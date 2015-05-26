@@ -1,0 +1,8 @@
+﻿<Window x:Class="PlayerUI.DummyWindowView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Okienko atrapka" Height="300" Width="300">
+    <Grid>
+		<Button x:Name="Close" Content="Zamknij" Width="128" Height="32"/>
+	</Grid>
+</Window>

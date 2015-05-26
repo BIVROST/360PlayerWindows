@@ -1,0 +1,314 @@
+﻿<Window x:Class="PlayerUI.ShellView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:cal="http://www.caliburnproject.org"
+		xmlns:ui="clr-namespace:PlayerUI"
+		xmlns:svgc="http://sharpvectors.codeplex.com/svgc/"
+		xmlns:sys="clr-namespace:System;assembly=mscorlib"
+		
+        Title="ShellView" Height="600" Width="1066" MinWidth="1066"  MinHeight="600" WindowStartupLocation="CenterScreen" Icon="sygnet.ico" cal:Message.Attach="[Shortcut Control+Y] = [Action Youtube]">
+	
+	<Window.Resources>		
+		<ResourceDictionary>
+			<sys:String x:Key="PlaySvgFile">
+				Graphics/play.svg
+			</sys:String>
+			<sys:String x:Key="PlayBlueSvgFile">
+				Graphics/play_blue.svg
+			</sys:String>
+
+			<SolidColorBrush x:Key="HorizontalSliderTrackNormalBackground" Color="#ffffff"/>
+			<SolidColorBrush x:Key="HorizontalSliderTrackElapsedBackground" Color="#00a7f5"/>
+
+			<SolidColorBrush x:Key="HorizontalSliderTrackNormalBorder" Color="#90909090" />
+
+
+			<Style x:Key="SliderRepeatButtonStyleLeft" TargetType="{x:Type RepeatButton}">
+				<Setter Property="OverridesDefaultStyle" Value="true"/>
+				<Setter Property="IsTabStop" Value="false"/>
+				<Setter Property="Focusable" Value="false"/>
+				<Setter Property="Template">
+					<Setter.Value>
+						<ControlTemplate TargetType="{x:Type RepeatButton}">
+							<Border BorderThickness="0 1" BorderBrush="#900081bd" Margin="0 4 -3 3">
+								<Rectangle Fill="#00a7f5" Margin="0"/>
+							</Border>
+						</ControlTemplate>
+					</Setter.Value>
+				</Setter>
+			</Style>
+
+			<Style x:Key="SliderRepeatButtonStyleRight" TargetType="{x:Type RepeatButton}">
+				<Setter Property="OverridesDefaultStyle" Value="true"/>
+				<Setter Property="IsTabStop" Value="false"/>
+				<Setter Property="Focusable" Value="false"/>
+				<Setter Property="Template">
+					<Setter.Value>
+						<ControlTemplate TargetType="{x:Type RepeatButton}">
+							<Rectangle Fill="Transparent"/>
+						</ControlTemplate>
+					</Setter.Value>
+				</Setter>
+			</Style>
+
+			<Style x:Key="CustomThumbForSlider" TargetType="{x:Type Thumb}">
+				<Setter Property="OverridesDefaultStyle" Value="True"/>
+				<Setter Property="Template">
+					<Setter.Value>
+						<ControlTemplate TargetType="{x:Type Thumb}">
+							<Ellipse Fill="#00a7f5" Stroke="#900081bd" Height="15" Width="15"/>
+						</ControlTemplate>
+					</Setter.Value>
+				</Setter>
+			</Style>
+
+
+			<Style x:Key="MyCustomStyleForSlider" TargetType="{x:Type Slider}">
+				<Setter Property="Template">
+					<Setter.Value>
+						<ControlTemplate TargetType="{x:Type Slider}">
+							<Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+								<Grid>
+									<Grid.RowDefinitions>
+										<RowDefinition Height="Auto"/>
+										<RowDefinition Height="Auto" MinHeight="{TemplateBinding MinHeight}"/>
+										<RowDefinition Height="Auto"/>
+									</Grid.RowDefinitions>
+									<TickBar x:Name="TopTick" Visibility="Collapsed" Fill="{TemplateBinding Foreground}" Placement="Top" Height="4" Grid.Row="0"/>
+									<TickBar x:Name="BottomTick" Visibility="Collapsed" Fill="{TemplateBinding Foreground}" Placement="Bottom" Height="4" Grid.Row="0"/>
+									<Border x:Name="TrackBackground" 
+                                        Background="{StaticResource HorizontalSliderTrackNormalBackground}"
+                                        BorderBrush="{StaticResource HorizontalSliderTrackNormalBorder}"                                        
+                                        BorderThickness="0 1" CornerRadius="0"
+                                        Margin="0,0" VerticalAlignment="Center" Height="8.0" Grid.Row="1" >
+										<Canvas Margin="-6,-1">
+											<Rectangle Visibility="Hidden" x:Name="PART_SelectionRange" Height="4.0"
+                                                   Fill="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"
+                                                   Stroke="{DynamicResource {x:Static SystemColors.ControlDarkDarkBrushKey}}"
+                                                   StrokeThickness="1.0"/>
+										</Canvas>
+									</Border>
+									<Track x:Name="PART_Track" Grid.Row="1">
+										<Track.DecreaseRepeatButton>
+											<RepeatButton  Style="{StaticResource SliderRepeatButtonStyleLeft}" Command="{x:Static Slider.DecreaseLarge}"/>
+										</Track.DecreaseRepeatButton>
+										<Track.IncreaseRepeatButton>
+											<RepeatButton Style="{StaticResource SliderRepeatButtonStyleRight}" Command="{x:Static Slider.IncreaseLarge}"/>
+										</Track.IncreaseRepeatButton>
+										<Track.Thumb>
+											<Thumb x:Name="Thumb" Style="{StaticResource CustomThumbForSlider}" Background="Black"/>
+										</Track.Thumb>
+									</Track>
+								</Grid>
+							</Border>
+						</ControlTemplate>
+					</Setter.Value>
+				</Setter>
+			</Style>
+
+		</ResourceDictionary>		
+	</Window.Resources>
+	
+	<Grid Background="LightGray" UseLayoutRounding="True" cal:Message.Attach="[Event Drop] = [Action FileDropped($eventArgs)]; [Event PreviewDragOver] = [Action FilePreviewDragEnter($eventArgs)]" 
+		  AllowDrop="True" >
+		<Grid.RowDefinitions>
+			<RowDefinition Height="22" />
+			<RowDefinition Height="*" />
+			<RowDefinition Height="68" />
+		</Grid.RowDefinitions>
+
+		<DockPanel Grid.Row="0" Grid.RowSpan="2" Background="Transparent" VerticalAlignment="Top" >
+			<Menu DockPanel.Dock="Top" Height="22" Padding="2">
+				<MenuItem Header="Plik"></MenuItem>
+				<MenuItem Header="Opcje"></MenuItem>
+				<MenuItem Header="O programie"></MenuItem>
+			</Menu>
+
+		</DockPanel>
+
+
+
+		<Button HorizontalAlignment="Right" Content="Options" Grid.Row="0" />
+
+		<ui:DPFCanvas x:Name="Canvas1" Stretch="UniformToFill" Grid.Row="1" Grid.RowSpan="3" HorizontalAlignment="Center" VerticalAlignment="Center"
+					  cal:Message.Attach="[Event MouseDown] = [Action PlayPause]; [Shortcut Control+O] = [Action OpenFile]; [Shortcut Control+Q] = [Action Quit]; [Shortcut Control+R] = [Action Rewind]; [Shortcut Space] = [Action PlayPause]"/>
+
+		<Grid Grid.Row="1">
+			<Image Source="logo.png" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="100,0" Stretch="None"  Width="400" Height="98" cal:Message.Attach="[Event MouseDown] = [Action PlayPause]"/>
+			<Label x:Name="SelectedFileName" Content="Wybrana nazwa pliku video.mp4" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Top" Foreground="White" Margin="10" >
+				<Label.BitmapEffect>
+					<DropShadowBitmapEffect ShadowDepth="1" Softness="0.4"></DropShadowBitmapEffect>
+				</Label.BitmapEffect>
+			</Label>
+		</Grid>
+
+		<Grid Grid.Row="2" Background="#99000000">
+
+			<Slider Orientation="Horizontal" Minimum="0" Maximum="{Binding MaxTime, Mode=OneWay}" ClipToBounds="False" Style="{StaticResource MyCustomStyleForSlider}"
+					cal:Message.Attach="[PreviewMouseDown] = [SliderLock]; [PreviewMouseUp] = [SliderUnlock]" LargeChange="0" SmallChange="0" VerticalAlignment="Top" Margin="0 -8 0 0"
+					Value="{Binding TimeValue}"
+					>
+			</Slider>
+
+			<StackPanel Orientation="Horizontal">
+				<!--<Button x:Name="OpenFile" Width="120" Height="32" Margin="5">Open</Button>
+				<Button x:Name="Play" Width="120" Height="32" Margin="5">Play</Button>
+				<Button x:Name="Stop" Width="120" Height="32" Margin="5">Stop</Button>
+				<Button x:Name="Youtube" Width="120" Height="32" Margin="5">Youtube</Button>-->
+
+				<Button x:Name="Test"  Width="36" Height="36" Margin="24 0 4 0">
+					<Button.Template>
+						<ControlTemplate TargetType="{x:Type Button}">
+							<Grid>
+								<svgc:SvgViewbox Name="Normal" Source="Graphics/back.svg"/>
+								<svgc:SvgViewbox Name="Hover" Source="Graphics/back_blue.svg" Visibility="Hidden"/>
+							</Grid>
+							<ControlTemplate.Triggers>
+								<Trigger Property="IsPressed" Value="True">
+									<Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+									<Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+								</Trigger>
+								<Trigger Property="IsMouseOver" Value="True">
+									<Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+									<Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+								</Trigger>
+							</ControlTemplate.Triggers>
+						</ControlTemplate>
+					</Button.Template>
+				</Button>
+
+				<Button x:Name="PlayPause"  Width="45" Height="45" Margin="4 0">
+					<Button.Template>
+						<ControlTemplate TargetType="{x:Type Button}">
+							<Grid>
+								<svgc:SvgViewbox Name="Normal" Source="Graphics/play.svg"/>
+								<svgc:SvgViewbox Name="Hover" Source="Graphics/play_blue.svg" Visibility="Hidden"/>
+							</Grid>
+							<ControlTemplate.Triggers>
+								<Trigger Property="IsPressed" Value="True">
+									<Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+									<Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+								</Trigger>
+								<Trigger Property="IsMouseOver" Value="True">
+									<Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+									<Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+								</Trigger>
+							</ControlTemplate.Triggers>
+						</ControlTemplate>
+					</Button.Template>
+				</Button>
+
+				<Button x:Name="Stop"  Width="36" Height="36" Margin="4 0">
+					<Button.Template>
+						<ControlTemplate TargetType="{x:Type Button}">
+							<Grid>
+								<svgc:SvgViewbox Name="Normal" Source="Graphics/stop.svg"/>
+								<svgc:SvgViewbox Name="Hover" Source="Graphics/stop_blue.svg" Visibility="Hidden"/>
+							</Grid>
+							<ControlTemplate.Triggers>
+								<Trigger Property="IsPressed" Value="True">
+									<Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+									<Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+								</Trigger>
+								<Trigger Property="IsMouseOver" Value="True">
+									<Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+									<Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+								</Trigger>
+							</ControlTemplate.Triggers>
+						</ControlTemplate>
+					</Button.Template>
+				</Button>
+
+				<Button x:Name="Test4"  Width="36" Height="36" Margin="4 0">
+					<Button.Template>
+						<ControlTemplate TargetType="{x:Type Button}">
+							<Grid>
+								<svgc:SvgViewbox Name="Normal" Source="Graphics/next.svg"/>
+								<svgc:SvgViewbox Name="Hover" Source="Graphics/next_blue.svg" Visibility="Hidden"/>
+							</Grid>
+							<ControlTemplate.Triggers>
+								<Trigger Property="IsPressed" Value="True">
+									<Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+									<Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+								</Trigger>
+								<Trigger Property="IsMouseOver" Value="True">
+									<Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+									<Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+								</Trigger>
+							</ControlTemplate.Triggers>
+						</ControlTemplate>
+					</Button.Template>
+				</Button>
+
+			</StackPanel>
+			
+			<StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+
+				<TextBlock x:Name="VideoTime" Grid.Column="1" Foreground="White" Text="0:00 / 0:00" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="5 0 18 0" />
+
+				<Button x:Name="OpenSettings"  Width="36" Height="36" Margin="4 0">
+					<Button.Template>
+						<ControlTemplate TargetType="{x:Type Button}">
+							<Grid>
+								<svgc:SvgViewbox Name="Normal" Source="Graphics/settings.svg"/>
+								<svgc:SvgViewbox Name="Hover" Source="Graphics/settings_blue.svg" Visibility="Hidden"/>
+							</Grid>
+							<ControlTemplate.Triggers>
+								<Trigger Property="IsPressed" Value="True">
+									<Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+									<Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+								</Trigger>
+								<Trigger Property="IsMouseOver" Value="True">
+									<Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+									<Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+								</Trigger>
+							</ControlTemplate.Triggers>
+						</ControlTemplate>
+					</Button.Template>
+				</Button>
+
+				<Button x:Name="Test6"  Width="36" Height="36" Margin="4 0">
+					<Button.Template>
+						<ControlTemplate TargetType="{x:Type Button}">
+							<Grid>
+								<svgc:SvgViewbox Name="Normal" Source="Graphics/oculus.svg"/>
+								<svgc:SvgViewbox Name="Hover" Source="Graphics/oculus_blue.svg" Visibility="Hidden"/>
+							</Grid>
+							<ControlTemplate.Triggers>
+								<Trigger Property="IsPressed" Value="True">
+									<Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+									<Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+								</Trigger>
+								<Trigger Property="IsMouseOver" Value="True">
+									<Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+									<Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+								</Trigger>
+							</ControlTemplate.Triggers>
+						</ControlTemplate>
+					</Button.Template>
+				</Button>
+
+				<Button x:Name="Test5"  Width="36" Height="36" Margin="4 0 20 0">
+					<Button.Template>
+						<ControlTemplate TargetType="{x:Type Button}">
+							<Grid>
+								<svgc:SvgViewbox Name="Normal" Source="Graphics/speaker.svg"/>
+								<svgc:SvgViewbox Name="Hover" Source="Graphics/speaker_blue.svg" Visibility="Hidden"/>
+							</Grid>
+							<ControlTemplate.Triggers>
+								<Trigger Property="IsPressed" Value="True">
+									<Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+									<Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+								</Trigger>
+								<Trigger Property="IsMouseOver" Value="True">
+									<Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+									<Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+								</Trigger>
+							</ControlTemplate.Triggers>
+						</ControlTemplate>
+					</Button.Template>
+				</Button>
+			</StackPanel>
+		</Grid>
+	</Grid>
+</Window>
