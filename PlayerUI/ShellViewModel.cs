@@ -7,6 +7,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
+using System.Windows.Threading;
 using System.Xml;
 
 
@@ -21,6 +23,7 @@ namespace PlayerUI
 		public bool IsPlaying { get; set; }
 
 		private string _selectedFileName = "";
+		public string SelectedFileNameLabel { get { return Path.GetFileNameWithoutExtension(SelectedFileName); } }
 		public string SelectedFileName { get { return _selectedFileName; } set { this._selectedFileName = value; NotifyOfPropertyChange(() => SelectedFileName); } }
 		public bool IsFileSelected { get; set; }
 
@@ -32,6 +35,7 @@ namespace PlayerUI
 		private MediaDecoder _mediaDecoder;
 
 		Window playerWindow;
+		Nancy.Hosting.Self.NancyHost nancy;
 
 		public ShellViewModel()
 		{
@@ -71,7 +75,107 @@ namespace PlayerUI
 			};
 
 			UpdateTimeLabel();
+
+
+
+			// NANCY HTTP REMOTE
+			nancy = ApiServer.InitNancy(apiServer =>
+				  Execute.OnUIThread(() => {
+					  Console.WriteLine("got unity init, device_id=", ApiServer.device_id, "movies=[\n", string.Join(",\n", ApiServer.movies), "]");
+
+					  
+				  })
+			);
+
+			ApiServer.OnBackPressed += ApiServer_OnBackPressed;
+			ApiServer.OnStateChange += ApiServer_OnStateChange;
+			ApiServer.OnPos += ApiServer_OnPos;
+			ApiServer.OnInfo += msg => Console.WriteLine(msg);
 		}
+
+		private ApiServer.State _serverState;
+		private void ApiServer_OnStateChange(ApiServer.State newState)
+		{
+			_serverState = newState;
+			//InfoState.Dispatcher.Invoke(() => InfoState.Content = newState);
+			switch(newState)
+			{
+				case ApiServer.State.init:
+					Rewind();
+					break;
+				case ApiServer.State.off:
+					Pause();
+					break;
+				case ApiServer.State.pause:
+					Pause();
+					break;
+				case ApiServer.State.play:
+					if (BivrostPlayerPrototype.PlayerPrototype.IsPlaying)
+						UnPause();
+					else
+						BivrostPlayerPrototype.PlayerPrototype.PlayLoadedFile();
+					break;
+				case ApiServer.State.stop:
+					Rewind();
+					break;
+			}
+
+			Console.WriteLine("STATE CHANGED: " + _serverState);
+		}
+
+		private void ApiServer_OnBackPressed()
+		{
+			//ApiServer.CommandMessage("back feedback "+ApiServer.status.max_id);
+			//ApiServer.CommandReset();
+
+			//Console.WriteLine("BACK PRESSED WITH STATE: " + _serverState);
+			//switch(_serverState)
+			//{
+   //            case ApiServer.State.stop:
+			//		//ApiServer.CommandReset();
+			//		//ApiServer.CommandUnPause();
+			//		Rewind();
+			//		if (BivrostPlayerPrototype.PlayerPrototype.IsPlaying)
+			//			UnPause();
+			//		else
+			//			BivrostPlayerPrototype.PlayerPrototype.PlayLoadedFile();
+			//		break;
+			//	case ApiServer.State.play:
+			//		//ApiServer.CommandReset();
+			//		Rewind();
+			//		break;
+			//	case ApiServer.State.pause:
+			//		//ApiServer.CommandUnPause();
+			//		UnPause();
+			//		break;
+			//	case ApiServer.State.init:
+			//		//ApiServer.CommandReset();
+			//		if (BivrostPlayerPrototype.PlayerPrototype.IsPlaying)
+			//			UnPause();
+			//		else
+			//			BivrostPlayerPrototype.PlayerPrototype.PlayLoadedFile();
+   //                 break;
+			//}
+		}
+
+		private void ApiServer_OnPos(System.Tuple<float, float, float> euler, float t01)
+		{
+			try { 
+				Execute.OnUIThread(() => {
+					//InfoX.Content = euler.Item1;
+					//InfoY.Content = euler.Item2;
+					//InfoZ.Content = euler.Item3;
+					//InfoT01.Content = t01;
+					if(Canvas.Scene != null)
+					{
+						(Canvas.Scene as Scene).SetLook(euler);
+					}
+				});
+			} catch(Exception) { };
+        }
+
+
+
 
 		public void Test()
 		{
@@ -83,7 +187,18 @@ namespace PlayerUI
 			base.OnViewAttached(view, context);
 			Canvas = (view as ShellView).Canvas1;
 			playerWindow = (view as Window);
-			
+
+			if (Logic.Instance.settings.StartInFullScreen)
+				ToggleFullscreen();
+			if (Logic.Instance.settings.AutoLoad)
+				if(!string.IsNullOrWhiteSpace(Logic.Instance.settings.AutoPlayFile))
+				{
+					if(File.Exists(Logic.Instance.settings.AutoPlayFile))
+					{
+						SelectedFileName = Logic.Instance.settings.AutoPlayFile.Trim();
+						Play();
+					}
+				}
 		}
 
 
@@ -133,6 +248,11 @@ namespace PlayerUI
 
 		public void Play()
 		{
+			if(IsPlaying) { 
+				Stop();
+				Thread.Sleep(500);
+			}
+
 			//if (_mediaDecoder == null) _mediaDecoder = new MediaDecoder(Canvas);
 			//_mediaDecoder.Play(SelectedFileName);
 
@@ -152,7 +272,7 @@ namespace PlayerUI
 						this.Canvas.SetVideoTexture(tex);
 					});
 				};
-				BivrostPlayerPrototype.PlayerPrototype.Play(SelectedFileName);
+				BivrostPlayerPrototype.PlayerPrototype.Play(SelectedFileName, Logic.Instance.settings.AutoPlay);
 
 				Thread.Sleep(500);
 				Execute.OnUIThread(() =>
@@ -176,7 +296,20 @@ namespace PlayerUI
 
 		public void PlayPause()
 		{
-			BivrostPlayerPrototype.PlayerPrototype.PlayPause();
+			if (this.Canvas.Scene == null && !string.IsNullOrWhiteSpace(SelectedFileName))
+				Play();
+			else
+				BivrostPlayerPrototype.PlayerPrototype.PlayPause();
+		}
+
+		public void Pause()
+		{
+			BivrostPlayerPrototype.PlayerPrototype.Pause();
+		}
+
+		public void UnPause()
+		{
+			BivrostPlayerPrototype.PlayerPrototype.UnPause();
 		}
 
 		public void OpenFile()
@@ -233,7 +366,9 @@ namespace PlayerUI
 
 		public void Stop()
 		{
-			BivrostPlayerPrototype.PlayerPrototype.Close();
+			TimeValue = 0;
+			this.Canvas.Scene = null;
+            BivrostPlayerPrototype.PlayerPrototype.Close();
 		}
 
 		public override void TryClose(bool? dialogResult = null)
@@ -242,6 +377,7 @@ namespace PlayerUI
 			ended = true;
 			if(_mediaDecoder != null)
 				_mediaDecoder.Shutdown();
+			nancy.Stop();
 		}
 
 		public void Rewind()
@@ -257,6 +393,90 @@ namespace PlayerUI
 		public void OpenSettings()
 		{
 			DialogHelper.ShowDialog<SettingsWindowViewModel>();
+		}
+
+		private Point _mouseDownPoint;
+		private bool _drag = false;
+		private IInputElement _element;
+		private Point _dragLastPosition;
+
+		public void MouseMove(object sender, MouseEventArgs e)
+		{
+			var current = e.GetPosition(null);
+			var delta = current - _dragLastPosition;
+			_dragLastPosition = current;
+			if(this.Canvas.Scene != null) {
+				((Scene)this.Canvas.Scene).MoveDelta((float)delta.X, (float)delta.Y, (float) (72f/this.Canvas.ActualWidth) * 1.5f);
+			}
+		}
+
+		public void MouseDown(object sender, MouseButtonEventArgs e)
+		{
+			_mouseDownPoint = e.GetPosition(null);
+			_dragLastPosition = _mouseDownPoint;
+			_drag = false;
+			_element = (IInputElement)e.Source;
+			_element.CaptureMouse();
+			_element.MouseMove += MouseMove;
+		}
+
+		public void MouseUp(MouseButtonEventArgs e)
+		{
+			if (_mouseDownPoint == e.GetPosition(null) && !_drag) {
+				PlayPause();				
+			} else {
+
+			}
+			if(_element != null) { 
+				_element.ReleaseMouseCapture();
+				_element.MouseMove -= MouseMove;
+			}
+		}
+
+		private bool fullscreen = false;
+		public void ToggleFullscreen()
+		{
+			fullscreen = !fullscreen;
+			if(!fullscreen) {
+				ShowUI();
+				playerWindow.WindowState = WindowState.Normal;
+				playerWindow.WindowStyle = WindowStyle.SingleBorderWindow;
+				//playerWindow.Topmost = false;
+				playerWindow.ResizeMode = ResizeMode.CanResize;
+			} else
+			{
+				HideUI();
+				playerWindow.WindowState = WindowState.Normal;
+				playerWindow.WindowStyle = WindowStyle.None;
+				//playerWindow.Topmost = true;
+				playerWindow.ResizeMode = ResizeMode.NoResize;
+				playerWindow.Margin = new Thickness(0,0,0,0);
+				playerWindow.WindowState = WindowState.Maximized;
+			}
+		}
+
+		public void HideUI()
+		{
+			var shell = playerWindow as ShellView;
+			shell.topMenuPanel.Visibility = Visibility.Collapsed;
+			shell.controlBar.Visibility = Visibility.Collapsed;
+			//shell.logoImage.Visibility = Visibility.Collapsed;
+			shell.menuRow.Height = new GridLength(0);
+			shell.SelectedFileNameLabel.Visibility = Visibility.Collapsed;
+			shell.mainGrid.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Black);
+			NotifyOfPropertyChange(null);
+		}
+
+		public void ShowUI()
+		{
+			var shell = playerWindow as ShellView;
+			shell.topMenuPanel.Visibility = Visibility.Visible;
+			shell.controlBar.Visibility = Visibility.Visible;
+			//shell.logoImage.Visibility = Visibility.Visible;
+			shell.menuRow.Height = new GridLength(22);
+			shell.SelectedFileNameLabel.Visibility = Visibility.Visible;
+			shell.mainGrid.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.LightGray);
+			NotifyOfPropertyChange(null);
 		}
 	}
 }

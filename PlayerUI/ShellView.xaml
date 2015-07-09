@@ -7,8 +7,8 @@
 		xmlns:sys="clr-namespace:System;assembly=mscorlib"
 		
         Title="ShellView" Height="600" Width="1066" MinWidth="1066"  MinHeight="600" WindowStartupLocation="CenterScreen" Icon="sygnet.ico" cal:Message.Attach="[Shortcut Control+Y] = [Action Youtube]">
-	
-	<Window.Resources>		
+
+	<Window.Resources>
 		<ResourceDictionary>
 			<sys:String x:Key="PlaySvgFile">
 				Graphics/play.svg
@@ -106,51 +106,60 @@
 				</Setter>
 			</Style>
 
-		</ResourceDictionary>		
+		</ResourceDictionary>
 	</Window.Resources>
-	
-	<Grid Background="LightGray" UseLayoutRounding="True" cal:Message.Attach="[Event Drop] = [Action FileDropped($eventArgs)]; [Event PreviewDragOver] = [Action FilePreviewDragEnter($eventArgs)]" 
-		  AllowDrop="True" >
+
+	<Grid Background="LightGray" UseLayoutRounding="True" cal:Message.Attach="[Event Drop] = [Action FileDropped($eventArgs)]; [Event PreviewDragOver] = [Action FilePreviewDragEnter($eventArgs)];
+		  [Event MouseDown] = [Action MouseDown($source, $eventArgs)]; [Event MouseUp] = [Action MouseUp($eventArgs)];" 
+		  AllowDrop="True" x:Name="mainGrid">
 		<Grid.RowDefinitions>
-			<RowDefinition Height="22" />
+			<RowDefinition Height="22" x:Name="menuRow"/>
 			<RowDefinition Height="*" />
 			<RowDefinition Height="68" />
 		</Grid.RowDefinitions>
 
-		<DockPanel Grid.Row="0" Grid.RowSpan="2" Background="Transparent" VerticalAlignment="Top" >
+		<DockPanel Grid.Row="0" Grid.RowSpan="2" Background="Transparent" VerticalAlignment="Top" x:Name="topMenuPanel">
 			<Menu DockPanel.Dock="Top" Height="22" Padding="2">
-				<MenuItem Header="Plik"></MenuItem>
-				<MenuItem Header="Opcje"></MenuItem>
+				<MenuItem Header="Plik">
+					<MenuItem Header="Otwórz" x:Name="OpenFile"/>
+					<MenuItem Header="Otwórz link Youtube" x:Name="Youtube"/>
+					<Separator />
+					<MenuItem Header="Zakończ" x:Name="Quit"/>
+				</MenuItem>
+				<MenuItem Header="Opcje">
+					<MenuItem Header="Ustawienia" cal:Message.Attach="[Event Click] = [Action OpenSettings]"/>
+				</MenuItem>
 				<MenuItem Header="O programie"></MenuItem>
 			</Menu>
 
 		</DockPanel>
 
 
-
-		<Button HorizontalAlignment="Right" Content="Options" Grid.Row="0" />
-
 		<ui:DPFCanvas x:Name="Canvas1" Stretch="UniformToFill" Grid.Row="1" Grid.RowSpan="3" HorizontalAlignment="Center" VerticalAlignment="Center"
-					  cal:Message.Attach="[Event MouseDown] = [Action PlayPause]; [Shortcut Control+O] = [Action OpenFile]; [Shortcut Control+Q] = [Action Quit]; [Shortcut Control+R] = [Action Rewind]; [Shortcut Space] = [Action PlayPause]"/>
+					  cal:Message.Attach="[Shortcut Control+O] = [Action OpenFile]; [Shortcut Control+Q] = [Action Quit]; [Shortcut Control+R] = [Action Rewind]; [Shortcut Space] = [Action PlayPause]; [Shortcut F11] = [Action ToggleFullscreen]" />
 
-		<Grid Grid.Row="1">
-			<Image Source="logo.png" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="100,0" Stretch="None"  Width="400" Height="98" cal:Message.Attach="[Event MouseDown] = [Action PlayPause]"/>
-			<Label x:Name="SelectedFileName" Content="Wybrana nazwa pliku video.mp4" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Top" Foreground="White" Margin="10" >
+		<Grid Grid.Row="1" >
+			<Image Source="logo.png" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="100,0" Stretch="None"  Width="400" Height="98" cal:Message.Attach="[Event MouseDown] = [Action PlayPause]" x:Name="logoImage"/>
+			<Label x:Name="SelectedFileNameLabel" Content="Wybrana nazwa pliku video.mp4" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Top" Foreground="White" Margin="10" >
 				<Label.BitmapEffect>
 					<DropShadowBitmapEffect ShadowDepth="1" Softness="0.4"></DropShadowBitmapEffect>
 				</Label.BitmapEffect>
 			</Label>
 		</Grid>
 
-		<Grid Grid.Row="2" Background="#99000000">
+		<Grid Grid.Row="2" Background="#99000000" x:Name="controlBar">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="7*"/>
+				<ColumnDefinition Width="1051*"/>
+			</Grid.ColumnDefinitions>
 
 			<Slider Orientation="Horizontal" Minimum="0" Maximum="{Binding MaxTime, Mode=OneWay}" ClipToBounds="False" Style="{StaticResource MyCustomStyleForSlider}"
 					cal:Message.Attach="[PreviewMouseDown] = [SliderLock]; [PreviewMouseUp] = [SliderUnlock]" LargeChange="0" SmallChange="0" VerticalAlignment="Top" Margin="0 -8 0 0"
-					Value="{Binding TimeValue}"
+					Value="{Binding TimeValue}" Grid.ColumnSpan="2"
 					>
 			</Slider>
 
-			<StackPanel Orientation="Horizontal">
+			<StackPanel Orientation="Horizontal" x:Name="playbackControlButtons" Grid.ColumnSpan="2">
 				<!--<Button x:Name="OpenFile" Width="120" Height="32" Margin="5">Open</Button>
 				<Button x:Name="Play" Width="120" Height="32" Margin="5">Play</Button>
 				<Button x:Name="Stop" Width="120" Height="32" Margin="5">Stop</Button>
@@ -176,6 +185,8 @@
 						</ControlTemplate>
 					</Button.Template>
 				</Button>
+
+
 
 				<Button x:Name="PlayPause"  Width="45" Height="45" Margin="4 0">
 					<Button.Template>
@@ -241,8 +252,8 @@
 				</Button>
 
 			</StackPanel>
-			
-			<StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+
+			<StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Grid.Column="1">
 
 				<TextBlock x:Name="VideoTime" Grid.Column="1" Foreground="White" Text="0:00 / 0:00" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="5 0 18 0" />
 

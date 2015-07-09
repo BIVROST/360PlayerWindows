@@ -51,5 +51,6 @@ namespace PlayerUI
 			this.Canvas1.ClearColor = new SharpDX.Color4(gray.R / 255F, gray.G / 255F, gray.B / 255F, gray.A / 255F);
 
 		}
+
 	}
 }

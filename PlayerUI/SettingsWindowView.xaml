@@ -52,12 +52,32 @@
 				</GroupBox>
 				
 				<GroupBox Header="Ustawienia odtwarzania" Margin="8">
+					<StackPanel>
+						<StackPanel Orientation="Horizontal">
+							<TextBlock Text="Plik ładowany przy starcie" Margin="8"/>
+							<TextBox x:Name="AutoPlayFile" Width="200"/>
+						</StackPanel>
 
+						<StackPanel Orientation="Horizontal">
+							<CheckBox x:Name="AutoLoad" Margin="8" HorizontalAlignment="Right"/>
+							<TextBlock Text="Automatycznie załaduj przy starcie" Margin="8"/>
+						</StackPanel>
+
+						<StackPanel Orientation="Horizontal">
+							<CheckBox x:Name="AutoPlay" Margin="8" HorizontalAlignment="Right"/>
+							<TextBlock Text="Automatycznie odtwarzaj przy starcie" Margin="8"/>
+						</StackPanel>
+
+						<StackPanel Orientation="Horizontal">
+							<CheckBox x:Name="StartInFullScreen" Margin="8" HorizontalAlignment="Right"/>
+							<TextBlock Text="Uruchamiaj na pełnym ekranie" Margin="8"/>
+						</StackPanel>
+					</StackPanel>
 				</GroupBox>
 
-				<GroupBox Header="Ustawienia wyglądu" Margin="8">
+				<!--<GroupBox Header="Ustawienia wyglądu" Margin="8">
 
-				</GroupBox>
+				</GroupBox>-->
 			</StackPanel>			
 			
 		</Border>

@@ -23,6 +23,12 @@ namespace PlayerUI
 
 		public bool EventModeLoop { get { return Logic.Instance.settings.EventModeLoop; } set { Logic.Instance.settings.EventModeLoop = value; } }
 
+		public bool AutoPlay { get { return Logic.Instance.settings.AutoPlay; } set { Logic.Instance.settings.AutoPlay = value; } }
+		public bool AutoLoad { get { return Logic.Instance.settings.AutoLoad; } set { Logic.Instance.settings.AutoLoad = value; } }
+		public bool StartInFullScreen { get { return Logic.Instance.settings.StartInFullScreen; } set { Logic.Instance.settings.StartInFullScreen = value; } }
+		public string AutoPlayFile { get { return Logic.Instance.settings.AutoPlayFile; } set { Logic.Instance.settings.AutoPlayFile = value; } }
+
+
 		public void Reboot()
 		{
 			Logic.Instance.ReloadPlayer();
@@ -31,6 +37,11 @@ namespace PlayerUI
 		public void Save()
 		{
 			Logic.Instance.settings.Save();
+		}
+
+		public void Close()
+		{
+			TryClose();
 		}
 	}
 }

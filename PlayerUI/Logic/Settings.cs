@@ -16,14 +16,14 @@ namespace PlayerUI
 		{
 			get { return _settingsFile; }
 			set { _settingsFile = value; }
-		}		
+		}
 
 		public Settings(string configFile = "settings.conf")
 		{
 			SettingsFile = configFile;
 			Load();
 		}
-		
+
 
 		public void Load()
 		{
@@ -52,6 +52,12 @@ namespace PlayerUI
 		public string EventModeBackgroundColor { get; set; }
 		public bool EventModeLoop { get; set; }
 
+		public string AutoPlayFile { get; set; }
+		public bool AutoPlay { get; set; }
+		public bool AutoLoad { get; set; }
+
+		public bool StartInFullScreen { get; set; }
+
 		public void Defauls()
 		{
 			EventMode = false;
@@ -60,6 +66,11 @@ namespace PlayerUI
 			EventModePauseAtStartup = true;
 			EventModeBackgroundColor = "000000";
 			EventModeLoop = true;
+
+			AutoPlay = false;
+			AutoLoad = true;
+			AutoPlayFile = "";
+			StartInFullScreen = false;
 		}
 	}
 }

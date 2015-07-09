@@ -43,10 +43,14 @@ namespace BivrostPlayerPrototype
 
 		public static Device _presetDevice = null;
 
+		public static bool IsPlaying { get { return isPlaying; } }
+
 		private static bool isPlaying = false;
 
+		private static bool readyToPlayLoadedVideo = false;
+
 		[STAThread]
-        public static void Play(string fileName)
+        public static void Play(string fileName, bool autoPlay = true)
 		{
 			var radius = 4.9f;
 			if(File.Exists("radius.txt"))
@@ -61,7 +65,7 @@ namespace BivrostPlayerPrototype
 			form = new RenderForm(); // new RenderForm("Bivrost Player");
 			form.Width = 1920;
 			form.Height = 1080;
-			form.Visible = true;
+			form.Visible = false;
 			form.WindowState = FormWindowState.Maximized;
 			form.FormBorderStyle = FormBorderStyle.None;
 			form.VisibleChanged += (s, e) =>
@@ -70,11 +74,11 @@ namespace BivrostPlayerPrototype
 			};
 			form.FormBorderStyle = FormBorderStyle.None;
 			form.TransparencyKey = form.BackColor;
-			form.ShowInTaskbar = true;
+			form.ShowInTaskbar = false;
 
-			form.StartPosition = FormStartPosition.CenterScreen;
+			form.StartPosition = FormStartPosition.Manual;
 			
-			//form.Location = new System.Drawing.Point(0, 4000);
+			form.Location = new System.Drawing.Point(0, 4000);
 			
 
 			Wrap	oculus	= new Wrap();
@@ -433,10 +437,14 @@ namespace BivrostPlayerPrototype
 
 			// Play the music
 			mediaEngineEx.Loop = Loop;
-			mediaEngineEx.Play();
-			//mediaEngineEx.Volume = 0;
 
-			isPlaying = true;
+			readyToPlayLoadedVideo = true;
+
+			if(autoPlay) { 
+				mediaEngineEx.Play();
+				//mediaEngineEx.Volume = 0;
+				isPlaying = true;
+			}
 
 			long ts;
 
@@ -753,6 +761,15 @@ namespace BivrostPlayerPrototype
 		};
 
 
+		public static void PlayLoadedFile()
+		{
+			if (readyToPlayLoadedVideo)
+			{
+				mediaEngine.Play();
+				isPlaying = true;
+			}
+		}
+
 		public static void PlayPause()
 		{
 			if(mediaEngine!= null)
@@ -760,6 +777,28 @@ namespace BivrostPlayerPrototype
 				{
 					if (mediaEngine.IsPaused) mediaEngine.Play();
 					else mediaEngine.Pause();
+				} else
+				{
+					if (readyToPlayLoadedVideo)
+						PlayLoadedFile();
+				}
+		}
+
+		public static void Pause()
+		{
+			if (mediaEngine != null)
+				if (isPlaying && !mediaEngine.IsPaused)
+				{
+					mediaEngine.Pause();
+				}
+		}
+
+		public static void UnPause()
+		{
+			if (mediaEngine != null)
+				if (isPlaying && mediaEngine.IsPaused)
+				{
+					mediaEngine.Play();
 				}
 		}
 

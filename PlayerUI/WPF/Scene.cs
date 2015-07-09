@@ -27,6 +27,11 @@
 		SharpDX.Toolkit.Graphics.BasicEffect basicEffect;
 		SharpDX.Toolkit.Graphics.GeometricPrimitive primitive;
 
+		private float yaw = 0;
+		private float pitch = 0;
+		private bool remoteRotationOverride = false;
+		private Matrix remoteRotation;
+
 		KeyedMutex mutex;
 
         void IScene.Attach(ISceneHost host)
@@ -98,17 +103,41 @@
 
 			BivrostPlayerPrototype.PlayerPrototype.LookChanged += (look) =>
 			{
-				basicEffect.View = look;
+				if (remoteRotationOverride)
+				{
+					Matrix lerpMatrix = Matrix.Lerp(basicEffect.View, remoteRotation, 1 / 15f);
+					basicEffect.View = lerpMatrix;
+                } else { 
+					pitch = MathUtil.Clamp(pitch, (float)-Math.PI/2f, (float)Math.PI / 2f);
+					Quaternion q1 = Quaternion.RotationYawPitchRoll(yaw, 0, 0);
+					Quaternion q2 = Quaternion.RotationYawPitchRoll(0, pitch, 0);
+					basicEffect.View = look * Matrix.RotationQuaternion(q2 * q1);
+				}
 			};
-
-
+			
         }
+
+		public void SetLook(System.Tuple<float, float,float> euler)
+		{
+			remoteRotationOverride = true;
+			Quaternion q1 = Quaternion.RotationYawPitchRoll(MathUtil.DegreesToRadians(euler.Item2), 0, 0);
+			Quaternion q2 = Quaternion.RotationYawPitchRoll(0, MathUtil.DegreesToRadians(euler.Item1), 0);
+			Quaternion q3 = Quaternion.RotationYawPitchRoll(0, 0, MathUtil.DegreesToRadians(euler.Item3));
+			remoteRotation = Matrix.RotationQuaternion(q3 * (q2 * q1));
+			//remoteRotation = Matrix.RotationYawPitchRoll(MathUtil.DegreesToRadians(euler.Item2), MathUtil.DegreesToRadians(euler.Item1), MathUtil.DegreesToRadians(euler.Item3));
+		}
 
 		private bool textureWaiting = false;
 		public void SetVideoTexture(Texture2D sharedTexture)
 		{
 			this.videoTexture = sharedTexture;
 		}
+
+		public void MoveDelta(float x, float y, float ratio)
+		{
+			yaw += -MathUtil.DegreesToRadians(x) * ratio;
+            pitch += -MathUtil.DegreesToRadians(y) * ratio;
+        }
 
 
         void IScene.Detach()
@@ -131,6 +160,7 @@
             if (device == null)
                 return;
 
+			
 			primitive.Draw(basicEffect);
 			
 			//device.ImmediateContext.InputAssembler.InputLayout = this.VertexLayout;
