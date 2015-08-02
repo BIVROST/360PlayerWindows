@@ -1,4 +1,5 @@
 ﻿using Caliburn.Micro;
+using PlayerUI.ConfigUI;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -48,6 +49,8 @@ namespace PlayerUI
 			CurrentPosition = "00:00:00";
 			VideoLength = "00:00:00";
 
+			
+
 			BivrostPlayerPrototype.PlayerPrototype.TimeUpdate += (time) =>
 			{
 				if (ended) return;
@@ -76,22 +79,27 @@ namespace PlayerUI
 
 			UpdateTimeLabel();
 
+			#region NANCY REMOTE CONTROL SERVER
+			if (Logic.Instance.settings.EnableRemoteServer) { 
 
-
-			// NANCY HTTP REMOTE
-			nancy = ApiServer.InitNancy(apiServer =>
-				  Execute.OnUIThread(() => {
-					  Console.WriteLine("got unity init, device_id=", ApiServer.device_id, "movies=[\n", string.Join(",\n", ApiServer.movies), "]");
+				// NANCY HTTP REMOTE
+				nancy = ApiServer.InitNancy(apiServer =>
+					  Execute.OnUIThread(() => {
+						  Console.WriteLine("got unity init, device_id=", ApiServer.device_id, "movies=[\n", string.Join(",\n", ApiServer.movies), "]");
 
 					  
-				  })
-			);
+					  })
+				);
 
-			ApiServer.OnBackPressed += ApiServer_OnBackPressed;
-			ApiServer.OnStateChange += ApiServer_OnStateChange;
-			ApiServer.OnPos += ApiServer_OnPos;
-			ApiServer.OnInfo += msg => Console.WriteLine(msg);
+				ApiServer.OnBackPressed += ApiServer_OnBackPressed;
+				ApiServer.OnStateChange += ApiServer_OnStateChange;
+				ApiServer.OnPos += ApiServer_OnPos;
+				ApiServer.OnInfo += msg => Console.WriteLine(msg);
+			}
+			#endregion
 		}
+
+		#region REMOTE CONTROL HANDLERS
 
 		private ApiServer.State _serverState;
 		private void ApiServer_OnStateChange(ApiServer.State newState)
@@ -174,12 +182,12 @@ namespace PlayerUI
 			} catch(Exception) { };
         }
 
-
+		#endregion
 
 
 		public void Test()
 		{
-			Console.Beep();
+			
 		}
 
 		protected override void OnViewAttached(object view, object context)
@@ -199,6 +207,9 @@ namespace PlayerUI
 						Play();
 					}
 				}
+
+			//TODO usunac nieptorzebne fragmenty kodu z okienkiem testowym
+			DialogHelper.ShowWindow<TestWindowViewModel>(Canvas);
 		}
 
 
@@ -248,6 +259,7 @@ namespace PlayerUI
 
 		public void Play()
 		{
+
 			if(IsPlaying) { 
 				Stop();
 				Thread.Sleep(500);
@@ -326,6 +338,11 @@ namespace PlayerUI
 				}
 		}
 
+		public void OpenAbout()
+		{
+			DialogHelper.ShowDialog<AboutViewModel>();
+		}
+
 		public void FileDropped(DragEventArgs e)
 		{
 			if (e.Data.GetDataPresent(DataFormats.FileDrop))
@@ -373,11 +390,15 @@ namespace PlayerUI
 
 		public override void TryClose(bool? dialogResult = null)
 		{
-			base.TryClose(dialogResult);
 			ended = true;
+			Stop();
+
+			base.TryClose(dialogResult);
+			
 			if(_mediaDecoder != null)
 				_mediaDecoder.Shutdown();
 			nancy.Stop();
+
 		}
 
 		public void Rewind()
@@ -392,7 +413,7 @@ namespace PlayerUI
 
 		public void OpenSettings()
 		{
-			DialogHelper.ShowDialog<SettingsWindowViewModel>();
+			DialogHelper.ShowDialog<ConfigurationViewModel>();
 		}
 
 		private Point _mouseDownPoint;
@@ -459,7 +480,7 @@ namespace PlayerUI
 		{
 			var shell = playerWindow as ShellView;
 			shell.topMenuPanel.Visibility = Visibility.Collapsed;
-			shell.controlBar.Visibility = Visibility.Collapsed;
+			//shell.controlBar.Visibility = Visibility.Collapsed;
 			//shell.logoImage.Visibility = Visibility.Collapsed;
 			shell.menuRow.Height = new GridLength(0);
 			shell.SelectedFileNameLabel.Visibility = Visibility.Collapsed;

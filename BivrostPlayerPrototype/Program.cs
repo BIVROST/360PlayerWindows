@@ -14,7 +14,7 @@ using System.IO;
 using System.Threading.Tasks;
 using SharpDX.D3DCompiler;
 using System.Linq;
-
+using System.Diagnostics;
 
 namespace BivrostPlayerPrototype
 {
@@ -49,9 +49,16 @@ namespace BivrostPlayerPrototype
 
 		private static bool readyToPlayLoadedVideo = false;
 
+		private static Texture2D textureL;
+		private static Texture2D textureR;
+
+		public static Texture2D videoTextureL;
+		public static Texture2D videoTextureR;
+
 		[STAThread]
         public static void Play(string fileName, bool autoPlay = true)
 		{
+			
 			var radius = 4.9f;
 			if(File.Exists("radius.txt"))
 			{
@@ -62,6 +69,8 @@ namespace BivrostPlayerPrototype
 			AbortSignal = false;
 
 			eventReadyToPlay = new ManualResetEvent(false);
+
+			
 			form = new RenderForm(); // new RenderForm("Bivrost Player");
 			form.Width = 1920;
 			form.Height = 1080;
@@ -85,7 +94,13 @@ namespace BivrostPlayerPrototype
 			Hmd		hmd;
 
 			// Initialize the Oculus runtime.
-			oculus.Initialize();
+			bool success = oculus.Initialize();
+
+			if (!success)
+			{
+				MessageBox.Show("Failed to initialize the Oculus runtime library.", "Uh oh", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				return;
+			}
 
 			// Use the head mounted display, if it's available, otherwise use the debug HMD.
 			int numberOfHeadMountedDisplays = oculus.Hmd_Detect();
@@ -104,26 +119,22 @@ namespace BivrostPlayerPrototype
 			if (hmd.ProductName == string.Empty) 
 				MessageBox.Show("The HMD is not enabled.", "There's a tear in the Rift", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
-			OVR.Recti	destMirrorRect;
-			OVR.Recti	sourceRenderTargetRect;
-			hmd.AttachToWindow(form.Handle, out destMirrorRect, out sourceRenderTargetRect);
 
-			// Create a backbuffer that's the same size as the HMD's resolution.
-			OVR.Sizei backBufferSize;
-			backBufferSize.Width = hmd.Resolution.Width;
-			backBufferSize.Height = hmd.Resolution.Height;
+			// Specify which head tracking capabilities to enable.
+			hmd.SetEnabledCaps(OVR.HmdCaps.LowPersistence | OVR.HmdCaps.DynamicPrediction);
 
-			// Configure Stereo settings.
-			OVR.Sizei recommenedTex0Size = hmd.GetFovTextureSize(OVR.EyeType.Left,  hmd.DefaultEyeFov[0], 1.0f);
-			OVR.Sizei recommenedTex1Size = hmd.GetFovTextureSize(OVR.EyeType.Right, hmd.DefaultEyeFov[1], 1.0f);
-
-			// Define a render target texture that's the size that the Oculus SDK recommends, for it's default field of view.
-			OVR.Sizei renderTargetTextureSize;
-			renderTargetTextureSize.Width = recommenedTex0Size.Width + recommenedTex1Size.Width;
-			renderTargetTextureSize.Height = Math.Max(recommenedTex0Size.Height, recommenedTex1Size.Height);
+			// Start the sensor which informs of the Rift's pose and motion	
+			hmd.ConfigureTracking(OVR.TrackingCaps.ovrTrackingCap_Orientation | OVR.TrackingCaps.ovrTrackingCap_MagYawCorrection | OVR.TrackingCaps.ovrTrackingCap_Position, OVR.TrackingCaps.None);
 
 
-			
+			// Create a set of layers to submit.
+			EyeTexture[] eyeTextures = new EyeTexture[2];
+			OVR.ovrResult ovrResult;
+
+
+
+
+
 			// Create DirectX Graphics Interface factory, used to create the swap chain.
 			SharpDX.DXGI.Factory factory = new SharpDX.DXGI.Factory();
 			string lines = "";
@@ -137,24 +148,29 @@ namespace BivrostPlayerPrototype
 			SharpDX.Direct3D11.Device device = null;
 
 
-			if (factory.Adapters.Any(a => a.Description.Description.ToLower().Contains("amd")))
-			{
-				Adapter adapter = factory.Adapters.First(a => a.Description.Description.ToLower().Contains("amd"));
-				//device = new SharpDX.Direct3D11.Device(adapter, DeviceCreationFlags.BgraSupport | DeviceCreationFlags.VideoSupport | DeviceCreationFlags.Debug, levels);
-				device = new SharpDX.Direct3D11.Device(adapter, DeviceCreationFlags.BgraSupport | DeviceCreationFlags.VideoSupport, levels);
-			}
-			else if (factory.Adapters.Any(a => a.Description.Description.ToLower().Contains("nvidia")))
-			{
-				Adapter adapter = factory.Adapters.First(a => a.Description.Description.ToLower().Contains("nvidia"));
-				//device = new SharpDX.Direct3D11.Device(adapter, DeviceCreationFlags.BgraSupport | DeviceCreationFlags.VideoSupport | DeviceCreationFlags.Debug, levels);
-				device = new SharpDX.Direct3D11.Device(adapter, DeviceCreationFlags.BgraSupport | DeviceCreationFlags.VideoSupport, levels);
-			}
-			else
-			{
-				// Create DirectX drawing device.
-				//device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.BgraSupport | DeviceCreationFlags.VideoSupport | DeviceCreationFlags.Debug, levels);
-				device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.BgraSupport | DeviceCreationFlags.VideoSupport, levels);
-			}
+			// TODO dopracowac wybor adaptera dla systemow z wieloma GPU
+
+			//if (factory.Adapters.Any(a => a.Description.Description.ToLower().Contains("amd")))
+			//{
+			//	Adapter adapter = factory.Adapters.First(a => a.Description.Description.ToLower().Contains("amd"));
+			//	//device = new SharpDX.Direct3D11.Device(adapter, DeviceCreationFlags.BgraSupport | DeviceCreationFlags.VideoSupport | DeviceCreationFlags.Debug, levels);
+			//	device = new SharpDX.Direct3D11.Device(adapter, DeviceCreationFlags.BgraSupport | DeviceCreationFlags.VideoSupport, levels);
+			//}
+			//else if (factory.Adapters.Any(a => a.Description.Description.ToLower().Contains("nvidia")))
+			//{
+			//	Adapter adapter = factory.Adapters.First(a => a.Description.Description.ToLower().Contains("nvidia"));
+			//	//device = new SharpDX.Direct3D11.Device(adapter, DeviceCreationFlags.BgraSupport | DeviceCreationFlags.VideoSupport | DeviceCreationFlags.Debug, levels);
+			//	device = new SharpDX.Direct3D11.Device(adapter, DeviceCreationFlags.BgraSupport | DeviceCreationFlags.VideoSupport, levels);
+			//}
+			//else
+			//{
+			//	// Create DirectX drawing device.
+			//	//device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.BgraSupport | DeviceCreationFlags.VideoSupport | DeviceCreationFlags.Debug, levels);
+			//	device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.BgraSupport | DeviceCreationFlags.VideoSupport, levels);
+			//}
+
+			// Create DirectX drawing device.
+			device = new Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.Debug, levels);
 
 
 			SharpDX.DXGI.Device1 dxdevice = device.QueryInterface<SharpDX.DXGI.Device1>();
@@ -174,9 +190,30 @@ namespace BivrostPlayerPrototype
 			
 
             // Ignore all windows events.
+			//TODO uncomment
             factory.MakeWindowAssociation(form.Handle, WindowAssociationFlags.IgnoreAll);
+			
+			DeviceContext immediateContext = device.ImmediateContext;
+			
+			
+			//Texture2DDescription swapChainTextureDescription = new Texture2DDescription()
+			//{
+			//	Width = 1920,
+			//	Height = 1080,
+			//	MipLevels = 1,
+			//	ArraySize = 1,
+			//	Format = Format.B8G8R8A8_UNorm,
+			//	Usage = ResourceUsage.Default,
+			//	SampleDescription = new SampleDescription(1, 0),
+			//	BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
+			//	CpuAccessFlags = CpuAccessFlags.None,
+			//	OptionFlags = ResourceOptionFlags.Shared
+			//};
+			
+			//Texture2D swapChainTexture = new Texture2D(device, swapChainTextureDescription);
 
-            // Define the properties of the swap chain.
+
+			// Define the properties of the swap chain.
 			SwapChainDescription swapChainDescription						= new SwapChainDescription();
 			swapChainDescription.BufferCount								= 1;
 			swapChainDescription.IsWindowed									= true;
@@ -185,8 +222,9 @@ namespace BivrostPlayerPrototype
 			swapChainDescription.Usage										= Usage.RenderTargetOutput | Usage.ShaderInput;
 			swapChainDescription.SwapEffect									= SwapEffect.Sequential;
 			swapChainDescription.Flags										= SwapChainFlags.AllowModeSwitch;
-			swapChainDescription.ModeDescription.Width						= backBufferSize.Width;
-			swapChainDescription.ModeDescription.Height						= backBufferSize.Height;
+			// TODO change to form.width and form.height
+			swapChainDescription.ModeDescription.Width						= 1920;
+			swapChainDescription.ModeDescription.Height						= 1080;
 			swapChainDescription.ModeDescription.Format						= Format.R8G8B8A8_UNorm;
 			swapChainDescription.ModeDescription.RefreshRate.Numerator		= 0;
 			swapChainDescription.ModeDescription.RefreshRate.Denominator	= 1;
@@ -198,15 +236,19 @@ namespace BivrostPlayerPrototype
 			Texture2D			backBufferTexture				= swapChain.GetBackBuffer<Texture2D>(0);				// = BackBuffer
 			RenderTargetView	backBufferRenderTargetView		= new RenderTargetView(device, backBufferTexture);		// = BackBufferRT
 
-			
+		
+
+			//Texture2D backBufferTexture = new Texture2D(device, swapChainTextureDescription);
+			//RenderTargetView backBufferRenderTargetView = new RenderTargetView(device, backBufferTexture);      // = BackBufferRT
 
 			// Create a depth buffer, using the same width and height as the back buffer.
 			Texture2DDescription depthBufferDescription = new Texture2DDescription();
 			depthBufferDescription.Format				= Format.D32_Float;
 			depthBufferDescription.ArraySize			= 1;
 			depthBufferDescription.MipLevels			= 1;
-			depthBufferDescription.Width				= backBufferSize.Width;
-			depthBufferDescription.Height				= backBufferSize.Height;
+			// TODO change to form.width and form.height
+			depthBufferDescription.Width				= 1920;
+			depthBufferDescription.Height				= 1080;
 			depthBufferDescription.SampleDescription	= new SampleDescription(1, 0);
 			depthBufferDescription.Usage				= ResourceUsage.Default;
 			depthBufferDescription.BindFlags			= BindFlags.DepthStencil;
@@ -223,64 +265,13 @@ namespace BivrostPlayerPrototype
             Texture2D			depthBufferTexture	= new Texture2D(device, depthBufferDescription);
             DepthStencilView	depthStencilView	= new DepthStencilView(device, depthBufferTexture);
 			DepthStencilState	depthStencilState	= new DepthStencilState(device, depthStencilStateDescription);
-
-			// Define a texture that will contain the rendered graphics.
-			Texture2DDescription texture2DDescription	= new Texture2DDescription();
-			texture2DDescription.Width					= renderTargetTextureSize.Width;
-			texture2DDescription.Height					= renderTargetTextureSize.Height;
-			texture2DDescription.ArraySize				= 1;
-			texture2DDescription.MipLevels				= 1;
-			texture2DDescription.Format = Format.R8G8B8A8_UNorm;
-			texture2DDescription.SampleDescription		= new SampleDescription(1, 0);
-			texture2DDescription.BindFlags				= BindFlags.ShaderResource | BindFlags.RenderTarget;
-			texture2DDescription.Usage					= ResourceUsage.Default;
-			texture2DDescription.CpuAccessFlags			= CpuAccessFlags.None;
-			//texture2DDescription.OptionFlags = ResourceOptionFlags.Shared;
-
-			// Create the texture that will contain the rendered graphics.
-			Texture2D			renderTargetTexture				= new Texture2D(device, texture2DDescription);			// = pRendertargetTexture
-			RenderTargetView	renderTargetRenderTargetView	= new RenderTargetView(device, renderTargetTexture);	// = pRendertargetTexture->TexRtv
-			ShaderResourceView	renderTargetShaderResourceView	= new ShaderResourceView(device, renderTargetTexture);	// = pRendertargetTexture->TexSv
-
-
+			Viewport viewport = new Viewport(0, 0, hmd.Resolution.Width, hmd.Resolution.Height, 0.0f, 1.0f);
+			
+			immediateContext.OutputMerger.SetDepthStencilState(depthStencilState);
+			immediateContext.OutputMerger.SetRenderTargets(depthStencilView, backBufferRenderTargetView);
+			immediateContext.Rasterizer.SetViewport(viewport);
 			
 
-		    // Update the actual size of the render target texture. 
-			// This may differ from the requested size, for certain kinds of graphics adapters.
-			renderTargetTextureSize.Width = renderTargetTexture.Description.Width;
-			renderTargetTextureSize.Height = renderTargetTexture.Description.Height;
-
-			// Define a depth buffer for the render target texture, matching the dimensions of the texture.
-			Texture2DDescription renderTargetDepthBufferDescription = new Texture2DDescription();
-			renderTargetDepthBufferDescription.Format				= Format.D32_Float;
-			renderTargetDepthBufferDescription.ArraySize			= 1;
-			renderTargetDepthBufferDescription.MipLevels			= 1;
-			renderTargetDepthBufferDescription.Width				= renderTargetTexture.Description.Width;
-			renderTargetDepthBufferDescription.Height				= renderTargetTexture.Description.Height;
-			renderTargetDepthBufferDescription.SampleDescription	= new SampleDescription(1, 0);
-			renderTargetDepthBufferDescription.Usage				= ResourceUsage.Default;
-			renderTargetDepthBufferDescription.BindFlags			= BindFlags.DepthStencil;
-			renderTargetDepthBufferDescription.CpuAccessFlags		= CpuAccessFlags.None;
-			renderTargetDepthBufferDescription.OptionFlags			= ResourceOptionFlags.None;
-
-			// Define how the depth buffer will be used to filter out objects, based on their distance from the viewer.
-			DepthStencilStateDescription renderTargetDepthStencilStateDescription	= new DepthStencilStateDescription();
-			renderTargetDepthStencilStateDescription.IsDepthEnabled					= true;
-			renderTargetDepthStencilStateDescription.DepthComparison				= Comparison.Less;
-			renderTargetDepthStencilStateDescription.DepthWriteMask					= DepthWriteMask.Zero;
-
-			// Create depth buffer for the render target texture, matching the dimensions of the texture.
-			Texture2D			renderTargetDepthBufferTexture	= new Texture2D(device, renderTargetDepthBufferDescription);
-			DepthStencilView	renderTargetDepthStencilView	= new DepthStencilView(device, renderTargetDepthBufferTexture);
-			DepthStencilState	renderTargetDepthStencilState	= new DepthStencilState(device, renderTargetDepthStencilStateDescription);
-
-			// Create a depth stencil for clearing the renderTargetDepthBufferTexture.
-			DepthStencilStateDescription clearDepthStencilStateDescription	= new DepthStencilStateDescription();
-			clearDepthStencilStateDescription.IsDepthEnabled				= true;
-			clearDepthStencilStateDescription.DepthComparison				= Comparison.Always;
-			clearDepthStencilStateDescription.DepthWriteMask				= DepthWriteMask.All;
-
-			DepthStencilState	clearDepthStencilState	= new DepthStencilState(device, clearDepthStencilStateDescription);
 
 			#region Vertex and pixel shader
 			// Create vertex shader.
@@ -310,18 +301,33 @@ namespace BivrostPlayerPrototype
             Buffer contantBuffer = new Buffer(device, Utilities.SizeOf<Matrix>(), ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
             // Setup the immediate context to use the shaders and model we defined.
-            DeviceContext immediateContext						= device.ImmediateContext;
+            //DeviceContext immediateContext						= device.ImmediateContext;
             immediateContext.InputAssembler.InputLayout			= new InputLayout(device, shaderSignature, inputElements);
             immediateContext.InputAssembler.PrimitiveTopology	= PrimitiveTopology.TriangleList;
             immediateContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(vertexBuffer, sizeof(float)*4*2, 0));
             immediateContext.VertexShader.SetConstantBuffer(0, contantBuffer);
             immediateContext.VertexShader.Set(vertexShader);
             immediateContext.PixelShader.Set(pixelShader);
+
+			// Retrieve the DXGI device, in order to set the maximum frame latency.
+			using (SharpDX.DXGI.Device1 dxgiDevice = device.QueryInterface<SharpDX.DXGI.Device1>())
+			{
+				dxgiDevice.MaximumFrameLatency = 1;
+			}
+
 			#endregion
 
 
 
 			#region Media Playback configuration
+
+			var resourceL =  videoTextureL.QueryInterface<SharpDX.DXGI.Resource>();
+			textureL = device.OpenSharedResource<Texture2D>(resourceL.SharedHandle);
+
+			var resourceR = videoTextureR.QueryInterface<SharpDX.DXGI.Resource>();
+			textureR = device.OpenSharedResource<Texture2D>(resourceR.SharedHandle);
+
+			/*
 
 			// MEDIA PLAYBACK
 
@@ -364,7 +370,7 @@ namespace BivrostPlayerPrototype
 			};
 
 			mediaEngineEx = mediaEngine.QueryInterface<MediaEngineEx>();
-			if (fileName.Contains("http://"))
+			if (fileName.Contains("http://") || fileName.Contains("https://"))
 			{
 				var webStream = new System.Net.WebClient().OpenRead(fileName);
 				var stream = new ByteStream(webStream);
@@ -401,8 +407,7 @@ namespace BivrostPlayerPrototype
 			_stereoVideo = videoAspect < 1.5;
 			h = _stereoVideo ? h / 2 : h;
 
-
-			var textureL = new SharpDX.Direct3D11.Texture2D(device, new Texture2DDescription()
+			Texture2DDescription frameTextureDescription = new Texture2DDescription()
 			{
 				Width = w,
 				Height = h,
@@ -414,26 +419,20 @@ namespace BivrostPlayerPrototype
 				BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
 				CpuAccessFlags = CpuAccessFlags.None,
 				OptionFlags = ResourceOptionFlags.Shared
-			});
+			};
 
-			var textureR = new SharpDX.Direct3D11.Texture2D(device, new Texture2DDescription()
-			{
-				Width = w,
-				Height = h,
-				MipLevels = 1,
-				ArraySize = 1,
-				Format = Format.B8G8R8A8_UNorm,
-				Usage = ResourceUsage.Default,
-				SampleDescription = new SampleDescription(1, 0),
-				BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
-				CpuAccessFlags = CpuAccessFlags.None,
-				OptionFlags = ResourceOptionFlags.Shared
-			});
+
+			var textureL = new SharpDX.Direct3D11.Texture2D(device, frameTextureDescription);
+			var textureR = new SharpDX.Direct3D11.Texture2D(device, frameTextureDescription);
+
+			
 
 			TextureCreated(textureL);
 
 			var surfaceL = textureL.QueryInterface<SharpDX.DXGI.Surface>();
 			var surfaceR = textureR.QueryInterface<SharpDX.DXGI.Surface>();
+
+			bool surfaceFirst = true;
 
 			// Play the music
 			mediaEngineEx.Loop = Loop;
@@ -442,77 +441,103 @@ namespace BivrostPlayerPrototype
 
 			if(autoPlay) { 
 				mediaEngineEx.Play();
-				//mediaEngineEx.Volume = 0;
+				mediaEngineEx.Volume = 0;
 				isPlaying = true;
 			}
 
 			long ts;
-
+			*/
 			#endregion
 
 
-			OVR.FovPort[] eyeFov = new OVR.FovPort[]
-			{ 
-				hmd.DefaultEyeFov[0], 
-				hmd.DefaultEyeFov[1] 
-			};
+			#region configure hmd layers and rendering
 
-			OVR.Recti[] eyeRenderViewport	= new OVR.Recti[2];
-			eyeRenderViewport[0].Position	= new OVR.Vector2i(0, 0);
-			eyeRenderViewport[0].Size		= new OVR.Sizei(renderTargetTextureSize.Width/2, renderTargetTextureSize.Height);
-			eyeRenderViewport[1].Position	= new OVR.Vector2i((renderTargetTextureSize.Width + 1) / 2, 0);
-			eyeRenderViewport[1].Size		= eyeRenderViewport[0].Size;
+			Layers layers = new Layers();
+			LayerEyeFov layerEyeFov = layers.AddLayerEyeFov();
 
-			// Query D3D texture data.
-			OVR.D3D11.D3D11TextureData[] eyeTexture	= new OVR.D3D11.D3D11TextureData[2];
-			eyeTexture[0].Header.API				= OVR.RenderAPIType.D3D11;
-			eyeTexture[0].Header.TextureSize		= renderTargetTextureSize;
-			eyeTexture[0].Header.RenderViewport		= eyeRenderViewport[0];
-			eyeTexture[0].Texture					= renderTargetTexture.NativePointer;
-			eyeTexture[0].ShaderResourceView		= renderTargetShaderResourceView.NativePointer;
+			
 
-			// Right eye uses the same texture, but different rendering viewport.
-			eyeTexture[1]						= eyeTexture[0];
-			eyeTexture[1].Header.RenderViewport = eyeRenderViewport[1];
-
-			// Configure d3d11.
-			OVR.D3D11.D3D11ConfigData d3d11cfg	= new OVR.D3D11.D3D11ConfigData();
-			d3d11cfg.Header.API						= OVR.RenderAPIType.D3D11;
-			d3d11cfg.Header.BackBufferSize		= new OVR.Sizei(hmd.Resolution.Width, hmd.Resolution.Height);
-			d3d11cfg.Header.Multisample				= 1;
-			d3d11cfg.Device							= device.NativePointer;
-			d3d11cfg.DeviceContext					= immediateContext.NativePointer;
-			d3d11cfg.BackBufferRenderTargetView		= backBufferRenderTargetView.NativePointer;
-			d3d11cfg.SwapChain						= swapChain.NativePointer;
-
-			OVR.EyeRenderDesc[]	eyeRenderDesc = hmd.ConfigureRendering(d3d11cfg, 
-				//OVR.DistortionCaps.None
-				OVR.DistortionCaps.ovrDistortionCap_Chromatic
-				| OVR.DistortionCaps.ovrDistortionCap_Vignette
-				| OVR.DistortionCaps.ovrDistortionCap_TimeWarp
-				| OVR.DistortionCaps.ovrDistortionCap_Overdrive
-				, eyeFov);
-			if(eyeRenderDesc == null)
-				return;
-
-			// Specify which head tracking capabilities to enable.
-			hmd.SetEnabledCaps(OVR.HmdCaps.LowPersistence | OVR.HmdCaps.DynamicPrediction);
-
-			// Start the sensor which informs of the Rift's pose and motion
-			hmd.ConfigureTracking(OVR.TrackingCaps.ovrTrackingCap_Orientation | OVR.TrackingCaps.ovrTrackingCap_MagYawCorrection | OVR.TrackingCaps.ovrTrackingCap_Position, OVR.TrackingCaps.None);
-
-
-			// Get HMD output
-			var riftAdapter = (Adapter)dxdevice.Adapter;
-			var hmdOutput = riftAdapter.Outputs.FirstOrDefault(o => hmd.DisplayDeviceName.StartsWith(o.Description.DeviceName, StringComparison.OrdinalIgnoreCase));
-			if (hmdOutput != null)
+			for (int eyeIndex = 0; eyeIndex < 2; eyeIndex++)
 			{
-				// Set game to fullscreen on rift
-				var riftDescription = swapChain.Description.ModeDescription;
-				swapChain.ResizeTarget(ref riftDescription);
-				swapChain.SetFullscreenState(true, hmdOutput);
+				OVR.EyeType eye = (OVR.EyeType)eyeIndex;
+				EyeTexture eyeTexture = new EyeTexture();
+				eyeTextures[eyeIndex] = eyeTexture;
+
+				// Retrieve size and position of the texture for the current eye.
+				eyeTexture.FieldOfView = hmd.DefaultEyeFov[eyeIndex];
+				eyeTexture.TextureSize = hmd.GetFovTextureSize(eye, hmd.DefaultEyeFov[eyeIndex], 1.0f);
+				eyeTexture.RenderDescription = hmd.GetRenderDesc(eye, hmd.DefaultEyeFov[eyeIndex]);
+				eyeTexture.HmdToEyeViewOffset = eyeTexture.RenderDescription.HmdToEyeViewOffset;
+				eyeTexture.ViewportSize.Position = new OVR.Vector2i(0, 0);
+				eyeTexture.ViewportSize.Size = eyeTexture.TextureSize;
+				eyeTexture.Viewport = new Viewport(0, 0, eyeTexture.TextureSize.Width, eyeTexture.TextureSize.Height, 0.0f, 1.0f);
+
+				// Define a texture at the size recommended for the eye texture.
+				eyeTexture.Texture2DDescription = new Texture2DDescription();
+				eyeTexture.Texture2DDescription.Width = eyeTexture.TextureSize.Width;
+				eyeTexture.Texture2DDescription.Height = eyeTexture.TextureSize.Height;
+				eyeTexture.Texture2DDescription.ArraySize = 1;
+				eyeTexture.Texture2DDescription.MipLevels = 1;
+				eyeTexture.Texture2DDescription.Format = Format.R8G8B8A8_UNorm;
+				eyeTexture.Texture2DDescription.SampleDescription = new SampleDescription(1, 0);
+				eyeTexture.Texture2DDescription.Usage = ResourceUsage.Default;
+				eyeTexture.Texture2DDescription.CpuAccessFlags = CpuAccessFlags.None;
+				eyeTexture.Texture2DDescription.BindFlags = BindFlags.ShaderResource | BindFlags.RenderTarget;
+
+				// Convert the SharpDX texture description to the native Direct3D texture description.
+				OVR.D3D11.D3D11_TEXTURE2D_DESC swapTextureDescriptionD3D11 = SharpDXHelpers.CreateTexture2DDescription(eyeTexture.Texture2DDescription);
+
+				// Create a SwapTextureSet, which will contain the textures to render to, for the current eye.
+				ovrResult = hmd.CreateSwapTextureSetD3D11(device.NativePointer, ref swapTextureDescriptionD3D11, out eyeTexture.SwapTextureSet);
+				WriteErrorDetails(oculus, ovrResult, "Failed to create swap texture set.");
 				
+
+				// Create room for each DirectX texture in the SwapTextureSet.
+				eyeTexture.Textures = new Texture2D[eyeTexture.SwapTextureSet.TextureCount];
+				eyeTexture.RenderTargetViews = new RenderTargetView[eyeTexture.SwapTextureSet.TextureCount];
+
+				// Create a texture 2D and a render target view, for each unmanaged texture contained in the SwapTextureSet.
+				for (int textureIndex = 0; textureIndex < eyeTexture.SwapTextureSet.TextureCount; textureIndex++)
+				{
+					// Retrieve the current textureData object.
+					OVR.D3D11.D3D11TextureData textureData = eyeTexture.SwapTextureSet.Textures[textureIndex];
+
+					// Create a managed Texture2D, based on the unmanaged texture pointer.
+					eyeTexture.Textures[textureIndex] = new Texture2D(textureData.Texture);
+
+					// Create a render target view for the current Texture2D.
+					eyeTexture.RenderTargetViews[textureIndex] = new RenderTargetView(device, eyeTexture.Textures[textureIndex]);
+				}
+
+				// Define the depth buffer, at the size recommended for the eye texture.
+				eyeTexture.DepthBufferDescription = new Texture2DDescription();
+				eyeTexture.DepthBufferDescription.Format = Format.D32_Float;
+				eyeTexture.DepthBufferDescription.Width = eyeTexture.TextureSize.Width;
+				eyeTexture.DepthBufferDescription.Height = eyeTexture.TextureSize.Height;
+				eyeTexture.DepthBufferDescription.ArraySize = 1;
+				eyeTexture.DepthBufferDescription.MipLevels = 1;
+				eyeTexture.DepthBufferDescription.SampleDescription = new SampleDescription(1, 0);
+				eyeTexture.DepthBufferDescription.Usage = ResourceUsage.Default;
+				eyeTexture.DepthBufferDescription.BindFlags = BindFlags.DepthStencil;
+				eyeTexture.DepthBufferDescription.CpuAccessFlags = CpuAccessFlags.None;
+				eyeTexture.DepthBufferDescription.OptionFlags = ResourceOptionFlags.None;
+
+				// Create the depth buffer.
+				eyeTexture.DepthBuffer = new Texture2D(device, eyeTexture.DepthBufferDescription);
+				eyeTexture.DepthStencilView = new DepthStencilView(device, eyeTexture.DepthBuffer);
+
+				// Specify the texture to show on the HMD.
+				layerEyeFov.ColorTexture[eyeIndex] = eyeTexture.SwapTextureSet.SwapTextureSetPtr;
+				layerEyeFov.Viewport[eyeIndex].Position = new OVR.Vector2i(0, 0);
+				layerEyeFov.Viewport[eyeIndex].Size = eyeTexture.TextureSize;
+				layerEyeFov.Fov[eyeIndex] = eyeTexture.FieldOfView;
+				layerEyeFov.Header.Flags = OVR.LayerFlags.None;
 			}
+
+
+
+			#endregion
+
 
 
 
@@ -520,22 +545,24 @@ namespace BivrostPlayerPrototype
 
 			SharpDX.Toolkit.Graphics.GraphicsDevice gd = SharpDX.Toolkit.Graphics.GraphicsDevice.New(device);
 
-			var basicEffect = new SharpDX.Toolkit.Graphics.BasicEffect(gd);
+			var basicEffectL = new SharpDX.Toolkit.Graphics.BasicEffect(gd);
 
-			basicEffect.PreferPerPixelLighting = false;
-			basicEffect.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(gd, textureL);
+			basicEffectL.PreferPerPixelLighting = false;
+			basicEffectL.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(gd, textureL);
 			
-			basicEffect.TextureEnabled = true;
-			basicEffect.LightingEnabled = false;
+			basicEffectL.TextureEnabled = true;
+			basicEffectL.LightingEnabled = false;
 
-			var basicEffect2 = new SharpDX.Toolkit.Graphics.BasicEffect(gd);
+			var basicEffectR = new SharpDX.Toolkit.Graphics.BasicEffect(gd);
 
-			basicEffect2.PreferPerPixelLighting = false;
-			basicEffect2.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(gd, textureR);
+			basicEffectR.PreferPerPixelLighting = false;
+			basicEffectR.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(gd, textureR);
 
-			basicEffect2.TextureEnabled = true;
-			basicEffect2.LightingEnabled = false;
-			
+			basicEffectR.TextureEnabled = true;
+			basicEffectR.LightingEnabled = false;
+
+
+
 			var primitive = SharpDX.Toolkit.Graphics.GeometricPrimitive.Sphere.New(gd, radius, 32, true);
 
 
@@ -563,118 +590,127 @@ namespace BivrostPlayerPrototype
 				Bottom = 1f
 			};
 
-			Task.Factory.StartNew(() =>
-			{
-				while (!endPlayer && !AbortSignal) { 
-					if (mediaEngine.OnVideoStreamTick(out ts))
-					{
-						if (_stereoVideo) { 
-							mediaEngine.TransferVideoFrame(surfaceL, topRect, new SharpDX.Rectangle(0, 0, w, h), null);
-							mediaEngine.TransferVideoFrame(surfaceR, bottomRect, new SharpDX.Rectangle(0, 0, w, h), null);
-						} else
-						{
-							mediaEngine.TransferVideoFrame(surfaceL, null, new SharpDX.Rectangle(0, 0, w, h), null);
-						}
-					}
-					Thread.Sleep(10);
-				}
-			});
-			
+			ManualResetEvent waitForOculus = new ManualResetEvent(false);
 
-            RenderLoop.Run(form, () =>
+			//Task.Factory.StartNew(() =>
+			//{
+			//	while (!endPlayer && !AbortSignal)
+			//	{
+					
+
+			//		if (!mediaEngine.IsPaused && mediaEngine.OnVideoStreamTick(out ts))
+			//		{
+			//			//waitForOculus.WaitOne();
+
+			//			if (_stereoVideo)
+			//			{
+			//				mediaEngine.TransferVideoFrame(textureL, topRect, new SharpDX.Rectangle(0, 0, w, h), null);
+			//				Thread.Sleep(1);
+			//				mediaEngine.TransferVideoFrame(textureR, bottomRect, new SharpDX.Rectangle(0, 0, w, h), null);
+			//			}
+			//			else
+			//			{
+			//				mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
+			//			}
+						
+			//		}
+			//		Thread.Sleep(1);
+			//	}
+			//});
+
+			RenderLoop.Run(form, () =>
+			//Task.Factory.StartNew(() =>
             {
 				if (AbortSignal) form.Close();
+				//while (!AbortSignal)
+				//{
+
+					OVR.Vector3f[] hmdToEyeViewOffsets = { eyeTextures[0].HmdToEyeViewOffset, eyeTextures[1].HmdToEyeViewOffset };
+					OVR.FrameTiming frameTiming = hmd.GetFrameTiming(0);
+					OVR.TrackingState trackingState = hmd.GetTrackingState(frameTiming.DisplayMidpointSeconds);
+					OVR.Posef[] eyePoses = new OVR.Posef[2];
 
 
-				frames++;
-				timeSinceStart = (float) (DateTime.Now-startTime).TotalSeconds;
-				deltaTime = timeSinceStart - last;
-				last = timeSinceStart;
 
-				OculusWrap.OVR.HSWDisplayState hasWarningState;
-				hmd.GetHSWDisplayState(out hasWarningState);
+					// Calculate the position and orientation of each eye.
+					oculus.CalcEyePoses(trackingState.HeadPose.ThePose, hmdToEyeViewOffsets, ref eyePoses);
 
-				// Remove the health and safety warning.
-				if(hasWarningState.Displayed == 1)
-					hmd.DismissHSWDisplay();
-
-				OVR.FrameTiming frameTiming = hmd.BeginFrame(0); 
-
-                // Clear views
-				immediateContext.OutputMerger.SetDepthStencilState(clearDepthStencilState);
-                immediateContext.ClearDepthStencilView(renderTargetDepthStencilView, DepthStencilClearFlags.Depth, 1.0f, 0);
-                immediateContext.ClearRenderTargetView(renderTargetRenderTargetView, Color.CornflowerBlue);
-
-				float			bodyYaw				= 3.141592f;
-				OVR.Vector3f	headPos				= new OVR.Vector3f(0.0f, hmd.GetFloat(OVR.OVR_KEY_EYE_HEIGHT, 1.6f), -5.0f);
-				Viewport		viewport			= new Viewport(0, 0, renderTargetTexture.Description.Width, renderTargetTexture.Description.Height, 0.0f, 1.0f);
-				OVR.Posef[]		eyeRenderPose		= new OVR.Posef[2];
-
-				immediateContext.OutputMerger.SetDepthStencilState(renderTargetDepthStencilState);
-				immediateContext.OutputMerger.SetRenderTargets(renderTargetDepthStencilView, renderTargetRenderTargetView);
-				immediateContext.Rasterizer.SetViewport(viewport);
-
-				
-
-				for (int eyeIndex=0; eyeIndex<OVR.Eye_Count; eyeIndex++)
-				{
-					OVR.EyeType eye = hmd.EyeRenderOrder[eyeIndex];
-
-					eyeRenderPose[(int) eye] = hmd.GetHmdPosePerEye(eye);
+					frames++;
+					timeSinceStart = (float)(DateTime.Now - startTime).TotalSeconds;
+					deltaTime = timeSinceStart - last;
+					last = timeSinceStart;
 
 
-					Quaternion	rotationQuaternion	= SharpDXHelpers.ToQuaternion(eyeRenderPose[(int) eye].Orientation);
-					Matrix viewMatrix = Matrix.RotationQuaternion(rotationQuaternion);
-					viewMatrix.Transpose();
-					
-					Matrix		projectionMatrix	= Matrix.PerspectiveFovRH((float)(90f * Math.PI / 180f), (float)hmd.Resolution.Width / 2f / hmd.Resolution.Height, 0.001f, 100.0f);
-					viewport	= new Viewport(eyeRenderViewport[(int) eye].Position.x, eyeRenderViewport[(int) eye].Position.y, eyeRenderViewport[(int) eye].Size.Width, eyeRenderViewport[(int) eye].Size.Height, 0.0f, 1.0f);
-					immediateContext.Rasterizer.SetViewport(viewport);
+					for (int eyeIndex = 0; eyeIndex < 2; eyeIndex++)
+					{
+						OVR.EyeType eye = (OVR.EyeType)eyeIndex;
+						EyeTexture eyeTexture = eyeTextures[eyeIndex];
 
-					LookChanged(viewMatrix);
+						layerEyeFov.RenderPose[eyeIndex] = eyePoses[eyeIndex];
 
-					basicEffect.World = Matrix.Identity;
-					basicEffect.View = viewMatrix;
-					basicEffect.Projection = projectionMatrix;
+						// Retrieve the index of the active texture and select the next texture as being active next.
+						int textureIndex = eyeTexture.SwapTextureSet.CurrentIndex++;
 
-					if (_stereoVideo) { 
-						basicEffect2.World = Matrix.Identity;
-						basicEffect2.View = viewMatrix;
-						basicEffect2.Projection = projectionMatrix;
+						immediateContext.OutputMerger.SetRenderTargets(eyeTexture.DepthStencilView, eyeTexture.RenderTargetViews[textureIndex]);
+						immediateContext.ClearRenderTargetView(eyeTexture.RenderTargetViews[textureIndex], Color.Black);
+						immediateContext.ClearDepthStencilView(eyeTexture.DepthStencilView, DepthStencilClearFlags.Depth | DepthStencilClearFlags.Stencil, 1.0f, 0);
+
+						Viewport viewportCorrrected = eyeTexture.Viewport;
+						//viewportCorrrected.
+						immediateContext.Rasterizer.SetViewport(viewportCorrrected);
+
+						Quaternion rotationQuaternion = SharpDXHelpers.ToQuaternion(eyePoses[eyeIndex].Orientation);
+						Matrix viewMatrix = Matrix.RotationQuaternion(rotationQuaternion);
+						viewMatrix.Transpose();
+
+						Matrix projectionMatrix = Matrix.PerspectiveFovRH((float)(90f * Math.PI / 180f), (float)hmd.Resolution.Width / 2f / hmd.Resolution.Height, 0.001f, 100.0f);
+
+						LookChanged(viewMatrix);
+
+						basicEffectL.World = Matrix.Identity;
+						basicEffectL.View = viewMatrix;
+						basicEffectL.Projection = projectionMatrix;
+
+						if (_stereoVideo)
+						{
+							basicEffectR.World = Matrix.Identity;
+							basicEffectR.View = viewMatrix;
+							basicEffectR.Projection = projectionMatrix;
+						}
+
+						if (_stereoVideo)
+						{
+							if (eyeIndex == 0)
+								primitive.Draw(basicEffectL);
+							if (eyeIndex == 1)
+								primitive.Draw(basicEffectR);
+						}
+						else
+							primitive.Draw(basicEffectL);
 					}
 
-					if (_stereoVideo)
-					{
-						if (eyeIndex == 0)
-							primitive.Draw(basicEffect2);
-						if (eyeIndex == 1)
-							primitive.Draw(basicEffect);
-					} else
-						primitive.Draw(basicEffect);
-				}
-				
-				hmd.EndFrame(eyeRenderPose, eyeTexture);				
-			
-            });
+					hmd.SubmitFrame(0, layers);
+				//}
+			});
 
 			isPlaying = false;
 
 			mediaEngine.Shutdown();
-			endPlayer = true;
-			mediaEngine.Dispose();
+			//endPlayer = true;
+			//mediaEngine.Dispose();
 
-			mediaEngineEx.Dispose();
+			//mediaEngineEx.Dispose();
 
 			MediaManager.Shutdown();
 
-			surfaceL.Dispose();
-			surfaceR.Dispose();
+			//surfaceL.Dispose();
+			//surfaceR.Dispose();
 
 			textureL.Dispose();
 			textureR.Dispose();
 
-            // Release all resources
-            shaderSignature.Dispose();
+			// Release all resources
+			shaderSignature.Dispose();
             vertexShaderByteCode.Dispose();
             vertexShader.Dispose();
             pixelShaderByteCode.Dispose();
@@ -682,20 +718,48 @@ namespace BivrostPlayerPrototype
             vertexBuffer.Dispose();
             inputLayout.Dispose();
             contantBuffer.Dispose();
-            depthBufferTexture.Dispose();
-            depthStencilView.Dispose();
-            backBufferRenderTargetView.Dispose();
-            backBufferTexture.Dispose();
-            immediateContext.ClearState();
+			depthBufferTexture.Dispose();
+			depthStencilView.Dispose();
+			backBufferRenderTargetView.Dispose();
+			backBufferTexture.Dispose();
+			immediateContext.ClearState();
             immediateContext.Flush();
-			//device.Dispose();
+			device.Dispose();
 			immediateContext.Dispose();
 			swapChain.Dispose();
-            factory.Dispose();
+			factory.Dispose();
 			hmd.Dispose();
 			oculus.Dispose();
 
+
         }
+
+		/// <summary>
+		/// Write out any error details received from the Oculus SDK, into the debug output window.
+		/// 
+		/// Please note that writing text to the debug output window is a slow operation and will affect performance,
+		/// if too many messages are written in a short timespan.
+		/// </summary>
+		/// <param name="oculus">OculusWrap object for which the error occurred.</param>
+		/// <param name="result">Error code to write in the debug text.</param>
+		/// <param name="message">Error message to include in the debug text.</param>
+		public static void WriteErrorDetails(Wrap oculus, OVR.ovrResult result, string message)
+		{
+			if (result >= OVR.ovrResult.Success)
+				return;
+
+			// Retrieve the error message from the last occurring error.
+			OVR.ovrErrorInfo errorInformation = oculus.GetLastError();
+
+
+
+			string formattedMessage = string.Format("{0}. Message: {1} (Error code={2})", message, errorInformation.ErrorString, errorInformation.Result);
+
+			Trace.WriteLine(formattedMessage);
+
+
+			throw new Exception(formattedMessage);
+		}
 
 		public static void Close()
 		{

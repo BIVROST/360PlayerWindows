@@ -1,0 +1,55 @@
+﻿<Window x:Class="PlayerUI.ConfigUI.ConfigurationView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:PlayerUI.ConfigUI"
+		xmlns:cal="http://www.caliburnproject.org"
+        mc:Ignorable="d"
+        Title="ConfigurationView" Height="300" Width="300" MinWidth="450" MinHeight="450" WindowStyle="ToolWindow" WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
+    <Grid Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="42" />
+        </Grid.RowDefinitions>
+
+        <TabControl Margin="8,8,8,0">
+            
+			<TabItem Header="Basic">
+                <ScrollViewer>
+                    <StackPanel>
+
+                        <ListBox ItemsSource="{Binding ConfigItems}" Margin="8">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <ContentControl cal:View.Model="{Binding}" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <Button x:Name="ShowAdvanced" Content="Advanced" Width="80" Height="28" HorizontalAlignment="Left" Margin="8,2" Visibility="Hidden"/>
+
+
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="Advanced">
+                <ListBox ItemsSource="{Binding ConfigAdvancedItems}" Margin="8" Visibility="Collapsed" x:Name="AdvancedOptionListBox">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <ContentControl cal:View.Model="{Binding}" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </TabItem>
+			
+        </TabControl>
+
+        <StackPanel Orientation="Horizontal" Grid.Row="1" HorizontalAlignment="Right">
+            <Button x:Name="Save" Content="OK" Width="80" Height="28" Margin="8,2,4,2"/>
+            <Button x:Name="Cancel" Content="Cancel" Width="80" Height="28" Margin="4,2,8,2"/>
+        </StackPanel>
+    </Grid>
+</Window>

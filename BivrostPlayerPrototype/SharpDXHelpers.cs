@@ -1,5 +1,6 @@
 ﻿using OculusWrap;
 using SharpDX;
+using SharpDX.Direct3D11;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -47,5 +48,28 @@ namespace BivrostPlayerPrototype
 		{
 			return new Quaternion(ovrQuatf.X, ovrQuatf.Y, ovrQuatf.Z, ovrQuatf.W);
 		}
-	}	
+
+		/// <summary>
+		/// Creates a Direct3D texture description, based on the SharpDX texture description.
+		/// </summary>
+		/// <param name="texture2DDescription">SharpDX texture description.</param>
+		/// <returns>Direct3D texture description, based on the SharpDX texture description.</returns>
+		public static OVR.D3D11.D3D11_TEXTURE2D_DESC CreateTexture2DDescription(Texture2DDescription texture2DDescription)
+		{
+			OVR.D3D11.D3D11_TEXTURE2D_DESC d3d11DTexture = new OVR.D3D11.D3D11_TEXTURE2D_DESC();
+			d3d11DTexture.Width = (uint)texture2DDescription.Width;
+			d3d11DTexture.Height = (uint)texture2DDescription.Height;
+			d3d11DTexture.MipLevels = (uint)texture2DDescription.MipLevels;
+			d3d11DTexture.ArraySize = (uint)texture2DDescription.ArraySize;
+			d3d11DTexture.Format = (OVR.D3D11.DXGI_FORMAT)texture2DDescription.Format;
+			d3d11DTexture.SampleDesc.Count = (uint)texture2DDescription.SampleDescription.Count;
+			d3d11DTexture.SampleDesc.Quality = (uint)texture2DDescription.SampleDescription.Quality;
+			d3d11DTexture.Usage = (OVR.D3D11.D3D11_USAGE)texture2DDescription.Usage;
+			d3d11DTexture.BindFlags = (uint)texture2DDescription.BindFlags;
+			d3d11DTexture.CPUAccessFlags = (uint)texture2DDescription.CpuAccessFlags;
+			d3d11DTexture.MiscFlags = (uint)texture2DDescription.OptionFlags;
+
+			return d3d11DTexture;
+		}
+	}
 }

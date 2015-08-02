@@ -152,8 +152,30 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="AboutView.xaml.cs">
+      <DependentUpon>AboutView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="AboutViewModel.cs" />
     <Compile Include="ApiServer.cs" />
     <Compile Include="BivrostBootstrapper.cs" />
+    <Compile Include="ConfigUI\BoolConfigItemView.xaml.cs">
+      <DependentUpon>BoolConfigItemView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ConfigUI\BoolConfigItemViewModel.cs" />
+    <Compile Include="ConfigUI\ConfigItemBase.cs" />
+    <Compile Include="ConfigUI\ConfigurationView.xaml.cs">
+      <DependentUpon>ConfigurationView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ConfigUI\ConfigurationViewModel.cs" />
+    <Compile Include="ConfigUI\PathConfigItemView.xaml.cs">
+      <DependentUpon>PathConfigItemView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ConfigUI\PathConfigItemViewModel.cs" />
+    <Compile Include="ConfigUI\SettingsPropertyAttribute.cs" />
+    <Compile Include="ConfigUI\StringConfigItemView.xaml.cs">
+      <DependentUpon>StringConfigItemView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ConfigUI\StringConfigItemViewModel.cs" />
     <Compile Include="DialogHelper.cs" />
     <Compile Include="DummyWindowView.xaml.cs">
       <DependentUpon>DummyWindowView.xaml</DependentUpon>
@@ -165,10 +187,15 @@
     <Compile Include="EventShellViewModel.cs" />
     <Compile Include="Logic\Logic.cs" />
     <Compile Include="Logic\Settings.cs" />
+    <Compile Include="Oculus\OculusPlayback.cs" />
     <Compile Include="SettingsWindowView.xaml.cs">
       <DependentUpon>SettingsWindowView.xaml</DependentUpon>
     </Compile>
     <Compile Include="SettingsWindowViewModel.cs" />
+    <Compile Include="TestWindowView.xaml.cs">
+      <DependentUpon>TestWindowView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="TestWindowViewModel.cs" />
     <Compile Include="Tools\RegistryBase.cs" />
     <Compile Include="Tools\RegistryContext.cs" />
     <Compile Include="WPF\Disposer.cs" />
@@ -193,6 +220,26 @@
     </Compile>
     <Compile Include="YoutubeAddressViewModel.cs" />
     <Compile Include="YoutubeEngine.cs" />
+    <Page Include="AboutView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ConfigUI\BoolConfigItemView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ConfigUI\ConfigurationView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ConfigUI\PathConfigItemView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ConfigUI\StringConfigItemView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="DummyWindowView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -206,6 +253,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="ShellView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="TestWindowView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -265,6 +316,12 @@
     <Content Include="Graphics\back.svg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Graphics\bivrost.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Graphics\bivrost_blue.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Graphics\check_blue.svg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -282,6 +339,12 @@
       <SubType>Designer</SubType>
     </Content>
     <Content Include="Graphics\display.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Graphics\fullscreen.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Graphics\fullscreen_blue.svg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Graphics\menu_blue.svg">

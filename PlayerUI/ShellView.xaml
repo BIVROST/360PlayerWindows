@@ -120,16 +120,19 @@
 
 		<DockPanel Grid.Row="0" Grid.RowSpan="2" Background="Transparent" VerticalAlignment="Top" x:Name="topMenuPanel">
 			<Menu DockPanel.Dock="Top" Height="22" Padding="2">
-				<MenuItem Header="Plik">
-					<MenuItem Header="Otwórz" x:Name="OpenFile"/>
-					<MenuItem Header="Otwórz link Youtube" x:Name="Youtube"/>
+				<MenuItem Header="File">
+					<MenuItem Header="Open file" x:Name="OpenFile"/>
+					<MenuItem Header="Open Youtube link" x:Name="Youtube"/>
 					<Separator />
-					<MenuItem Header="Zakończ" x:Name="Quit"/>
+					<MenuItem Header="Quit" x:Name="Quit"/>
 				</MenuItem>
-				<MenuItem Header="Opcje">
-					<MenuItem Header="Ustawienia" cal:Message.Attach="[Event Click] = [Action OpenSettings]"/>
+				<MenuItem Header="Options">
+					<MenuItem Header="Settings" cal:Message.Attach="[Event Click] = [Action OpenSettings]"/>
 				</MenuItem>
-				<MenuItem Header="O programie"></MenuItem>
+				<MenuItem Header="Help">
+					<Separator />
+                    <MenuItem Header="About Bivrost Player" cal:Message.Attach="[Event Click] = [Action OpenAbout]"/>
+                </MenuItem>
 			</Menu>
 
 		</DockPanel>
@@ -299,7 +302,7 @@
 					</Button.Template>
 				</Button>
 
-				<Button x:Name="Test5"  Width="36" Height="36" Margin="4 0 20 0">
+				<Button x:Name="Test5"  Width="36" Height="36" Margin="4 0">
 					<Button.Template>
 						<ControlTemplate TargetType="{x:Type Button}">
 							<Grid>
@@ -319,7 +322,28 @@
 						</ControlTemplate>
 					</Button.Template>
 				</Button>
-			</StackPanel>
+
+                <Button x:Name="ToggleFullscreen"  Width="36" Height="36" Margin="4 0 20 0">
+                    <Button.Template>
+                        <ControlTemplate TargetType="{x:Type Button}">
+                            <Grid>
+                                <svgc:SvgViewbox Name="Normal" Source="Graphics/fullscreen.svg"/>
+                                <svgc:SvgViewbox Name="Hover" Source="Graphics/fullscreen_blue.svg" Visibility="Hidden"/>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+                                    <Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+                                    <Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </StackPanel>
 		</Grid>
 	</Grid>
 </Window>

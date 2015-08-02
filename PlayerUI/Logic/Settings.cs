@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.IO;
+using PlayerUI.ConfigUI;
 
 namespace PlayerUI
 {
@@ -32,7 +33,6 @@ namespace PlayerUI
 			}
 			else
 			{
-				Defauls();
 				Save();
 			}
 		}
@@ -45,32 +45,26 @@ namespace PlayerUI
 		#endregion
 
 
-		public bool EventMode { get; set; }
-		public string EventModeSingleFile { get; set; }
-		public bool EventModeAutoPlay { get; set; }
-		public bool EventModePauseAtStartup { get; set; }
-		public string EventModeBackgroundColor { get; set; }
-		public bool EventModeLoop { get; set; }
+		public bool EnableRemoteServer { get; set; } = false;
+		public bool EventMode { get; set; } = false;		
+		public string EventModeSingleFile { get; set; } = "";		
+		public bool EventModeAutoPlay { get; set; } = true;
+		public bool EventModePauseAtStartup { get; set; } = true;
+		public string EventModeBackgroundColor { get; set; } = "000000";
+		public bool EventModeLoop { get; set; } = true;
 
-		public string AutoPlayFile { get; set; }
-		public bool AutoPlay { get; set; }
-		public bool AutoLoad { get; set; }
+		public string AutoPlayFile { get; set; } = "";
+		public bool AutoPlay { get; set; } = true;
+		public bool AutoLoad { get; set; } = true;
 
-		public bool StartInFullScreen { get; set; }
+		[SettingsProperty("Start in fullscreen", ConfigItemType.Bool)]
+		public bool StartInFullScreen { get; set; } = false;
 
-		public void Defauls()
-		{
-			EventMode = false;
-			EventModeSingleFile = "";
-			EventModeAutoPlay = true;
-			EventModePauseAtStartup = true;
-			EventModeBackgroundColor = "000000";
-			EventModeLoop = true;
+		[SettingsProperty("Use mouse to look around when Oculus Rift connected", ConfigItemType.Bool)]
+		public bool UseMouseLookWithOculus { get; set; } = true;
 
-			AutoPlay = false;
-			AutoLoad = true;
-			AutoPlayFile = "";
-			StartInFullScreen = false;
-		}
+		[SettingsProperty("Use Oculus Rift if available", ConfigItemType.Bool)]
+		public bool UseOculusWhenConnected { get; set; } = true;
+
 	}
 }

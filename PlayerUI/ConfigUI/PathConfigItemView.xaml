@@ -1,0 +1,20 @@
+﻿<UserControl x:Class="PlayerUI.ConfigUI.PathConfigItemView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:PlayerUI.ConfigUI"
+             mc:Ignorable="d" 
+             d:DesignHeight="56" d:DesignWidth="366" HorizontalAlignment="Stretch">
+    <StackPanel Width="366">
+        <TextBlock x:Name="DisplayName" Text="Path option display name" Margin="8,2"/>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="64" />
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="Value" Text="option Path value" Margin="8,2,4,2" IsReadOnly="True" />
+            <Button x:Name="SelectPath" Content="..." Grid.Column="1" Margin="4,2,8,2" />
+        </Grid>
+    </StackPanel>
+</UserControl>
