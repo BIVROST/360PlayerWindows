@@ -22,8 +22,7 @@ namespace PlayerUI
 		protected override void OnViewLoaded(object view)
 		{
 			base.OnViewLoaded(view);
-			mediaDecoder = new MediaDecoder(_canvas, view as Window);
-			mediaDecoder.Init();
+			mediaDecoder = new MediaDecoder();
 		}
 
 		public void Load()

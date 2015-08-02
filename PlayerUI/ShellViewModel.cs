@@ -21,7 +21,7 @@ namespace PlayerUI
 		public string CurrentPosition { get; set; }
 		public string VideoTime { get; set; }
         
-		public bool IsPlaying { get; set; }
+		public bool IsPlaying { get { return _mediaDecoder.IsPlaying; }	}
 
 		private string _selectedFileName = "";
 		public string SelectedFileNameLabel { get { return Path.GetFileNameWithoutExtension(SelectedFileName); } }
@@ -38,6 +38,8 @@ namespace PlayerUI
 		Window playerWindow;
 		Nancy.Hosting.Self.NancyHost nancy;
 
+		private AutoResetEvent waitForPlaybackReady = new AutoResetEvent(false);
+
 		public ShellViewModel()
 		{
 			var currentParser = Parser.CreateTrigger;
@@ -49,12 +51,42 @@ namespace PlayerUI
 			CurrentPosition = "00:00:00";
 			VideoLength = "00:00:00";
 
-			
+			_mediaDecoder = new MediaDecoder();
 
-			BivrostPlayerPrototype.PlayerPrototype.TimeUpdate += (time) =>
+			//BivrostPlayerPrototype.PlayerPrototype.TimeUpdate += (time) =>
+			//{
+			//	if (ended) return;
+
+
+			//	if (!lockSlider)
+			//	{
+			//		CurrentPosition = (new TimeSpan(0, 0, (int)Math.Floor(time))).ToString();
+			//		_timeValue = time;
+			//		NotifyOfPropertyChange(() => TimeValue);
+			//	}
+			//	UpdateTimeLabel();
+			//};
+
+			//BivrostPlayerPrototype.PlayerPrototype.VideoLoaded += (duration) =>
+			//{
+			//	if (ended) return;
+
+			//	TimeValue = 0;
+			//	MaxTime = duration;
+			//	CurrentPosition = "00:00:00";
+			//	VideoLength = (new TimeSpan(0, 0, (int)Math.Floor(duration))).ToString();
+
+			//	UpdateTimeLabel();
+			//};
+
+			_mediaDecoder.OnReady += (duration) =>
 			{
-				if (ended) return;
+				waitForPlaybackReady.Set();
+			};
 
+			_mediaDecoder.OnTimeUpdate += (time) =>
+			{
+				if (!_mediaDecoder.IsPlaying) return;
 
 				if (!lockSlider)
 				{
@@ -65,17 +97,6 @@ namespace PlayerUI
 				UpdateTimeLabel();
 			};
 
-			BivrostPlayerPrototype.PlayerPrototype.VideoLoaded += (duration) =>
-			{
-				if (ended) return;
-
-				TimeValue = 0;
-				MaxTime = duration;
-				CurrentPosition = "00:00:00";
-				VideoLength = (new TimeSpan(0, 0, (int)Math.Floor(duration))).ToString();
-
-				UpdateTimeLabel();
-			};
 
 			UpdateTimeLabel();
 
@@ -207,9 +228,6 @@ namespace PlayerUI
 						Play();
 					}
 				}
-
-			//TODO usunac nieptorzebne fragmenty kodu z okienkiem testowym
-			DialogHelper.ShowWindow<TestWindowViewModel>(Canvas);
 		}
 
 
@@ -223,10 +241,12 @@ namespace PlayerUI
 
 			set
 			{
+				if (!_mediaDecoder.IsPlaying) return;
+
 				_timeValue = value;
 
-				if(!lockSlider)
-					BivrostPlayerPrototype.PlayerPrototype.SetTime(_timeValue);
+				if (!lockSlider)
+					_mediaDecoder.Seek(value);
 				else
 				{
 					CurrentPosition = (new TimeSpan(0, 0, (int)Math.Floor(_timeValue))).ToString();
@@ -259,39 +279,24 @@ namespace PlayerUI
 
 		public void Play()
 		{
-
-			if(IsPlaying) { 
-				Stop();
-				Thread.Sleep(500);
-			}
-
-			//if (_mediaDecoder == null) _mediaDecoder = new MediaDecoder(Canvas);
-			//_mediaDecoder.Play(SelectedFileName);
-
+			_mediaDecoder.LoadMedia(SelectedFileName);
 			Task.Factory.StartNew(() =>
 			{
+
+				waitForPlaybackReady.WaitOne();
+
 				Execute.OnUIThread(() =>
 				{
-					IsPlaying = true;
+					TimeValue = 0;
+					MaxTime = _mediaDecoder.Duration;
+					VideoLength = (new TimeSpan(0, 0, (int)Math.Floor(_mediaDecoder.Duration))).ToString();
+					UpdateTimeLabel();
+
+					_mediaDecoder.Play();
+					this.Canvas.Scene = new Scene(_mediaDecoder.TextureL);
 					NotifyOfPropertyChange(null);
 				});
 				
-				BivrostPlayerPrototype.PlayerPrototype.TextureCreated += (tex) =>
-				{
-					Caliburn.Micro.Execute.OnUIThread(() =>
-					{
-						this.Canvas.Scene = new Scene();
-						this.Canvas.SetVideoTexture(tex);
-					});
-				};
-				BivrostPlayerPrototype.PlayerPrototype.Play(SelectedFileName, Logic.Instance.settings.AutoPlay);
-
-				Thread.Sleep(500);
-				Execute.OnUIThread(() =>
-				{
-					IsPlaying = false;
-					NotifyOfPropertyChange(null);
-				});
 			});
 
 			playerWindow.Focus();
@@ -311,7 +316,9 @@ namespace PlayerUI
 			if (this.Canvas.Scene == null && !string.IsNullOrWhiteSpace(SelectedFileName))
 				Play();
 			else
-				BivrostPlayerPrototype.PlayerPrototype.PlayPause();
+			{
+				_mediaDecoder.TogglePause();
+			}
 		}
 
 		public void Pause()
@@ -368,7 +375,7 @@ namespace PlayerUI
 		public void SliderUnlock()
 		{
 			lockSlider = false;
-			BivrostPlayerPrototype.PlayerPrototype.SetTime(_timeValue);
+			_mediaDecoder.Seek(_timeValue);
 		}
 
 		public void FilePreviewDragEnter(DragEventArgs e)
@@ -383,9 +390,17 @@ namespace PlayerUI
 
 		public void Stop()
 		{
-			TimeValue = 0;
 			this.Canvas.Scene = null;
-            BivrostPlayerPrototype.PlayerPrototype.Close();
+			Task.Factory.StartNew(() =>
+			{
+				if (IsPlaying)
+				{
+					_mediaDecoder.Stop();
+					_timeValue = 0;
+					NotifyOfPropertyChange(() => TimeValue);
+				}
+			});
+			
 		}
 
 		public override void TryClose(bool? dialogResult = null)

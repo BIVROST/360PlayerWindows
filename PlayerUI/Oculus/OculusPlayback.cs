@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace PlayerUI.Oculus
 {
-	class OculusPlayback
+	public class OculusPlayback
 	{
+
 	}
 }

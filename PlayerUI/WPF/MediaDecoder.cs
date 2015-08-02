@@ -16,35 +16,53 @@ namespace PlayerUI
 {
 	public class MediaDecoder
 	{
-		private DPFCanvas _canvas;
+		public class Error
+		{
+			public long major;
+			public int minor;
+		}
+
+		public Error LastError;
+
 		private MediaEngine _mediaEngine;
 		private MediaEngineEx _mediaEngineEx;
-		private ManualResetEvent eventReadyToPlay = new ManualResetEvent(false);
+		private object criticalSection = new object();
+
 		private long ts;
-		private CancellationTokenSource _cancelTransferFrame;
-		private Surface _surface;
 		private bool _stereoVideo = false;
+		private int w, h;
 
 		private Texture2D textureL;
 		private Texture2D textureR;
-		private Surface surfaceL;
-		private Surface surfaceR;
-
-		private DXGIDeviceManager dxgiManager;
-
 		public Texture2D TextureL { get { return this.textureL; } }
 		public Texture2D TextureR { get { return this.textureR; } }
 
+		public bool IsStereo { get { return IsPlaying ? _stereoVideo : false; } }
 		public bool IsPlaying { get; private set; }
+		public bool IsPaused { get { return IsPlaying ? (bool)_mediaEngineEx.IsPaused : false; } }
+		public bool Ready { get; private set; }
+
+		public double Duration { get { return _mediaEngineEx.Duration; } }
+
+		private bool _initialized = false;
+		private bool _rendering = false;
+		private ManualResetEvent waitForRenderingEnd = new ManualResetEvent(false);
 
 		private static MediaDecoder _instance = null;
 		public static MediaDecoder Instance { get { return MediaDecoder._instance; } }
 
 		private SharpDX.Direct3D11.Device _device;
-		public SharpDX.Direct3D11.Device Device { get { return _device; } set { _device = value; } }
+		private Factory _factory;
+		private FeatureLevel[] _levels = new FeatureLevel[] { FeatureLevel.Level_11_0 };
+		private DXGIDeviceManager _dxgiManager;
 
-		private Thread frameGrabber;
-		private Window _currentWindow;
+		public event Action<bool> OnPlay = delegate { };
+		public event Action<double> OnReady = delegate { };
+		public event Action OnStop = delegate { };
+		public event Action OnEnded = delegate { };
+		public event Action OnError = delegate { };
+		public event Action OnAbort = delegate { };
+		public event Action<double> OnTimeUpdate = delegate { };
 
 		VideoNormalizedRect topRect = new VideoNormalizedRect()
 		{
@@ -62,290 +80,255 @@ namespace PlayerUI
 			Bottom = 1f
 		};
 
-		public MediaDecoder(DPFCanvas canvas, Window currentWindow)
+		public MediaDecoder()
 		{
 			IsPlaying = false;
+			Ready = false;
 			MediaDecoder._instance = this;
-			this._canvas = canvas;
-			this._currentWindow = currentWindow;
-		}
+			_initialized = false;
 
-		private SwapChain _swapChain;
-		private Texture2D _backBufferTexture;
-		private RenderTargetView _backBufferRenderTargetView;
-		private Texture2D _swapChainTexture;
-
-		public void Init()
-		{
-			System.Diagnostics.Debug.WriteLine("Media Init: " + System.Threading.Thread.CurrentThread.ManagedThreadId + " " + System.Threading.Thread.CurrentThread.GetApartmentState());
-
-			SharpDX.DXGI.Factory factory = new SharpDX.DXGI.Factory();
-			FeatureLevel[] levels = new FeatureLevel[] { FeatureLevel.Level_11_0};
-
-
-			_device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.Debug | DeviceCreationFlags.BgraSupport | DeviceCreationFlags.VideoSupport, levels);
-			//SharpDX.Direct3D11.DeviceDebug _deviceDebug = _device.QueryInterface<DeviceDebug>();
-			//InfoQueue _deviceInfoQueue = _deviceDebug.QueryInterface<InfoQueue>();
-			//_deviceInfoQueue.SetBreakOnSeverity(MessageSeverity.Corruption, true);
-			//_deviceInfoQueue.SetBreakOnSeverity(MessageSeverity.Error, true);
-			//_deviceInfoQueue.SetBreakOnSeverity(MessageSeverity.Warning, true);
-			//_device = _canvas.GetDevice();
+			_factory = new SharpDX.DXGI.Factory();
+			_device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.Debug | DeviceCreationFlags.BgraSupport | DeviceCreationFlags.VideoSupport, _levels);
 
 			DeviceMultithread mt = _device.QueryInterface<DeviceMultithread>();
 			mt.SetMultithreadProtected(true);
-			
-			
-
-			//Texture2DDescription frameTextureDescription = new Texture2DDescription()
-			//{
-			//	Width = 4096,
-			//	Height = 4096,
-			//	MipLevels = 1,
-			//	ArraySize = 1,
-			//	Format = Format.B8G8R8A8_UNorm,
-			//	Usage = ResourceUsage.Default,
-			//	SampleDescription = new SampleDescription(1, 0),
-			//	BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
-			//	CpuAccessFlags = CpuAccessFlags.None,
-			//	OptionFlags = ResourceOptionFlags.Shared
-			//};
-
-			//_swapChainTexture = new Texture2D(_device, frameTextureDescription);
-
-			//SwapChainDescription swapChainDescription = new SwapChainDescription();
-			//swapChainDescription.BufferCount = 1;
-			//swapChainDescription.IsWindowed = true;
-			//swapChainDescription.OutputHandle = IntPtr.Zero;
-			//swapChainDescription.SampleDescription = new SampleDescription(1, 0);
-			//swapChainDescription.Usage = Usage.RenderTargetOutput | Usage.ShaderInput;
-			//swapChainDescription.SwapEffect = SwapEffect.Sequential;
-			//swapChainDescription.Flags = SwapChainFlags.AllowModeSwitch;
-			//swapChainDescription.ModeDescription.Width = 4096;
-			//swapChainDescription.ModeDescription.Height = 4096;
-			//swapChainDescription.ModeDescription.Format = Format.R8G8B8A8_UNorm;
-			//swapChainDescription.ModeDescription.RefreshRate.Numerator = 0;
-			//swapChainDescription.ModeDescription.RefreshRate.Denominator = 1;
-
-			//// Create the swap chain.
-			
-			//_swapChain = new SwapChain(factory, _device, swapChainDescription);
-
-			// Retrieve the back buffer of the swap chain.
-			//_backBufferTexture = _swapChain.GetBackBuffer<Texture2D>(0); // = BackBuffer
-			//_backBufferRenderTargetView = new RenderTargetView(_device, _backBufferTexture);      // = BackBufferRT
-
-
 
 			using (SharpDX.DXGI.Device1 dxgiDevice = _device.QueryInterface<SharpDX.DXGI.Device1>())
 			{
 				dxgiDevice.MaximumFrameLatency = 1;
 			}
 
-
-
-
-			MediaManager.Startup();
-			var mediaEngineFactory = new MediaEngineClassFactory();
-			dxgiManager = new DXGIDeviceManager();
-			
-
-			dxgiManager.ResetDevice(_device);
-
-			MediaEngineAttributes attr = new MediaEngineAttributes();
-			attr.VideoOutputFormat = (int)SharpDX.DXGI.Format.B8G8R8A8_UNorm;
-			attr.DxgiManager = dxgiManager;
-
-			_mediaEngine = new MediaEngine(mediaEngineFactory, attr, MediaEngineCreateFlags.None);
-			//_mediaEngine = new MediaEngine(mediaEngineFactory, null, MediaEngineCreateFlags.AudioOnly);
-
-			_mediaEngine.PlaybackEvent += (playEvent, param1, param2) =>
-			{
-				switch (playEvent)
-				{
-					case MediaEngineEvent.CanPlay:
-						Console.WriteLine(string.Format("CAN PLAY {0}, {1}", param1, param2));
-						break;
-
-					case MediaEngineEvent.TimeUpdate:
-						//Console.WriteLine(string.Format("Time Update {0}, {1}", param1, param2));
-						//Console.WriteLine(_mediaEngine.CurrentTime);
-						break;
-
-					case MediaEngineEvent.Error:
-						Console.WriteLine(string.Format("ERROR {0}, {1}", param1, param2));
-						Console.WriteLine(((MediaEngineErr)param1).ToString());
-
-						break;
-
-					case MediaEngineEvent.Abort:
-						Console.WriteLine(string.Format("ABORT {0}, {1}", param1, param2));
-						break;
-
-					case MediaEngineEvent.Ended:
-						Console.WriteLine(string.Format("ENDED {0}, {1}", param1, param2));
-						break;
-				}
-			};
-
-			_mediaEngineEx = _mediaEngine.QueryInterface<MediaEngineEx>();
-			_mediaEngineEx.EnableWindowlessSwapchainMode(true);
-			
+			_dxgiManager = new DXGIDeviceManager();
 		}
 
-		int w, h;
 
-		public void Play()
-		{	
-			
-			var hasVideo = _mediaEngine.HasVideo();
-			var hasAudio = _mediaEngine.HasAudio();
-
-			if (hasVideo)
+		public void Init()
+		{
+			lock(criticalSection)
 			{
-				_mediaEngine.GetNativeVideoSize(out w, out h);
+				if (_initialized) return;
 
+				MediaManager.Startup();
+				var mediaEngineFactory = new MediaEngineClassFactory();
 
-				float videoAspect = w / h;
-				_stereoVideo = videoAspect < 1.5;
-				h = _stereoVideo ? h / 2 : h;
+				_dxgiManager.ResetDevice(_device);
 
-				Texture2DDescription frameTextureDescription = new Texture2DDescription()
+				MediaEngineAttributes attr = new MediaEngineAttributes();
+				attr.VideoOutputFormat = (int)SharpDX.DXGI.Format.B8G8R8A8_UNorm;
+				attr.DxgiManager = _dxgiManager;
+
+				_mediaEngine = new MediaEngine(mediaEngineFactory, attr, MediaEngineCreateFlags.None);
+
+				_mediaEngine.PlaybackEvent += (playEvent, param1, param2) =>
 				{
-					Width = w,
-					Height = h,
-					MipLevels = 1,
-					ArraySize = 1,
-					Format = Format.B8G8R8A8_UNorm,
-					Usage = ResourceUsage.Default,
-					SampleDescription = new SampleDescription(1, 0),
-					BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
-					CpuAccessFlags = CpuAccessFlags.None,
-					OptionFlags = ResourceOptionFlags.Shared
+					switch (playEvent)
+					{
+						case MediaEngineEvent.CanPlay:
+							Console.WriteLine(string.Format("CAN PLAY {0}, {1}", param1, param2));
+							Ready = true;
+							OnReady(_mediaEngineEx.Duration);
+							break;
+
+						case MediaEngineEvent.TimeUpdate:
+							OnTimeUpdate(_mediaEngineEx.CurrentTime);
+							break;
+
+						case MediaEngineEvent.Error:
+							Console.WriteLine(string.Format("ERROR {0}, {1}", param1, param2));
+							Console.WriteLine(((MediaEngineErr)param1).ToString());
+							LastError = new Error() { major = param1, minor = param2 };
+
+							OnError();
+							Stop();
+							break;
+
+						case MediaEngineEvent.Abort:
+							Console.WriteLine(string.Format("ABORT {0}, {1}", param1, param2));
+							OnAbort();
+							Stop();
+							break;
+
+						case MediaEngineEvent.Ended:
+							Console.WriteLine(string.Format("ENDED {0}, {1}", param1, param2));
+							OnEnded();
+							Stop();
+							break;
+					}
 				};
 
+				_mediaEngineEx = _mediaEngine.QueryInterface<MediaEngineEx>();
+				_mediaEngineEx.EnableWindowlessSwapchainMode(true);
 
-				textureL = new SharpDX.Direct3D11.Texture2D(_device, frameTextureDescription);
-				textureR = new SharpDX.Direct3D11.Texture2D(_device, frameTextureDescription);
-
-				BivrostPlayerPrototype.PlayerPrototype.videoTextureL = textureL;
-				BivrostPlayerPrototype.PlayerPrototype.videoTextureR = textureR;
-
-
-				//TextureCreated(textureL);
-
-				surfaceL = textureL.QueryInterface<SharpDX.DXGI.Surface>();
-				surfaceR = textureR.QueryInterface<SharpDX.DXGI.Surface>();
-
-				//bool surfaceFirst = true;
-
-				// Play the music
-				//_mediaEngineEx.Loop = Loop;
-
-				//readyToPlayLoadedVideo = true;
+				mediaEngineFactory.Dispose();
+				_initialized = true;
 			}
-			
-			_mediaEngineEx.Play();
-			_mediaEngineEx.Volume = 0.2;
-			IsPlaying = true;
+		}
 
+		
 
-			Task.Factory.StartNew(() =>
+		public void Play()
+		{
+			lock(criticalSection)
 			{
-				while (IsPlaying)
+				if (IsPlaying) return;
+
+				if (!_initialized) return;
+				if (!Ready) return;
+
+
+				var hasVideo = _mediaEngine.HasVideo();
+				var hasAudio = _mediaEngine.HasAudio();
+
+				if (hasVideo)
 				{
-					if (!_mediaEngine.IsPaused)
+					_mediaEngine.GetNativeVideoSize(out w, out h);
+
+
+					float videoAspect = w / h;
+					_stereoVideo = videoAspect < 1.5;
+					h = _stereoVideo ? h / 2 : h;
+
+					Texture2DDescription frameTextureDescription = new Texture2DDescription()
 					{
-						long lastTs = ts;
-						bool result = _mediaEngine.OnVideoStreamTick(out ts);
-						
-						if(result == false)
-						{
-							Console.WriteLine("FALSE!!");
-						}
+						Width = w,
+						Height = h,
+						MipLevels = 1,
+						ArraySize = 1,
+						Format = Format.B8G8R8A8_UNorm,
+						Usage = ResourceUsage.Default,
+						SampleDescription = new SampleDescription(1, 0),
+						BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
+						CpuAccessFlags = CpuAccessFlags.None,
+						OptionFlags = ResourceOptionFlags.Shared
+					};
 
-						if (result && ts != lastTs)
-						{
-							//		if (_stereoVideo)
-							//		{
-							_mediaEngine.TransferVideoFrame(surfaceL, topRect, new SharpDX.Rectangle(0, 0, w, h), null);
-							//			//Thread.Sleep(1);
-							_mediaEngine.TransferVideoFrame(surfaceR, bottomRect, new SharpDX.Rectangle(0, 0, w, h), null);
-						
-						//_swapChain.Present(1, 0);
-						//			Console.WriteLine("Tick stereo" + ts);
-						//		}
-						//		else
-						//		{
-						//			_mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
-						//			Console.WriteLine("Tick mono" + ts);
-						//		}
 
-						//		Thread.Sleep(10);
+					textureL = new SharpDX.Direct3D11.Texture2D(_device, frameTextureDescription);
+					textureR = new SharpDX.Direct3D11.Texture2D(_device, frameTextureDescription);
+				}
+
+				_mediaEngineEx.Play();
+				_mediaEngineEx.Volume = 0.2;
+				IsPlaying = true;
+			}
+
+			Task t = Task.Factory.StartNew(() =>
+			{
+				_rendering = true;
+				while (_mediaEngine != null && IsPlaying)
+				{
+					lock (criticalSection)
+					{
+						if (!_mediaEngine.IsPaused)
+						{
+							long lastTs = ts;
+							bool result = _mediaEngine.OnVideoStreamTick(out ts);
+
+							if (result && ts != lastTs)
+							{
+								if (_stereoVideo)
+								{
+									_mediaEngine.TransferVideoFrame(textureL, topRect, new SharpDX.Rectangle(0, 0, w, h), null);
+									_mediaEngine.TransferVideoFrame(textureR, bottomRect, new SharpDX.Rectangle(0, 0, w, h), null);
+								}
+								else
+								{
+									_mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
+								}
+							}
 						}
 					}
 				}
+				waitForRenderingEnd.Set();
+				_rendering = false;
 			});
-
-			//frameGrabber = new Thread(new ThreadStart(() =>
-			//{
-			//	while (IsPlaying)
-			//	{
-			//		if (!_mediaEngine.IsPaused)
-			//		{
-			//			long lastTs = ts;
-			//			bool result = _mediaEngine.OnVideoStreamTick(out ts);
-			//		//	if (result && ts != lastTs)
-			//		//	{
-
-			//		//		if (_stereoVideo)
-			//		//		{
-			//					_mediaEngine.TransferVideoFrame(surfaceL, topRect, new SharpDX.Rectangle(0, 0, w, h), null);
-			//		//			//Thread.Sleep(1);
-			//					_mediaEngine.TransferVideoFrame(textureR, bottomRect, new SharpDX.Rectangle(0, 0, w, h), null);
-
-			//		//			Console.WriteLine("Tick stereo" + ts);
-			//		//		}
-			//		//		else
-			//		//		{
-			//		//			_mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
-			//		//			Console.WriteLine("Tick mono" + ts);
-			//		//		}
-							
-			//		//		Thread.Sleep(10);
-			//		//	}
-			//		}
-			//	}
-
-			//}));
-
-			//frameGrabber.Start();
-		}
-
-		void Trim()
-		{
 			
-			using (var Direct3DDevice = _device.QueryInterface<SharpDX.Direct3D11.Device1>())
-				using (var DxgiDevice3 = Direct3DDevice.QueryInterface<SharpDX.DXGI.Device3>())
-					DxgiDevice3.Trim();
 		}
 
+		public void Pause()
+		{
+			if(IsPlaying)
+			{
+				if(!_mediaEngine.IsPaused)
+					_mediaEngine.Pause();
+			}
+		}
+
+		public void Unpause()
+		{
+			if (IsPlaying)
+			{
+				if (_mediaEngine.IsPaused)
+					_mediaEngine.Play();
+			}
+		}
+
+		public void TogglePause()
+		{
+			if(IsPlaying)
+			{
+				if (IsPaused) Unpause();
+				else Pause();
+			}
+		}
+
+		public void SetVolume(double volume)
+		{
+			if(IsPlaying)
+			{
+				_mediaEngine.Volume = volume;
+			}
+		}
+
+		public void Seek(double time)
+		{
+			if(IsPlaying)
+			{
+				if(!_mediaEngineEx.IsSeeking)
+				{
+					_mediaEngineEx.CurrentTime = time;
+				}
+			}
+		}
+
+		
 		public void Stop()
 		{
+
+			if (!_initialized) return;
+			if (!IsPlaying) return;
+
+
+			waitForRenderingEnd.Reset();
 			IsPlaying = false;
+			
+			if (_rendering) {
 
-			_mediaEngineEx.Shutdown();
+				waitForRenderingEnd.WaitOne(1000);
+			}
+			
+			Ready = false;
 
-			fileStream?.Close();
-			fileStream?.Dispose();
-			webStream?.Close();
-			webStream?.Dispose();
-			stream?.Close();
-			stream?.Dispose();
+			lock (criticalSection)
+			{
+				_mediaEngineEx.Shutdown();
+				_mediaEngineEx.Dispose();
+				_mediaEngine.Dispose();
 
-			textureL?.Dispose();
-			textureR?.Dispose();
-			surfaceL?.Dispose();
-			surfaceR?.Dispose();
+
+				fileStream?.Close();
+				fileStream?.Dispose();
+				webStream?.Close();
+				webStream?.Dispose();
+				stream?.Close();
+				stream?.Dispose();
+
+				textureL?.Dispose();
+				textureR?.Dispose();
+
+				_initialized = false;
+	
+			}
 		}
 
 		private FileStream fileStream;
@@ -355,6 +338,9 @@ namespace PlayerUI
 
 		public void LoadMedia(string fileName)
 		{
+			Stop();
+			Init();
+
 			if (fileName.Contains("http://") || fileName.Contains("https://"))
 			{
 				webStream = new System.Net.WebClient().OpenRead(fileName);
@@ -363,7 +349,6 @@ namespace PlayerUI
 
 				_mediaEngineEx.SetSourceFromByteStream(stream, url.AbsoluteUri);
 				_mediaEngineEx.Load();
-
 			}
 			else
 			{
@@ -378,8 +363,10 @@ namespace PlayerUI
 
 		public void Shutdown()
 		{
-			_cancelTransferFrame.Cancel();
 			MediaManager.Shutdown();
+			_dxgiManager.Dispose();
+			_factory.Dispose();
+			_device.Dispose();
 		}
 
 	}

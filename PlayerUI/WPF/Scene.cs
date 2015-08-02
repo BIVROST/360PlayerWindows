@@ -34,6 +34,11 @@
 
 		KeyedMutex mutex;
 
+		public Scene(Texture2D sharedTexture)
+		{
+			videoTexture = sharedTexture;
+		}
+
         void IScene.Attach(ISceneHost host)
         {
             this.Host = host;
@@ -51,13 +56,13 @@
 			//basicEffect.Projection = Matrix.Identity;
 			basicEffect.World = Matrix.Identity;
 
-			var tempTex = new Texture2D(videoTexture.NativePointer);
+			//var tempTex = new Texture2D(videoTexture.NativePointer);
 			basicEffect.PreferPerPixelLighting = false;
 
 			var resource = videoTexture.QueryInterface<SharpDX.DXGI.Resource>();
 			var sharedTex = _device.OpenSharedResource<Texture2D>(resource.SharedHandle);
 
-			mutex = new KeyedMutex(sharedTex.NativePointer);
+			//mutex = new KeyedMutex(sharedTex.NativePointer);
 
 
 			basicEffect.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(graphicsDevice, sharedTex);
