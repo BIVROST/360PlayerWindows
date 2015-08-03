@@ -40,6 +40,8 @@ namespace PlayerUI
 
 		private AutoResetEvent waitForPlaybackReady = new AutoResetEvent(false);
 
+		private const string DisplayString = "Bivrost Player ™";
+
 		public ShellViewModel()
 		{
 			var currentParser = Parser.CreateTrigger;
@@ -47,41 +49,20 @@ namespace PlayerUI
 																? ShortcutParser.CreateTrigger(triggerText)
 																: currentParser(target, triggerText);
 
-			DisplayName = "Bivrost Player ™";
+			DisplayName = DisplayString;
 			CurrentPosition = "00:00:00";
 			VideoLength = "00:00:00";
 
 			_mediaDecoder = new MediaDecoder();
 
-			//BivrostPlayerPrototype.PlayerPrototype.TimeUpdate += (time) =>
-			//{
-			//	if (ended) return;
-
-
-			//	if (!lockSlider)
-			//	{
-			//		CurrentPosition = (new TimeSpan(0, 0, (int)Math.Floor(time))).ToString();
-			//		_timeValue = time;
-			//		NotifyOfPropertyChange(() => TimeValue);
-			//	}
-			//	UpdateTimeLabel();
-			//};
-
-			//BivrostPlayerPrototype.PlayerPrototype.VideoLoaded += (duration) =>
-			//{
-			//	if (ended) return;
-
-			//	TimeValue = 0;
-			//	MaxTime = duration;
-			//	CurrentPosition = "00:00:00";
-			//	VideoLength = (new TimeSpan(0, 0, (int)Math.Floor(duration))).ToString();
-
-			//	UpdateTimeLabel();
-			//};
-
 			_mediaDecoder.OnReady += (duration) =>
 			{
 				waitForPlaybackReady.Set();
+			};
+
+			_mediaDecoder.OnEnded += () =>
+			{
+				Stop();
 			};
 
 			_mediaDecoder.OnTimeUpdate += (time) =>
@@ -206,10 +187,6 @@ namespace PlayerUI
 		#endregion
 
 
-		public void Test()
-		{
-			
-		}
 
 		protected override void OnViewAttached(object view, object context)
 		{
@@ -228,6 +205,12 @@ namespace PlayerUI
 						Play();
 					}
 				}
+		}
+
+		protected override void OnDeactivate(bool close)
+		{
+			TryClose();
+			base.OnDeactivate(close);
 		}
 
 
@@ -291,6 +274,7 @@ namespace PlayerUI
 					MaxTime = _mediaDecoder.Duration;
 					VideoLength = (new TimeSpan(0, 0, (int)Math.Floor(_mediaDecoder.Duration))).ToString();
 					UpdateTimeLabel();
+					DisplayName = DisplayString + " - " + SelectedFileNameLabel;
 
 					_mediaDecoder.Play();
 					this.Canvas.Scene = new Scene(_mediaDecoder.TextureL);
@@ -393,7 +377,7 @@ namespace PlayerUI
 			this.Canvas.Scene = null;
 			Task.Factory.StartNew(() =>
 			{
-				if (IsPlaying)
+				if (IsPlaying || _mediaDecoder.IsEnded)
 				{
 					_mediaDecoder.Stop();
 					_timeValue = 0;
@@ -412,7 +396,7 @@ namespace PlayerUI
 			
 			if(_mediaDecoder != null)
 				_mediaDecoder.Shutdown();
-			nancy.Stop();
+			//nancy.Stop();
 
 		}
 

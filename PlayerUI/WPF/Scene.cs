@@ -142,7 +142,12 @@
 		{
 			yaw += -MathUtil.DegreesToRadians(x) * ratio;
             pitch += -MathUtil.DegreesToRadians(y) * ratio;
-        }
+
+			pitch = MathUtil.Clamp(pitch, (float)-Math.PI / 2f, (float)Math.PI / 2f);
+			Quaternion q1 = Quaternion.RotationYawPitchRoll(yaw, 0, 0);
+			Quaternion q2 = Quaternion.RotationYawPitchRoll(0, pitch, 0);
+			basicEffect.View = Matrix.RotationQuaternion(q2 * q1);
+		}
 
 
         void IScene.Detach()

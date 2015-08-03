@@ -39,7 +39,23 @@ namespace PlayerUI
 
 		public bool IsStereo { get { return IsPlaying ? _stereoVideo : false; } }
 		public bool IsPlaying { get; private set; }
-		public bool IsPaused { get { return IsPlaying ? (bool)_mediaEngineEx.IsPaused : false; } }
+		public bool IsPaused { get {
+				lock(criticalSection)
+				{
+					return _initialized ? (bool)_mediaEngineEx.IsPaused : false;
+				}
+			} }
+
+		public bool IsEnded
+		{
+			get
+			{
+				lock (criticalSection)
+				{
+					return _initialized? (bool)_mediaEngineEx.IsEnded : false;
+				}
+			}
+		}
 		public bool Ready { get; private set; }
 
 		public double Duration { get { return _mediaEngineEx.Duration; } }
@@ -104,6 +120,7 @@ namespace PlayerUI
 
 		public void Init()
 		{
+			criticalSection = new object();
 			lock(criticalSection)
 			{
 				if (_initialized) return;
@@ -151,7 +168,6 @@ namespace PlayerUI
 						case MediaEngineEvent.Ended:
 							Console.WriteLine(string.Format("ENDED {0}, {1}", param1, param2));
 							OnEnded();
-							Stop();
 							break;
 					}
 				};
@@ -249,8 +265,11 @@ namespace PlayerUI
 		{
 			if(IsPlaying)
 			{
-				if(!_mediaEngine.IsPaused)
-					_mediaEngine.Pause();
+				lock (criticalSection)
+				{
+					if (!_mediaEngine.IsPaused)
+						_mediaEngine.Pause();
+				}
 			}
 		}
 
@@ -258,8 +277,11 @@ namespace PlayerUI
 		{
 			if (IsPlaying)
 			{
-				if (_mediaEngine.IsPaused)
-					_mediaEngine.Play();
+				lock (criticalSection)
+				{
+					if (_mediaEngine.IsPaused)
+						_mediaEngine.Play();
+				}
 			}
 		}
 
@@ -284,20 +306,24 @@ namespace PlayerUI
 		{
 			if(IsPlaying)
 			{
-				if(!_mediaEngineEx.IsSeeking)
+				lock (criticalSection)
 				{
-					_mediaEngineEx.CurrentTime = time;
+					if (!_mediaEngineEx.IsSeeking)
+					{
+						_mediaEngineEx.CurrentTime = time;
+					}
 				}
 			}
 		}
 
 		
-		public void Stop()
+		public void Stop(bool force = false)
 		{
-
-			if (!_initialized) return;
-			if (!IsPlaying) return;
-
+			if (!force)
+			{
+				if (!_initialized) return;
+				if (!IsPlaying) return;
+			}
 
 			waitForRenderingEnd.Reset();
 			IsPlaying = false;
