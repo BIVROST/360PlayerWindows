@@ -307,7 +307,7 @@ namespace PlayerUI
 			if(IsPlaying)
 			{
 				lock (criticalSection)
-				{
+				{	
 					if (!_mediaEngineEx.IsSeeking)
 					{
 						_mediaEngineEx.CurrentTime = time;

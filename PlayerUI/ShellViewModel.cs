@@ -1,5 +1,6 @@
 ﻿using Caliburn.Micro;
 using PlayerUI.ConfigUI;
+using PlayerUI.Oculus;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -278,6 +279,12 @@ namespace PlayerUI
 
 					_mediaDecoder.Play();
 					this.Canvas.Scene = new Scene(_mediaDecoder.TextureL);
+					if(OculusPlayback.IsOculusPresent()) { 
+						OculusPlayback.textureL = _mediaDecoder.TextureL;
+						OculusPlayback.textureR = _mediaDecoder.TextureR;
+						OculusPlayback._stereoVideo = _mediaDecoder.IsStereo;
+						OculusPlayback.Start();
+					}
 					NotifyOfPropertyChange(null);
 				});
 				
@@ -374,6 +381,7 @@ namespace PlayerUI
 
 		public void Stop()
 		{
+			OculusPlayback.Stop();
 			this.Canvas.Scene = null;
 			Task.Factory.StartNew(() =>
 			{

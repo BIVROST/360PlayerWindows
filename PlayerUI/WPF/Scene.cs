@@ -61,7 +61,7 @@
 
 			var resource = videoTexture.QueryInterface<SharpDX.DXGI.Resource>();
 			var sharedTex = _device.OpenSharedResource<Texture2D>(resource.SharedHandle);
-
+			
 			//mutex = new KeyedMutex(sharedTex.NativePointer);
 
 
