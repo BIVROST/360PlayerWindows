@@ -106,19 +106,19 @@
 
 			_device.ImmediateContext.Flush();
 
-			BivrostPlayerPrototype.PlayerPrototype.LookChanged += (look) =>
-			{
-				if (remoteRotationOverride)
-				{
-					Matrix lerpMatrix = Matrix.Lerp(basicEffect.View, remoteRotation, 1 / 15f);
-					basicEffect.View = lerpMatrix;
-                } else { 
-					pitch = MathUtil.Clamp(pitch, (float)-Math.PI/2f, (float)Math.PI / 2f);
-					Quaternion q1 = Quaternion.RotationYawPitchRoll(yaw, 0, 0);
-					Quaternion q2 = Quaternion.RotationYawPitchRoll(0, pitch, 0);
-					basicEffect.View = look * Matrix.RotationQuaternion(q2 * q1);
-				}
-			};
+			//BivrostPlayerPrototype.PlayerPrototype.LookChanged += (look) =>
+			//{
+			//	if (remoteRotationOverride)
+			//	{
+			//		Matrix lerpMatrix = Matrix.Lerp(basicEffect.View, remoteRotation, 1 / 15f);
+			//		basicEffect.View = lerpMatrix;
+   //             } else { 
+			//		pitch = MathUtil.Clamp(pitch, (float)-Math.PI/2f, (float)Math.PI / 2f);
+			//		Quaternion q1 = Quaternion.RotationYawPitchRoll(yaw, 0, 0);
+			//		Quaternion q2 = Quaternion.RotationYawPitchRoll(0, pitch, 0);
+			//		basicEffect.View = look * Matrix.RotationQuaternion(q2 * q1);
+			//	}
+			//};
 			
         }
 

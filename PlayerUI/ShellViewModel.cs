@@ -121,10 +121,10 @@ namespace PlayerUI
 					Pause();
 					break;
 				case ApiServer.State.play:
-					if (BivrostPlayerPrototype.PlayerPrototype.IsPlaying)
-						UnPause();
-					else
-						BivrostPlayerPrototype.PlayerPrototype.PlayLoadedFile();
+					//if (BivrostPlayerPrototype.PlayerPrototype.IsPlaying)
+					//	UnPause();
+					//else
+					//	BivrostPlayerPrototype.PlayerPrototype.PlayLoadedFile();
 					break;
 				case ApiServer.State.stop:
 					Rewind();
@@ -243,7 +243,7 @@ namespace PlayerUI
 		public double SphereSize
 		{
 			get { return _sphereSize; }
-			set { this._sphereSize = value; BivrostPlayerPrototype.PlayerPrototype.SetSphereSize(value); }
+			set { this._sphereSize = value; /*BivrostPlayerPrototype.PlayerPrototype.SetSphereSize(value);*/ }
 		}
 
 
@@ -314,12 +314,14 @@ namespace PlayerUI
 
 		public void Pause()
 		{
-			BivrostPlayerPrototype.PlayerPrototype.Pause();
+			//BivrostPlayerPrototype.PlayerPrototype.Pause();
+			_mediaDecoder.Pause();
 		}
 
 		public void UnPause()
 		{
-			BivrostPlayerPrototype.PlayerPrototype.UnPause();
+			//BivrostPlayerPrototype.PlayerPrototype.UnPause();
+			_mediaDecoder.Unpause();
 		}
 
 		public void OpenFile()
@@ -410,7 +412,7 @@ namespace PlayerUI
 
 		public void Rewind()
 		{
-			BivrostPlayerPrototype.PlayerPrototype.Rewind();
+			//BivrostPlayerPrototype.PlayerPrototype.Rewind();
 		}
 
 		public void Quit()

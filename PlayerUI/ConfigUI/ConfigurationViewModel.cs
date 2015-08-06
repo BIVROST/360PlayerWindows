@@ -31,13 +31,13 @@ namespace PlayerUI.ConfigUI
 				switch (attr.Type)
 				{
 					case ConfigItemType.Bool:
-						TargetCollection.Add(new BoolConfigItemViewModel(attr, () => (bool)property.GetValue(settings), (value) => property.SetValue(settings, value)));
+						TargetCollection.Add(new BoolConfigItemViewModel(attr, () => (bool)property.GetValue(settings, null), (value) => property.SetValue(settings, value, null)));
 						break;
 					case ConfigItemType.Path:
-						TargetCollection.Add(new PathConfigItemViewModel(attr, () => (string)property.GetValue(settings), (value) => property.SetValue(settings, value)));
+						TargetCollection.Add(new PathConfigItemViewModel(attr, () => (string)property.GetValue(settings, null), (value) => property.SetValue(settings, value, null)));
 						break;
 					case ConfigItemType.String:
-						TargetCollection.Add(new StringConfigItemViewModel(attr, () => (string)property.GetValue(settings), (value) => property.SetValue(settings, value)));
+						TargetCollection.Add(new StringConfigItemViewModel(attr, () => (string)property.GetValue(settings, null), (value) => property.SetValue(settings, value, null)));
 						break;
 				}
 			});

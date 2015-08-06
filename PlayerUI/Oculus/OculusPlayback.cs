@@ -98,7 +98,7 @@ namespace PlayerUI.Oculus
 			OVR.ovrResult result;
 
 			// Create DirectX drawing device.
-			SharpDX.Direct3D11.Device device = new Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.Debug);
+			SharpDX.Direct3D11.Device device = new Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.None);
 
 			// Create DirectX Graphics Interface factory, used to create the swap chain.
 			Factory factory = new Factory();

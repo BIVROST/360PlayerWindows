@@ -121,7 +121,7 @@ namespace ModelRendering
 					case MediaEngineEvent.Error:
 					case MediaEngineEvent.Abort:
 					case MediaEngineEvent.Ended:
-						System.Diagnostics.Debug.WriteLine("ENDED OR ERROR");
+						//System.Diagnostics.Debug.WriteLine("ENDED OR ERROR");
 						break;
 				}
 			};

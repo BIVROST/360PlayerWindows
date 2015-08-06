@@ -38,7 +38,7 @@ namespace PlayerUI
 
 			if (Logic.Instance.settings.EventModeAutoPlay)
 			{
-				BivrostPlayerPrototype.PlayerPrototype.Loop = Logic.Instance.settings.EventModeLoop;
+				//BivrostPlayerPrototype.PlayerPrototype.Loop = Logic.Instance.settings.EventModeLoop;
 				Play();
 			}			
 
@@ -73,11 +73,11 @@ namespace PlayerUI
 			{
 
 
-				BivrostPlayerPrototype.PlayerPrototype.TextureCreated += (tex) =>
-				{
+				//BivrostPlayerPrototype.PlayerPrototype.TextureCreated += (tex) =>
+				//{
 
-				};
-				BivrostPlayerPrototype.PlayerPrototype.Play(Logic.Instance.settings.EventModeSingleFile);
+				//};
+				//BivrostPlayerPrototype.PlayerPrototype.Play(Logic.Instance.settings.EventModeSingleFile);
 
 				
 			});
@@ -88,12 +88,12 @@ namespace PlayerUI
 
 		public void PlayPause()
 		{
-			BivrostPlayerPrototype.PlayerPrototype.PlayPause();
+			//BivrostPlayerPrototype.PlayerPrototype.PlayPause();
 		}
 
 		public void Rewind()
 		{
-			BivrostPlayerPrototype.PlayerPrototype.Rewind();
+			//BivrostPlayerPrototype.PlayerPrototype.Rewind();
 		}
 
 		public void Restart()

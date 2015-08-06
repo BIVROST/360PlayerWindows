@@ -71,7 +71,7 @@ public class InputBindingTrigger : TriggerBase<FrameworkElement>, ICommand
 			return frameworkElement as Window;
 
 		var parent = frameworkElement.Parent as FrameworkElement;
-		Debug.Assert(parent != null);
+		//Debug.Assert(parent != null);
 
 		return GetWindow(parent);
 	}

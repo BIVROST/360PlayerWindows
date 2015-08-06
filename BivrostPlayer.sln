@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BivrostPlayerPrototype", "BivrostPlayerPrototype\BivrostPlayerPrototype.csproj", "{990F85DF-E064-49D0-B1CC-FC827C6D66FD}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlayerUI", "PlayerUI\PlayerUI.csproj", "{E14FBC2B-B29D-4428-8052-52292EB22C1D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BivrostWP", "ModelRendering.DrawingSurface\BivrostWP.csproj", "{80D96612-4912-4D8B-9A95-E13348FD6B15}"
@@ -36,14 +34,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{990F85DF-E064-49D0-B1CC-FC827C6D66FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{990F85DF-E064-49D0-B1CC-FC827C6D66FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{990F85DF-E064-49D0-B1CC-FC827C6D66FD}.Debug|ARM.ActiveCfg = Debug|Any CPU
-		{990F85DF-E064-49D0-B1CC-FC827C6D66FD}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{990F85DF-E064-49D0-B1CC-FC827C6D66FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{990F85DF-E064-49D0-B1CC-FC827C6D66FD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{990F85DF-E064-49D0-B1CC-FC827C6D66FD}.Release|ARM.ActiveCfg = Release|Any CPU
-		{990F85DF-E064-49D0-B1CC-FC827C6D66FD}.Release|x86.ActiveCfg = Release|Any CPU
 		{E14FBC2B-B29D-4428-8052-52292EB22C1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E14FBC2B-B29D-4428-8052-52292EB22C1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E14FBC2B-B29D-4428-8052-52292EB22C1D}.Debug|ARM.ActiveCfg = Debug|Any CPU

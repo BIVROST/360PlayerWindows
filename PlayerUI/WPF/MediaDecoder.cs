@@ -104,7 +104,7 @@ namespace PlayerUI
 			_initialized = false;
 
 			_factory = new SharpDX.DXGI.Factory();
-			_device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.Debug | DeviceCreationFlags.BgraSupport | DeviceCreationFlags.VideoSupport, _levels);
+			_device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.BgraSupport | DeviceCreationFlags.VideoSupport, _levels);
 
 			DeviceMultithread mt = _device.QueryInterface<DeviceMultithread>();
 			mt.SetMultithreadProtected(true);

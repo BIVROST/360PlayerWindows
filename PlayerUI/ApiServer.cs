@@ -24,7 +24,7 @@ namespace PlayerUI
 
             System.Threading.Thread.CurrentThread.CurrentCulture =
             System.Threading.Thread.CurrentThread.CurrentUICulture =
-            System.Globalization.CultureInfo.DefaultThreadCurrentCulture=
+            //System.Globalization.CultureInfo.DefaultThreadCurrentCulture=
             System.Globalization.CultureInfo.InvariantCulture;
 
             string filePath = Process.GetCurrentProcess().MainModule.FileName;
