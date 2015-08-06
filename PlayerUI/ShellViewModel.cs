@@ -41,7 +41,7 @@ namespace PlayerUI
 
 		private AutoResetEvent waitForPlaybackReady = new AutoResetEvent(false);
 
-		private const string DisplayString = "Bivrost Player ™";
+		private const string DisplayString = "Bivrost Player ™ BETA";
 
 		public ShellViewModel()
 		{
@@ -483,6 +483,11 @@ namespace PlayerUI
 				playerWindow.Margin = new Thickness(0,0,0,0);
 				playerWindow.WindowState = WindowState.Maximized;
 			}
+		}
+
+		public void EscapeFullscreen()
+		{
+			if (fullscreen) ToggleFullscreen();
 		}
 
 		public void HideUI()

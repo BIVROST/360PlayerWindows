@@ -139,7 +139,8 @@
 
 
 		<ui:DPFCanvas x:Name="Canvas1" Stretch="UniformToFill" Grid.Row="1" Grid.RowSpan="3" HorizontalAlignment="Center" VerticalAlignment="Center"
-					  cal:Message.Attach="[Shortcut Control+O] = [Action OpenFile]; [Shortcut Control+Q] = [Action Quit]; [Shortcut Control+R] = [Action Rewind]; [Shortcut Space] = [Action PlayPause]; [Shortcut F11] = [Action ToggleFullscreen]" />
+					  cal:Message.Attach="[Shortcut Control+O] = [Action OpenFile]; [Shortcut Control+Q] = [Action Quit]; [Shortcut Control+R] = [Action Rewind];  [Shortcut Space] = [Action PlayPause]; 
+					  [Shortcut F11] = [Action ToggleFullscreen]; [Shortcut Escape] = [Action EscapeFullscreen]" />
 
 		<Grid Grid.Row="1" >
 			<Image Source="logo.png" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="100,0" Stretch="None"  Width="400" Height="98" cal:Message.Attach="[Event MouseDown] = [Action PlayPause]" x:Name="logoImage"/>
