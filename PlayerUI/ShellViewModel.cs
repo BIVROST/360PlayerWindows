@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using System.Xml;
 
@@ -23,13 +24,15 @@ namespace PlayerUI
 		public string VideoTime { get; set; }
         
 		public bool IsPlaying { get { return _mediaDecoder.IsPlaying; }	}
+		public bool IsPaused { get; set; }
 
 		private string _selectedFileName = "";
 		public string SelectedFileNameLabel { get { return Path.GetFileNameWithoutExtension(SelectedFileName); } }
 		public string SelectedFileName { get { return _selectedFileName; } set { this._selectedFileName = value; NotifyOfPropertyChange(() => SelectedFileName); } }
 		public bool IsFileSelected { get; set; }
 
-		public DPFCanvas Canvas;
+		public DPFCanvas DXCanvas;
+		public ShellView shellView;
 
 		private bool ended = false;
 		private bool lockSlider = false;
@@ -177,9 +180,9 @@ namespace PlayerUI
 					//InfoY.Content = euler.Item2;
 					//InfoZ.Content = euler.Item3;
 					//InfoT01.Content = t01;
-					if(Canvas.Scene != null)
+					if(DXCanvas.Scene != null)
 					{
-						(Canvas.Scene as Scene).SetLook(euler);
+						(DXCanvas.Scene as Scene).SetLook(euler);
 					}
 				});
 			} catch(Exception) { };
@@ -192,8 +195,12 @@ namespace PlayerUI
 		protected override void OnViewAttached(object view, object context)
 		{
 			base.OnViewAttached(view, context);
-			Canvas = (view as ShellView).Canvas1;
+			shellView = view as ShellView;
+			DXCanvas = shellView.Canvas1;
 			playerWindow = (view as Window);
+
+			shellView.PlayPause.Visibility = Visibility.Visible;
+			shellView.Pause.Visibility = Visibility.Collapsed;
 
 			if (Logic.Instance.settings.StartInFullScreen)
 				ToggleFullscreen();
@@ -263,6 +270,8 @@ namespace PlayerUI
 
 		public void Play()
 		{
+			if (!IsFileSelected) return;
+
 			_mediaDecoder.LoadMedia(SelectedFileName);
 			Task.Factory.StartNew(() =>
 			{
@@ -278,19 +287,52 @@ namespace PlayerUI
 					DisplayName = DisplayString + " - " + SelectedFileNameLabel;
 
 					_mediaDecoder.Play();
-					this.Canvas.Scene = new Scene(_mediaDecoder.TextureL);
+					this.DXCanvas.Scene = new Scene(_mediaDecoder.TextureL);
 					if(OculusPlayback.IsOculusPresent()) { 
 						OculusPlayback.textureL = _mediaDecoder.TextureL;
 						OculusPlayback.textureR = _mediaDecoder.TextureR;
 						OculusPlayback._stereoVideo = _mediaDecoder.IsStereo;
 						OculusPlayback.Start();
 					}
+					shellView.PlayPause.Visibility = Visibility.Collapsed;
+					shellView.Pause.Visibility = Visibility.Visible;
 					NotifyOfPropertyChange(null);
 				});
 				
 			});
 
 			playerWindow.Focus();
+			AnimateIndicator(shellView.PlayIndicator);
+        }
+
+		private void AnimateIndicator(UIElement uiControl)
+		{
+			Task.Factory.StartNew(() =>
+			{
+				Thread.Sleep(100);
+				Execute.OnUIThread(() =>
+				{
+					Storyboard storyboard = new Storyboard();
+					double animTime = 0.8;
+
+					DoubleAnimation opacityAnimation = new DoubleAnimation { From = 0.8, To = 0.0, Duration = TimeSpan.FromSeconds(animTime) };
+					Storyboard.SetTarget(opacityAnimation, uiControl);
+					Storyboard.SetTargetProperty(opacityAnimation, new PropertyPath("Opacity"));
+					storyboard.Children.Add(opacityAnimation);
+
+					DoubleAnimation scaleAnimationX = new DoubleAnimation { From = 0.5, To = 1.5, Duration = TimeSpan.FromSeconds(animTime) };
+					Storyboard.SetTarget(scaleAnimationX, uiControl);
+					Storyboard.SetTargetProperty(scaleAnimationX, new PropertyPath("RenderTransform.ScaleX"));
+					storyboard.Children.Add(scaleAnimationX);
+
+					DoubleAnimation scaleAnimationY = new DoubleAnimation { From = 0.5, To = 1.5, Duration = TimeSpan.FromSeconds(animTime) };
+					Storyboard.SetTarget(scaleAnimationY, uiControl);
+					Storyboard.SetTargetProperty(scaleAnimationY, new PropertyPath("RenderTransform.ScaleY"));
+					storyboard.Children.Add(scaleAnimationY);
+
+					storyboard.Begin();
+				});
+			});			
 		}
 
 		public void Youtube()
@@ -304,24 +346,40 @@ namespace PlayerUI
 
 		public void PlayPause()
 		{
-			if (this.Canvas.Scene == null && !string.IsNullOrWhiteSpace(SelectedFileName))
-				Play();
-			else
+			if (!IsPlaying)
 			{
-				_mediaDecoder.TogglePause();
+				if(CanPlay)
+					Play();
+			} else
+			{
+				if (IsPaused) UnPause();
+				else Pause();
 			}
+			
 		}
 
 		public void Pause()
 		{
-			//BivrostPlayerPrototype.PlayerPrototype.Pause();
-			_mediaDecoder.Pause();
+			IsPaused = true;
+			Task.Factory.StartNew(() => {
+				_mediaDecoder.Pause();
+			});			
+			shellView.PlayPause.Visibility = Visibility.Visible;
+			shellView.Pause.Visibility = Visibility.Collapsed;
+			NotifyOfPropertyChange(() => CanPlay);
+			AnimateIndicator(shellView.PauseIndicator);
 		}
 
 		public void UnPause()
 		{
-			//BivrostPlayerPrototype.PlayerPrototype.UnPause();
-			_mediaDecoder.Unpause();
+			IsPaused = false;
+			Task.Factory.StartNew(() => {
+				_mediaDecoder.Unpause();
+			});
+			shellView.PlayPause.Visibility = Visibility.Collapsed;
+			shellView.Pause.Visibility = Visibility.Visible;
+			NotifyOfPropertyChange(() => CanPlay);
+			AnimateIndicator(shellView.PlayIndicator);
 		}
 
 		public void OpenFile()
@@ -376,7 +434,7 @@ namespace PlayerUI
 			e.Handled = true;
 		}
 
-		public bool CanPlay { get { return !IsPlaying && IsFileSelected; } }
+		public bool CanPlay { get { return (!IsPlaying || IsPaused) && IsFileSelected;  } }
 		public bool CanStop { get { return IsPlaying; } }
 
 		public bool CanOpenFile { get { return !IsPlaying; } }
@@ -384,17 +442,22 @@ namespace PlayerUI
 		public void Stop()
 		{
 			OculusPlayback.Stop();
-			this.Canvas.Scene = null;
+			this.DXCanvas.Scene = null;
 			Task.Factory.StartNew(() =>
 			{
 				if (IsPlaying || _mediaDecoder.IsEnded)
 				{
 					_mediaDecoder.Stop();
 					_timeValue = 0;
-					NotifyOfPropertyChange(() => TimeValue);
+					Execute.OnUIThread(() =>
+					{
+						NotifyOfPropertyChange(() => TimeValue);
+						NotifyOfPropertyChange(() => CanPlay);
+					});
 				}
 			});
-			
+			shellView.PlayPause.Visibility = Visibility.Visible;
+			shellView.Pause.Visibility = Visibility.Collapsed;
 		}
 
 		public override void TryClose(bool? dialogResult = null)
@@ -435,8 +498,8 @@ namespace PlayerUI
 			var current = e.GetPosition(null);
 			var delta = current - _dragLastPosition;
 			_dragLastPosition = current;
-			if(this.Canvas.Scene != null) {
-				((Scene)this.Canvas.Scene).MoveDelta((float)delta.X, (float)delta.Y, (float) (72f/this.Canvas.ActualWidth) * 1.5f);
+			if(this.DXCanvas.Scene != null) {
+				((Scene)this.DXCanvas.Scene).MoveDelta((float)delta.X, (float)delta.Y, (float) (72f/this.DXCanvas.ActualWidth) * 1.5f);
 			}
 		}
 

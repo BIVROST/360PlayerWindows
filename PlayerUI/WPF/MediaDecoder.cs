@@ -40,10 +40,10 @@ namespace PlayerUI
 		public bool IsStereo { get { return IsPlaying ? _stereoVideo : false; } }
 		public bool IsPlaying { get; private set; }
 		public bool IsPaused { get {
-				lock(criticalSection)
-				{
+				/////lock(criticalSection)
+				//{
 					return _initialized ? (bool)_mediaEngineEx.IsPaused : false;
-				}
+				//}
 			} }
 
 		public bool IsEnded
@@ -224,7 +224,7 @@ namespace PlayerUI
 				}
 
 				_mediaEngineEx.Play();
-				_mediaEngineEx.Volume = 0.2;
+				//_mediaEngineEx.Volume = 0.2;
 				IsPlaying = true;
 			}
 

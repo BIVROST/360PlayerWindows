@@ -149,7 +149,24 @@
 					<DropShadowBitmapEffect ShadowDepth="1" Softness="0.4"></DropShadowBitmapEffect>
 				</Label.BitmapEffect>
 			</Label>
-		</Grid>
+
+            <Canvas Width="128" Height="128" IsHitTestVisible="False" x:Name="PauseIndicator" Opacity="0">
+                <Canvas.RenderTransform>
+                    <ScaleTransform x:Name="PauseScale" ScaleX="1" ScaleY="1" CenterX="64" CenterY="64"></ScaleTransform>
+				</Canvas.RenderTransform>
+				<Ellipse Width="136" Height="136" Fill="#90000000" Canvas.Top="-4" Canvas.Left="-4"/>
+                <svgc:SvgViewbox Source="Graphics/pause.svg" Width="128" Height="128"/>
+            </Canvas>
+
+            <Canvas Width="128" Height="128" IsHitTestVisible="False" x:Name="PlayIndicator" Opacity="0">
+                <Canvas.RenderTransform>
+                    <ScaleTransform x:Name="PlayScale" ScaleX="1" ScaleY="1" CenterX="64" CenterY="64"></ScaleTransform>
+                </Canvas.RenderTransform>
+                <Ellipse Width="136" Height="136" Fill="#90000000" Canvas.Top="-4" Canvas.Left="-4"/>
+                <svgc:SvgViewbox Source="Graphics/play.svg" Width="128" Height="128" />
+            </Canvas>
+			
+        </Grid>
 
 		<Grid Grid.Row="2" Background="#99000000" x:Name="controlBar">
 			<Grid.ColumnDefinitions>
@@ -157,7 +174,7 @@
 				<ColumnDefinition Width="1051*"/>
 			</Grid.ColumnDefinitions>
 
-			<Slider Orientation="Horizontal" Minimum="0" Maximum="{Binding MaxTime, Mode=OneWay}" ClipToBounds="False" Style="{StaticResource MyCustomStyleForSlider}"
+			<Slider Orientation="Horizontal" Minimum="0" Maximum="{Binding MaxTime, Mode=OneWay}" ClipToBounds="False" Style="{StaticResource MyCustomStyleForSlider}" IsMoveToPointEnabled="True"
 					cal:Message.Attach="[PreviewMouseDown] = [SliderLock]; [PreviewMouseUp] = [SliderUnlock]" LargeChange="0" SmallChange="0" VerticalAlignment="Top" Margin="0 -8 0 0"
 					Value="{Binding TimeValue}" Grid.ColumnSpan="2"
 					>
@@ -213,7 +230,28 @@
 					</Button.Template>
 				</Button>
 
-				<Button x:Name="Stop"  Width="36" Height="36" Margin="4 0">
+                <Button x:Name="Pause"  Width="45" Height="45" Margin="4 0">
+                    <Button.Template>
+                        <ControlTemplate TargetType="{x:Type Button}">
+                            <Grid>
+                                <svgc:SvgViewbox Name="Normal" Source="Graphics/pause.svg"/>
+                                <svgc:SvgViewbox Name="Hover" Source="Graphics/pause_blue.svg" Visibility="Hidden"/>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+                                    <Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+                                    <Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+
+                <Button x:Name="Stop"  Width="36" Height="36" Margin="4 0">
 					<Button.Template>
 						<ControlTemplate TargetType="{x:Type Button}">
 							<Grid>
