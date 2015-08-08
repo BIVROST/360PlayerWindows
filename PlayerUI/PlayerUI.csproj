@@ -235,6 +235,7 @@
     </Compile>
     <Compile Include="EventShellViewModel.cs" />
     <Compile Include="Logic\Logic.cs" />
+    <Compile Include="Logic\ProtocolHandler.cs" />
     <Compile Include="Logic\Settings.cs" />
     <Compile Include="Oculus\EyeTexture.cs" />
     <Compile Include="Oculus\OculusPlayback.cs" />

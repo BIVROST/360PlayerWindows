@@ -288,6 +288,7 @@ namespace PlayerUI
 
 					_mediaDecoder.Play();
 					this.DXCanvas.Scene = new Scene(_mediaDecoder.TextureL);
+					
 					if(OculusPlayback.IsOculusPresent()) { 
 						OculusPlayback.textureL = _mediaDecoder.TextureL;
 						OculusPlayback.textureR = _mediaDecoder.TextureR;
@@ -576,5 +577,16 @@ namespace PlayerUI
 			shell.mainGrid.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.LightGray);
 			NotifyOfPropertyChange(null);
 		}
+
+		public void OnLostFocus()
+		{
+			if (IsPlaying) ((Scene)this.DXCanvas.Scene).HasFocus = false;
+		}
+
+		public void OnGotFocus()
+		{
+			if (IsPlaying) ((Scene)this.DXCanvas.Scene).HasFocus = true;
+		}
+
 	}
 }
