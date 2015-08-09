@@ -116,7 +116,7 @@
 		<Grid.RowDefinitions>
 			<RowDefinition Height="22" x:Name="menuRow"/>
 			<RowDefinition Height="*" />
-			<RowDefinition Height="68" />
+			<RowDefinition Height="68" x:Name="bottomBarRow"/>
 		</Grid.RowDefinitions>
 
 		<DockPanel Grid.Row="0" Grid.RowSpan="2" Background="Transparent" VerticalAlignment="Top" x:Name="topMenuPanel">
@@ -143,13 +143,13 @@
 					  cal:Message.Attach="[Shortcut Control+O] = [Action OpenFile]; [Shortcut Control+Q] = [Action Quit]; [Shortcut Control+R] = [Action Rewind];  [Shortcut Space] = [Action PlayPause]; 
 					  [Shortcut F11] = [Action ToggleFullscreen]; [Shortcut Escape] = [Action EscapeFullscreen];" />
 
-		<Grid Grid.Row="1" >
-			<Image Source="logo.png" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="100,0" Stretch="None"  Width="400" Height="98" cal:Message.Attach="[Event MouseDown] = [Action PlayPause]" x:Name="logoImage"/>
-			<Label x:Name="SelectedFileNameLabel" Content="Wybrana nazwa pliku video.mp4" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Top" Foreground="White" Margin="10" >
-				<Label.BitmapEffect>
-					<DropShadowBitmapEffect ShadowDepth="1" Softness="0.4"></DropShadowBitmapEffect>
-				</Label.BitmapEffect>
-			</Label>
+
+        <Grid Grid.Row="1" >
+            <Grid Background="#99000000" Height="32" VerticalAlignment="Top" x:Name="TopBar">
+                <!--<Border BorderThickness="0,0,0,2" BorderBrush="#ffffff">-->
+                <Label x:Name="SelectedFileNameLabel" Content="Wybrana nazwa pliku video.mp4" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Bottom" Foreground="White" Height="34"/>
+                <!--</Border>-->
+            </Grid>			
 
             <Canvas Width="128" Height="128" IsHitTestVisible="False" x:Name="PauseIndicator" Opacity="0">
                 <Canvas.RenderTransform>
@@ -169,7 +169,10 @@
 			
         </Grid>
 
-		<Grid Grid.Row="2" Background="#99000000" x:Name="controlBar">
+        <Image Source="logo.png" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="100,50" Stretch="None"  Width="400" Height="98" Grid.Row="1" Grid.RowSpan="2" Opacity="0.5"
+			   cal:Message.Attach="[Event MouseDown] = [Action PlayPause]" x:Name="logoImage"/>
+
+        <Grid Grid.Row="2" Background="#99000000" x:Name="controlBar">
 			<Grid.ColumnDefinitions>
 				<ColumnDefinition Width="7*"/>
 				<ColumnDefinition Width="1051*"/>
@@ -181,13 +184,8 @@
 					>
 			</Slider>
 
-			<StackPanel Orientation="Horizontal" x:Name="playbackControlButtons" Grid.ColumnSpan="2">
-				<!--<Button x:Name="OpenFile" Width="120" Height="32" Margin="5">Open</Button>
-				<Button x:Name="Play" Width="120" Height="32" Margin="5">Play</Button>
-				<Button x:Name="Stop" Width="120" Height="32" Margin="5">Stop</Button>
-				<Button x:Name="Youtube" Width="120" Height="32" Margin="5">Youtube</Button>-->
-
-				<Button x:Name="Test"  Width="36" Height="36" Margin="24 0 4 0">
+            <StackPanel Orientation="Horizontal" x:Name="playbackControlButtons" Grid.ColumnSpan="2" Height="68">
+                <Button x:Name="Test"  Width="36" Height="36" Margin="24 0 4 0">
 					<Button.Template>
 						<ControlTemplate TargetType="{x:Type Button}">
 							<Grid>
@@ -296,7 +294,7 @@
 
 			</StackPanel>
 
-			<StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Grid.Column="1">
+			<StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Grid.Column="1" Height="68">
 
 				<TextBlock x:Name="VideoTime" Grid.Column="1" Foreground="White" Text="0:00 / 0:00" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="5 0 18 0" />
 

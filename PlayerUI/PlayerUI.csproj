@@ -262,6 +262,7 @@
     <Compile Include="WPF\DPFCanvas.cs" />
     <Compile Include="WPF\DwmApiWrapper.cs" />
     <Compile Include="WPF\DX11ImageSource.cs" />
+    <Compile Include="WPF\GridLengthAnimation.cs" />
     <Compile Include="WPF\InputBindingTrigger.cs" />
     <Compile Include="WPF\IScene.cs" />
     <Compile Include="WPF\MediaDecoder.cs" />

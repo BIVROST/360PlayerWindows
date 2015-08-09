@@ -1,8 +1,10 @@
 ﻿using Caliburn.Micro;
 using PlayerUI.ConfigUI;
 using PlayerUI.Oculus;
+using PlayerUI.WPF;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -213,6 +215,64 @@ namespace PlayerUI
 						Play();
 					}
 				}
+
+			shellView.MouseMove += WatchUIVisibility;
+
+			uiVisibilityBackgrundChecker = new BackgroundWorker();
+			uiVisibilityBackgrundChecker.WorkerSupportsCancellation = true;
+			uiVisibilityBackgrundChecker.DoWork += (sender, parameters) =>
+			{
+				while(!ended || uiVisibilityBackgrundChecker.CancellationPending)
+				{
+
+					if ((DateTime.Now - lastUIMove).TotalSeconds > 2)
+					{
+						if (IsPlaying)
+						{
+							if (uiVisible)
+							{
+								uiVisible = false;
+								HideBars();
+							}
+						}
+					}
+					Thread.Sleep(100);
+				}
+			};
+
+			uiVisibilityBackgrundChecker.RunWorkerAsync();
+			
+        }
+
+		private DateTime lastUIMove;
+		private BackgroundWorker uiVisibilityBackgrundChecker;
+		private bool uiVisible = true;
+
+		public void WatchUIVisibility(object sender, MouseEventArgs e)
+		{
+			if (!IsPlaying || (IsPlaying && IsPaused))
+			{
+				lastUIMove = DateTime.Now;
+				if (!uiVisible)
+				{
+					uiVisible = true;
+					ShowBars();
+				}
+			} else
+			if(IsPlaying && !IsPaused) {
+				double height = shellView.ActualHeight;
+				double Y = e.GetPosition(null).Y;
+				if(!fullscreen || (height - Y) < 120)
+				{
+					lastUIMove = DateTime.Now;
+					if (!uiVisible)
+					{
+						uiVisible = true;
+						ShowBars();
+					}
+				}
+			}
+			
 		}
 
 		protected override void OnDeactivate(bool close)
@@ -454,11 +514,12 @@ namespace PlayerUI
 					{
 						NotifyOfPropertyChange(() => TimeValue);
 						NotifyOfPropertyChange(() => CanPlay);
+
+						shellView.PlayPause.Visibility = Visibility.Visible;
+						shellView.Pause.Visibility = Visibility.Collapsed;
 					});
 				}
-			});
-			shellView.PlayPause.Visibility = Visibility.Visible;
-			shellView.Pause.Visibility = Visibility.Collapsed;
+			});			
 		}
 
 		public override void TryClose(bool? dialogResult = null)
@@ -561,8 +622,9 @@ namespace PlayerUI
 			//shell.controlBar.Visibility = Visibility.Collapsed;
 			//shell.logoImage.Visibility = Visibility.Collapsed;
 			shell.menuRow.Height = new GridLength(0);
-			shell.SelectedFileNameLabel.Visibility = Visibility.Collapsed;
+			//shell.SelectedFileNameLabel.Visibility = Visibility.Collapsed;
 			shell.mainGrid.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Black);
+			shell.OpenSettings.Visibility = Visibility.Collapsed;
 			NotifyOfPropertyChange(null);
 		}
 
@@ -573,10 +635,70 @@ namespace PlayerUI
 			shell.controlBar.Visibility = Visibility.Visible;
 			//shell.logoImage.Visibility = Visibility.Visible;
 			shell.menuRow.Height = new GridLength(22);
-			shell.SelectedFileNameLabel.Visibility = Visibility.Visible;
+			//shell.SelectedFileNameLabel.Visibility = Visibility.Visible;
 			shell.mainGrid.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.LightGray);
+			shell.OpenSettings.Visibility = Visibility.Visible;
 			NotifyOfPropertyChange(null);
 		}
+
+		private void HideBars()
+		{
+			Task.Factory.StartNew(() => Execute.OnUIThread(() => {
+
+				Storyboard storyboard = new Storyboard();
+				double animTime = 0.8;
+
+				GridLengthAnimation heightAnimation = new GridLengthAnimation() { From = shellView.bottomBarRow.Height, To = new GridLength(0), Duration = TimeSpan.FromSeconds(animTime) };
+				heightAnimation.EasingFunction = new QuadraticEase() { EasingMode = EasingMode.EaseInOut };
+				Storyboard.SetTarget(heightAnimation, shellView.bottomBarRow);
+				Storyboard.SetTargetProperty(heightAnimation, new PropertyPath("Height"));
+				storyboard.Children.Add(heightAnimation);
+
+				DoubleAnimation topHeightAnimation = new DoubleAnimation() { From = shellView.TopBar.Height, To = 0, Duration = TimeSpan.FromSeconds(animTime) };
+				topHeightAnimation.EasingFunction = new QuadraticEase() { EasingMode = EasingMode.EaseInOut };
+				Storyboard.SetTarget(topHeightAnimation, shellView.TopBar);
+				Storyboard.SetTargetProperty(topHeightAnimation, new PropertyPath("Height"));
+				storyboard.Children.Add(topHeightAnimation);
+
+				DoubleAnimation opacityAnimatiion = new DoubleAnimation() { From = shellView.SelectedFileNameLabel.Opacity, To = 0, Duration = TimeSpan.FromSeconds(animTime/2) };
+				Storyboard.SetTarget(opacityAnimatiion, shellView.SelectedFileNameLabel);
+				Storyboard.SetTargetProperty(opacityAnimatiion, new PropertyPath("Opacity"));
+				storyboard.Children.Add(opacityAnimatiion);
+
+				storyboard.Begin();
+
+			}));
+		}
+
+		private void ShowBars()
+		{
+			Task.Factory.StartNew(() => Execute.OnUIThread(() => {
+
+				Storyboard storyboard = new Storyboard();
+				double animTime = 0.4;
+
+				GridLengthAnimation heightAnimation = new GridLengthAnimation() { From = shellView.bottomBarRow.Height, To = new GridLength(68), Duration = TimeSpan.FromSeconds(animTime) };
+				heightAnimation.EasingFunction = new QuadraticEase() { EasingMode = EasingMode.EaseInOut };
+				Storyboard.SetTarget(heightAnimation, shellView.bottomBarRow);
+				Storyboard.SetTargetProperty(heightAnimation, new PropertyPath("Height"));
+				storyboard.Children.Add(heightAnimation);
+
+				DoubleAnimation topHeightAnimation = new DoubleAnimation() { From = shellView.TopBar.Height, To = 32, Duration = TimeSpan.FromSeconds(animTime) };
+				topHeightAnimation.EasingFunction = new QuadraticEase() { EasingMode = EasingMode.EaseInOut };
+				Storyboard.SetTarget(topHeightAnimation, shellView.TopBar);
+				Storyboard.SetTargetProperty(topHeightAnimation, new PropertyPath("Height"));
+				storyboard.Children.Add(topHeightAnimation);
+
+				DoubleAnimation opacityAnimatiion = new DoubleAnimation() { From = shellView.SelectedFileNameLabel.Opacity, To = 1, Duration = TimeSpan.FromSeconds(animTime*2) };
+				Storyboard.SetTarget(opacityAnimatiion, shellView.SelectedFileNameLabel);
+				Storyboard.SetTargetProperty(opacityAnimatiion, new PropertyPath("Opacity"));
+				storyboard.Children.Add(opacityAnimatiion);
+
+				storyboard.Begin();
+
+			}));			
+		}
+
 
 		public void OnLostFocus()
 		{
