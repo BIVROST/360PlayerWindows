@@ -1,6 +1,7 @@
 ﻿using Caliburn.Micro;
 using PlayerUI.ConfigUI;
 using PlayerUI.Oculus;
+using PlayerUI.Tools;
 using PlayerUI.WPF;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using System.Xml;
@@ -19,7 +21,7 @@ using System.Xml;
 
 namespace PlayerUI
 {
-	public class ShellViewModel : Screen
+	public partial class ShellViewModel : Screen
 	{
 		public string VideoLength { get; set; }
 		public string CurrentPosition { get; set; }
@@ -45,8 +47,11 @@ namespace PlayerUI
 		Nancy.Hosting.Self.NancyHost nancy;
 
 		private AutoResetEvent waitForPlaybackReady = new AutoResetEvent(false);
+		private ManualResetEvent waitForPlaybackStop = new ManualResetEvent(false);
 
 		private const string DisplayString = "Bivrost Player ™ BETA";
+
+		public VolumeControlViewModel VolumeRocker { get; set; }
 
 		public ShellViewModel()
 		{
@@ -68,24 +73,37 @@ namespace PlayerUI
 
 			_mediaDecoder.OnEnded += () =>
 			{
-				Stop();
+				Task.Factory.StartNew(() =>	Execute.OnUIThread(() => Stop()));
 			};
 
 			_mediaDecoder.OnTimeUpdate += (time) =>
 			{
-				if (!_mediaDecoder.IsPlaying) return;
 
-				if (!lockSlider)
+				if (!_mediaDecoder.IsPlaying) return;
+				Task.Factory.StartNew(() =>
 				{
-					CurrentPosition = (new TimeSpan(0, 0, (int)Math.Floor(time))).ToString();
-					_timeValue = time;
-					NotifyOfPropertyChange(() => TimeValue);
-				}
-				UpdateTimeLabel();
+					Execute.OnUIThread(() =>
+					{
+						if (!lockSlider)
+						{
+							CurrentPosition = (new TimeSpan(0, 0, (int)Math.Floor(time))).ToString();
+							_timeValue = time;
+							NotifyOfPropertyChange(() => TimeValue);
+						}
+						UpdateTimeLabel();
+					});
+				});
 			};
 
 
 			UpdateTimeLabel();
+
+			VolumeRocker = new VolumeControlViewModel();
+			VolumeRocker.Volume = 0.5;
+			VolumeRocker.OnVolumeChange += (volume) =>
+			{
+				_mediaDecoder.SetVolume(volume);
+			};
 
 			#region NANCY REMOTE CONTROL SERVER
 			if (Logic.Instance.settings.EnableRemoteServer) { 
@@ -193,6 +211,35 @@ namespace PlayerUI
 		#endregion
 
 
+		private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+		{
+
+			if (msg == NativeMethods.WM_SHOWBIVROSTPLAYER)
+			{
+				BringToFront();
+				handled = true;
+			}
+			return IntPtr.Zero;
+		}
+
+		public void BringToFront()
+		{
+			playerWindow.Activate();
+			string clipboardText = Clipboard.GetText();
+			Console.WriteLine(clipboardText);
+			if (clipboardText.StartsWith("bivrost://"))
+			{
+				Console.WriteLine(clipboardText);
+			}
+		}
+
+		protected override void OnViewLoaded(object view)
+		{
+			base.OnViewLoaded(view);
+
+			HwndSource source = HwndSource.FromHwnd(new WindowInteropHelper(playerWindow).Handle);
+			source.AddHook(new HwndSourceHook(WndProc));
+		}
 
 		protected override void OnViewAttached(object view, object context)
 		{
@@ -274,6 +321,8 @@ namespace PlayerUI
 			}
 			
 		}
+
+
 
 		protected override void OnDeactivate(bool close)
 		{
@@ -366,35 +415,7 @@ namespace PlayerUI
 			AnimateIndicator(shellView.PlayIndicator);
         }
 
-		private void AnimateIndicator(UIElement uiControl)
-		{
-			Task.Factory.StartNew(() =>
-			{
-				Thread.Sleep(100);
-				Execute.OnUIThread(() =>
-				{
-					Storyboard storyboard = new Storyboard();
-					double animTime = 0.8;
-
-					DoubleAnimation opacityAnimation = new DoubleAnimation { From = 0.8, To = 0.0, Duration = TimeSpan.FromSeconds(animTime) };
-					Storyboard.SetTarget(opacityAnimation, uiControl);
-					Storyboard.SetTargetProperty(opacityAnimation, new PropertyPath("Opacity"));
-					storyboard.Children.Add(opacityAnimation);
-
-					DoubleAnimation scaleAnimationX = new DoubleAnimation { From = 0.5, To = 1.5, Duration = TimeSpan.FromSeconds(animTime) };
-					Storyboard.SetTarget(scaleAnimationX, uiControl);
-					Storyboard.SetTargetProperty(scaleAnimationX, new PropertyPath("RenderTransform.ScaleX"));
-					storyboard.Children.Add(scaleAnimationX);
-
-					DoubleAnimation scaleAnimationY = new DoubleAnimation { From = 0.5, To = 1.5, Duration = TimeSpan.FromSeconds(animTime) };
-					Storyboard.SetTarget(scaleAnimationY, uiControl);
-					Storyboard.SetTargetProperty(scaleAnimationY, new PropertyPath("RenderTransform.ScaleY"));
-					storyboard.Children.Add(scaleAnimationY);
-
-					storyboard.Begin();
-				});
-			});			
-		}
+		
 
 		public void Youtube()
 		{
@@ -453,7 +474,7 @@ namespace PlayerUI
 				{
 					IsFileSelected = true;
 					SelectedFileName = ofd.FileName;
-					Play();
+					Play();				
 				}
 		}
 
@@ -498,10 +519,11 @@ namespace PlayerUI
 		public bool CanPlay { get { return (!IsPlaying || IsPaused) && IsFileSelected;  } }
 		public bool CanStop { get { return IsPlaying; } }
 
-		public bool CanOpenFile { get { return !IsPlaying; } }
+		//public bool CanOpenFile { get { return !IsPlaying; } }
 
 		public void Stop()
 		{
+			Console.WriteLine("STOP STOP STOP");
 			OculusPlayback.Stop();
 			this.DXCanvas.Scene = null;
 			Task.Factory.StartNew(() =>
@@ -519,7 +541,8 @@ namespace PlayerUI
 						shellView.Pause.Visibility = Visibility.Collapsed;
 					});
 				}
-			});			
+			});
+			waitForPlaybackStop.Set();
 		}
 
 		public override void TryClose(bool? dialogResult = null)
@@ -615,91 +638,6 @@ namespace PlayerUI
 			if (fullscreen) ToggleFullscreen();
 		}
 
-		public void HideUI()
-		{
-			var shell = playerWindow as ShellView;
-			shell.topMenuPanel.Visibility = Visibility.Collapsed;
-			//shell.controlBar.Visibility = Visibility.Collapsed;
-			//shell.logoImage.Visibility = Visibility.Collapsed;
-			shell.menuRow.Height = new GridLength(0);
-			//shell.SelectedFileNameLabel.Visibility = Visibility.Collapsed;
-			shell.mainGrid.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Black);
-			shell.OpenSettings.Visibility = Visibility.Collapsed;
-			NotifyOfPropertyChange(null);
-		}
-
-		public void ShowUI()
-		{
-			var shell = playerWindow as ShellView;
-			shell.topMenuPanel.Visibility = Visibility.Visible;
-			shell.controlBar.Visibility = Visibility.Visible;
-			//shell.logoImage.Visibility = Visibility.Visible;
-			shell.menuRow.Height = new GridLength(22);
-			//shell.SelectedFileNameLabel.Visibility = Visibility.Visible;
-			shell.mainGrid.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.LightGray);
-			shell.OpenSettings.Visibility = Visibility.Visible;
-			NotifyOfPropertyChange(null);
-		}
-
-		private void HideBars()
-		{
-			Task.Factory.StartNew(() => Execute.OnUIThread(() => {
-
-				Storyboard storyboard = new Storyboard();
-				double animTime = 0.8;
-
-				GridLengthAnimation heightAnimation = new GridLengthAnimation() { From = shellView.bottomBarRow.Height, To = new GridLength(0), Duration = TimeSpan.FromSeconds(animTime) };
-				heightAnimation.EasingFunction = new QuadraticEase() { EasingMode = EasingMode.EaseInOut };
-				Storyboard.SetTarget(heightAnimation, shellView.bottomBarRow);
-				Storyboard.SetTargetProperty(heightAnimation, new PropertyPath("Height"));
-				storyboard.Children.Add(heightAnimation);
-
-				DoubleAnimation topHeightAnimation = new DoubleAnimation() { From = shellView.TopBar.Height, To = 0, Duration = TimeSpan.FromSeconds(animTime) };
-				topHeightAnimation.EasingFunction = new QuadraticEase() { EasingMode = EasingMode.EaseInOut };
-				Storyboard.SetTarget(topHeightAnimation, shellView.TopBar);
-				Storyboard.SetTargetProperty(topHeightAnimation, new PropertyPath("Height"));
-				storyboard.Children.Add(topHeightAnimation);
-
-				DoubleAnimation opacityAnimatiion = new DoubleAnimation() { From = shellView.SelectedFileNameLabel.Opacity, To = 0, Duration = TimeSpan.FromSeconds(animTime/2) };
-				Storyboard.SetTarget(opacityAnimatiion, shellView.SelectedFileNameLabel);
-				Storyboard.SetTargetProperty(opacityAnimatiion, new PropertyPath("Opacity"));
-				storyboard.Children.Add(opacityAnimatiion);
-
-				storyboard.Begin();
-
-			}));
-		}
-
-		private void ShowBars()
-		{
-			Task.Factory.StartNew(() => Execute.OnUIThread(() => {
-
-				Storyboard storyboard = new Storyboard();
-				double animTime = 0.4;
-
-				GridLengthAnimation heightAnimation = new GridLengthAnimation() { From = shellView.bottomBarRow.Height, To = new GridLength(68), Duration = TimeSpan.FromSeconds(animTime) };
-				heightAnimation.EasingFunction = new QuadraticEase() { EasingMode = EasingMode.EaseInOut };
-				Storyboard.SetTarget(heightAnimation, shellView.bottomBarRow);
-				Storyboard.SetTargetProperty(heightAnimation, new PropertyPath("Height"));
-				storyboard.Children.Add(heightAnimation);
-
-				DoubleAnimation topHeightAnimation = new DoubleAnimation() { From = shellView.TopBar.Height, To = 32, Duration = TimeSpan.FromSeconds(animTime) };
-				topHeightAnimation.EasingFunction = new QuadraticEase() { EasingMode = EasingMode.EaseInOut };
-				Storyboard.SetTarget(topHeightAnimation, shellView.TopBar);
-				Storyboard.SetTargetProperty(topHeightAnimation, new PropertyPath("Height"));
-				storyboard.Children.Add(topHeightAnimation);
-
-				DoubleAnimation opacityAnimatiion = new DoubleAnimation() { From = shellView.SelectedFileNameLabel.Opacity, To = 1, Duration = TimeSpan.FromSeconds(animTime*2) };
-				Storyboard.SetTarget(opacityAnimatiion, shellView.SelectedFileNameLabel);
-				Storyboard.SetTargetProperty(opacityAnimatiion, new PropertyPath("Opacity"));
-				storyboard.Children.Add(opacityAnimatiion);
-
-				storyboard.Begin();
-
-			}));			
-		}
-
-
 		public void OnLostFocus()
 		{
 			if (IsPlaying) ((Scene)this.DXCanvas.Scene).HasFocus = false;
@@ -710,5 +648,14 @@ namespace PlayerUI
 			if (IsPlaying) ((Scene)this.DXCanvas.Scene).HasFocus = true;
 		}
 
+		public void ShowVolumeControl()
+		{
+			VolumeRocker.Show();
+		}
+
+		public void Mute()
+		{
+			VolumeRocker.ToggleMute();
+        }
 	}
 }
