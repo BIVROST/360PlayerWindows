@@ -70,7 +70,7 @@ namespace PlayerUI
             this.SetRenderTargetDX11(null);
             Disposer.RemoveAndDispose(ref this.RenderTarget);
 
-            DX11ImageSource.ActiveClients--;
+			DX11ImageSource.ActiveClients--;
             this.EndD3D();
         }
 
@@ -110,12 +110,13 @@ namespace PlayerUI
                 throw new ArgumentNullException("Handle");
 
             this.RenderTarget = new Texture(DX11ImageSource.D3DDevice, renderTarget.Description.Width, renderTarget.Description.Height, 1, Usage.RenderTarget, format, Pool.Default, ref handle);
-            using (Surface surface = this.RenderTarget.GetSurfaceLevel(0))
-            {
-                base.Lock();
+			using (Surface surface = this.RenderTarget.GetSurfaceLevel(0))
+			{
+				base.Lock();
+				
                 base.SetBackBuffer(D3DResourceType.IDirect3DSurface9, surface.NativePointer);
-                base.Unlock();
-            }
+				base.Unlock();
+			}
         }
 
         private void StartD3D()

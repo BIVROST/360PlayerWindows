@@ -44,7 +44,6 @@ namespace PlayerUI
 		}
 		#endregion
 
-
 		public bool EnableRemoteServer { get; set; } = false;
 		public bool EventMode { get; set; } = false;		
 		public string EventModeSingleFile { get; set; } = "";		
@@ -65,6 +64,7 @@ namespace PlayerUI
 
 		[SettingsProperty("Use Oculus Rift if available", ConfigItemType.Bool)]
 		public bool UseOculusWhenConnected { get; set; } = true;
+
 
 	}
 }

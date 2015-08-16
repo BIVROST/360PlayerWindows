@@ -158,11 +158,9 @@
 			this.DepthStencilView = new DepthStencilView(this.Device, this.DepthStencil);
 
 			this.D3DSurface.SetRenderTargetDX11(this.RenderTarget);
-
-
         }
 
-        private void StartRendering()
+		public void StartRendering()
         {
             if (this.RenderTimer.IsRunning)
                 return;
@@ -171,7 +169,7 @@
             this.RenderTimer.Start();
         }
 
-        private void StopRendering()
+        public void StopRendering()
         {
             if (!this.RenderTimer.IsRunning)
                 return;
@@ -195,7 +193,7 @@
                 return;
 			
             this.Render(this.RenderTimer.Elapsed);
-            this.D3DSurface.InvalidateD3DImage();
+			this.D3DSurface.InvalidateD3DImage();
         }
 
         protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
@@ -297,39 +295,39 @@
 
 
 
-		public void SetVideoTexture(Texture2D tex)
-		{
-			SharpDX.DXGI.Device1 dxgiDevice1 = Device.QueryInterface<SharpDX.DXGI.Device1>();
-			var luid = dxgiDevice1.Adapter.Description.Luid;
+		//public void SetVideoTexture(Texture2D tex)
+		//{
+		//	SharpDX.DXGI.Device1 dxgiDevice1 = Device.QueryInterface<SharpDX.DXGI.Device1>();
+		//	var luid = dxgiDevice1.Adapter.Description.Luid;
 
-			IntPtr hWnd = NativeApiWrapper.FindWindow(null, "bivrost");
-			if (hWnd == IntPtr.Zero)
-			{
-				Console.WriteLine("Could not find window.");
-				//return;
-			}
-			else
-			{
-				uint format = (uint)SharpDX.Direct3D9.Format.A8B8G8R8;
-				IntPtr pSharedHandle = IntPtr.Zero;
-				int hr = NativeApiWrapper.GetSharedSurface(hWnd, luid, 0, 0, ref format, out pSharedHandle, 0);
+		//	IntPtr hWnd = NativeApiWrapper.FindWindow(null, "bivrost");
+		//	if (hWnd == IntPtr.Zero)
+		//	{
+		//		Console.WriteLine("Could not find window.");
+		//		//return;
+		//	}
+		//	else
+		//	{
+		//		uint format = (uint)SharpDX.Direct3D9.Format.A8B8G8R8;
+		//		IntPtr pSharedHandle = IntPtr.Zero;
+		//		int hr = NativeApiWrapper.GetSharedSurface(hWnd, luid, 0, 0, ref format, out pSharedHandle, 0);
 
-				RECT winRect;
-				NativeApiWrapper.GetWindowRect(hWnd, out winRect);
+		//		RECT winRect;
+		//		NativeApiWrapper.GetWindowRect(hWnd, out winRect);
 
 
-				var tempResource = Device.OpenSharedResource<SharpDX.Direct3D11.Resource>(pSharedHandle);
-				Texture2D sharedTex = tempResource.QueryInterface<Texture2D>();
-				tempResource.Dispose();
+		//		var tempResource = Device.OpenSharedResource<SharpDX.Direct3D11.Resource>(pSharedHandle);
+		//		Texture2D sharedTex = tempResource.QueryInterface<Texture2D>();
+		//		tempResource.Dispose();
 
-				//Texture2D sharedTex = Device.OpenSharedResource<Texture2D>(resource.SharedHandle);
+		//		//Texture2D sharedTex = Device.OpenSharedResource<Texture2D>(resource.SharedHandle);
 
-				//this.Scene.SetVideoTexture(sharedTex);
+		//		//this.Scene.SetVideoTexture(sharedTex);
 				
-			}
+		//	}
 
-			this.Scene.SetVideoTexture(tex);
+		//	this.Scene.SetVideoTexture(tex);
 
-		}
+		//}
 	}
 }

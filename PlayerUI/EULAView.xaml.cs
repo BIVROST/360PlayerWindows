@@ -15,14 +15,13 @@ using System.Windows.Shapes;
 namespace PlayerUI
 {
 	/// <summary>
-	/// Interaction logic for ShellView.xaml
+	/// Interaction logic for EULAView.xaml
 	/// </summary>
-	public partial class ShellView : Window
+	public partial class EULAView : Window
 	{
-		public ShellView()
+		public EULAView()
 		{
 			InitializeComponent();
 		}
-
 	}
 }

@@ -1,5 +1,6 @@
 ﻿using Caliburn.Micro;
 using PlayerUI.ConfigUI;
+using PlayerUI;
 using PlayerUI.Oculus;
 using PlayerUI.Tools;
 using PlayerUI.WPF;
@@ -239,6 +240,11 @@ namespace PlayerUI
 
 			HwndSource source = HwndSource.FromHwnd(new WindowInteropHelper(playerWindow).Handle);
 			source.AddHook(new HwndSourceHook(WndProc));
+
+			this.DXCanvas.StopRendering();
+
+			UpdateRecents();
+			ShowStartupUI();
 		}
 
 		protected override void OnViewAttached(object view, object context)
@@ -397,6 +403,7 @@ namespace PlayerUI
 
 					_mediaDecoder.Play();
 					this.DXCanvas.Scene = new Scene(_mediaDecoder.TextureL);
+					this.DXCanvas.StartRendering();
 					
 					if(OculusPlayback.IsOculusPresent()) { 
 						OculusPlayback.textureL = _mediaDecoder.TextureL;
@@ -474,8 +481,31 @@ namespace PlayerUI
 				{
 					IsFileSelected = true;
 					SelectedFileName = ofd.FileName;
-					Play();				
+					Play();
+					Task.Factory.StartNew(() => Execute.OnUIThread(() => {
+						Recents.AddRecent(SelectedFileName);
+						UpdateRecents();
+						ShowPlaybackUI();
+					}));
 				}
+		}
+
+		public void UpdateRecents()
+		{
+			Recents.UpdateMenu(shellView.FileMenuItem, (file) =>
+			{
+				if (File.Exists(file))
+				{
+					IsFileSelected = true;
+					SelectedFileName = file;
+					Play();
+					Task.Factory.StartNew(() => Execute.OnUIThread(() => {
+						Recents.AddRecent(SelectedFileName);
+						UpdateRecents();
+						ShowPlaybackUI();
+					}));
+				}
+			});
 		}
 
 		public void OpenAbout()
@@ -495,9 +525,16 @@ namespace PlayerUI
 					IsFileSelected = true;
 					SelectedFileName = files[0];
 					Play();
+					Task.Factory.StartNew(() => Execute.OnUIThread(() => {
+						Recents.AddRecent(SelectedFileName);
+						UpdateRecents();
+						ShowPlaybackUI();
+					}));
 				}
-				
 			}
+			ShowDropFilesPanel(false);
+			if (IsFileSelected == false) ShowStartupPanel(true);
+			PlaybackControlUIHitTestVisible(true);
 		}
 
 		public void SliderLock()
@@ -513,8 +550,19 @@ namespace PlayerUI
 
 		public void FilePreviewDragEnter(DragEventArgs e)
 		{
-			e.Handled = true;
+			ShowDropFilesPanel(true);
+			ShowStartupPanel(false);
+			PlaybackControlUIHitTestVisible(false);
+            e.Handled = true;
 		}
+
+		public void FilePreviewDragLeave(DragEventArgs e)
+		{
+			ShowDropFilesPanel(false);
+			if(IsFileSelected == false) ShowStartupPanel(true);
+			PlaybackControlUIHitTestVisible(true);
+			e.Handled = true;
+        }
 
 		public bool CanPlay { get { return (!IsPlaying || IsPaused) && IsFileSelected;  } }
 		public bool CanStop { get { return IsPlaying; } }
@@ -536,9 +584,13 @@ namespace PlayerUI
 					{
 						NotifyOfPropertyChange(() => TimeValue);
 						NotifyOfPropertyChange(() => CanPlay);
+						CurrentPosition = (new TimeSpan(0, 0, 0)).ToString();
+						UpdateTimeLabel();
 
 						shellView.PlayPause.Visibility = Visibility.Visible;
 						shellView.Pause.Visibility = Visibility.Collapsed;
+
+						this.DXCanvas.StopRendering();
 					});
 				}
 			});
@@ -577,19 +629,33 @@ namespace PlayerUI
 		private bool _drag = false;
 		private IInputElement _element;
 		private Point _dragLastPosition;
+		private DateTime _doubleClickFirst;
+		private bool _doubleClickDetected = false;
+		private bool _waitingForDoubleClickTimeout = false;
+		private Point _waitingPoint;
 
 		public void MouseMove(object sender, MouseEventArgs e)
 		{
+			if (_doubleClickDetected) return;
 			var current = e.GetPosition(null);
 			var delta = current - _dragLastPosition;
 			_dragLastPosition = current;
 			if(this.DXCanvas.Scene != null) {
-				((Scene)this.DXCanvas.Scene).MoveDelta((float)delta.X, (float)delta.Y, (float) (72f/this.DXCanvas.ActualWidth) * 1.5f);
+				((Scene)this.DXCanvas.Scene).MoveDelta((float)delta.X, (float)delta.Y, (float) (72f/this.DXCanvas.ActualWidth) * 1.5f, 20f);
 			}
 		}
 
 		public void MouseDown(object sender, MouseButtonEventArgs e)
 		{
+			if (_doubleClickDetected) _doubleClickDetected = false;
+			else
+			if ((DateTime.Now - _doubleClickFirst).TotalMilliseconds < 250 )
+			{
+				ToggleFullscreen();
+				_doubleClickDetected = true;
+			}
+			_doubleClickFirst = DateTime.Now;
+
 			_mouseDownPoint = e.GetPosition(null);
 			_dragLastPosition = _mouseDownPoint;
 			_drag = false;
@@ -600,11 +666,32 @@ namespace PlayerUI
 
 		public void MouseUp(MouseButtonEventArgs e)
 		{
-			if (_mouseDownPoint == e.GetPosition(null) && !_drag) {
-				PlayPause();				
-			} else {
+			if(!_waitingForDoubleClickTimeout)
+			{
+				_waitingPoint = e.GetPosition(null);
+				_waitingForDoubleClickTimeout = true;
+				Task.Factory.StartNew(() =>
+				{
+					Thread.Sleep(280);
+					Execute.OnUIThread(() =>
+				   {
+					   Console.WriteLine("MAYBE PAUSE?");
+					   if (!_doubleClickDetected)
+					   {
+						   if (_mouseDownPoint == _waitingPoint && !_drag)
+						   {
+							   PlayPause();
+						   }
+						   else
+						   {
 
+						   }
+					   }
+					   _waitingForDoubleClickTimeout = false;
+				   });
+				});
 			}
+
 			if(_element != null) { 
 				_element.ReleaseMouseCapture();
 				_element.MouseMove -= MouseMove;
@@ -657,5 +744,10 @@ namespace PlayerUI
 		{
 			VolumeRocker.ToggleMute();
         }
+
+		public void VolumeMouseWheel(MouseWheelEventArgs e)
+		{
+			VolumeRocker.MouseWheel(e);
+		}
 	}
 }

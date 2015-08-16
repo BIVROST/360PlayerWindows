@@ -59,5 +59,16 @@ namespace PlayerUI.Properties {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to End User License Agreement
+        ///
+        ///The present agreement constitutes a legally binding agreement between the Licensee and KOLOR, a sole-proprietor limited liability company with a capital of 8.000,00 €, the head office of which is situated at 73800 FRANCIN (FRANCE), 112 Voie Albert Einstein, registered in the CHAMBERY trade register under reference 479 247 751, represented by Mr. Alexandre JENNY, Executive Manager, in accordance with the law and current company articles, domiciled in this function at the aforeme [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string EULA {
+            get {
+                return ResourceManager.GetString("EULA", resourceCulture);
+            }
+        }
     }
 }

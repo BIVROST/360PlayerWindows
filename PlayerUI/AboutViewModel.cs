@@ -9,5 +9,14 @@ namespace PlayerUI
 {
 	public class AboutViewModel : Screen
 	{
+		public AboutViewModel()
+		{
+			DisplayName = "About Bivrost Player";
+		}
+
+		public void OpenEULA()
+		{
+			DialogHelper.ShowDialog<EULAViewModel>();
+		}
 	}
 }

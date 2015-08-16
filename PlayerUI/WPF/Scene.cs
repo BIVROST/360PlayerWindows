@@ -28,6 +28,9 @@
 		private float deltaTime = 0;
 		private float lastFrameTime = 0;
 		public bool HasFocus = true;
+		private Quaternion targetRotationQuaternion;
+		private Quaternion currentRotationQuaternion;
+		private float lerpSpeed = 3f;
 
 		public Scene(Texture2D sharedTexture)
 		{
@@ -97,7 +100,7 @@
 			this.videoTexture = sharedTexture;
 		}
 
-		public void MoveDelta(float x, float y, float ratio)
+		public void MoveDelta(float x, float y, float ratio, float lerpSpeed)
 		{
 			yaw += -MathUtil.DegreesToRadians(x) * ratio;
             pitch += -MathUtil.DegreesToRadians(y) * ratio;
@@ -105,7 +108,9 @@
 			pitch = MathUtil.Clamp(pitch, (float)-Math.PI / 2f, (float)Math.PI / 2f);
 			Quaternion q1 = Quaternion.RotationYawPitchRoll(yaw, 0, 0);
 			Quaternion q2 = Quaternion.RotationYawPitchRoll(0, pitch, 0);
-			basicEffect.View = Matrix.RotationQuaternion(q2 * q1);
+			//basicEffect.View = Matrix.RotationQuaternion(q2 * q1);
+			this.lerpSpeed = lerpSpeed;
+			targetRotationQuaternion = q2 * q1;
 		}
 
 		public void ResetRotation()
@@ -115,6 +120,7 @@
 			Quaternion q1 = Quaternion.RotationYawPitchRoll(yaw, 0, 0);
 			Quaternion q2 = Quaternion.RotationYawPitchRoll(0, pitch, 0);
 			basicEffect.View = Matrix.RotationQuaternion(q2 * q1);
+			currentRotationQuaternion = q2 * q1;
 		}
 
 
@@ -133,6 +139,8 @@
 			if (lastFrameTime == 0) lastFrameTime = currentFrameTime;
 			deltaTime = currentFrameTime - lastFrameTime;
 			lastFrameTime = currentFrameTime;
+			currentRotationQuaternion = Quaternion.Lerp(currentRotationQuaternion, targetRotationQuaternion, lerpSpeed * deltaTime);
+			basicEffect.View = Matrix.RotationQuaternion(currentRotationQuaternion);
         }
 
 		void IScene.Render()
@@ -146,13 +154,13 @@
 			if (HasFocus)
 			{
 				if (Keyboard.IsKeyDown(Key.Left))
-					MoveDelta(1f, 0f, speed * deltaTime);
+					MoveDelta(1f, 0f, speed * deltaTime, 3f);
 				if (Keyboard.IsKeyDown(Key.Right))
-					MoveDelta(-1.0f, 0f, speed * deltaTime);
+					MoveDelta(-1.0f, 0f, speed * deltaTime, 3f);
 				if (Keyboard.IsKeyDown(Key.Up))
-					MoveDelta(0f, 1f, speed * deltaTime);
+					MoveDelta(0f, 1f, speed * deltaTime, 3f);
 				if (Keyboard.IsKeyDown(Key.Down))
-					MoveDelta(0f, -1f, speed * deltaTime);
+					MoveDelta(0f, -1f, speed * deltaTime, 3f);
 			}
 
 			primitive.Draw(basicEffect);

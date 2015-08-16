@@ -28,6 +28,8 @@ namespace PlayerUI
 		{
 			settings = new Settings();
 
+			Recents.Load();
+
 			Task.Factory.StartNew(() =>
 			{
 				webSocketServer = new WebSocketServer("ws://127.0.0.1:24876"); // PORT "BIVRO" 24876

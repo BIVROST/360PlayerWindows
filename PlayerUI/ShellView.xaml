@@ -6,7 +6,7 @@
 		xmlns:svgc="http://sharpvectors.codeplex.com/svgc/"
 		xmlns:sys="clr-namespace:System;assembly=mscorlib"
 		
-        Title="ShellView" Height="600" Width="1066" MinWidth="1066"  MinHeight="600" WindowStartupLocation="CenterScreen" Icon="sygnet.ico" 
+        Title="ShellView" Height="600" Width="1066" MinWidth="820"  MinHeight="530" WindowStartupLocation="CenterScreen" Icon="sygnet.ico" 
 		cal:Message.Attach="[Shortcut Control+Y] = [Action Youtube]; [Event Deactivated] = [Action OnLostFocus]; [Event Activated] = [Action OnGotFocus]">
 
 	<Window.Resources>
@@ -110,8 +110,8 @@
 		</ResourceDictionary>
 	</Window.Resources>
 
-	<Grid Background="LightGray" UseLayoutRounding="True" cal:Message.Attach="[Event Drop] = [Action FileDropped($eventArgs)]; [Event PreviewDragOver] = [Action FilePreviewDragEnter($eventArgs)];
-		  [Event MouseDown] = [Action MouseDown($source, $eventArgs)]; [Event MouseUp] = [Action MouseUp($eventArgs)];" 
+	<Grid Background="Black" UseLayoutRounding="True" cal:Message.Attach="[Event Drop] = [Action FileDropped($eventArgs)]; [Event PreviewDragOver] = [Action FilePreviewDragEnter($eventArgs)];
+		  [Event MouseDown] = [Action MouseDown($source, $eventArgs)]; [Event MouseUp] = [Action MouseUp($eventArgs)]; [Event PreviewDragLeave] = [Action FilePreviewDragLeave($eventArgs)];" 
 		  AllowDrop="True" x:Name="mainGrid">
 		<Grid.RowDefinitions>
 			<RowDefinition Height="22" x:Name="menuRow"/>
@@ -123,19 +123,19 @@
 			<Menu DockPanel.Dock="Top" Height="22" Padding="2">
 				<MenuItem Header="File" x:Name="FileMenuItem">
 					<MenuItem Header="Open file" x:Name="OpenFile"/>
-					<MenuItem Header="Open Youtube link" x:Name="Youtube"/>
+					<MenuItem Header="Open URL" x:Name="Youtube"/>
 					<Separator />
-                    <MenuItem Header="{Binding Recents.First}" Visibility="Visible" x:Name="PlayFirstRecent"/>
-                    <MenuItem Header="{Binding Recents.Second}" Visibility="Collapsed" x:Name="PlaySecondRecent"/>
-                    <MenuItem Header="{Binding Recents.Third}" Visibility="Collapsed" x:Name="PlayThirdRecent"/>
+                    <MenuItem Header="Quit" x:Name="Quit"/>                    
                     <Separator  />
-                    <MenuItem Header="Quit" x:Name="Quit"/>
+                    <MenuItem Header="( no recently opened files )" Foreground="gray" Visibility="Visible" Tag="recent"/>
 				</MenuItem>
 				<MenuItem Header="Options">
 					<MenuItem Header="Settings" cal:Message.Attach="[Event Click] = [Action OpenSettings]"/>
 				</MenuItem>
 				<MenuItem Header="Help">
-					<Separator />
+                    <MenuItem Header="Help / Support" cal:Message.Attach="[Event Click] = [Action OpenSupportPage]"/>
+					<MenuItem Header="Home Page" cal:Message.Attach="[Event Click] = [Action OpenHomePage]"/>                    
+                    <Separator />
                     <MenuItem Header="About Bivrost Player" cal:Message.Attach="[Event Click] = [Action OpenAbout]"/>
                 </MenuItem>
 			</Menu>
@@ -148,7 +148,7 @@
 					  [Shortcut F11] = [Action ToggleFullscreen]; [Shortcut Escape] = [Action EscapeFullscreen];" />
 
 
-        <Grid Grid.Row="1" >
+        <Grid Grid.Row="1" Grid.RowSpan="2">
             <Grid Background="#99000000" Height="32" VerticalAlignment="Top" x:Name="TopBar">
                 <!--<Border BorderThickness="0,0,0,2" BorderBrush="#ffffff">-->
                 <Label x:Name="SelectedFileNameLabel" Content="Wybrana nazwa pliku video.mp4" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Bottom" Foreground="White" Height="34"/>
@@ -177,7 +177,73 @@
 
         </Grid>
 
-        <Image Source="logo.png" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="100,50" Stretch="None"  Width="400" Height="98" Grid.Row="1" Grid.RowSpan="2" Opacity="0.5" IsHitTestVisible="False"/>
+        <Grid Grid.Row="1" Width="400" Height="400" x:Name="StartupPanel">
+            <svgc:SvgViewbox Source="Graphics/bivrostlogo.svg" HorizontalAlignment="Center" VerticalAlignment="Center" Width="400" />
+
+            <Button x:Name="_OpenFile"  Width="64" Height="64" Margin="100,0,0,50" HorizontalAlignment="Left" VerticalAlignment="Bottom" cal:Message.Attach="OpenFile">
+                <Button.Template>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Grid>
+                            <svgc:SvgViewbox Name="Normal" Source="Graphics/open.svg"/>
+                            <svgc:SvgViewbox Name="Hover" Source="Graphics/open_blue.svg" Visibility="Hidden"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+                                <Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+                                <Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+
+            <!--<svgc:SvgViewbox Source="Graphics/open.svg" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="64" Grid.Row="1" Margin="100,0,0,50"/>-->
+            <!--<svgc:SvgViewbox Source="Graphics/open.svg" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="64" Grid.Row="1" Margin="0,0,100,50"/>-->
+
+            <Button x:Name="_OpenUrl"  Width="64" Height="64" Margin="0,0,100,50" HorizontalAlignment="Right" VerticalAlignment="Bottom" cal:Message.Attach="Youtube">
+                <Button.Template>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Grid>
+                            <svgc:SvgViewbox Name="Normal" Source="Graphics/openurl.svg"/>
+                            <svgc:SvgViewbox Name="Hover" Source="Graphics/openurl_blue.svg" Visibility="Hidden"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+                                <Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+                                <Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+        </Grid>
+
+        <Grid Grid.Row="1" Margin="200,80,200,140" IsHitTestVisible="False" x:Name="DropFilesPanel" Grid.RowSpan="2">
+            <Rectangle RadiusX="32" RadiusY="32" StrokeThickness="1.5" StrokeDashArray="4 2" Fill="#90000000" x:Name="DropFilesRect">
+                <Rectangle.Style>
+                    <Style TargetType="Rectangle">
+                        <Setter Property="Stroke" Value="WhiteSmoke"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Stroke" Value="#00a7f5" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Rectangle.Style>                
+            </Rectangle>
+            <Label HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontSize="32" IsHitTestVisible="False" FontFamily="Segoe UI Light">Drop video files here</Label>
+        </Grid>
+
+
+        <!--<Image Source="logo.png" HorizontalAlignment="Center" VerticalAlignment="Center" Stretch="None"  Width="400" Height="98" Grid.Row="1" Grid.RowSpan="2" Opacity="1" IsHitTestVisible="False"/>-->
 
         <Grid Grid.Row="2" Background="#99000000" x:Name="controlBar">
 			<Grid.ColumnDefinitions>
@@ -185,7 +251,7 @@
 				<ColumnDefinition Width="1051*"/>
 			</Grid.ColumnDefinitions>
 
-			<Slider Orientation="Horizontal" Minimum="0" Maximum="{Binding MaxTime, Mode=OneWay}" ClipToBounds="False" Style="{StaticResource MyCustomStyleForSlider}" IsMoveToPointEnabled="True"
+			<Slider x:Name="VideoProgressBar" Orientation="Horizontal" Minimum="0" Maximum="{Binding MaxTime, Mode=OneWay}" ClipToBounds="False" Style="{StaticResource MyCustomStyleForSlider}" IsMoveToPointEnabled="True"
 					cal:Message.Attach="[PreviewMouseDown] = [SliderLock]; [PreviewMouseUp] = [SliderUnlock]" LargeChange="0" SmallChange="0" VerticalAlignment="Top" Margin="0 -8 0 0"
 					Value="{Binding TimeValue}" Grid.ColumnSpan="2"
 					>
@@ -347,7 +413,8 @@
 					</Button.Template>
 				</Button>
 
-				<ToggleButton x:Name="VolumeButton"  Width="36" Height="36" Margin="4 0" cal:Message.Attach="[Event MouseEnter] = [Action ShowVolumeControl]; [Event Click] = [Action Mute];">
+				<ToggleButton x:Name="VolumeButton"  Width="36" Height="36" Margin="4 0" cal:Message.Attach="[Event MouseEnter] = [Action ShowVolumeControl];
+							  [Event Click] = [Action Mute]; [Event MouseWheel] = [Action VolumeMouseWheel($eventArgs)]">
                     <ToggleButton.Template>
                         <ControlTemplate TargetType="{x:Type ToggleButton}">
 							<Grid>

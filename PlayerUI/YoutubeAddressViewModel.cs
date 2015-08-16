@@ -11,7 +11,7 @@ namespace PlayerUI
 	{
 		public YoutubeAddressViewModel()
 		{
-			DisplayName = "Podaj adres filmu Youtube";
+			DisplayName = "Open video URL";
 			YoutubeId = "";
 		}
 
@@ -23,7 +23,7 @@ namespace PlayerUI
 		{
 			if (string.IsNullOrWhiteSpace(Url))
 			{
-				System.Windows.MessageBox.Show("Niepoprawny adres youtube");
+				System.Windows.MessageBox.Show("Incorrect URL");
 				TryClose();
 				return;
 			}
@@ -39,11 +39,11 @@ namespace PlayerUI
 					{
 						YoutubeId = list[0].Split('=')[1];
 					}
-					else System.Windows.MessageBox.Show("Niepoprawny adres youtube");
+					else System.Windows.MessageBox.Show("Incorrect URL");
 				}
-				else System.Windows.MessageBox.Show("Niepoprawny adres youtube");
+				else System.Windows.MessageBox.Show("Incorrect URL");
 			}
-			else System.Windows.MessageBox.Show("Niepoprawny adres youtube");
+			else System.Windows.MessageBox.Show("Incorrect URL");
 
 			TryClose();
 		}

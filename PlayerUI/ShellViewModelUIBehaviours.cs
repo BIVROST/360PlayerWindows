@@ -78,6 +78,11 @@ namespace PlayerUI
 				Storyboard.SetTargetProperty(opacityAnimatiion, new PropertyPath("Opacity"));
 				storyboard.Children.Add(opacityAnimatiion);
 
+				DoubleAnimation opacityProgressAnimation = new DoubleAnimation() { From = shellView.SelectedFileNameLabel.Opacity, To = 0, Duration = TimeSpan.FromSeconds(animTime) };
+				Storyboard.SetTarget(opacityProgressAnimation, shellView.VideoProgressBar);
+				Storyboard.SetTargetProperty(opacityProgressAnimation, new PropertyPath("Opacity"));
+				storyboard.Children.Add(opacityProgressAnimation);
+
 				storyboard.Begin();
 
 			}));
@@ -106,6 +111,11 @@ namespace PlayerUI
 				Storyboard.SetTarget(opacityAnimatiion, shellView.SelectedFileNameLabel);
 				Storyboard.SetTargetProperty(opacityAnimatiion, new PropertyPath("Opacity"));
 				storyboard.Children.Add(opacityAnimatiion);
+
+				DoubleAnimation opacityProgressAnimation = new DoubleAnimation() { From = shellView.SelectedFileNameLabel.Opacity, To = 1, Duration = TimeSpan.FromSeconds(animTime) };
+				Storyboard.SetTarget(opacityProgressAnimation, shellView.VideoProgressBar);
+				Storyboard.SetTargetProperty(opacityProgressAnimation, new PropertyPath("Opacity"));
+				storyboard.Children.Add(opacityProgressAnimation);
 
 				storyboard.Begin();
 
@@ -141,5 +151,89 @@ namespace PlayerUI
 				});
 			});
 		}
-	}
+
+		public void ShowPlaybackUI()
+		{
+			ShowStartupPanel(false);
+			ShowDropFilesPanel(false);
+			shellView.VideoTime.Visibility = Visibility.Visible;
+		}
+
+
+		private Storyboard dropFilesPanelDashAnimation;
+
+		public void ShowDropFilesPanel(bool visibility)
+		{
+			shellView.DropFilesPanel.Visibility = visibility ? Visibility.Visible : Visibility.Collapsed;
+
+			if (visibility)
+			{
+				if (dropFilesPanelDashAnimation == null)
+				{
+
+					dropFilesPanelDashAnimation = new Storyboard();
+					double animTime = 5;
+
+					DoubleAnimation offsetAnimation = new DoubleAnimation { From = 0, To = 50, Duration = TimeSpan.FromSeconds(animTime) };
+					Storyboard.SetTarget(offsetAnimation, shellView.DropFilesRect);
+					Storyboard.SetTargetProperty(offsetAnimation, new PropertyPath("StrokeDashOffset"));
+					dropFilesPanelDashAnimation.Children.Add(offsetAnimation);
+
+					dropFilesPanelDashAnimation.RepeatBehavior = RepeatBehavior.Forever;
+					dropFilesPanelDashAnimation.Begin(shellView.DropFilesRect, true);
+					Console.WriteLine("Begin storyboard");
+				}
+				else
+				{
+					if (dropFilesPanelDashAnimation.GetCurrentState(shellView.DropFilesRect) == ClockState.Stopped)
+					{
+						Console.WriteLine("Begin storyboard again");
+						dropFilesPanelDashAnimation.Begin(shellView.DropFilesRect, true);
+					}
+				}
+			}
+			else
+			{
+				if (dropFilesPanelDashAnimation != null)
+				{
+					dropFilesPanelDashAnimation.Stop(shellView.DropFilesRect);
+					Console.WriteLine("Stop storyboard");
+				}
+			}
+		}
+
+		void PlaybackControlUIHitTestVisible(bool hitTestVisible)
+		{
+			shellView.controlBar.IsHitTestVisible = hitTestVisible;
+        }
+
+
+		public void ShowStartupPanel(bool visibility)
+		{
+			shellView.StartupPanel.Visibility = visibility ? Visibility.Visible : Visibility.Collapsed;
+		}
+
+		public void ShowStartupUI()
+		{
+			ShowStartupPanel(true);
+			ShowDropFilesPanel(false);
+			shellView.VideoTime.Visibility = Visibility.Hidden;
+		}
+
+
+		public void OpenEULA()
+		{
+
+		}
+
+		public void OpenHomePage()
+		{
+			
+		}
+
+		public void OpenSupportPage()
+		{
+
+		}
+    }
 }

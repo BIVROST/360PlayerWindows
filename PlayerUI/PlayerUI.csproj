@@ -34,7 +34,7 @@
     <InstallUrl>http://bivrost360.com/VBwii4uwo5/download/desktop/</InstallUrl>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
-    <ApplicationRevision>18</ApplicationRevision>
+    <ApplicationRevision>20</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
@@ -238,12 +238,17 @@
       <DependentUpon>DummyWindowView.xaml</DependentUpon>
     </Compile>
     <Compile Include="DummyWindowViewModel.cs" />
+    <Compile Include="EULAView.xaml.cs">
+      <DependentUpon>EULAView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="EULAViewModel.cs" />
     <Compile Include="EventShellView.xaml.cs">
       <DependentUpon>EventShellView.xaml</DependentUpon>
     </Compile>
     <Compile Include="EventShellViewModel.cs" />
     <Compile Include="Logic\Logic.cs" />
     <Compile Include="Logic\ProtocolHandler.cs" />
+    <Compile Include="Logic\Recents.cs" />
     <Compile Include="Logic\Settings.cs" />
     <Compile Include="Oculus\EyeTexture.cs" />
     <Compile Include="Oculus\OculusPlayback.cs" />
@@ -308,6 +313,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="DummyWindowView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="EULAView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -379,6 +388,9 @@
     <Resource Include="logo.png" />
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="EULA.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
     <Content Include="Graphics\back_blue.svg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -386,6 +398,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Graphics\bivrost.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Graphics\bivrostlogo.svg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Graphics\bivrost_blue.svg">
@@ -438,6 +453,12 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Graphics\oculus.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Graphics\openurl.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Graphics\openurl_blue.svg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Graphics\open_blue.svg">
