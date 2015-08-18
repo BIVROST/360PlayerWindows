@@ -140,8 +140,10 @@
 			deltaTime = currentFrameTime - lastFrameTime;
 			lastFrameTime = currentFrameTime;
 			currentRotationQuaternion = Quaternion.Lerp(currentRotationQuaternion, targetRotationQuaternion, lerpSpeed * deltaTime);
+
 			basicEffect.View = Matrix.RotationQuaternion(currentRotationQuaternion);
-        }
+			//basicEffect.View = Matrix.Lerp(basicEffect.View, Matrix.RotationQuaternion(targetRotationQuaternion), 3f * deltaTime);
+		}
 
 		void IScene.Render()
         {
@@ -154,13 +156,13 @@
 			if (HasFocus)
 			{
 				if (Keyboard.IsKeyDown(Key.Left))
-					MoveDelta(1f, 0f, speed * deltaTime, 3f);
+					MoveDelta(1f, 0f, speed * deltaTime, 4f);
 				if (Keyboard.IsKeyDown(Key.Right))
-					MoveDelta(-1.0f, 0f, speed * deltaTime, 3f);
+					MoveDelta(-1.0f, 0f, speed * deltaTime, 4f);
 				if (Keyboard.IsKeyDown(Key.Up))
-					MoveDelta(0f, 1f, speed * deltaTime, 3f);
+					MoveDelta(0f, 1f, speed * deltaTime, 4f);
 				if (Keyboard.IsKeyDown(Key.Down))
-					MoveDelta(0f, -1f, speed * deltaTime, 3f);
+					MoveDelta(0f, -1f, speed * deltaTime, 4f);
 			}
 
 			primitive.Draw(basicEffect);

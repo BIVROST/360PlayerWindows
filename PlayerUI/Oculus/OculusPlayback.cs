@@ -14,6 +14,8 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Buffer = SharpDX.Direct3D11.Buffer;
 using Device = SharpDX.Direct3D11.Device;
+using DX2D = SharpDX.Direct2D1;
+using System.Runtime.InteropServices;
 
 namespace PlayerUI.Oculus
 {
@@ -98,7 +100,7 @@ namespace PlayerUI.Oculus
 			OVR.ovrResult result;
 
 			// Create DirectX drawing device.
-			SharpDX.Direct3D11.Device device = new Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.None);
+			SharpDX.Direct3D11.Device device = new Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.Debug | DeviceCreationFlags.BgraSupport, new SharpDX.Direct3D.FeatureLevel[] { SharpDX.Direct3D.FeatureLevel.Level_10_0 });
 
 			// Create DirectX Graphics Interface factory, used to create the swap chain.
 			Factory factory = new Factory();
@@ -216,6 +218,7 @@ namespace PlayerUI.Oculus
 				layerEyeFov.Header.Flags = OVR.LayerFlags.HighQuality;
 			}
 
+			#region Rendering primitives and resources
 
 			SharpDX.Toolkit.Graphics.GraphicsDevice gd = SharpDX.Toolkit.Graphics.GraphicsDevice.New(device);
 
@@ -241,6 +244,104 @@ namespace PlayerUI.Oculus
 			basicEffectR.LightingEnabled = false;
 
 			var primitive = SharpDX.Toolkit.Graphics.GeometricPrimitive.Sphere.New(gd, radius, 32, true);
+
+
+			// UI Rendering
+
+			Texture2DDescription uiTextureDescription = new Texture2DDescription()
+			{
+				Width = 1024,
+				Height = 512,
+				MipLevels = 1,
+				ArraySize = 1,
+				Format = Format.B8G8R8A8_UNorm,
+				Usage = ResourceUsage.Default,
+				SampleDescription = new SampleDescription(1, 0),
+				BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
+				CpuAccessFlags = CpuAccessFlags.None,
+				OptionFlags = ResourceOptionFlags.Shared
+			};
+
+
+			Texture2D uiTexture = new SharpDX.Direct3D11.Texture2D(device, uiTextureDescription);
+			SharpDX.DXGI.Surface uiSurface = uiTexture.QueryInterface<Surface>();
+
+			DX2D.Factory factory2d = new DX2D.Factory(SharpDX.Direct2D1.FactoryType.SingleThreaded, DX2D.DebugLevel.Information);
+			DX2D.RenderTargetProperties renderTargetProperties = new DX2D.RenderTargetProperties()
+			{
+				DpiX = 96,
+				DpiY = 96,
+				PixelFormat = new DX2D.PixelFormat(Format.B8G8R8A8_UNorm, SharpDX.Direct2D1.AlphaMode.Premultiplied),
+				Type = SharpDX.Direct2D1.RenderTargetType.Hardware,
+				MinLevel = DX2D.FeatureLevel.Level_10,
+				Usage = SharpDX.Direct2D1.RenderTargetUsage.None
+			};
+			DX2D.RenderTarget target2d = new DX2D.RenderTarget(factory2d, uiSurface, renderTargetProperties);
+			SharpDX.DirectWrite.Factory factoryDW = new SharpDX.DirectWrite.Factory();
+
+
+			// 2D materials
+
+			var uiEffect = new SharpDX.Toolkit.Graphics.BasicEffect(gd);
+			uiEffect.PreferPerPixelLighting = false;
+			uiEffect.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(gd, uiTexture);
+			uiEffect.TextureEnabled = true;
+			//uiEffect.Alpha = 0.5f;
+			uiEffect.LightingEnabled = false;
+
+
+			var blendStateDescription = new BlendStateDescription();
+
+			blendStateDescription.AlphaToCoverageEnable = false;
+
+			blendStateDescription.RenderTarget[0].IsBlendEnabled = true;
+			blendStateDescription.RenderTarget[0].SourceBlend = BlendOption.SourceAlpha;
+			blendStateDescription.RenderTarget[0].DestinationBlend = BlendOption.InverseSourceAlpha;
+			blendStateDescription.RenderTarget[0].BlendOperation = BlendOperation.Add;
+			blendStateDescription.RenderTarget[0].SourceAlphaBlend = BlendOption.Zero;
+			blendStateDescription.RenderTarget[0].DestinationAlphaBlend = BlendOption.Zero;
+			blendStateDescription.RenderTarget[0].AlphaBlendOperation = BlendOperation.Add;
+			blendStateDescription.RenderTarget[0].RenderTargetWriteMask = ColorWriteMaskFlags.All;
+
+			var blendState = SharpDX.Toolkit.Graphics.BlendState.New(gd, blendStateDescription);
+			gd.SetBlendState(blendState);
+
+			var uiPrimitive = SharpDX.Toolkit.Graphics.GeometricPrimitive.Plane.New(gd, 2, 1);
+
+			SharpDX.DirectWrite.TextFormat textFormat = new SharpDX.DirectWrite.TextFormat(factoryDW, "Segoe UI Light", 32f)
+			{
+				TextAlignment = SharpDX.DirectWrite.TextAlignment.Center,
+				ParagraphAlignment = SharpDX.DirectWrite.ParagraphAlignment.Center
+			};
+
+			SharpDX.DirectWrite.TextFormat textFormatSmall = new SharpDX.DirectWrite.TextFormat(factoryDW, "Segoe UI Light", 18f)
+			{
+				TextAlignment = SharpDX.DirectWrite.TextAlignment.Center,
+				ParagraphAlignment = SharpDX.DirectWrite.ParagraphAlignment.Center
+			};
+
+			DX2D.SolidColorBrush textBrush = new SharpDX.Direct2D1.SolidColorBrush(target2d, new Color(1f,1f,1f,1f));
+			DX2D.SolidColorBrush blueBrush = new SharpDX.Direct2D1.SolidColorBrush(target2d, new Color(0, 167, 245, 255));
+
+			target2d.AntialiasMode = SharpDX.Direct2D1.AntialiasMode.Aliased;
+
+			target2d.BeginDraw();
+			target2d.Clear(new Color4(0, 0, 0, 0.7f));
+			target2d.DrawLine(new Vector2(0, 1), new Vector2(1024, 1), blueBrush, 2);
+			target2d.DrawLine(new Vector2(0, 511), new Vector2(1024, 511), blueBrush, 2);
+
+			target2d.DrawText("now playing:", textFormatSmall, new RectangleF(0, 0, 1024, 100), textBrush);
+			target2d.DrawText("moviefilename", textFormat, new RectangleF(0, 50, 1024, 100), textBrush);
+			target2d.EndDraw();
+
+
+			// DEBU UI WINDOW
+			OculusUIDebug debugWindow = new OculusUIDebug();
+			debugWindow.SetSharedTexture(uiTexture);
+			debugWindow.Start();
+
+
+			#endregion
 
 
 			DateTime startTime = DateTime.Now;
@@ -284,9 +385,15 @@ namespace PlayerUI.Oculus
 
 					//LookChanged(viewMatrix);
 
+					
+
 					basicEffectL.World = Matrix.Identity;
 					basicEffectL.View = viewMatrix;
 					basicEffectL.Projection = projectionMatrix;
+
+					uiEffect.World = Matrix.Identity * Matrix.Scaling(1f) * Matrix.Translation(0, 0, -1.5f);
+					uiEffect.Projection = projectionMatrix;
+					uiEffect.View = viewMatrix;
 
 					if (_stereoVideo)
 					{
@@ -304,12 +411,15 @@ namespace PlayerUI.Oculus
 					}
 					else
 						primitive.Draw(basicEffectL);
+
+					uiPrimitive.Draw(uiEffect);
 				}
 
 				hmd.SubmitFrame(0, layers);
 			}
 
 			#endregion
+			debugWindow.Stop();
 
 			waitForRendererStop.Set();
 
@@ -324,6 +434,13 @@ namespace PlayerUI.Oculus
 			depthStencilView.Dispose();
 			depthBuffer.Dispose();
 			factory.Dispose();
+
+			// Release all 2D resources
+
+			target2d.Dispose();
+			uiSurface.Dispose();
+			uiTexture.Dispose();			
+			factory2d.Dispose();
 
 			// Disposing the device, before the hmd, will cause the hmd to fail when disposing.
 			// Disposing the device, after the hmd, will cause the dispose of the device to fail.

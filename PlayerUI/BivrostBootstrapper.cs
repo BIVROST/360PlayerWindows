@@ -12,6 +12,7 @@ namespace PlayerUI
 {
 	public class BivrostBootstrapper : BootstrapperBase
 	{
+		// APP GUID 150A3700-F729-4FE2-B61B-C3C716530C58
 		// Single instance lock
 		static Mutex mutex = new Mutex(true, "{41F397A7-D196-4C6F-B75A-616069D45DAD}");
 		bool ownMutex = false;

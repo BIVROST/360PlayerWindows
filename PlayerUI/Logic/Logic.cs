@@ -28,6 +28,8 @@ namespace PlayerUI
 		{
 			settings = new Settings();
 
+			ProtocolHandler.RegisterProtocol();
+
 			Recents.Load();
 
 			Task.Factory.StartNew(() =>
