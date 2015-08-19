@@ -106,9 +106,9 @@ namespace PlayerUI
 			_factory = new SharpDX.DXGI.Factory();
 			_device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.BgraSupport | DeviceCreationFlags.VideoSupport, _levels);
 
-            SharpDX.DXGI.Device1 dxdevice = _device.QueryInterface<SharpDX.DXGI.Device1>();
-            MessageBox.Show(dxdevice.Adapter.Description.Description);
-            dxdevice.Dispose();
+            //SharpDX.DXGI.Device1 dxdevice = _device.QueryInterface<SharpDX.DXGI.Device1>();
+            //MessageBox.Show(dxdevice.Adapter.Description.Description);
+            //dxdevice.Dispose();
 
             DeviceMultithread mt = _device.QueryInterface<DeviceMultithread>();
 			mt.SetMultithreadProtected(true);
@@ -204,7 +204,7 @@ namespace PlayerUI
 					_mediaEngine.GetNativeVideoSize(out w, out h);
 
 
-					float videoAspect = w / h;
+					float videoAspect = ((float)w) / ((float)h);
 					_stereoVideo = videoAspect < 1.5;
 					h = _stereoVideo ? h / 2 : h;
 
@@ -224,7 +224,8 @@ namespace PlayerUI
 
 
 					textureL = new SharpDX.Direct3D11.Texture2D(_device, frameTextureDescription);
-					textureR = new SharpDX.Direct3D11.Texture2D(_device, frameTextureDescription);
+					if(_stereoVideo)
+						textureR = new SharpDX.Direct3D11.Texture2D(_device, frameTextureDescription);
 				}
 
 				_mediaEngineEx.Play();
@@ -243,7 +244,7 @@ namespace PlayerUI
 						{
 							long lastTs = ts;
 							bool result = _mediaEngine.OnVideoStreamTick(out ts);
-
+							if(ts > 0)
 							if (result && ts != lastTs)
 							{
 								if (_stereoVideo)
@@ -253,12 +254,15 @@ namespace PlayerUI
 								}
 								else
 								{
+									Console.Write("Transfering frame " + ts + " " + w + " x " + h + " ... ");
 									_mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
+									Console.WriteLine(" ... done.");
 								}
 							}
 						}
 					}
 				}
+
 				waitForRenderingEnd.Set();
 				_rendering = false;
 			});

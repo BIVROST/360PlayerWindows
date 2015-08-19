@@ -20,7 +20,7 @@ namespace PlayerUI.Tools
             {
                 adapters += adapter.Description.Description + "\n";
             });
-            System.Windows.MessageBox.Show(adapters);
+            //System.Windows.MessageBox.Show(adapters);
             
         }
 

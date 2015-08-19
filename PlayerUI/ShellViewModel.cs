@@ -69,8 +69,8 @@ namespace PlayerUI
 
 			_mediaDecoder.OnReady += (duration) =>
 			{
-				//waitForPlaybackReady.Set();
-                Task.Factory.StartNew(() => Execute.OnUIThread(() => waitForPlaybackReady.Set()));
+				waitForPlaybackReady.Set();
+                //Task.Factory.StartNew(() => Execute.OnUIThread(() => waitForPlaybackReady.Set()));
             };
 
 			_mediaDecoder.OnEnded += () =>
@@ -389,6 +389,7 @@ namespace PlayerUI
 			if (!IsFileSelected) return;
 
 			_mediaDecoder.LoadMedia(SelectedFileName);
+
 			Task.Factory.StartNew(() =>
 			{
 
@@ -406,21 +407,27 @@ namespace PlayerUI
 					this.DXCanvas.Scene = new Scene(_mediaDecoder.TextureL);
 					this.DXCanvas.StartRendering();
 					
-					if(OculusPlayback.IsOculusPresent()) { 
+					if(OculusPlayback.IsOculusPresent()) {
 						OculusPlayback.textureL = _mediaDecoder.TextureL;
 						OculusPlayback.textureR = _mediaDecoder.TextureR;
 						OculusPlayback._stereoVideo = _mediaDecoder.IsStereo;
 						OculusPlayback.Start();
+					} else
+					{
+						Console.WriteLine("No Oculus connected");
 					}
+
 					shellView.PlayPause.Visibility = Visibility.Collapsed;
 					shellView.Pause.Visibility = Visibility.Visible;
 					NotifyOfPropertyChange(null);
+
+					playerWindow.Focus();
+					AnimateIndicator(shellView.PlayIndicator);
 				});
 				
 			});
 
-			playerWindow.Focus();
-			AnimateIndicator(shellView.PlayIndicator);
+			
         }
 
 		

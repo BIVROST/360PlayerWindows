@@ -32,6 +32,9 @@
 		private Quaternion currentRotationQuaternion;
 		private float lerpSpeed = 3f;
 
+		private Texture2D sharedTex;
+		private SharpDX.DXGI.Resource resource;
+
 		public Scene(Texture2D sharedTexture)
 		{
 			videoTexture = sharedTexture;
@@ -55,13 +58,13 @@
 
 			basicEffect.PreferPerPixelLighting = false;
 
-			var resource = videoTexture.QueryInterface<SharpDX.DXGI.Resource>();
-			var sharedTex = _device.OpenSharedResource<Texture2D>(resource.SharedHandle);
-		
+			resource = videoTexture.QueryInterface<SharpDX.DXGI.Resource>();
+			sharedTex = _device.OpenSharedResource<Texture2D>(resource.SharedHandle);
+
 
 			basicEffect.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(graphicsDevice, sharedTex);
 
-			
+
 			basicEffect.TextureEnabled = true;
 			basicEffect.LightingEnabled = false;
 
@@ -126,6 +129,8 @@
 
         void IScene.Detach()
         {
+			Disposer.RemoveAndDispose(ref sharedTex);
+			Disposer.RemoveAndDispose(ref resource);
 			Disposer.RemoveAndDispose(ref graphicsDevice);
 			Disposer.RemoveAndDispose(ref basicEffect);
 			Disposer.RemoveAndDispose(ref primitive);
