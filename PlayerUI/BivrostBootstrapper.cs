@@ -24,6 +24,7 @@ namespace PlayerUI
 
 		protected override void OnStartup(object sender, System.Windows.StartupEventArgs e)
 		{
+            DeviceSelectionTool.EnumerateGraphicCards();
 
 			if (mutex.WaitOne(TimeSpan.Zero, true))
 			{
@@ -45,11 +46,6 @@ namespace PlayerUI
 					}
 				Application.Shutdown();
 			}
-
-			//if (Logic.Instance.settings.EventMode)
-			//	DisplayRootViewFor<EventShellViewModel>();
-			//else
-			//	DisplayRootViewFor<ShellViewModel>();
 		}
 
 		protected override void OnExit(object sender, EventArgs e)

@@ -69,7 +69,7 @@ namespace PlayerUI
 
 		private SharpDX.Direct3D11.Device _device;
 		private Factory _factory;
-		private FeatureLevel[] _levels = new FeatureLevel[] { FeatureLevel.Level_11_0 };
+		private FeatureLevel[] _levels = new FeatureLevel[] { FeatureLevel.Level_10_0 };
 		private DXGIDeviceManager _dxgiManager;
 
 		public event Action<bool> OnPlay = delegate { };
@@ -106,7 +106,11 @@ namespace PlayerUI
 			_factory = new SharpDX.DXGI.Factory();
 			_device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.BgraSupport | DeviceCreationFlags.VideoSupport, _levels);
 
-			DeviceMultithread mt = _device.QueryInterface<DeviceMultithread>();
+            SharpDX.DXGI.Device1 dxdevice = _device.QueryInterface<SharpDX.DXGI.Device1>();
+            MessageBox.Show(dxdevice.Adapter.Description.Description);
+            dxdevice.Dispose();
+
+            DeviceMultithread mt = _device.QueryInterface<DeviceMultithread>();
 			mt.SetMultithreadProtected(true);
 
 			using (SharpDX.DXGI.Device1 dxgiDevice = _device.QueryInterface<SharpDX.DXGI.Device1>())

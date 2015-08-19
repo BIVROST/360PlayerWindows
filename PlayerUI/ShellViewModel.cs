@@ -69,8 +69,9 @@ namespace PlayerUI
 
 			_mediaDecoder.OnReady += (duration) =>
 			{
-				waitForPlaybackReady.Set();
-			};
+				//waitForPlaybackReady.Set();
+                Task.Factory.StartNew(() => Execute.OnUIThread(() => waitForPlaybackReady.Set()));
+            };
 
 			_mediaDecoder.OnEnded += () =>
 			{
@@ -391,7 +392,7 @@ namespace PlayerUI
 			Task.Factory.StartNew(() =>
 			{
 
-				waitForPlaybackReady.WaitOne();
+                waitForPlaybackReady.WaitOne();
 
 				Execute.OnUIThread(() =>
 				{

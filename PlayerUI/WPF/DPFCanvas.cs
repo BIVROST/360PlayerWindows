@@ -76,9 +76,11 @@
         private void StartD3D()
         {
             //this.Device = new Device(DriverType.Hardware, DeviceCreationFlags.BgraSupport | DeviceCreationFlags.VideoSupport | DeviceCreationFlags.Debug, FeatureLevel.Level_11_0);
-			this.Device = new Device(DriverType.Hardware, DeviceCreationFlags.BgraSupport | DeviceCreationFlags.VideoSupport, FeatureLevel.Level_11_0);
+			this.Device = new Device(DriverType.Hardware, DeviceCreationFlags.BgraSupport | DeviceCreationFlags.VideoSupport, FeatureLevel.Level_10_0);
 
 			this.dxdevice = Device.QueryInterface<SharpDX.DXGI.Device1>();
+
+            MessageBox.Show(dxdevice.Adapter.Description.Description);
 
 			dxdevice.Disposing += (e, s) =>
 			{
