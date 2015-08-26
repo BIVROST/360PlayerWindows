@@ -53,7 +53,7 @@
 			graphicsDevice = SharpDX.Toolkit.Graphics.GraphicsDevice.New(_device);
 			basicEffect = new SharpDX.Toolkit.Graphics.BasicEffect(graphicsDevice);
 			
-			basicEffect.Projection = Matrix.PerspectiveFovRH((float)(72f * Math.PI / 180f), (float)16f/9f, 0.001f, 100.0f);
+			basicEffect.Projection = Matrix.PerspectiveFovRH((float)(72f * Math.PI / 180f), (float)16f/9f, 0.0001f, 50.0f);
 			basicEffect.World = Matrix.Identity;
 
 			basicEffect.PreferPerPixelLighting = false;

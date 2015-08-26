@@ -50,9 +50,11 @@ namespace PlayerUI
 		private AutoResetEvent waitForPlaybackReady = new AutoResetEvent(false);
 		private ManualResetEvent waitForPlaybackStop = new ManualResetEvent(false);
 
-		private const string DisplayString = "Bivrost Player ™ BETA";
+		private const string DisplayString = "Bivrost 360Player ™ BETA";
 
 		public VolumeControlViewModel VolumeRocker { get; set; }
+
+		public static string FileFromArgs = "";
 
 		public ShellViewModel()
 		{
@@ -76,6 +78,11 @@ namespace PlayerUI
 			_mediaDecoder.OnEnded += () =>
 			{
 				Task.Factory.StartNew(() =>	Execute.OnUIThread(() => Stop()));
+			};
+
+			_mediaDecoder.OnStop += () =>
+			{
+				Task.Factory.StartNew(() => waitForPlaybackStop.Set());
 			};
 
 			_mediaDecoder.OnTimeUpdate += (time) =>
@@ -227,11 +234,28 @@ namespace PlayerUI
 		public void BringToFront()
 		{
 			playerWindow.Activate();
+
 			string clipboardText = Clipboard.GetText();
 			Console.WriteLine(clipboardText);
+
 			if (clipboardText.StartsWith("bivrost://"))
 			{
 				Console.WriteLine(clipboardText);
+			} else
+			{
+				OpenFileFrom(clipboardText);
+				//if(File.Exists(clipboardText))
+				//{
+				//	Stop();
+				//	IsFileSelected = true;
+				//	SelectedFileName = clipboardText;
+				//	Play();
+				//	Task.Factory.StartNew(() => Execute.OnUIThread(() => {
+				//		Recents.AddRecent(SelectedFileName);
+				//		UpdateRecents();
+				//		ShowPlaybackUI();
+				//	}));
+				//}
 			}
 		}
 
@@ -246,6 +270,19 @@ namespace PlayerUI
 
 			UpdateRecents();
 			ShowStartupUI();
+
+			if(File.Exists(FileFromArgs))
+			{
+				OpenFileFrom(FileFromArgs);
+				//IsFileSelected = true;
+				//SelectedFileName = FileFromArgs;
+				//Play();
+				//Task.Factory.StartNew(() => Execute.OnUIThread(() => {
+				//	Recents.AddRecent(SelectedFileName);
+				//	UpdateRecents();
+				//	ShowPlaybackUI();
+				//}));
+			}
 		}
 
 		protected override void OnViewAttached(object view, object context)
@@ -287,9 +324,16 @@ namespace PlayerUI
 							{
 								uiVisible = false;
 								HideBars();
-							}
+							}	
 						}
 					}
+
+					if ((DateTime.Now - lastCursorMove).TotalSeconds > 3)
+					{
+						if (fullscreen)
+							Execute.OnUIThread(() => Mouse.OverrideCursor = Cursors.None);
+					}
+
 					Thread.Sleep(100);
 				}
 			};
@@ -299,12 +343,15 @@ namespace PlayerUI
         }
 
 		private DateTime lastUIMove;
+		private DateTime lastCursorMove;
 		private BackgroundWorker uiVisibilityBackgrundChecker;
 		private bool uiVisible = true;
 
 		public void WatchUIVisibility(object sender, MouseEventArgs e)
 		{
-			if (!IsPlaying || (IsPlaying && IsPaused))
+			Execute.OnUIThread(() => Mouse.OverrideCursor = null);
+			lastCursorMove = DateTime.Now;
+            if (!IsPlaying || (IsPlaying && IsPaused))
 			{
 				lastUIMove = DateTime.Now;
 				if (!uiVisible)
@@ -325,8 +372,7 @@ namespace PlayerUI
 						ShowBars();
 					}
 				}
-			}
-			
+			}			
 		}
 
 
@@ -392,8 +438,8 @@ namespace PlayerUI
 
 			Task.Factory.StartNew(() =>
 			{
-
-                waitForPlaybackReady.WaitOne();
+				
+				waitForPlaybackReady.WaitOne();
 
 				Execute.OnUIThread(() =>
 				{
@@ -406,21 +452,27 @@ namespace PlayerUI
 					_mediaDecoder.Play();
 					this.DXCanvas.Scene = new Scene(_mediaDecoder.TextureL);
 					this.DXCanvas.StartRendering();
-					
-					if(OculusPlayback.IsOculusPresent()) {
-						OculusPlayback.textureL = _mediaDecoder.TextureL;
-						OculusPlayback.textureR = _mediaDecoder.TextureR;
-						OculusPlayback._stereoVideo = _mediaDecoder.IsStereo;
-						OculusPlayback.Start();
-					} else
+
+					Task.Factory.StartNew(() =>
 					{
-						Console.WriteLine("No Oculus connected");
-					}
+						if (OculusPlayback.IsOculusPresent())
+						{
+
+							OculusPlayback.textureL = _mediaDecoder.TextureL;
+							OculusPlayback.textureR = _mediaDecoder.TextureR;
+							OculusPlayback._stereoVideo = _mediaDecoder.IsStereo;
+							OculusPlayback.Start();
+						}
+						else
+						{
+							Console.WriteLine("No Oculus connected");
+						}
+					});				
 
 					shellView.PlayPause.Visibility = Visibility.Collapsed;
 					shellView.Pause.Visibility = Visibility.Visible;
 					NotifyOfPropertyChange(null);
-
+					
 					playerWindow.Focus();
 					AnimateIndicator(shellView.PlayIndicator);
 				});
@@ -443,6 +495,9 @@ namespace PlayerUI
 
 		public void PlayPause()
 		{
+			//space press hack
+			shellView.VideoProgressBar.Focus();
+
 			if (!IsPlaying)
 			{
 				if(CanPlay)
@@ -457,6 +512,9 @@ namespace PlayerUI
 
 		public void Pause()
 		{
+			//space press hack
+			shellView.VideoProgressBar.Focus();
+
 			IsPaused = true;
 			Task.Factory.StartNew(() => {
 				_mediaDecoder.Pause();
@@ -487,14 +545,15 @@ namespace PlayerUI
 			if(result.HasValue)
 				if (result.Value == true)
 				{
-					IsFileSelected = true;
-					SelectedFileName = ofd.FileName;
-					Play();
-					Task.Factory.StartNew(() => Execute.OnUIThread(() => {
-						Recents.AddRecent(SelectedFileName);
-						UpdateRecents();
-						ShowPlaybackUI();
-					}));
+					OpenFileFrom(ofd.FileName);
+					//IsFileSelected = true;
+					//SelectedFileName = ofd.FileName;
+					//Play();
+					//Task.Factory.StartNew(() => Execute.OnUIThread(() => {
+					//	Recents.AddRecent(SelectedFileName);
+					//	UpdateRecents();
+					//	ShowPlaybackUI();
+					//}));
 				}
 		}
 
@@ -502,17 +561,24 @@ namespace PlayerUI
 		{
 			Recents.UpdateMenu(shellView.FileMenuItem, (file) =>
 			{
-				if (File.Exists(file))
+				if (!File.Exists(file))
 				{
-					IsFileSelected = true;
-					SelectedFileName = file;
-					Play();
-					Task.Factory.StartNew(() => Execute.OnUIThread(() => {
-						Recents.AddRecent(SelectedFileName);
-						UpdateRecents();
-						ShowPlaybackUI();
-					}));
+					Recents.Remove(file);
+					UpdateRecents();
 				}
+				else
+					OpenFileFrom(file);
+				//if (File.Exists(file))
+				//{
+				//	IsFileSelected = true;
+				//	SelectedFileName = file;
+				//	Play();
+				//	Task.Factory.StartNew(() => Execute.OnUIThread(() => {
+				//		Recents.AddRecent(SelectedFileName);
+				//		UpdateRecents();
+				//		ShowPlaybackUI();
+				//	}));
+				//}
 			});
 		}
 
@@ -530,14 +596,15 @@ namespace PlayerUI
 				string ext = Path.GetExtension(files[0]);
 				if (Path.GetExtension(files[0]) == ".mp4")
 				{
-					IsFileSelected = true;
-					SelectedFileName = files[0];
-					Play();
-					Task.Factory.StartNew(() => Execute.OnUIThread(() => {
-						Recents.AddRecent(SelectedFileName);
-						UpdateRecents();
-						ShowPlaybackUI();
-					}));
+					OpenFileFrom(files[0]);
+					//IsFileSelected = true;
+					//SelectedFileName = files[0];
+					//Play();
+					//Task.Factory.StartNew(() => Execute.OnUIThread(() => {
+					//	Recents.AddRecent(SelectedFileName);
+					//	UpdateRecents();
+					//	ShowPlaybackUI();
+					//}));
 				}
 			}
 			ShowDropFilesPanel(false);
@@ -577,8 +644,40 @@ namespace PlayerUI
 
 		//public bool CanOpenFile { get { return !IsPlaying; } }
 
+		private void OpenFileFrom(string file)
+		{			
+			if (File.Exists(file))
+			{
+				Task.Factory.StartNew(() =>
+				{
+					if (IsPlaying)
+					{
+						waitForPlaybackStop.Reset();
+						Stop();
+						
+						waitForPlaybackStop.WaitOne();
+						
+					}
+					IsFileSelected = true;
+					SelectedFileName = file;
+					Execute.OnUIThread(() => Play());
+					Task.Factory.StartNew(() => Execute.OnUIThread(() => {
+						Recents.AddRecent(SelectedFileName);
+						UpdateRecents();
+						ShowPlaybackUI();
+					}));
+				});
+				
+			}
+        }
+
 		public void Stop()
 		{
+			if (fullscreen) ToggleFullscreen();
+			//space press hack
+			shellView.VideoProgressBar.Focus();
+			ShowBars();
+
 			Console.WriteLine("STOP STOP STOP");
 			OculusPlayback.Stop();
 			this.DXCanvas.Scene = null;
@@ -630,6 +729,9 @@ namespace PlayerUI
 
 		public void OpenSettings()
 		{
+			//space press hack
+			shellView.VideoProgressBar.Focus();
+
 			DialogHelper.ShowDialog<ConfigurationViewModel>();
 		}
 
@@ -654,7 +756,7 @@ namespace PlayerUI
 		}
 
 		public void MouseDown(object sender, MouseButtonEventArgs e)
-		{
+		{	
 			if (_doubleClickDetected) _doubleClickDetected = false;
 			else
 			if ((DateTime.Now - _doubleClickFirst).TotalMilliseconds < 250 )
@@ -709,8 +811,12 @@ namespace PlayerUI
 		private bool fullscreen = false;
 		public void ToggleFullscreen()
 		{
+			//space press hack
+			shellView.VideoProgressBar.Focus();
+
 			fullscreen = !fullscreen;
 			if(!fullscreen) {
+				Mouse.OverrideCursor = null;
 				ShowUI();
 				playerWindow.WindowState = WindowState.Normal;
 				playerWindow.WindowStyle = WindowStyle.SingleBorderWindow;
@@ -718,6 +824,7 @@ namespace PlayerUI
 				playerWindow.ResizeMode = ResizeMode.CanResize;
 			} else
 			{
+				Mouse.OverrideCursor = null;
 				HideUI();
 				playerWindow.WindowState = WindowState.Normal;
 				playerWindow.WindowStyle = WindowStyle.None;
@@ -750,12 +857,44 @@ namespace PlayerUI
 
 		public void Mute()
 		{
+			//space press hack
+			shellView.VideoProgressBar.Focus();
+
 			VolumeRocker.ToggleMute();
-        }
+			NotifyOfPropertyChange(() => VolumeTooltip);
+		}
+
+		public string VolumeTooltip
+		{
+			get { return "Volume: " + (VolumeRocker.IsMuted ? "muted" : (Math.Round(VolumeRocker.Volume * 100) + "%")); }
+		}
 
 		public void VolumeMouseWheel(MouseWheelEventArgs e)
 		{
 			VolumeRocker.MouseWheel(e);
+			NotifyOfPropertyChange(() => VolumeTooltip);
+		}
+
+		public void FastForward()
+		{
+			//space press hack
+			shellView.VideoProgressBar.Focus();
+
+			if (IsPlaying)
+			{
+				_mediaDecoder.Seek(_mediaDecoder.CurrentPosition + 5f);
+			}
+		}
+
+		public void FastRewind()
+		{
+			//space press hack
+			shellView.VideoProgressBar.Focus();
+
+			if (IsPlaying)
+			{
+				_mediaDecoder.Seek(_mediaDecoder.CurrentPosition - 5f);
+			}
 		}
 	}
 }

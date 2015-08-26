@@ -52,6 +52,8 @@ namespace PlayerUI
 			}
 		}
 
+		public bool IsMuted { get { return this.mute; } }
+
 		public void Show()
 		{
 			lastMouse = DateTime.Now;
@@ -104,7 +106,8 @@ namespace PlayerUI
 		{
 			double vol = Volume + Math.Sign(eventArgs.Delta) * 0.05f;
 			vol = Math.Max(0, Math.Min(1, vol));
-			Volume = vol;
+			if(!IsMuted)
+				Volume = vol;
 			lastMouse = DateTime.Now;
 		}
 

@@ -22,6 +22,12 @@ namespace PlayerUI
 			catch (Exception) { }
 		}
 
+		public static void Remove(string file)
+		{
+			if (recentFiles.Contains(file))
+				recentFiles.Remove(file);
+		}
+
 		public static void Load()
 		{
 			
@@ -71,7 +77,7 @@ namespace PlayerUI
 			deleteItems.ForEach(di => menuItem.Items.Remove(di));
 
 
-			recentFiles.Reverse<string>().Take(4).ToList().ForEach(recent =>
+			recentFiles.Reverse<string>().Take(10).ToList().ForEach(recent =>
 			  {
 				  string header = Path.GetFileName(recent);
 				  string fileName = recent;

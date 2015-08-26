@@ -6,7 +6,8 @@
 		xmlns:svgc="http://sharpvectors.codeplex.com/svgc/"
 		xmlns:sys="clr-namespace:System;assembly=mscorlib"		
         Title="ShellView" Height="600" Width="1066" MinWidth="820"  MinHeight="530" WindowStartupLocation="CenterScreen" Icon="Graphics\sygnet.ico" 
-		cal:Message.Attach="[Shortcut Control+Y] = [Action Youtube]; [Event Deactivated] = [Action OnLostFocus]; [Event Activated] = [Action OnGotFocus]">
+		cal:Message.Attach="[Shortcut Control+U] = [Action Youtube]; [Event Deactivated] = [Action OnLostFocus]; [Event Activated] = [Action OnGotFocus]; [Shortcut F1] = [Action OpenSupportPage];
+		[Shortcut Tab] = [Action DisableTabPress($source, $eventArgs)];">
 
 	<Window.Resources>
 		<ResourceDictionary>
@@ -17,13 +18,27 @@
 				Graphics/play_blue.svg
 			</sys:String>
 
-			<SolidColorBrush x:Key="HorizontalSliderTrackNormalBackground" Color="#ffffff"/>
+            <Style x:Key="{x:Type ToolTip}" TargetType="ToolTip">
+                <Setter Property="OverridesDefaultStyle" Value="true" />
+                <Setter Property="HasDropShadow" Value="True" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ToolTip">
+                            <Grid>
+                                <Rectangle RadiusX="8" RadiusY="8" Fill="Black" Stroke="#00a7f5" StrokeThickness="1" />
+                                <Label Content="{TemplateBinding Content}" Foreground="#00a7f5"/>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <SolidColorBrush x:Key="HorizontalSliderTrackNormalBackground" Color="#ffffff"/>
 			<SolidColorBrush x:Key="HorizontalSliderTrackElapsedBackground" Color="#00a7f5"/>
 
-			<SolidColorBrush x:Key="HorizontalSliderTrackNormalBorder" Color="#90909090" />
+			<SolidColorBrush x:Key="HorizontalSliderTrackNormalBorder" Color="#90909090" />            
 
-
-			<Style x:Key="SliderRepeatButtonStyleLeft" TargetType="{x:Type RepeatButton}">
+            <Style x:Key="SliderRepeatButtonStyleLeft" TargetType="{x:Type RepeatButton}">
 				<Setter Property="OverridesDefaultStyle" Value="true"/>
 				<Setter Property="IsTabStop" Value="false"/>
 				<Setter Property="Focusable" Value="false"/>
@@ -121,18 +136,18 @@
 		<DockPanel Grid.Row="0" Grid.RowSpan="2" Background="Transparent" VerticalAlignment="Top" x:Name="topMenuPanel">
 			<Menu DockPanel.Dock="Top" Height="22" Padding="2">
 				<MenuItem Header="File" x:Name="FileMenuItem">
-					<MenuItem Header="Open file" x:Name="OpenFile"/>
-					<MenuItem Header="Open URL" x:Name="Youtube"/>
+					<MenuItem Header="Open file" x:Name="OpenFile" InputGestureText="Ctrl+O"/>
+					<MenuItem Header="Open URL" x:Name="Youtube" InputGestureText="Ctrl+U"/>
 					<Separator />
-                    <MenuItem Header="Quit" x:Name="Quit"/>                    
+                    <MenuItem Header="Quit" x:Name="Quit" InputGestureText="Ctrl+Q"/>
                     <Separator  />
                     <MenuItem Header="( no recently opened files )" Foreground="gray" Visibility="Visible" Tag="recent"/>
 				</MenuItem>
 				<MenuItem Header="Options">
-					<MenuItem Header="Settings" cal:Message.Attach="[Event Click] = [Action OpenSettings]"/>
+					<MenuItem Header="Settings" cal:Message.Attach="[Event Click] = [Action OpenSettings]" InputGestureText="Ctrl+P"/>
 				</MenuItem>
 				<MenuItem Header="Help">
-                    <MenuItem Header="Help / Support" cal:Message.Attach="[Event Click] = [Action OpenSupportPage]"/>
+                    <MenuItem Header="Help / Support" cal:Message.Attach="[Event Click] = [Action OpenSupportPage]" InputGestureText="F1"/>
 					<MenuItem Header="Home Page" cal:Message.Attach="[Event Click] = [Action OpenHomePage]"/>                    
                     <Separator />
                     <MenuItem Header="About Bivrost Player" cal:Message.Attach="[Event Click] = [Action OpenAbout]"/>
@@ -182,9 +197,9 @@
             <Button x:Name="_OpenFile"  Width="64" Height="64" Margin="100,0,0,50" HorizontalAlignment="Left" VerticalAlignment="Bottom" cal:Message.Attach="OpenFile">
                 <Button.Template>
                     <ControlTemplate TargetType="{x:Type Button}">
-                        <Grid>
-                            <svgc:SvgViewbox Name="Normal" Source="Graphics/open.svg"/>
-                            <svgc:SvgViewbox Name="Hover" Source="Graphics/open_blue.svg" Visibility="Hidden"/>
+                        <Grid IsHitTestVisible="True" Background="Transparent" ToolTip="Open File">
+                            <svgc:SvgViewbox Name="Normal" Source="Graphics/open.svg" IsHitTestVisible="False"/>
+                            <svgc:SvgViewbox Name="Hover" Source="Graphics/open_blue.svg" Visibility="Hidden" IsHitTestVisible="False"/>
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsPressed" Value="True">
@@ -206,9 +221,9 @@
             <Button x:Name="_OpenUrl"  Width="64" Height="64" Margin="0,0,100,50" HorizontalAlignment="Right" VerticalAlignment="Bottom" cal:Message.Attach="Youtube">
                 <Button.Template>
                     <ControlTemplate TargetType="{x:Type Button}">
-                        <Grid>
-                            <svgc:SvgViewbox Name="Normal" Source="Graphics/openurl.svg"/>
-                            <svgc:SvgViewbox Name="Hover" Source="Graphics/openurl_blue.svg" Visibility="Hidden"/>
+                        <Grid IsHitTestVisible="True" Background="Transparent" ToolTip="Open Url">
+                            <svgc:SvgViewbox Name="Normal" Source="Graphics/openurl.svg" IsHitTestVisible="False"/>
+                            <svgc:SvgViewbox Name="Hover" Source="Graphics/openurl_blue.svg" Visibility="Hidden" IsHitTestVisible="False"/>
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsPressed" Value="True">
@@ -257,12 +272,12 @@
 			</Slider>
 
             <StackPanel Orientation="Horizontal" x:Name="playbackControlButtons" Grid.ColumnSpan="2" Height="68">
-                <Button x:Name="Test"  Width="36" Height="36" Margin="24 0 4 0">
+                <Button x:Name="FastRewind"  Width="36" Height="36" Margin="24 0 4 0">
 					<Button.Template>
 						<ControlTemplate TargetType="{x:Type Button}">
-							<Grid>
-								<svgc:SvgViewbox Name="Normal" Source="Graphics/back.svg"/>
-								<svgc:SvgViewbox Name="Hover" Source="Graphics/back_blue.svg" Visibility="Hidden"/>
+							<Grid IsHitTestVisible="True" Background="Transparent" ToolTip="Fast-Rewind">
+								<svgc:SvgViewbox Name="Normal" Source="Graphics/back.svg" IsHitTestVisible="False"/>
+								<svgc:SvgViewbox Name="Hover" Source="Graphics/back_blue.svg" Visibility="Hidden" IsHitTestVisible="False"/>
 							</Grid>
 							<ControlTemplate.Triggers>
 								<Trigger Property="IsPressed" Value="True">
@@ -283,9 +298,9 @@
 				<Button x:Name="PlayPause"  Width="45" Height="45" Margin="4 0">
 					<Button.Template>
 						<ControlTemplate TargetType="{x:Type Button}">
-							<Grid>
-								<svgc:SvgViewbox Name="Normal" Source="Graphics/play.svg"/>
-								<svgc:SvgViewbox Name="Hover" Source="Graphics/play_blue.svg" Visibility="Hidden"/>
+							<Grid IsHitTestVisible="True" Background="Transparent" ToolTip="Play">
+								<svgc:SvgViewbox Name="Normal" Source="Graphics/play.svg" IsHitTestVisible="False"/>
+								<svgc:SvgViewbox Name="Hover" Source="Graphics/play_blue.svg" Visibility="Hidden" IsHitTestVisible="False"/>
 							</Grid>
 							<ControlTemplate.Triggers>
 								<Trigger Property="IsPressed" Value="True">
@@ -304,9 +319,9 @@
                 <Button x:Name="Pause"  Width="45" Height="45" Margin="4 0">
                     <Button.Template>
                         <ControlTemplate TargetType="{x:Type Button}">
-                            <Grid>
-                                <svgc:SvgViewbox Name="Normal" Source="Graphics/pause.svg"/>
-                                <svgc:SvgViewbox Name="Hover" Source="Graphics/pause_blue.svg" Visibility="Hidden"/>
+                            <Grid IsHitTestVisible="True" Background="Transparent" ToolTip="Pause">
+                                <svgc:SvgViewbox Name="Normal" Source="Graphics/pause.svg" IsHitTestVisible="False"/>
+                                <svgc:SvgViewbox Name="Hover" Source="Graphics/pause_blue.svg" Visibility="Hidden" IsHitTestVisible="False"/>
                             </Grid>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsPressed" Value="True">
@@ -325,9 +340,9 @@
                 <Button x:Name="Stop"  Width="36" Height="36" Margin="4 0">
 					<Button.Template>
 						<ControlTemplate TargetType="{x:Type Button}">
-							<Grid>
-								<svgc:SvgViewbox Name="Normal" Source="Graphics/stop.svg"/>
-								<svgc:SvgViewbox Name="Hover" Source="Graphics/stop_blue.svg" Visibility="Hidden"/>
+							<Grid IsHitTestVisible="True" Background="Transparent" ToolTip="Stop">
+								<svgc:SvgViewbox Name="Normal" Source="Graphics/stop.svg" IsHitTestVisible="False"/>
+								<svgc:SvgViewbox Name="Hover" Source="Graphics/stop_blue.svg" Visibility="Hidden" IsHitTestVisible="False"/>
 							</Grid>
 							<ControlTemplate.Triggers>
 								<Trigger Property="IsPressed" Value="True">
@@ -343,12 +358,12 @@
 					</Button.Template>
 				</Button>
 
-				<Button x:Name="Test4"  Width="36" Height="36" Margin="4 0">
+				<Button x:Name="FastForward"  Width="36" Height="36" Margin="4 0">
 					<Button.Template>
 						<ControlTemplate TargetType="{x:Type Button}">
-							<Grid>
-								<svgc:SvgViewbox Name="Normal" Source="Graphics/next.svg"/>
-								<svgc:SvgViewbox Name="Hover" Source="Graphics/next_blue.svg" Visibility="Hidden"/>
+							<Grid IsHitTestVisible="True" Background="Transparent" ToolTip="Fast-Forward">
+								<svgc:SvgViewbox Name="Normal" Source="Graphics/next.svg" IsHitTestVisible="False"/>
+								<svgc:SvgViewbox Name="Hover" Source="Graphics/next_blue.svg" Visibility="Hidden" IsHitTestVisible="False"/>
 							</Grid>
 							<ControlTemplate.Triggers>
 								<Trigger Property="IsPressed" Value="True">
@@ -373,9 +388,9 @@
 				<Button x:Name="OpenSettings"  Width="36" Height="36" Margin="4 0">
 					<Button.Template>
 						<ControlTemplate TargetType="{x:Type Button}">
-							<Grid>
-								<svgc:SvgViewbox Name="Normal" Source="Graphics/settings.svg"/>
-								<svgc:SvgViewbox Name="Hover" Source="Graphics/settings_blue.svg" Visibility="Hidden"/>
+							<Grid IsHitTestVisible="True" Background="Transparent" ToolTip="Settings">
+                                <svgc:SvgViewbox Name="Normal" Source="Graphics/settings.svg" IsHitTestVisible="False"/>
+                                <svgc:SvgViewbox Name="Hover" Source="Graphics/settings_blue.svg" Visibility="Hidden" IsHitTestVisible="False"/>
 							</Grid>
 							<ControlTemplate.Triggers>
 								<Trigger Property="IsPressed" Value="True">
@@ -394,9 +409,9 @@
 				<Button x:Name="Test6"  Width="36" Height="36" Margin="4 0">
 					<Button.Template>
 						<ControlTemplate TargetType="{x:Type Button}">
-							<Grid>
-								<svgc:SvgViewbox Name="Normal" Source="Graphics/oculus.svg"/>
-								<svgc:SvgViewbox Name="Hover" Source="Graphics/oculus_blue.svg" Visibility="Hidden"/>
+							<Grid IsHitTestVisible="True" Background="Transparent" ToolTip="Oculus Playback">
+								<svgc:SvgViewbox Name="Normal" Source="Graphics/oculus.svg" IsHitTestVisible="False"/>
+								<svgc:SvgViewbox Name="Hover" Source="Graphics/oculus_blue.svg" Visibility="Hidden" IsHitTestVisible="False"/>
 							</Grid>
 							<ControlTemplate.Triggers>
 								<Trigger Property="IsPressed" Value="True">
@@ -416,11 +431,11 @@
 							  [Event Click] = [Action Mute]; [Event MouseWheel] = [Action VolumeMouseWheel($eventArgs)]">
                     <ToggleButton.Template>
                         <ControlTemplate TargetType="{x:Type ToggleButton}">
-							<Grid>
-								<svgc:SvgViewbox Name="Normal" Source="Graphics/speaker.svg" />
-								<svgc:SvgViewbox Name="Hover" Source="Graphics/speaker_blue.svg" Visibility="Hidden"/>
-                                <svgc:SvgViewbox Name="MuteNormal" Source="Graphics/mute.svg" Visibility="Hidden"/>
-                                <svgc:SvgViewbox Name="MuteHover" Source="Graphics/mute_blue.svg" Visibility="Hidden"/>
+							<Grid IsHitTestVisible="True" Background="Transparent" ToolTip="{Binding VolumeTooltip}">
+								<svgc:SvgViewbox Name="Normal" Source="Graphics/speaker.svg" IsHitTestVisible="False" />
+                                <svgc:SvgViewbox Name="Hover" Source="Graphics/speaker_blue.svg" Visibility="Hidden" IsHitTestVisible="False"/>
+                                <svgc:SvgViewbox Name="MuteNormal" Source="Graphics/mute.svg" Visibility="Hidden" IsHitTestVisible="False"/>
+                                <svgc:SvgViewbox Name="MuteHover" Source="Graphics/mute_blue.svg" Visibility="Hidden" IsHitTestVisible="False"/>
                             </Grid>
 							<ControlTemplate.Triggers>
                                 <MultiTrigger>
@@ -540,12 +555,12 @@
 					</ToggleButton.Template>
 				</ToggleButton>
 
-                <Button x:Name="ToggleFullscreen"  Width="36" Height="36" Margin="4 0 20 0">
+                <Button x:Name="ToggleFullscreen"  Width="36" Height="36" Margin="4 0 20 0" >
                     <Button.Template>
                         <ControlTemplate TargetType="{x:Type Button}">
-                            <Grid>
-                                <svgc:SvgViewbox Name="Normal" Source="Graphics/fullscreen.svg"/>
-                                <svgc:SvgViewbox Name="Hover" Source="Graphics/fullscreen_blue.svg" Visibility="Hidden"/>
+                            <Grid Background="Transparent" IsHitTestVisible="True" ToolTip="Fullscreen" >
+                                <svgc:SvgViewbox Name="Normal" Source="Graphics/fullscreen.svg" IsHitTestVisible="False"/>
+                                <svgc:SvgViewbox Name="Hover" Source="Graphics/fullscreen_blue.svg" Visibility="Hidden" IsHitTestVisible="False"/>
                             </Grid>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsPressed" Value="True">

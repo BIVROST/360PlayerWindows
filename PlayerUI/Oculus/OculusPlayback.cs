@@ -29,22 +29,36 @@ namespace PlayerUI.Oculus
 		public static ManualResetEvent waitForRendererStop = new ManualResetEvent(false);
 		public static bool abort = false;
 
+		private static SharpDX.Toolkit.Graphics.BasicEffect basicEffectL;
+		private static SharpDX.Toolkit.Graphics.BasicEffect basicEffectR;
+
+		private static bool _playbackLock = false;
 
 		public static void Start()
 		{
 			abort = false;
 			waitForRendererStop.Reset();
-			Task.Factory.StartNew(() => Render());
+			if (_playbackLock)
+				return;
+			Task.Factory.StartNew(() =>
+			{
+				try
+				{
+					Render();
+				}
+				catch (Exception) { }
+			});
 		}
 
 		public static void Stop()
 		{
 			abort = true;
-			waitForRendererStop.WaitOne(1000);
+			//waitForRendererStop.WaitOne(1000);
 		}
 
 		public static bool IsOculusPresent()
 		{
+			if (_playbackLock) return true;
 			Wrap oculus = new Wrap();
 
 			bool success = oculus.Initialize();
@@ -62,6 +76,8 @@ namespace PlayerUI.Oculus
 
 		private static void Render()
 		{
+			_playbackLock = true;
+
 			Wrap oculus = new Wrap();
 			Hmd hmd;
 
@@ -224,10 +240,8 @@ namespace PlayerUI.Oculus
 
 			var resourceL = textureL.QueryInterface<SharpDX.DXGI.Resource>();
 			var sharedTexL = device.OpenSharedResource<Texture2D>(resourceL.SharedHandle);
-			var resourceR = textureR.QueryInterface<SharpDX.DXGI.Resource>();
-			var sharedTexR = device.OpenSharedResource<Texture2D>(resourceR.SharedHandle);
 
-			var basicEffectL = new SharpDX.Toolkit.Graphics.BasicEffect(gd);
+			basicEffectL = new SharpDX.Toolkit.Graphics.BasicEffect(gd);
 
 			basicEffectL.PreferPerPixelLighting = false;
 			basicEffectL.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(gd, sharedTexL);
@@ -235,13 +249,19 @@ namespace PlayerUI.Oculus
 			basicEffectL.TextureEnabled = true;
 			basicEffectL.LightingEnabled = false;
 
-			var basicEffectR = new SharpDX.Toolkit.Graphics.BasicEffect(gd);
+			if (_stereoVideo)
+			{
+				var resourceR = textureR.QueryInterface<SharpDX.DXGI.Resource>();
+				var sharedTexR = device.OpenSharedResource<Texture2D>(resourceR.SharedHandle);
 
-			basicEffectR.PreferPerPixelLighting = false;
-			basicEffectR.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(gd, sharedTexR);
+				basicEffectR = new SharpDX.Toolkit.Graphics.BasicEffect(gd);
 
-			basicEffectR.TextureEnabled = true;
-			basicEffectR.LightingEnabled = false;
+				basicEffectR.PreferPerPixelLighting = false;
+				basicEffectR.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(gd, sharedTexR);
+
+				basicEffectR.TextureEnabled = true;
+				basicEffectR.LightingEnabled = false;
+			}
 
 			var primitive = SharpDX.Toolkit.Graphics.GeometricPrimitive.Sphere.New(gd, radius, 32, true);
 
@@ -336,14 +356,14 @@ namespace PlayerUI.Oculus
 
 
 			// DEBU UI WINDOW
-			OculusUIDebug debugWindow = new OculusUIDebug();
-			debugWindow.SetSharedTexture(uiTexture);
-			debugWindow.Start();
+			//OculusUIDebug debugWindow = new OculusUIDebug();
+			//debugWindow.SetSharedTexture(uiTexture);
+			//debugWindow.Start();
 
 
 			#endregion
 
-
+			
 			DateTime startTime = DateTime.Now;
 			Vector3 position = new Vector3(0, 0, -1);
 
@@ -381,19 +401,24 @@ namespace PlayerUI.Oculus
 					Matrix viewMatrix = Matrix.RotationQuaternion(rotationQuaternion);
 					viewMatrix.Transpose();
 
-					Matrix projectionMatrix = Matrix.PerspectiveFovRH((float)(90f * Math.PI / 180f), (float)hmd.Resolution.Width / 2f / hmd.Resolution.Height, 0.001f, 100.0f);
+					float fov = eyeTexture.FieldOfView.LeftTan + eyeTexture.FieldOfView.RightTan;
+					double a = Math.Atan(eyeTexture.FieldOfView.LeftTan) * 180f / Math.PI + Math.Atan(eyeTexture.FieldOfView.RightTan) * 180f / Math.PI; ;
+                    //float fov2 = (float)(a * Math.PI / 180f);
+					float fov2 = (float)(102.57f * Math.PI / 180f);
+					//eyeTexture.
+					//float fov2 = 2 * Math.Atan2(eyeTexture.HmdToEyeViewOffset.Z .vScreenSize * distScale, 2 * HMD.eyeToScreenDistance));
 
-					//LookChanged(viewMatrix);
+					Matrix projectionMatrix = Matrix.PerspectiveFovRH(fov2, (float)eyeTexture.ViewportSize.Size.Width / (float)eyeTexture.ViewportSize.Size.Height, 0.001f, 100.0f);
+					//projectionMatrix.Transpose();
 
-					
 
 					basicEffectL.World = Matrix.Identity;
 					basicEffectL.View = viewMatrix;
 					basicEffectL.Projection = projectionMatrix;
 
 					uiEffect.World = Matrix.Identity * Matrix.Scaling(1f) * Matrix.Translation(0, 0, -1.5f);
-					uiEffect.Projection = projectionMatrix;
 					uiEffect.View = viewMatrix;
+					uiEffect.Projection = projectionMatrix;
 
 					if (_stereoVideo)
 					{
@@ -412,14 +437,14 @@ namespace PlayerUI.Oculus
 					else
 						primitive.Draw(basicEffectL);
 
-					uiPrimitive.Draw(uiEffect);
+					//uiPrimitive.Draw(uiEffect);
 				}
 
 				hmd.SubmitFrame(0, layers);
 			}
 
 			#endregion
-			debugWindow.Stop();
+			//debugWindow.Stop();
 
 			waitForRendererStop.Set();
 
@@ -436,6 +461,9 @@ namespace PlayerUI.Oculus
 			factory.Dispose();
 
 			// Release all 2D resources
+			basicEffectL.Dispose();
+			if (_stereoVideo)
+				basicEffectR.Dispose();
 
 			target2d.Dispose();
 			uiSurface.Dispose();
@@ -449,6 +477,8 @@ namespace PlayerUI.Oculus
 
 			hmd.Dispose();
 			oculus.Dispose();
+
+			_playbackLock = false;
 		}
 
 

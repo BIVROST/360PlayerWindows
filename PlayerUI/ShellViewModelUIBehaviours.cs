@@ -13,20 +13,6 @@ namespace PlayerUI
 {
 	public partial class ShellViewModel
 	{
-		public void PlayFirstRecent()
-		{
-			
-		}
-
-		public void PlaySecondRecent()
-		{
-
-		}
-
-		public void PlayThirdRecent()
-		{
-
-		}
 
 		public void HideUI()
 		{
@@ -228,12 +214,19 @@ namespace PlayerUI
 
 		public void OpenHomePage()
 		{
-			
+			if (fullscreen) ToggleFullscreen();
+			System.Diagnostics.Process.Start("http://www.bivrost360.com");
 		}
 
 		public void OpenSupportPage()
 		{
+			if (fullscreen) ToggleFullscreen();
+			System.Diagnostics.Process.Start("http://www.bivrost360.com");
+		}
 
+		public void DisableTabPress(object sender, object e)
+		{ 			
+			Console.WriteLine("tabstop");
 		}
     }
 }

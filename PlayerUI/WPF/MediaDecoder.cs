@@ -31,6 +31,7 @@ namespace PlayerUI
 		private long ts;
 		private bool _stereoVideo = false;
 		private int w, h;
+		private bool manualRender = false;
 
 		private Texture2D textureL;
 		private Texture2D textureR;
@@ -59,6 +60,8 @@ namespace PlayerUI
 		public bool Ready { get; private set; }
 
 		public double Duration { get { return _mediaEngineEx.Duration; } }
+
+		public double CurrentPosition { get { return _mediaEngineEx.CurrentTime; } }
 
 		private bool _initialized = false;
 		private bool _rendering = false;
@@ -240,8 +243,9 @@ namespace PlayerUI
 				{
 					lock (criticalSection)
 					{
-						if (!_mediaEngine.IsPaused)
+						if (!_mediaEngine.IsPaused || manualRender)
 						{
+							manualRender = false;
 							long lastTs = ts;
 							bool result = _mediaEngine.OnVideoStreamTick(out ts);
 							if(ts > 0)
@@ -254,9 +258,9 @@ namespace PlayerUI
 								}
 								else
 								{
-									Console.Write("Transfering frame " + ts + " " + w + " x " + h + " ... ");
+									//Console.Write("Transfering frame " + ts + " " + w + " x " + h + " ... ");
 									_mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
-									Console.WriteLine(" ... done.");
+									//Console.WriteLine(" ... done.");
 								}
 							}
 						}
@@ -319,11 +323,14 @@ namespace PlayerUI
 					if (!_mediaEngineEx.IsSeeking)
 					{
 						_mediaEngineEx.CurrentTime = time;
+						if (IsPaused)
+						{
+							manualRender = true;
+						}
 					}
 				}
 			}
 		}
-
 		
 		public void Stop(bool force = false)
 		{
@@ -340,7 +347,7 @@ namespace PlayerUI
 
 				waitForRenderingEnd.WaitOne(1000);
 			}
-			
+
 			Ready = false;
 
 			lock (criticalSection)
@@ -360,9 +367,9 @@ namespace PlayerUI
 				textureL?.Dispose();
 				textureR?.Dispose();
 
-				_initialized = false;
-	
+				_initialized = false;	
 			}
+			
 		}
 
 		private FileStream fileStream;
@@ -373,6 +380,11 @@ namespace PlayerUI
 		public void LoadMedia(string fileName)
 		{
 			Stop();
+			while (_initialized == true)
+			{
+				Console.WriteLine("Cannot init when initialized");
+				Thread.Sleep(5);
+			}
 			Init();
 
 			if (fileName.Contains("http://") || fileName.Contains("https://"))
