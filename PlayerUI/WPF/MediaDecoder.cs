@@ -122,7 +122,19 @@ namespace PlayerUI
 			}
 
 			_dxgiManager = new DXGIDeviceManager();
-		}
+
+			//MFTEnumEx 
+			var category = SharpDX.MediaFoundation.TransformCategoryGuids.VideoDecoder;
+			var flags = SharpDX.MediaFoundation.TransformEnumFlag.Hardware | TransformEnumFlag.Localmft | TransformEnumFlag.SortAndFilter;
+			var typeInfo = new SharpDX.MediaFoundation.TRegisterTypeInformation();
+			typeInfo.GuidMajorType = MediaTypeGuids.Video;
+			typeInfo.GuidSubtype = VideoFormatGuids.H264;
+		
+			Guid[] guids = new Guid[50];
+			int costamref;
+			MediaFactory.TEnum(category, (int)flags, null, null, null, guids, out costamref);
+			;			
+        }
 
 
 		public void Init()
@@ -398,10 +410,11 @@ namespace PlayerUI
 			}
 			else
 			{
-				fileStream = File.OpenRead(fileName);
-				stream = new ByteStream(fileStream);
-				url = new Uri(fileStream.Name, UriKind.RelativeOrAbsolute);
-				_mediaEngineEx.SetSourceFromByteStream(stream, url.AbsoluteUri);
+				//fileStream = File.OpenRead(fileName);
+				//stream = new ByteStream(fileStream);
+				//url = new Uri(fileStream.Name, UriKind.RelativeOrAbsolute);
+				//_mediaEngineEx.SetSourceFromByteStream(stream, url.AbsoluteUri);
+				_mediaEngineEx.Source = fileName;
 			}
 		}
 

@@ -22,7 +22,7 @@ namespace PlayerUI
 			//shell.logoImage.Visibility = Visibility.Collapsed;
 			shell.menuRow.Height = new GridLength(0);
 			//shell.SelectedFileNameLabel.Visibility = Visibility.Collapsed;
-			shell.mainGrid.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Black);
+			//shell.mainGrid.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Black);
 			shell.OpenSettings.Visibility = Visibility.Collapsed;
 			NotifyOfPropertyChange(null);
 		}
@@ -31,11 +31,11 @@ namespace PlayerUI
 		{
 			var shell = playerWindow as ShellView;
 			shell.topMenuPanel.Visibility = Visibility.Visible;
-			shell.controlBar.Visibility = Visibility.Visible;
+			//shell.controlBar.Visibility = Visibility.Visible;
 			//shell.logoImage.Visibility = Visibility.Visible;
 			shell.menuRow.Height = new GridLength(22);
 			//shell.SelectedFileNameLabel.Visibility = Visibility.Visible;
-			shell.mainGrid.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.LightGray);
+			//shell.mainGrid.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Black);
 			shell.OpenSettings.Visibility = Visibility.Visible;
 			NotifyOfPropertyChange(null);
 		}
@@ -201,6 +201,8 @@ namespace PlayerUI
 
 		public void ShowStartupUI()
 		{
+			shellView.TopBar.Visibility = Visibility.Hidden;
+			this.DXCanvas.Visibility = Visibility.Hidden;
 			ShowStartupPanel(true);
 			ShowDropFilesPanel(false);
 			shellView.VideoTime.Visibility = Visibility.Hidden;
@@ -228,5 +230,40 @@ namespace PlayerUI
 		{ 			
 			Console.WriteLine("tabstop");
 		}
-    }
+
+		public void ChangeFov(System.Windows.Input.MouseWheelEventArgs wheelEventArgs)
+		{
+			if(IsPlaying)
+			{
+				if (this.DXCanvas.Scene != null)
+				{
+					Scene scene = ((Scene)this.DXCanvas.Scene);
+					scene.ChangeFov(Math.Sign(wheelEventArgs.Delta) * -5f);
+				}
+			}
+		}
+
+		public void ResetFov()
+		{
+			if (IsPlaying)
+			{
+				if (this.DXCanvas.Scene != null)
+				{
+					Scene scene = ((Scene)this.DXCanvas.Scene);
+					scene.ResetFov();
+				}
+			}
+		}
+
+		public void ChangeFovZoomIn()
+		{
+			ChangeFov(new System.Windows.Input.MouseWheelEventArgs(null, 0, 120));
+		}
+
+		public void ChangeFovZoomOut()
+		{
+			ChangeFov(new System.Windows.Input.MouseWheelEventArgs(null, 0, -120));
+        }
+
+	}
 }

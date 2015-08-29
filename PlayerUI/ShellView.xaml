@@ -7,7 +7,7 @@
 		xmlns:sys="clr-namespace:System;assembly=mscorlib"		
         Title="ShellView" Height="600" Width="1066" MinWidth="820"  MinHeight="530" WindowStartupLocation="CenterScreen" Icon="Graphics\sygnet.ico" 
 		cal:Message.Attach="[Shortcut Control+U] = [Action Youtube]; [Event Deactivated] = [Action OnLostFocus]; [Event Activated] = [Action OnGotFocus]; [Shortcut F1] = [Action OpenSupportPage];
-		[Shortcut Tab] = [Action DisableTabPress($source, $eventArgs)];">
+		[Shortcut Tab] = [Action DisableTabPress($source, $eventArgs)];" Background="Black">
 
 	<Window.Resources>
 		<ResourceDictionary>
@@ -124,7 +124,7 @@
 		</ResourceDictionary>
 	</Window.Resources>
 
-	<Grid Background="Black" UseLayoutRounding="True" cal:Message.Attach="[Event Drop] = [Action FileDropped($eventArgs)]; [Event PreviewDragOver] = [Action FilePreviewDragEnter($eventArgs)];
+    <Grid Background="#303030" UseLayoutRounding="True" cal:Message.Attach="[Event Drop] = [Action FileDropped($eventArgs)]; [Event PreviewDragOver] = [Action FilePreviewDragEnter($eventArgs)];
 		  [Event MouseDown] = [Action MouseDown($source, $eventArgs)]; [Event MouseUp] = [Action MouseUp($eventArgs)]; [Event PreviewDragLeave] = [Action FilePreviewDragLeave($eventArgs)];" 
 		  AllowDrop="True" x:Name="mainGrid">
 		<Grid.RowDefinitions>
@@ -159,7 +159,8 @@
 
 		<ui:DPFCanvas x:Name="Canvas1" Stretch="UniformToFill" Grid.Row="1" Grid.RowSpan="3" HorizontalAlignment="Center" VerticalAlignment="Center"
 					  cal:Message.Attach="[Shortcut Control+O] = [Action OpenFile]; [Shortcut Control+Q] = [Action Quit]; [Shortcut Control+R] = [Action Rewind];  [Shortcut Space] = [Action PlayPause]; 
-					  [Shortcut F11] = [Action ToggleFullscreen]; [Shortcut Escape] = [Action EscapeFullscreen];" />
+					  [Shortcut F11] = [Action ToggleFullscreen]; [Shortcut Escape] = [Action EscapeFullscreen]; [Event MouseWheel] = [Action ChangeFov($eventArgs)]; [Shortcut Control+NumPad0] = [Action ResetFov];
+					  [Shortcut Control+D0] = [Action ResetFov];" />
 
 
         <Grid Grid.Row="1" Grid.RowSpan="2">

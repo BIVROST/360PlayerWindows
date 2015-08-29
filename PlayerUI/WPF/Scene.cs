@@ -31,6 +31,13 @@
 		private Quaternion targetRotationQuaternion;
 		private Quaternion currentRotationQuaternion;
 		private float lerpSpeed = 3f;
+		private float targetFov = 72f;
+		private float currentFov = 72f;
+
+		private const float MIN_FOV = 40f;		
+		private const float DEFAULT_FOV = 72f;
+		private const float MAX_FOV = 130f;
+
 
 		private Texture2D sharedTex;
 		private SharpDX.DXGI.Resource resource;
@@ -116,6 +123,17 @@
 			targetRotationQuaternion = q2 * q1;
 		}
 
+		public void ChangeFov(float fov)
+		{
+			targetFov += fov;
+			targetFov = Math.Min(MAX_FOV, Math.Max(targetFov, MIN_FOV));
+		}
+
+		public void ResetFov()
+		{
+			targetFov = DEFAULT_FOV;
+		}
+
 		public void ResetRotation()
 		{
 			yaw = 0;
@@ -157,6 +175,8 @@
                 return;
 
 			var speed = 50f;
+			currentFov = Lerp(currentFov, targetFov, 5f * deltaTime);
+			basicEffect.Projection = Matrix.PerspectiveFovRH((float)(currentFov * Math.PI / 180f), (float)16f / 9f, 0.0001f, 50.0f);
 
 			if (HasFocus)
 			{
@@ -171,6 +191,11 @@
 			}
 
 			primitive.Draw(basicEffect);
+        }
+
+		private float Lerp(float value1, float value2, float amount)
+		{
+			return value1 + (value2 - value1) * amount;
         }
     }
 }

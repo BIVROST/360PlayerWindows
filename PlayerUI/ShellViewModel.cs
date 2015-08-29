@@ -104,6 +104,11 @@ namespace PlayerUI
 				});
 			};
 
+			_mediaDecoder.OnError += () =>
+			{
+
+			};
+
 
 			UpdateTimeLabel();
 
@@ -449,7 +454,10 @@ namespace PlayerUI
 					UpdateTimeLabel();
 					DisplayName = DisplayString + " - " + SelectedFileNameLabel;
 
+					_mediaDecoder.SetVolume(VolumeRocker.Volume);
 					_mediaDecoder.Play();
+					this.DXCanvas.Visibility = Visibility.Visible;
+					shellView.TopBar.Visibility = Visibility.Visible;
 					this.DXCanvas.Scene = new Scene(_mediaDecoder.TextureL);
 					this.DXCanvas.StartRendering();
 
@@ -496,7 +504,7 @@ namespace PlayerUI
 		public void PlayPause()
 		{
 			//space press hack
-			shellView.VideoProgressBar.Focus();
+			Execute.OnUIThread(() => shellView.VideoProgressBar.Focus());
 
 			if (!IsPlaying)
 			{
@@ -513,7 +521,7 @@ namespace PlayerUI
 		public void Pause()
 		{
 			//space press hack
-			shellView.VideoProgressBar.Focus();
+			Execute.OnUIThread(() => shellView.VideoProgressBar.Focus());
 
 			IsPaused = true;
 			Task.Factory.StartNew(() => {
@@ -594,8 +602,8 @@ namespace PlayerUI
 				// Note that you can have more than one file.
 				string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
 				string ext = Path.GetExtension(files[0]);
-				if (Path.GetExtension(files[0]) == ".mp4")
-				{
+				//if (Path.GetExtension(files[0]) == ".mp4")
+				//{
 					OpenFileFrom(files[0]);
 					//IsFileSelected = true;
 					//SelectedFileName = files[0];
@@ -605,7 +613,7 @@ namespace PlayerUI
 					//	UpdateRecents();
 					//	ShowPlaybackUI();
 					//}));
-				}
+				//}
 			}
 			ShowDropFilesPanel(false);
 			if (IsFileSelected == false) ShowStartupPanel(true);
@@ -673,13 +681,16 @@ namespace PlayerUI
 
 		public void Stop()
 		{
+			Console.WriteLine("FILE ENDED");
 			if (fullscreen) ToggleFullscreen();
 			//space press hack
-			shellView.VideoProgressBar.Focus();
+			Execute.OnUIThread(() => shellView.VideoProgressBar.Focus());
 			ShowBars();
 
 			Console.WriteLine("STOP STOP STOP");
 			OculusPlayback.Stop();
+			shellView.TopBar.Visibility = Visibility.Hidden;
+			this.DXCanvas.Visibility = Visibility.Hidden;
 			this.DXCanvas.Scene = null;
 			Task.Factory.StartNew(() =>
 			{
@@ -730,7 +741,7 @@ namespace PlayerUI
 		public void OpenSettings()
 		{
 			//space press hack
-			shellView.VideoProgressBar.Focus();
+			Execute.OnUIThread(() => shellView.VideoProgressBar.Focus());
 
 			DialogHelper.ShowDialog<ConfigurationViewModel>();
 		}
@@ -785,7 +796,6 @@ namespace PlayerUI
 					Thread.Sleep(280);
 					Execute.OnUIThread(() =>
 				   {
-					   Console.WriteLine("MAYBE PAUSE?");
 					   if (!_doubleClickDetected)
 					   {
 						   if (_mouseDownPoint == _waitingPoint && !_drag)
@@ -812,7 +822,7 @@ namespace PlayerUI
 		public void ToggleFullscreen()
 		{
 			//space press hack
-			shellView.VideoProgressBar.Focus();
+			Execute.OnUIThread(() => shellView.VideoProgressBar.Focus());
 
 			fullscreen = !fullscreen;
 			if(!fullscreen) {
@@ -858,7 +868,7 @@ namespace PlayerUI
 		public void Mute()
 		{
 			//space press hack
-			shellView.VideoProgressBar.Focus();
+			Execute.OnUIThread(() => shellView.VideoProgressBar.Focus());
 
 			VolumeRocker.ToggleMute();
 			NotifyOfPropertyChange(() => VolumeTooltip);
@@ -878,7 +888,7 @@ namespace PlayerUI
 		public void FastForward()
 		{
 			//space press hack
-			shellView.VideoProgressBar.Focus();
+			Execute.OnUIThread(() => shellView.VideoProgressBar.Focus());
 
 			if (IsPlaying)
 			{
@@ -889,7 +899,7 @@ namespace PlayerUI
 		public void FastRewind()
 		{
 			//space press hack
-			shellView.VideoProgressBar.Focus();
+			Execute.OnUIThread(() => shellView.VideoProgressBar.Focus());
 
 			if (IsPlaying)
 			{
