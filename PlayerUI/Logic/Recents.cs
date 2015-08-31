@@ -5,7 +5,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Interactivity;
 
 namespace PlayerUI
 {
@@ -76,7 +79,7 @@ namespace PlayerUI
 
 			deleteItems.ForEach(di => menuItem.Items.Remove(di));
 
-
+			int index = 1;
 			recentFiles.Reverse<string>().Take(10).ToList().ForEach(recent =>
 			  {
 				  string header = Path.GetFileName(recent);
@@ -87,6 +90,7 @@ namespace PlayerUI
 				  {
 					  bindAction(fileName);
 				  };
+				  //newItem.InputGestureText = "Ctrl+" + index++ % 10;
 				  menuItem.Items.Add(newItem);
 			  });
 		}

@@ -70,5 +70,24 @@ namespace PlayerUI.Properties {
                 return ResourceManager.GetString("EULA", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Third party components:
+        ///
+        ///SharpDX 2.6.3 is under the MIT license.
+        ///Caliburn Micro 2.0.1 is under the MIT license.
+        ///HTML Agility Pack 1.4.9 is under the Microsoft Public License (Ms-PL).
+        ///Newtonsoft Json 6.0 is under the MIT license.
+        ///RestSharp 105.0.1 is under the Apache License Version 2.0.
+        ///SharpVectors 1.0 is under the New BSD License (BSD).
+        ///OculusWrap 1.6.0.2 is under the Microsoft Public License (Ms-PL).
+        ///Nancy 1.2 and Nancy.Hosting.Self 1.2 are under the MIT license.
+        ///Fleck 0.13.0.57 is under the MI [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string EulaLibs {
+            get {
+                return ResourceManager.GetString("EulaLibs", resourceCulture);
+            }
+        }
     }
 }

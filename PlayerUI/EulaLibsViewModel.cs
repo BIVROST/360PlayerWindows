@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 
 namespace PlayerUI
 {
-	public class EULAViewModel : Screen
+	public class EulaLibsViewModel : Screen
 	{
-		public EULAViewModel()
+		public EulaLibsViewModel()
 		{
-			DisplayName = "Bivrost 360Player license";
-			LicenseText = Properties.Resources.EULA;
-        }
+			DisplayName = "3rd party libraries";
+			LicenseText = Properties.Resources.EulaLibs;
+		}
 
 		public string LicenseText { get; set; }
 	}

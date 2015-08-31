@@ -26,7 +26,7 @@
                         <ControlTemplate TargetType="ToolTip">
                             <Grid>
                                 <Rectangle RadiusX="8" RadiusY="8" Fill="Black" Stroke="#00a7f5" StrokeThickness="1" />
-                                <Label Content="{TemplateBinding Content}" Foreground="#00a7f5"/>
+                                <Label Content="{TemplateBinding Content}" Foreground="#ffffff"/>
                             </Grid>
                         </ControlTemplate>
                     </Setter.Value>
@@ -143,6 +143,11 @@
                     <Separator  />
                     <MenuItem Header="( no recently opened files )" Foreground="gray" Visibility="Visible" Tag="recent"/>
 				</MenuItem>
+                <MenuItem Header="Navigate">
+                    <MenuItem Header="Play/Pause" InputGestureText="Space" cal:Message.Attach="[Event Click] = [Action PlayPause]" />
+                    <MenuItem Header="Stop" cal:Message.Attach="[Event Click] = [Action Stop]" />
+                    <MenuItem Header="Reset zoom" InputGestureText="Ctrl+0" cal:Message.Attach="[Event Click] = [Action ResetFov]" />
+                </MenuItem>
 				<MenuItem Header="Options">
 					<MenuItem Header="Settings" cal:Message.Attach="[Event Click] = [Action OpenSettings]" InputGestureText="Ctrl+P"/>
 				</MenuItem>
@@ -187,9 +192,8 @@
             </Canvas>
 
             <Grid Background="Transparent" Width="64" Height="128" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,50,68">
-				<ContentControl x:Name="VolumeRocker" VerticalAlignment="Bottom" Margin="0,0,0,10"/>
+                <ContentControl x:Name="VolumeRocker" VerticalAlignment="Bottom" Margin="0,0,0,10"/>
             </Grid>
-
         </Grid>
 
         <Grid Grid.Row="1" Width="400" Height="400" x:Name="StartupPanel">
@@ -256,6 +260,9 @@
             </Rectangle>
             <Label HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontSize="32" IsHitTestVisible="False" FontFamily="Segoe UI Light">Drop video files here</Label>
         </Grid>
+
+        <ContentControl x:Name="NotificationCenter" VerticalAlignment="Bottom" Margin="15" HorizontalAlignment="Right" Background="Pink" Grid.Row="1">
+        </ContentControl>
 
 
         <!--<Image Source="logo.png" HorizontalAlignment="Center" VerticalAlignment="Center" Stretch="None"  Width="400" Height="98" Grid.Row="1" Grid.RowSpan="2" Opacity="1" IsHitTestVisible="False"/>-->

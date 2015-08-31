@@ -188,7 +188,9 @@
 					MoveDelta(0f, 1f, speed * deltaTime, 4f);
 				if (Keyboard.IsKeyDown(Key.Down))
 					MoveDelta(0f, -1f, speed * deltaTime, 4f);
-			}
+				if (Keyboard.IsKeyDown(Key.Z))
+					ResetFov();
+            }
 
 			primitive.Draw(basicEffect);
         }

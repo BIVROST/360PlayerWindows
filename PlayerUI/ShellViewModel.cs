@@ -56,6 +56,8 @@ namespace PlayerUI
 
 		public static string FileFromArgs = "";
 
+		public NotificationCenterViewModel NotificationCenter { get; set; }
+
 		public ShellViewModel()
 		{
 			var currentParser = Parser.CreateTrigger;
@@ -67,6 +69,8 @@ namespace PlayerUI
 			CurrentPosition = "00:00:00";
 			VideoLength = "00:00:00";
 
+			NotificationCenter = new NotificationCenterViewModel();
+
 			_mediaDecoder = new MediaDecoder();
 
 			_mediaDecoder.OnReady += (duration) =>
@@ -77,7 +81,11 @@ namespace PlayerUI
 
 			_mediaDecoder.OnEnded += () =>
 			{
-				Task.Factory.StartNew(() =>	Execute.OnUIThread(() => Stop()));
+				Task.Factory.StartNew(() =>	Execute.OnUIThread(() =>
+				{
+					Stop();
+					ShowStartupUI();
+				}));
 			};
 
 			_mediaDecoder.OnStop += () =>
@@ -104,9 +112,11 @@ namespace PlayerUI
 				});
 			};
 
-			_mediaDecoder.OnError += () =>
+			_mediaDecoder.OnError += (error) =>
 			{
-
+				waitForPlaybackReady.Set();
+				NotificationCenter.PushNotification(MediaDecoderHelper.GetNotification(error));
+				Execute.OnUIThread(() => ShowStartupUI());
 			};
 
 
@@ -126,8 +136,6 @@ namespace PlayerUI
 				nancy = ApiServer.InitNancy(apiServer =>
 					  Execute.OnUIThread(() => {
 						  Console.WriteLine("got unity init, device_id=", ApiServer.device_id, "movies=[\n", string.Join(",\n", ApiServer.movies), "]");
-
-					  
 					  })
 				);
 
@@ -288,6 +296,15 @@ namespace PlayerUI
 				//	ShowPlaybackUI();
 				//}));
 			}
+
+			Task.Factory.StartNew(() =>
+			{
+				var connected = OculusPlayback.IsOculusPresent();
+				if(!connected)
+				{
+					NotificationCenter.PushNotification(new NotificationViewModel("Oculus Rift not connected"));
+				}
+			});
 		}
 
 		protected override void OnViewAttached(object view, object context)
@@ -446,8 +463,11 @@ namespace PlayerUI
 				
 				waitForPlaybackReady.WaitOne();
 
+				if (_mediaDecoder.LastError != null) return;
+
 				Execute.OnUIThread(() =>
 				{
+					ShowPlaybackUI();
 					TimeValue = 0;
 					MaxTime = _mediaDecoder.Duration;
 					VideoLength = (new TimeSpan(0, 0, (int)Math.Floor(_mediaDecoder.Duration))).ToString();
@@ -456,8 +476,12 @@ namespace PlayerUI
 
 					_mediaDecoder.SetVolume(VolumeRocker.Volume);
 					_mediaDecoder.Play();
-					this.DXCanvas.Visibility = Visibility.Visible;
-					shellView.TopBar.Visibility = Visibility.Visible;
+
+					Execute.OnUIThread(() =>
+					{
+						shellView.TopBar.Visibility = Visibility.Visible;
+						this.DXCanvas.Visibility = Visibility.Visible;
+					});
 					this.DXCanvas.Scene = new Scene(_mediaDecoder.TextureL);
 					this.DXCanvas.StartRendering();
 
@@ -661,10 +685,16 @@ namespace PlayerUI
 					if (IsPlaying)
 					{
 						waitForPlaybackStop.Reset();
-						Stop();
-						
-						waitForPlaybackStop.WaitOne();
-						
+						Stop();						
+						waitForPlaybackStop.WaitOne();						
+					} else
+					{
+						int it = 5;
+						while(_mediaDecoder.Initialized && it > 0)
+						{
+							Thread.Sleep(100);
+							it--;
+						}
 					}
 					IsFileSelected = true;
 					SelectedFileName = file;
@@ -689,8 +719,11 @@ namespace PlayerUI
 
 			Console.WriteLine("STOP STOP STOP");
 			OculusPlayback.Stop();
-			shellView.TopBar.Visibility = Visibility.Hidden;
-			this.DXCanvas.Visibility = Visibility.Hidden;
+			Execute.OnUIThread(() =>
+			{
+				shellView.TopBar.Visibility = Visibility.Hidden;
+				this.DXCanvas.Visibility = Visibility.Hidden;
+			});			
 			this.DXCanvas.Scene = null;
 			Task.Factory.StartNew(() =>
 			{

@@ -62,6 +62,7 @@ namespace PlayerUI
 		public double Duration { get { return _mediaEngineEx.Duration; } }
 
 		public double CurrentPosition { get { return _mediaEngineEx.CurrentTime; } }
+		public bool Initialized { get { return _initialized; } }
 
 		private bool _initialized = false;
 		private bool _rendering = false;
@@ -79,7 +80,7 @@ namespace PlayerUI
 		public event Action<double> OnReady = delegate { };
 		public event Action OnStop = delegate { };
 		public event Action OnEnded = delegate { };
-		public event Action OnError = delegate { };
+		public event Action<Error> OnError = delegate { };
 		public event Action OnAbort = delegate { };
 		public event Action<double> OnTimeUpdate = delegate { };
 
@@ -139,6 +140,7 @@ namespace PlayerUI
 
 		public void Init()
 		{
+			LastError = null;
 			criticalSection = new object();
 			lock(criticalSection)
 			{
@@ -174,8 +176,8 @@ namespace PlayerUI
 							Console.WriteLine(((MediaEngineErr)param1).ToString());
 							LastError = new Error() { major = param1, minor = param2 };
 
-							OnError();
-							Stop();
+							Stop(true);
+							OnError(LastError);							
 							break;
 
 						case MediaEngineEvent.Abort:
@@ -346,6 +348,7 @@ namespace PlayerUI
 		
 		public void Stop(bool force = false)
 		{
+			
 			if (!force)
 			{
 				if (!_initialized) return;
@@ -415,6 +418,8 @@ namespace PlayerUI
 				//url = new Uri(fileStream.Name, UriKind.RelativeOrAbsolute);
 				//_mediaEngineEx.SetSourceFromByteStream(stream, url.AbsoluteUri);
 				_mediaEngineEx.Source = fileName;
+				_mediaEngineEx.Preload = MediaEnginePreload.Automatic;
+				_mediaEngineEx.Load();
 			}
 		}
 

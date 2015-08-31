@@ -18,5 +18,10 @@ namespace PlayerUI
 		{
 			DialogHelper.ShowDialog<EULAViewModel>();
 		}
+
+		public void ShowLibs()
+		{
+			DialogHelper.ShowDialog<EulaLibsViewModel>();
+		}
 	}
 }

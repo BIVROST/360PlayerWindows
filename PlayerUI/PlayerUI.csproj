@@ -37,7 +37,7 @@
     <PublisherName>VIZAO Sp z o.o.</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
-    <ApplicationRevision>42</ApplicationRevision>
+    <ApplicationRevision>43</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
@@ -73,8 +73,7 @@
     <ManifestCertificateThumbprint>C77BE0EB13C7E824BC5B74B34F731B75309D3121</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>
-    </ManifestKeyFile>
+    <ManifestKeyFile>PlayerUI_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
     <GenerateManifests>true</GenerateManifests>
@@ -247,6 +246,10 @@
       <DependentUpon>DummyWindowView.xaml</DependentUpon>
     </Compile>
     <Compile Include="DummyWindowViewModel.cs" />
+    <Compile Include="EulaLibsView.xaml.cs">
+      <DependentUpon>EulaLibsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="EulaLibsViewModel.cs" />
     <Compile Include="EULAView.xaml.cs">
       <DependentUpon>EULAView.xaml</DependentUpon>
     </Compile>
@@ -259,6 +262,14 @@
     <Compile Include="Logic\ProtocolHandler.cs" />
     <Compile Include="Logic\Recents.cs" />
     <Compile Include="Logic\Settings.cs" />
+    <Compile Include="NotificationCenterView.xaml.cs">
+      <DependentUpon>NotificationCenterView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="NotificationCenterViewModel.cs" />
+    <Compile Include="NotificationView.xaml.cs">
+      <DependentUpon>NotificationView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="NotificationViewModel.cs" />
     <Compile Include="Oculus\EyeTexture.cs" />
     <Compile Include="Oculus\OculusPlayback.cs" />
     <Compile Include="Oculus\OculusUIDebug.cs" />
@@ -296,6 +307,7 @@
     <Compile Include="WPF\InputBindingTrigger.cs" />
     <Compile Include="WPF\IScene.cs" />
     <Compile Include="WPF\MediaDecoder.cs" />
+    <Compile Include="WPF\MediaDecoderHelper.cs" />
     <Compile Include="WPF\Scene.cs" />
     <Compile Include="WPF\ShortcutParser.cs" />
     <Compile Include="YoutubeAddressView.xaml.cs">
@@ -327,11 +339,23 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="EulaLibsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="EULAView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="EventShellView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="NotificationCenterView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="NotificationView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -551,6 +575,7 @@
     <Content Include="Graphics\window_blue.svg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <None Include="Resources\EulaLibs.txt" />
     <Content Include="x64\DllOvr.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
