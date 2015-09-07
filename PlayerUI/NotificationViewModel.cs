@@ -52,8 +52,9 @@ namespace PlayerUI
 
 		public Visibility MoreVisible { get { return string.IsNullOrWhiteSpace(Url) ? Visibility.Collapsed : Visibility.Visible; } }
 
-		public void OpenUrl()
+		public void OpenUrl(RoutedEventArgs e)
 		{
+			e.Handled = true;
 			if(!string.IsNullOrWhiteSpace(Url))
 			{
 				System.Diagnostics.Process.Start(Url);

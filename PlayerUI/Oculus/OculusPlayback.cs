@@ -16,10 +16,11 @@ using Buffer = SharpDX.Direct3D11.Buffer;
 using Device = SharpDX.Direct3D11.Device;
 using DX2D = SharpDX.Direct2D1;
 using System.Runtime.InteropServices;
+using PlayerUI.Tools;
 
 namespace PlayerUI.Oculus
 {
-	public class OculusPlayback
+	public partial class OculusPlayback
 	{
 		public static Texture2D textureL;
 		public static Texture2D textureR;
@@ -28,6 +29,12 @@ namespace PlayerUI.Oculus
 
 		public static ManualResetEvent waitForRendererStop = new ManualResetEvent(false);
 		public static bool abort = false;
+		public static bool pause = false;
+
+		private static float uiOpacity = 0;
+		private static string movieTitle = "";
+		private static float duration = 0;
+		private static float currentTime = 0;
 
 		private static SharpDX.Toolkit.Graphics.BasicEffect basicEffectL;
 		private static SharpDX.Toolkit.Graphics.BasicEffect basicEffectR;
@@ -37,6 +44,7 @@ namespace PlayerUI.Oculus
 		public static void Start()
 		{
 			abort = false;
+			pause = false;
 			waitForRendererStop.Reset();
 			if (_playbackLock)
 				return;
@@ -50,10 +58,25 @@ namespace PlayerUI.Oculus
 			});
 		}
 
+		public static void Pause() {
+			EnqueueUIRedraw();
+			pause = true;
+		}
+		public static void UnPause() { pause = false; }
+
+		public static void UpdateTime(float time) {
+			currentTime = time;
+		}
+
+		public static void Configure(string title, float movieDuration)
+		{
+			movieTitle = title;
+			duration = movieDuration;
+		}
+		
 		public static void Stop()
 		{
 			abort = true;
-			//waitForRendererStop.WaitOne(1000);
 		}
 
 		public static bool IsOculusPresent()
@@ -267,92 +290,94 @@ namespace PlayerUI.Oculus
 
 
 			// UI Rendering
+			InitUI(device, gd);
+			DrawUI();
 
-			Texture2DDescription uiTextureDescription = new Texture2DDescription()
-			{
-				Width = 1024,
-				Height = 512,
-				MipLevels = 1,
-				ArraySize = 1,
-				Format = Format.B8G8R8A8_UNorm,
-				Usage = ResourceUsage.Default,
-				SampleDescription = new SampleDescription(1, 0),
-				BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
-				CpuAccessFlags = CpuAccessFlags.None,
-				OptionFlags = ResourceOptionFlags.Shared
-			};
-
-
-			Texture2D uiTexture = new SharpDX.Direct3D11.Texture2D(device, uiTextureDescription);
-			SharpDX.DXGI.Surface uiSurface = uiTexture.QueryInterface<Surface>();
-
-			DX2D.Factory factory2d = new DX2D.Factory(SharpDX.Direct2D1.FactoryType.SingleThreaded, DX2D.DebugLevel.Information);
-			DX2D.RenderTargetProperties renderTargetProperties = new DX2D.RenderTargetProperties()
-			{
-				DpiX = 96,
-				DpiY = 96,
-				PixelFormat = new DX2D.PixelFormat(Format.B8G8R8A8_UNorm, SharpDX.Direct2D1.AlphaMode.Premultiplied),
-				Type = SharpDX.Direct2D1.RenderTargetType.Hardware,
-				MinLevel = DX2D.FeatureLevel.Level_10,
-				Usage = SharpDX.Direct2D1.RenderTargetUsage.None
-			};
-			DX2D.RenderTarget target2d = new DX2D.RenderTarget(factory2d, uiSurface, renderTargetProperties);
-			SharpDX.DirectWrite.Factory factoryDW = new SharpDX.DirectWrite.Factory();
+			//Texture2DDescription uiTextureDescription = new Texture2DDescription()
+			//{
+			//	Width = 1024,
+			//	Height = 512,
+			//	MipLevels = 1,
+			//	ArraySize = 1,
+			//	Format = Format.B8G8R8A8_UNorm,
+			//	Usage = ResourceUsage.Default,
+			//	SampleDescription = new SampleDescription(1, 0),
+			//	BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
+			//	CpuAccessFlags = CpuAccessFlags.None,
+			//	OptionFlags = ResourceOptionFlags.Shared
+			//};
 
 
-			// 2D materials
+			//Texture2D uiTexture = new SharpDX.Direct3D11.Texture2D(device, uiTextureDescription);
+			//SharpDX.DXGI.Surface uiSurface = uiTexture.QueryInterface<Surface>();
 
-			var uiEffect = new SharpDX.Toolkit.Graphics.BasicEffect(gd);
-			uiEffect.PreferPerPixelLighting = false;
-			uiEffect.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(gd, uiTexture);
-			uiEffect.TextureEnabled = true;
-			//uiEffect.Alpha = 0.5f;
-			uiEffect.LightingEnabled = false;
+			//DX2D.Factory factory2d = new DX2D.Factory(SharpDX.Direct2D1.FactoryType.SingleThreaded, DX2D.DebugLevel.Information);
+			//DX2D.RenderTargetProperties renderTargetProperties = new DX2D.RenderTargetProperties()
+			//{
+			//	DpiX = 96,
+			//	DpiY = 96,
+			//	PixelFormat = new DX2D.PixelFormat(Format.B8G8R8A8_UNorm, SharpDX.Direct2D1.AlphaMode.Premultiplied),
+			//	Type = SharpDX.Direct2D1.RenderTargetType.Hardware,
+			//	MinLevel = DX2D.FeatureLevel.Level_10,
+			//	Usage = SharpDX.Direct2D1.RenderTargetUsage.None
+			//};
+			//DX2D.RenderTarget target2d = new DX2D.RenderTarget(factory2d, uiSurface, renderTargetProperties);
+			//SharpDX.DirectWrite.Factory factoryDW = new SharpDX.DirectWrite.Factory();
 
 
-			var blendStateDescription = new BlendStateDescription();
+			//// 2D materials
 
-			blendStateDescription.AlphaToCoverageEnable = false;
+			//var uiEffect = new SharpDX.Toolkit.Graphics.BasicEffect(gd);
+			//uiEffect.PreferPerPixelLighting = false;
+			//uiEffect.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(gd, uiTexture);
+			//uiEffect.TextureEnabled = true;
+			////uiEffect.Alpha = 0.5f;
+			//uiEffect.LightingEnabled = false;
 
-			blendStateDescription.RenderTarget[0].IsBlendEnabled = true;
-			blendStateDescription.RenderTarget[0].SourceBlend = BlendOption.SourceAlpha;
-			blendStateDescription.RenderTarget[0].DestinationBlend = BlendOption.InverseSourceAlpha;
-			blendStateDescription.RenderTarget[0].BlendOperation = BlendOperation.Add;
-			blendStateDescription.RenderTarget[0].SourceAlphaBlend = BlendOption.Zero;
-			blendStateDescription.RenderTarget[0].DestinationAlphaBlend = BlendOption.Zero;
-			blendStateDescription.RenderTarget[0].AlphaBlendOperation = BlendOperation.Add;
-			blendStateDescription.RenderTarget[0].RenderTargetWriteMask = ColorWriteMaskFlags.All;
 
-			var blendState = SharpDX.Toolkit.Graphics.BlendState.New(gd, blendStateDescription);
-			gd.SetBlendState(blendState);
+			//var blendStateDescription = new BlendStateDescription();
 
-			var uiPrimitive = SharpDX.Toolkit.Graphics.GeometricPrimitive.Plane.New(gd, 2, 1);
+			//blendStateDescription.AlphaToCoverageEnable = false;
 
-			SharpDX.DirectWrite.TextFormat textFormat = new SharpDX.DirectWrite.TextFormat(factoryDW, "Segoe UI Light", 32f)
-			{
-				TextAlignment = SharpDX.DirectWrite.TextAlignment.Center,
-				ParagraphAlignment = SharpDX.DirectWrite.ParagraphAlignment.Center
-			};
+			//blendStateDescription.RenderTarget[0].IsBlendEnabled = true;
+			//blendStateDescription.RenderTarget[0].SourceBlend = BlendOption.SourceAlpha;
+			//blendStateDescription.RenderTarget[0].DestinationBlend = BlendOption.InverseSourceAlpha;
+			//blendStateDescription.RenderTarget[0].BlendOperation = BlendOperation.Add;
+			//blendStateDescription.RenderTarget[0].SourceAlphaBlend = BlendOption.Zero;
+			//blendStateDescription.RenderTarget[0].DestinationAlphaBlend = BlendOption.Zero;
+			//blendStateDescription.RenderTarget[0].AlphaBlendOperation = BlendOperation.Add;
+			//blendStateDescription.RenderTarget[0].RenderTargetWriteMask = ColorWriteMaskFlags.All;
 
-			SharpDX.DirectWrite.TextFormat textFormatSmall = new SharpDX.DirectWrite.TextFormat(factoryDW, "Segoe UI Light", 18f)
-			{
-				TextAlignment = SharpDX.DirectWrite.TextAlignment.Center,
-				ParagraphAlignment = SharpDX.DirectWrite.ParagraphAlignment.Center
-			};
+			//var blendState = SharpDX.Toolkit.Graphics.BlendState.New(gd, blendStateDescription);
+			//gd.SetBlendState(blendState);
 
-			DX2D.SolidColorBrush textBrush = new SharpDX.Direct2D1.SolidColorBrush(target2d, new Color(1f,1f,1f,1f));
-			DX2D.SolidColorBrush blueBrush = new SharpDX.Direct2D1.SolidColorBrush(target2d, new Color(0, 167, 245, 255));
+			//var uiPrimitive = SharpDX.Toolkit.Graphics.GeometricPrimitive.Plane.New(gd, 2, 1);
 
-			target2d.AntialiasMode = SharpDX.Direct2D1.AntialiasMode.Aliased;
+			//SharpDX.DirectWrite.TextFormat textFormat = new SharpDX.DirectWrite.TextFormat(factoryDW, "Segoe UI Light", 32f)
+			//{
+			//	TextAlignment = SharpDX.DirectWrite.TextAlignment.Center,
+			//	ParagraphAlignment = SharpDX.DirectWrite.ParagraphAlignment.Center
+			//};
 
-			target2d.BeginDraw();
-			target2d.Clear(new Color4(0, 0, 0, 0.7f));
-			target2d.DrawLine(new Vector2(0, 1), new Vector2(1024, 1), blueBrush, 2);
-			target2d.DrawLine(new Vector2(0, 511), new Vector2(1024, 511), blueBrush, 2);
+			//SharpDX.DirectWrite.TextFormat textFormatSmall = new SharpDX.DirectWrite.TextFormat(factoryDW, "Segoe UI Light", 18f)
+			//{
+			//	TextAlignment = SharpDX.DirectWrite.TextAlignment.Center,
+			//	ParagraphAlignment = SharpDX.DirectWrite.ParagraphAlignment.Center
+			//};
 
-			target2d.DrawText("now playing:", textFormatSmall, new RectangleF(0, 0, 1024, 100), textBrush);
-			target2d.DrawText("moviefilename", textFormat, new RectangleF(0, 50, 1024, 100), textBrush);
-			target2d.EndDraw();
+			//DX2D.SolidColorBrush textBrush = new SharpDX.Direct2D1.SolidColorBrush(target2d, new Color(1f,1f,1f,1f));
+			//DX2D.SolidColorBrush blueBrush = new SharpDX.Direct2D1.SolidColorBrush(target2d, new Color(0, 167, 245, 255));
+
+			//target2d.AntialiasMode = SharpDX.Direct2D1.AntialiasMode.Aliased;
+
+			//target2d.BeginDraw();
+			//target2d.Clear(new Color4(0, 0, 0, 0.7f));
+			//target2d.DrawLine(new Vector2(0, 1), new Vector2(1024, 1), blueBrush, 2);
+			//target2d.DrawLine(new Vector2(0, 511), new Vector2(1024, 511), blueBrush, 2);
+
+			//target2d.DrawText("now playing:", textFormatSmall, new RectangleF(0, 0, 1024, 100), textBrush);
+			//target2d.DrawText("moviefilename", textFormat, new RectangleF(0, 50, 1024, 100), textBrush);
+			//target2d.EndDraw();
 
 
 			// DEBU UI WINDOW
@@ -363,11 +388,14 @@ namespace PlayerUI.Oculus
 
 			#endregion
 
-			
+
 			DateTime startTime = DateTime.Now;
 			Vector3 position = new Vector3(0, 0, -1);
 
 			#region Render loop
+
+			DateTime lastTime = DateTime.Now;
+			float deltaTime = 0;
 
 			while (!abort)
 			{
@@ -380,6 +408,8 @@ namespace PlayerUI.Oculus
 				oculus.CalcEyePoses(trackingState.HeadPose.ThePose, hmdToEyeViewOffsets, ref eyePoses);
 
 				float timeSinceStart = (float)(DateTime.Now - startTime).TotalSeconds;
+				deltaTime = (float)(DateTime.Now - lastTime).TotalSeconds;
+				lastTime = DateTime.Now;
 
 				for (int eyeIndex = 0; eyeIndex < 2; eyeIndex++)
 				{
@@ -437,7 +467,12 @@ namespace PlayerUI.Oculus
 					else
 						primitive.Draw(basicEffectL);
 
-					//uiPrimitive.Draw(uiEffect);
+					DrawUI();
+					RenderUI(deltaTime);
+
+					//uiEffect.Alpha = uiEffect.Alpha.LerpInPlace(pause ? 1 : 0, 5f * deltaTime);
+					//if(uiEffect.Alpha > 0)
+					//	uiPrimitive.Draw(uiEffect);
 				}
 
 				hmd.SubmitFrame(0, layers);
@@ -465,10 +500,11 @@ namespace PlayerUI.Oculus
 			if (_stereoVideo)
 				basicEffectR.Dispose();
 
-			target2d.Dispose();
-			uiSurface.Dispose();
-			uiTexture.Dispose();			
-			factory2d.Dispose();
+			//target2d.Dispose();
+			//uiSurface.Dispose();
+			//uiTexture.Dispose();			
+			//factory2d.Dispose();
+			DisposeUI();
 
 			// Disposing the device, before the hmd, will cause the hmd to fail when disposing.
 			// Disposing the device, after the hmd, will cause the dispose of the device to fail.
@@ -480,9 +516,6 @@ namespace PlayerUI.Oculus
 
 			_playbackLock = false;
 		}
-
-
-
 
 
 		public static void WriteErrorDetails(Wrap oculus, OVR.ovrResult result, string message)

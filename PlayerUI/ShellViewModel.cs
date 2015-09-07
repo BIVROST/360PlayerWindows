@@ -24,12 +24,33 @@ namespace PlayerUI
 {
 	public partial class ShellViewModel : Screen
 	{
+		public enum PlayerState
+		{
+			Idle,
+			FileSelected,
+			MediaLoaded,
+			Playing,
+			Ended
+		}
+
 		public string VideoLength { get; set; }
 		public string CurrentPosition { get; set; }
 		public string VideoTime { get; set; }
         
 		public bool IsPlaying { get { return _mediaDecoder.IsPlaying; }	}
 		public bool IsPaused { get; set; }
+		public bool Loop {
+			get
+			{
+				return _mediaDecoder.Loop;
+			}
+			set
+			{
+				Console.WriteLine("Writing Loop: " + value);
+				_mediaDecoder.Loop = value;
+				NotifyOfPropertyChange(() => Loop);
+			}
+		}
 
 		private string _selectedFileName = "";
 		public string SelectedFileNameLabel { get { return Path.GetFileNameWithoutExtension(SelectedFileName); } }
@@ -42,6 +63,7 @@ namespace PlayerUI
 		private bool ended = false;
 		private bool lockSlider = false;
 
+		private bool autoplay = false;
 		private MediaDecoder _mediaDecoder;
 
 		Window playerWindow;
@@ -75,9 +97,13 @@ namespace PlayerUI
 
 			_mediaDecoder.OnReady += (duration) =>
 			{
-				waitForPlaybackReady.Set();
-                //Task.Factory.StartNew(() => Execute.OnUIThread(() => waitForPlaybackReady.Set()));
-            };
+				if (autoplay)
+				{
+					autoplay = false;
+					Play();					
+				}
+				//Task.Factory.StartNew(() => Execute.OnUIThread(() => waitForPlaybackReady.Set()));
+			};
 
 			_mediaDecoder.OnEnded += () =>
 			{
@@ -97,26 +123,42 @@ namespace PlayerUI
 			{
 
 				if (!_mediaDecoder.IsPlaying) return;
-				Task.Factory.StartNew(() =>
+
+				//Task.Factory.StartNew(() =>
+				//{
+				//	Execute.OnUIThread(() =>
+				//	{
+				//		if (!lockSlider)
+				//		{
+				//			CurrentPosition = (new TimeSpan(0, 0, (int)Math.Floor(time))).ToString();
+				//			_timeValue = time;
+				//			NotifyOfPropertyChange(() => TimeValue);
+				//		}
+				//		UpdateTimeLabel();
+				//	});
+				//});
+
+				Execute.OnUIThreadAsync(() =>
 				{
-					Execute.OnUIThread(() =>
+					if (!lockSlider)
 					{
-						if (!lockSlider)
-						{
-							CurrentPosition = (new TimeSpan(0, 0, (int)Math.Floor(time))).ToString();
-							_timeValue = time;
-							NotifyOfPropertyChange(() => TimeValue);
-						}
-						UpdateTimeLabel();
-					});
+						OculusPlayback.UpdateTime((float)time);
+						CurrentPosition = (new TimeSpan(0, 0, (int)Math.Floor(time))).ToString();
+						_timeValue = time;
+						NotifyOfPropertyChange(() => TimeValue);
+					}
+					UpdateTimeLabel();
 				});
 			};
 
 			_mediaDecoder.OnError += (error) =>
 			{
-				waitForPlaybackReady.Set();
-				NotificationCenter.PushNotification(MediaDecoderHelper.GetNotification(error));
-				Execute.OnUIThread(() => ShowStartupUI());
+				Execute.OnUIThreadAsync(() =>
+				{
+					NotificationCenter.PushNotification(MediaDecoderHelper.GetNotification(error));
+					SelectedFileName = null;
+					ShowStartupUI();
+				});
 			};
 
 
@@ -257,18 +299,6 @@ namespace PlayerUI
 			} else
 			{
 				OpenFileFrom(clipboardText);
-				//if(File.Exists(clipboardText))
-				//{
-				//	Stop();
-				//	IsFileSelected = true;
-				//	SelectedFileName = clipboardText;
-				//	Play();
-				//	Task.Factory.StartNew(() => Execute.OnUIThread(() => {
-				//		Recents.AddRecent(SelectedFileName);
-				//		UpdateRecents();
-				//		ShowPlaybackUI();
-				//	}));
-				//}
 			}
 		}
 
@@ -307,6 +337,13 @@ namespace PlayerUI
 			});
 		}
 
+		public void LoadMedia(bool autoplay = true)
+		{
+			if (!IsFileSelected) return;
+			this.autoplay = autoplay;
+			_mediaDecoder.LoadMedia(SelectedFileName);
+		}
+
 		protected override void OnViewAttached(object view, object context)
 		{
 			base.OnViewAttached(view, context);
@@ -325,7 +362,8 @@ namespace PlayerUI
 					if(File.Exists(Logic.Instance.settings.AutoPlayFile))
 					{
 						SelectedFileName = Logic.Instance.settings.AutoPlayFile.Trim();
-						Play();
+						LoadMedia();
+						//Play();
 					}
 				}
 
@@ -454,18 +492,18 @@ namespace PlayerUI
 
 		public void Play()
 		{
-			if (!IsFileSelected) return;
+			//if (!IsFileSelected) return;
 
-			_mediaDecoder.LoadMedia(SelectedFileName);
+			//_mediaDecoder.LoadMedia(SelectedFileName);
 
-			Task.Factory.StartNew(() =>
-			{
+			//Task.Factory.StartNew(() =>
+			//{
 				
-				waitForPlaybackReady.WaitOne();
+				//waitForPlaybackReady.WaitOne();
 
-				if (_mediaDecoder.LastError != null) return;
+				//if (_mediaDecoder.LastError != null) return;
 
-				Execute.OnUIThread(() =>
+				Execute.OnUIThreadAsync(() =>
 				{
 					ShowPlaybackUI();
 					TimeValue = 0;
@@ -493,6 +531,7 @@ namespace PlayerUI
 							OculusPlayback.textureL = _mediaDecoder.TextureL;
 							OculusPlayback.textureR = _mediaDecoder.TextureR;
 							OculusPlayback._stereoVideo = _mediaDecoder.IsStereo;
+							OculusPlayback.Configure(SelectedFileNameLabel, (float)_mediaDecoder.Duration);
 							OculusPlayback.Start();
 						}
 						else
@@ -509,7 +548,7 @@ namespace PlayerUI
 					AnimateIndicator(shellView.PlayIndicator);
 				});
 				
-			});
+			//});
 
 			
         }
@@ -521,7 +560,8 @@ namespace PlayerUI
 			YoutubeAddressViewModel yavm = DialogHelper.ShowDialogOut<YoutubeAddressViewModel>();
 			if (!string.IsNullOrWhiteSpace(yavm.YoutubeId)) { 
 				SelectedFileName = YoutubeEngine.GetVideoUrlFromId(yavm.YoutubeId);
-				Play();
+				LoadMedia();
+				//Play();
 			}
 		}
 
@@ -532,8 +572,9 @@ namespace PlayerUI
 
 			if (!IsPlaying)
 			{
-				if(CanPlay)
-					Play();
+				if (CanPlay)
+					LoadMedia();
+					//Play();
 			} else
 			{
 				if (IsPaused) UnPause();
@@ -555,6 +596,7 @@ namespace PlayerUI
 			shellView.Pause.Visibility = Visibility.Collapsed;
 			NotifyOfPropertyChange(() => CanPlay);
 			AnimateIndicator(shellView.PauseIndicator);
+			OculusPlayback.Pause();
 		}
 
 		public void UnPause()
@@ -567,25 +609,19 @@ namespace PlayerUI
 			shellView.Pause.Visibility = Visibility.Visible;
 			NotifyOfPropertyChange(() => CanPlay);
 			AnimateIndicator(shellView.PlayIndicator);
+			OculusPlayback.UnPause();
 		}
 
 		public void OpenFile()
 		{
 			Microsoft.Win32.OpenFileDialog ofd = new Microsoft.Win32.OpenFileDialog();
-			ofd.Filter = "Video MP4|*.mp4|Video M4V|*.m4v|All|*.*";
+			//ofd.Filter = "Video MP4|*.mp4|Video M4V|*.m4v|All|*.*";
+			ofd.Filter = MediaDecoder.ExtensionsFilter();
 			bool? result = ofd.ShowDialog();
 			if(result.HasValue)
 				if (result.Value == true)
 				{
 					OpenFileFrom(ofd.FileName);
-					//IsFileSelected = true;
-					//SelectedFileName = ofd.FileName;
-					//Play();
-					//Task.Factory.StartNew(() => Execute.OnUIThread(() => {
-					//	Recents.AddRecent(SelectedFileName);
-					//	UpdateRecents();
-					//	ShowPlaybackUI();
-					//}));
 				}
 		}
 
@@ -600,17 +636,6 @@ namespace PlayerUI
 				}
 				else
 					OpenFileFrom(file);
-				//if (File.Exists(file))
-				//{
-				//	IsFileSelected = true;
-				//	SelectedFileName = file;
-				//	Play();
-				//	Task.Factory.StartNew(() => Execute.OnUIThread(() => {
-				//		Recents.AddRecent(SelectedFileName);
-				//		UpdateRecents();
-				//		ShowPlaybackUI();
-				//	}));
-				//}
 			});
 		}
 
@@ -627,17 +652,13 @@ namespace PlayerUI
 				string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
 				string ext = Path.GetExtension(files[0]);
 				//if (Path.GetExtension(files[0]) == ".mp4")
-				//{
+				if(MediaDecoder.CheckExtension(Path.GetExtension(files[0])))
+				{
 					OpenFileFrom(files[0]);
-					//IsFileSelected = true;
-					//SelectedFileName = files[0];
-					//Play();
-					//Task.Factory.StartNew(() => Execute.OnUIThread(() => {
-					//	Recents.AddRecent(SelectedFileName);
-					//	UpdateRecents();
-					//	ShowPlaybackUI();
-					//}));
-				//}
+				} else
+				{
+					NotificationCenter.PushNotification(new NotificationViewModel("File format not supported."));
+				}
 			}
 			ShowDropFilesPanel(false);
 			if (IsFileSelected == false) ShowStartupPanel(true);
@@ -698,7 +719,7 @@ namespace PlayerUI
 					}
 					IsFileSelected = true;
 					SelectedFileName = file;
-					Execute.OnUIThread(() => Play());
+					Execute.OnUIThread(() => LoadMedia());
 					Task.Factory.StartNew(() => Execute.OnUIThread(() => {
 						Recents.AddRecent(SelectedFileName);
 						UpdateRecents();
@@ -725,26 +746,32 @@ namespace PlayerUI
 				this.DXCanvas.Visibility = Visibility.Hidden;
 			});			
 			this.DXCanvas.Scene = null;
-			Task.Factory.StartNew(() =>
-			{
-				if (IsPlaying || _mediaDecoder.IsEnded)
+			
+				Task.Factory.StartNew(() =>
 				{
-					_mediaDecoder.Stop();
-					_timeValue = 0;
-					Execute.OnUIThread(() =>
+					if (IsPlaying || _mediaDecoder.IsEnded)
 					{
-						NotifyOfPropertyChange(() => TimeValue);
-						NotifyOfPropertyChange(() => CanPlay);
-						CurrentPosition = (new TimeSpan(0, 0, 0)).ToString();
-						UpdateTimeLabel();
+						_mediaDecoder.Stop();
+						_timeValue = 0;
+						try
+						{
+							Execute.OnUIThread(() =>
+							{
+								NotifyOfPropertyChange(() => TimeValue);
+								NotifyOfPropertyChange(() => CanPlay);
+								CurrentPosition = (new TimeSpan(0, 0, 0)).ToString();
+								UpdateTimeLabel();
 
-						shellView.PlayPause.Visibility = Visibility.Visible;
-						shellView.Pause.Visibility = Visibility.Collapsed;
+								shellView.PlayPause.Visibility = Visibility.Visible;
+								shellView.Pause.Visibility = Visibility.Collapsed;
 
-						this.DXCanvas.StopRendering();
-					});
-				}
-			});
+								this.DXCanvas.StopRendering();
+							});
+						}
+						catch (Exception) { }
+					}
+				});
+			
 			waitForPlaybackStop.Set();
 		}
 
@@ -939,5 +966,7 @@ namespace PlayerUI
 				_mediaDecoder.Seek(_mediaDecoder.CurrentPosition - 5f);
 			}
 		}
+
+		
 	}
 }

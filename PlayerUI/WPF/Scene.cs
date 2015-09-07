@@ -8,6 +8,7 @@
 	using Buffer = SharpDX.Direct3D11.Buffer;
 	using Device = SharpDX.Direct3D11.Device;
 	using System.Windows.Input;
+	using Tools;
 
 	public class Scene : IScene
     {
@@ -175,7 +176,8 @@
                 return;
 
 			var speed = 50f;
-			currentFov = Lerp(currentFov, targetFov, 5f * deltaTime);
+			//currentFov = Lerp(currentFov, targetFov, 5f * deltaTime);
+			currentFov = currentFov.LerpInPlace(targetFov, 5f * deltaTime);
 			basicEffect.Projection = Matrix.PerspectiveFovRH((float)(currentFov * Math.PI / 180f), (float)16f / 9f, 0.0001f, 50.0f);
 
 			if (HasFocus)

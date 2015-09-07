@@ -47,6 +47,17 @@ namespace PlayerUI
 				//}
 			} }
 
+
+		private bool _loop = false;
+		public bool Loop
+		{
+			get { return _loop;}
+			set {
+				_loop = value;
+				if (_initialized) _mediaEngineEx.Loop = _loop;
+			}
+		}
+
 		public bool IsEnded
 		{
 			get
@@ -137,6 +148,24 @@ namespace PlayerUI
 			;			
         }
 
+		public static bool CheckExtension(string extension)
+		{
+			switch(extension)
+			{
+				case ".mp4": return true;
+				case ".wmv": return true;
+				case ".avi": return true;
+				case ".m4v": return true;
+				case ".mov": return true;
+				default: return false;
+			}
+		}
+
+		public static string ExtensionsFilter()
+		{
+			return "Video MP4|*.mp4|Video M4V|*.m4v|Video MOV|*.mov|Video AVI|*.avi|Video WMV|*.wmv";
+		}
+
 
 		public void Init()
 		{
@@ -177,7 +206,7 @@ namespace PlayerUI
 							LastError = new Error() { major = param1, minor = param2 };
 
 							Stop(true);
-							OnError(LastError);							
+							OnError(LastError);
 							break;
 
 						case MediaEngineEvent.Abort:

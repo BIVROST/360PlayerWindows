@@ -171,7 +171,8 @@
         <Grid Grid.Row="1" Grid.RowSpan="2">
             <Grid Background="#99000000" Height="32" VerticalAlignment="Top" x:Name="TopBar">
                 <!--<Border BorderThickness="0,0,0,2" BorderBrush="#ffffff">-->
-                <Label x:Name="SelectedFileNameLabel" Content="Wybrana nazwa pliku video.mp4" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Bottom" Foreground="White" Height="34"/>
+                <Label x:Name="SelectedFileNameLabel" Content="Wybrana nazwa pliku video.mp4" FontSize="18" FontFamily="Segoe UI Light"
+					   HorizontalAlignment="Center" VerticalAlignment="Bottom" Foreground="White" Height="34"/>
                 <!--</Border>-->
             </Grid>			
 
@@ -387,13 +388,133 @@
 					</Button.Template>
 				</Button>
 
-			</StackPanel>
+                
+
+            </StackPanel>
 
 			<StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Grid.Column="1" Height="68">
 
 				<TextBlock x:Name="VideoTime" Grid.Column="1" Foreground="White" Text="0:00 / 0:00" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="5 0 18 0" />
 
-				<Button x:Name="OpenSettings"  Width="36" Height="36" Margin="4 0">
+                <ToggleButton x:Name="RepeatButton"  Width="36" Height="36" Margin="4 0"  IsChecked="{Binding Loop}">
+                    <ToggleButton.Template>
+                        <ControlTemplate TargetType="{x:Type ToggleButton}">
+                            <Grid IsHitTestVisible="True" Background="Transparent" ToolTip="Play mode">
+                                <svgc:SvgViewbox Name="Normal" Source="Graphics/playmode_once.svg" IsHitTestVisible="False" />
+                                <svgc:SvgViewbox Name="Hover" Source="Graphics/playmode_once_blue.svg" Visibility="Hidden" IsHitTestVisible="False"/>
+                                <svgc:SvgViewbox Name="MuteNormal" Source="Graphics/playmode_repeat.svg" Visibility="Hidden" IsHitTestVisible="False"/>
+                                <svgc:SvgViewbox Name="MuteHover" Source="Graphics/playmode_repeat_blue.svg" Visibility="Hidden" IsHitTestVisible="False"/>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="IsPressed" Value="False" />
+                                        <Condition Property="IsChecked" Value="False" />
+                                    </MultiTrigger.Conditions>
+                                    <MultiTrigger.Setters>
+                                        <Setter TargetName="Normal" Property="Visibility" Value="Visible"/>
+                                        <Setter TargetName="Hover" Property="Visibility" Value="Hidden"/>
+                                        <Setter TargetName="MuteNormal" Property="Visibility" Value="Hidden"/>
+                                        <Setter TargetName="MuteHover" Property="Visibility" Value="Hidden"/>
+                                    </MultiTrigger.Setters>
+                                </MultiTrigger>
+
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="IsPressed" Value="True" />
+                                        <Condition Property="IsChecked" Value="False" />
+                                    </MultiTrigger.Conditions>
+                                    <MultiTrigger.Setters>
+                                        <Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+                                        <Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+                                        <Setter TargetName="MuteNormal" Property="Visibility" Value="Hidden"/>
+                                        <Setter TargetName="MuteHover" Property="Visibility" Value="Hidden"/>
+                                    </MultiTrigger.Setters>
+                                </MultiTrigger>
+
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="IsPressed" Value="False" />
+                                        <Condition Property="IsChecked" Value="True" />
+                                    </MultiTrigger.Conditions>
+                                    <MultiTrigger.Setters>
+                                        <Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+                                        <Setter TargetName="Hover" Property="Visibility" Value="Hidden"/>
+                                        <Setter TargetName="MuteNormal" Property="Visibility" Value="Visible"/>
+                                        <Setter TargetName="MuteHover" Property="Visibility" Value="Hidden"/>
+                                    </MultiTrigger.Setters>
+                                </MultiTrigger>
+
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="IsPressed" Value="True" />
+                                        <Condition Property="IsChecked" Value="True" />
+                                    </MultiTrigger.Conditions>
+                                    <MultiTrigger.Setters>
+                                        <Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+                                        <Setter TargetName="Hover" Property="Visibility" Value="Hidden"/>
+                                        <Setter TargetName="MuteNormal" Property="Visibility" Value="Hidden"/>
+                                        <Setter TargetName="MuteHover" Property="Visibility" Value="Visible"/>
+                                    </MultiTrigger.Setters>
+                                </MultiTrigger>
+
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="IsMouseOver" Value="False" />
+                                        <Condition Property="IsChecked" Value="False" />
+                                    </MultiTrigger.Conditions>
+                                    <MultiTrigger.Setters>
+                                        <Setter TargetName="Normal" Property="Visibility" Value="Visible"/>
+                                        <Setter TargetName="Hover" Property="Visibility" Value="Hidden"/>
+                                        <Setter TargetName="MuteNormal" Property="Visibility" Value="Hidden"/>
+                                        <Setter TargetName="MuteHover" Property="Visibility" Value="Hidden"/>
+                                    </MultiTrigger.Setters>
+                                </MultiTrigger>
+
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="IsMouseOver" Value="True" />
+                                        <Condition Property="IsChecked" Value="False" />
+                                    </MultiTrigger.Conditions>
+                                    <MultiTrigger.Setters>
+                                        <Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+                                        <Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+                                        <Setter TargetName="MuteNormal" Property="Visibility" Value="Hidden"/>
+                                        <Setter TargetName="MuteHover" Property="Visibility" Value="Hidden"/>
+                                    </MultiTrigger.Setters>
+                                </MultiTrigger>
+
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="IsMouseOver" Value="False" />
+                                        <Condition Property="IsChecked" Value="True" />
+                                    </MultiTrigger.Conditions>
+                                    <MultiTrigger.Setters>
+                                        <Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+                                        <Setter TargetName="Hover" Property="Visibility" Value="Hidden"/>
+                                        <Setter TargetName="MuteNormal" Property="Visibility" Value="Visible"/>
+                                        <Setter TargetName="MuteHover" Property="Visibility" Value="Hidden"/>
+                                    </MultiTrigger.Setters>
+                                </MultiTrigger>
+
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="IsMouseOver" Value="True" />
+                                        <Condition Property="IsChecked" Value="True" />
+                                    </MultiTrigger.Conditions>
+                                    <MultiTrigger.Setters>
+                                        <Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+                                        <Setter TargetName="Hover" Property="Visibility" Value="Hidden"/>
+                                        <Setter TargetName="MuteNormal" Property="Visibility" Value="Hidden"/>
+                                        <Setter TargetName="MuteHover" Property="Visibility" Value="Visible"/>
+                                    </MultiTrigger.Setters>
+                                </MultiTrigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </ToggleButton.Template>
+                </ToggleButton>
+
+                <Button x:Name="OpenSettings"  Width="36" Height="36" Margin="4 0">
 					<Button.Template>
 						<ControlTemplate TargetType="{x:Type Button}">
 							<Grid IsHitTestVisible="True" Background="Transparent" ToolTip="Settings">
