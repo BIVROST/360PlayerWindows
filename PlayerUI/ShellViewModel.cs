@@ -195,8 +195,8 @@ namespace PlayerUI
 									System.Windows.Forms.Application.Restart();
 									System.Windows.Application.Current.Shutdown();
 								}, "restart", 60f )));
-							Updater.InstallUpdate();
 							Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Installing update...")));
+							Updater.InstallUpdate();							
                         },
 						"install now"
 						)
