@@ -20,11 +20,14 @@ namespace PlayerUI
 		private BackgroundWorker _closeOnTimeoutWorker;
 		private NotificationView _view;
 		private bool _animatedClosing = false;
+		private System.Action _userAction = null;
+		private bool _isAction = false;
 
 		public NotificationViewModel(string message, string url = "", float timeout = 5f)
 		{
 			Message = message;
 			Url = url;
+			ActionLabel = "read more";
 			this._timeout = timeout;
 			this._currentTime = _timeout;
 
@@ -32,6 +35,29 @@ namespace PlayerUI
 			_closeOnTimeoutWorker.DoWork += (s,e) =>
 			{
 				while(_currentTime > 0)
+				{
+					_currentTime -= 0.1f;
+					Thread.Sleep(100);
+				}
+			};
+			_closeOnTimeoutWorker.RunWorkerCompleted += (s, e) => AnimateClose();
+			_closeOnTimeoutWorker.RunWorkerAsync();
+		}
+
+		public NotificationViewModel(string message, System.Action userAction, string actionLabel = "", float timeout = 10f)
+		{
+			_isAction = true;
+			Message = message;
+			Url = "";
+			ActionLabel = actionLabel;
+			this._timeout = timeout;
+			this._currentTime = _timeout;
+			this._userAction = userAction;
+
+			_closeOnTimeoutWorker = new BackgroundWorker();
+			_closeOnTimeoutWorker.DoWork += (s, e) =>
+			{
+				while (_currentTime > 0)
 				{
 					_currentTime -= 0.1f;
 					Thread.Sleep(100);
@@ -49,8 +75,16 @@ namespace PlayerUI
 
 		public string Message { get; set; }
 		public string Url { get; set; }
+		public string ActionLabel { get; set; }
 
-		public Visibility MoreVisible { get { return string.IsNullOrWhiteSpace(Url) ? Visibility.Collapsed : Visibility.Visible; } }
+		public Visibility MoreVisible { get {
+				if (_isAction)
+				{
+					if (!string.IsNullOrWhiteSpace(ActionLabel)) return Visibility.Visible;
+				}
+				
+				return string.IsNullOrWhiteSpace(Url) ? Visibility.Collapsed : Visibility.Visible;
+			} }
 
 		public void OpenUrl(RoutedEventArgs e)
 		{
@@ -58,6 +92,11 @@ namespace PlayerUI
 			if(!string.IsNullOrWhiteSpace(Url))
 			{
 				System.Diagnostics.Process.Start(Url);
+			}
+			if (_userAction != null)
+			{	
+				_userAction();
+				Close();
 			}
 		}
 

@@ -75,6 +75,7 @@ namespace PlayerUI
 		private const string DisplayString = "Bivrost 360Player ™ BETA";
 
 		public VolumeControlViewModel VolumeRocker { get; set; }
+		public HeadsetMenuViewModel HeadsetMenu { get; set; }
 
 		public static string FileFromArgs = "";
 
@@ -94,6 +95,7 @@ namespace PlayerUI
 			NotificationCenter = new NotificationCenterViewModel();
 
 			_mediaDecoder = new MediaDecoder();
+			_mediaDecoder.Loop = Loop;
 
 			_mediaDecoder.OnReady += (duration) =>
 			{
@@ -170,6 +172,39 @@ namespace PlayerUI
 			{
 				_mediaDecoder.SetVolume(volume);
 			};
+
+			HeadsetMenu = new HeadsetMenuViewModel();
+			HeadsetMenu.OnRift += () => Task.Factory.StartNew(() =>
+			{
+				if (OculusPlayback.IsOculusPresent())
+					Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Automatic Oculus Rift playback selected.")));
+				else
+					Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Oculus Rift not detected.")));
+			});
+
+			Logic.Instance.OnUpdateAvailable += () => Execute.OnUIThreadAsync(() =>
+			{
+				NotificationCenter.PushNotification(
+					new NotificationViewModel(
+						"A new version of Bivrost 360Player is available.",
+						() => {
+							Updater.OnUpdateFail += 
+								() => Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Something went wrong :(")));
+							Updater.OnUpdateSuccess +=
+								() => Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Update completed successfully.", () => {
+									System.Windows.Forms.Application.Restart();
+									System.Windows.Application.Current.Shutdown();
+								}, "restart", 60f )));
+							Updater.InstallUpdate();
+							Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Installing update...")));
+                        },
+						"install now"
+						)
+					);
+			});
+
+
+			//Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Installing update...")));
 
 			#region NANCY REMOTE CONTROL SERVER
 			if (Logic.Instance.settings.EnableRemoteServer) { 
@@ -327,14 +362,16 @@ namespace PlayerUI
 				//}));
 			}
 
-			Task.Factory.StartNew(() =>
-			{
-				var connected = OculusPlayback.IsOculusPresent();
-				if(!connected)
-				{
-					NotificationCenter.PushNotification(new NotificationViewModel("Oculus Rift not connected"));
-				}
-			});
+			//Task.Factory.StartNew(() =>
+			//{
+			//	var connected = OculusPlayback.IsOculusPresent();
+			//	if(!connected)
+			//	{
+			//		NotificationCenter.PushNotification(new NotificationViewModel("Oculus Rift not connected"));
+			//	}
+			//});
+
+			Logic.Instance.CheckForUpdate();
 		}
 
 		public void LoadMedia(bool autoplay = true)
@@ -355,7 +392,7 @@ namespace PlayerUI
 			shellView.Pause.Visibility = Visibility.Collapsed;
 
 			if (Logic.Instance.settings.StartInFullScreen)
-				ToggleFullscreen();
+				ToggleFullscreen(true);
 			if (Logic.Instance.settings.AutoLoad)
 				if(!string.IsNullOrWhiteSpace(Logic.Instance.settings.AutoPlayFile))
 				{
@@ -390,7 +427,7 @@ namespace PlayerUI
 
 					if ((DateTime.Now - lastCursorMove).TotalSeconds > 3)
 					{
-						if (fullscreen)
+						if (Fullscreen)
 							Execute.OnUIThread(() => Mouse.OverrideCursor = Cursors.None);
 					}
 
@@ -423,7 +460,7 @@ namespace PlayerUI
 			if(IsPlaying && !IsPaused) {
 				double height = shellView.ActualHeight;
 				double Y = e.GetPosition(null).Y;
-				if(!fullscreen || (height - Y) < 120)
+				if(!Fullscreen || (height - Y) < 120)
 				{
 					lastUIMove = DateTime.Now;
 					if (!uiVisible)
@@ -733,7 +770,7 @@ namespace PlayerUI
 		public void Stop()
 		{
 			Console.WriteLine("FILE ENDED");
-			if (fullscreen) ToggleFullscreen();
+			if (Fullscreen) ToggleFullscreen(true);
 			//space press hack
 			Execute.OnUIThread(() => shellView.VideoProgressBar.Focus());
 			ShowBars();
@@ -832,7 +869,7 @@ namespace PlayerUI
 			else
 			if ((DateTime.Now - _doubleClickFirst).TotalMilliseconds < 250 )
 			{
-				ToggleFullscreen();
+				ToggleFullscreen(true);
 				_doubleClickDetected = true;
 			}
 			_doubleClickFirst = DateTime.Now;
@@ -878,14 +915,24 @@ namespace PlayerUI
 			}
 		}
 
-		private bool fullscreen = false;
-		public void ToggleFullscreen()
+		private bool _fullscreen = false;
+		public bool Fullscreen
+		{
+			get { return this._fullscreen; }
+			set { this._fullscreen = value; NotifyOfPropertyChange(() => Fullscreen); }
+		}
+
+		//public void ToggleFullscreen() { ToggleFullscreen(false); }
+
+		public void ToggleFullscreen(bool realToggle = false)
 		{
 			//space press hack
 			Execute.OnUIThread(() => shellView.VideoProgressBar.Focus());
 
-			fullscreen = !fullscreen;
-			if(!fullscreen) {
+			if(realToggle)
+				Fullscreen = !Fullscreen;
+
+			if(!Fullscreen) {
 				Mouse.OverrideCursor = null;
 				ShowUI();
 				playerWindow.WindowState = WindowState.Normal;
@@ -907,7 +954,7 @@ namespace PlayerUI
 
 		public void EscapeFullscreen()
 		{
-			if (fullscreen) ToggleFullscreen();
+			if (Fullscreen) ToggleFullscreen(true);
 		}
 
 		public void OnLostFocus()
@@ -967,6 +1014,10 @@ namespace PlayerUI
 			}
 		}
 
+		public void HeadsetSelect()
+		{
+			HeadsetMenu.ToggleVisibility();
+		}
 		
 	}
 }

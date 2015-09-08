@@ -42,8 +42,9 @@ namespace PlayerUI
 
 		private void HideBars()
 		{
-			Task.Factory.StartNew(() => Execute.OnUIThread(() => {
-
+			//Task.Factory.StartNew(() => Execute.OnUIThread(() => {
+			Execute.OnUIThreadAsync(() =>
+			{
 				Storyboard storyboard = new Storyboard();
 				double animTime = 0.8;
 
@@ -71,12 +72,15 @@ namespace PlayerUI
 
 				storyboard.Begin();
 
-			}));
+			});
+			//}));
 		}
 
 		private void ShowBars()
 		{
-			Task.Factory.StartNew(() => Execute.OnUIThread(() => {
+			//Task.Factory.StartNew(() => Execute.OnUIThread(() => {
+			Execute.OnUIThreadAsync(() =>
+			{
 
 				Storyboard storyboard = new Storyboard();
 				double animTime = 0.4;
@@ -105,7 +109,8 @@ namespace PlayerUI
 
 				storyboard.Begin();
 
-			}));
+			});
+			//}));
 		}
 
 		private void AnimateIndicator(UIElement uiControl)
@@ -113,7 +118,7 @@ namespace PlayerUI
 			Task.Factory.StartNew(() =>
 			{
 				Thread.Sleep(100);
-				Execute.OnUIThread(() =>
+				Execute.OnUIThreadAsync(() =>
 				{
 					Storyboard storyboard = new Storyboard();
 					double animTime = 0.8;
@@ -216,13 +221,13 @@ namespace PlayerUI
 
 		public void OpenHomePage()
 		{
-			if (fullscreen) ToggleFullscreen();
+			if (Fullscreen) ToggleFullscreen(true);
 			System.Diagnostics.Process.Start("http://www.bivrost360.com");
 		}
 
 		public void OpenSupportPage()
 		{
-			if (fullscreen) ToggleFullscreen();
+			if (Fullscreen) ToggleFullscreen(true);
 			System.Diagnostics.Process.Start("http://www.bivrost360.com");
 		}
 
@@ -265,5 +270,9 @@ namespace PlayerUI
 			ChangeFov(new System.Windows.Input.MouseWheelEventArgs(null, 0, -120));
         }
 
+		public void Dummy(RoutedEventArgs e)
+		{
+			e.Handled = true;
+		}
 	}
 }

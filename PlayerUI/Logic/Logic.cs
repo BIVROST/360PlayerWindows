@@ -13,19 +13,34 @@ namespace PlayerUI
 	public class Logic
 	{
 		private static Logic _instance = null;
-		public static Logic Instance { 
-			get { 
-				if (_instance == null) 
+		public static Logic Instance {
+			get {
+				if (_instance == null)
 					_instance = new Logic();
 				return _instance;
 			}
 		}
-		
+
 		public Settings settings;
 		private WebSocketServer webSocketServer;
 
+		public event Action OnUpdateAvailable = delegate { };
+
 		public Logic()
 		{
+			Application.Current.DispatcherUnhandledException += (sender, e) =>
+			{
+				Console.WriteLine("Exception supressed. Success.");
+				//throw new NotImplementedException();
+			};
+
+			AppDomain currentDomain = AppDomain.CurrentDomain;
+			currentDomain.UnhandledException += (sender, e) =>
+			{
+				Console.WriteLine("Exception supressed. Success.");
+				MessageBox.Show("Exception supressed. Success. ");
+            };
+
 			settings = new Settings();
 
 			ProtocolHandler.RegisterProtocol();
@@ -75,6 +90,17 @@ namespace PlayerUI
 		{
 			System.Diagnostics.Process.Start(System.Reflection.Assembly.GetEntryAssembly().Location);
 			Application.Current.Shutdown();
+		}
+
+		public void CheckForUpdate()
+		{
+			Task.Factory.StartNew(() =>
+			{
+				if(Updater.CheckForUpdate())
+				{
+					OnUpdateAvailable();
+				}
+            });			
 		}
 	}
 }
