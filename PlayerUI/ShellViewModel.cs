@@ -53,7 +53,12 @@ namespace PlayerUI
 		}
 
 		private string _selectedFileName = "";
-		public string SelectedFileNameLabel { get { return Path.GetFileNameWithoutExtension(SelectedFileName); } }
+		public string SelectedFileNameLabel {
+			get {
+				if (SelectedFileName.ToLower().StartsWith("http")) return "web stream";
+				return Path.GetFileNameWithoutExtension(SelectedFileName);
+			}
+		}
 		public string SelectedFileName { get { return _selectedFileName; } set { this._selectedFileName = value; NotifyOfPropertyChange(() => SelectedFileName); } }
 		public bool IsFileSelected { get; set; }
 
@@ -595,8 +600,11 @@ namespace PlayerUI
 		public void Youtube()
 		{
 			YoutubeAddressViewModel yavm = DialogHelper.ShowDialogOut<YoutubeAddressViewModel>();
-			if (!string.IsNullOrWhiteSpace(yavm.YoutubeId)) { 
-				SelectedFileName = YoutubeEngine.GetVideoUrlFromId(yavm.YoutubeId);
+			if (!string.IsNullOrWhiteSpace(yavm.YoutubeId)) {
+				//SelectedFileName = YoutubeEngine.GetVideoUrlFromId(yavm.YoutubeId);
+				
+				SelectedFileName = YoutubeEngine.GetVideUrl(yavm.YoutubeId);
+				IsFileSelected = true;
 				LoadMedia();
 				//Play();
 			}

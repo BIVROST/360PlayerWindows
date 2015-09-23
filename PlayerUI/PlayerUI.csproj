@@ -263,6 +263,7 @@
       <DependentUpon>HeadsetMenuView.xaml</DependentUpon>
     </Compile>
     <Compile Include="HeadsetMenuViewModel.cs" />
+    <Compile Include="Logger\Logger.cs" />
     <Compile Include="Logic\Logic.cs" />
     <Compile Include="Logic\ProtocolHandler.cs" />
     <Compile Include="Logic\Recents.cs" />
@@ -435,6 +436,9 @@
     <Resource Include="logo.png" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="youtube-dl\youtube-dl.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Resource Include="EULA.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
