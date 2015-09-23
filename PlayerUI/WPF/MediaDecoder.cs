@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -20,6 +21,16 @@ namespace PlayerUI
 		{
 			public long major;
 			public int minor;
+		}
+
+		public enum VideoMode
+		{
+			Autodetect,
+			Mono,
+			SideBySide,
+			TopBottom,
+			SideBySideReversed,
+			TopBottomReversed
 		}
 
 		public Error LastError;
@@ -39,6 +50,16 @@ namespace PlayerUI
 		public Texture2D TextureR { get { return this.textureR; } }
 
 		public bool IsStereo { get { return IsPlaying ? _stereoVideo : false; } }
+		public bool IsStereoRendered { get
+			{
+				switch(StereoMode)
+				{
+					case VideoMode.Mono: return false;
+					case VideoMode.Autodetect: return IsStereo;
+					default: return true;
+				}
+			} }
+
 		public bool IsPlaying { get; private set; }
 		public bool IsPaused { get {
 				/////lock(criticalSection)
@@ -74,6 +95,9 @@ namespace PlayerUI
 
 		public double CurrentPosition { get { return _mediaEngineEx.CurrentTime; } }
 		public bool Initialized { get { return _initialized; } }
+		public VideoMode StereoMode { get; set; } = VideoMode.Autodetect;
+		public VideoMode CurrentMode { get; set; } = VideoMode.Autodetect;
+		
 
 		private bool _initialized = false;
 		private bool _rendering = false;
@@ -108,6 +132,22 @@ namespace PlayerUI
 			Left = 0,
 			Top = 0.5f,
 			Right = 1,
+			Bottom = 1f
+		};
+
+		VideoNormalizedRect leftRect = new VideoNormalizedRect()
+		{
+			Left = 0f,
+			Top = 0f,
+			Right = 0.5f,
+			Bottom = 1f
+		};
+
+		VideoNormalizedRect rightRect = new VideoNormalizedRect()
+		{
+			Left = 0.5f,
+			Top = 0f,
+			Right = 1f,
 			Bottom = 1f
 		};
 
@@ -230,7 +270,16 @@ namespace PlayerUI
 			}
 		}
 
-		
+		public static VideoMode DetectFromFileName(string fileName)
+		{
+			if (!string.IsNullOrWhiteSpace(fileName))
+			{
+				if (Regex.IsMatch(Path.GetFileNameWithoutExtension(fileName), "\b(SbS|LR)\b")) return VideoMode.SideBySide;
+				if (Regex.IsMatch(Path.GetFileNameWithoutExtension(fileName), "\b(TaB|TB)\b")) return VideoMode.TopBottom;
+				if (Regex.IsMatch(Path.GetFileNameWithoutExtension(fileName), "\bmono\b")) return VideoMode.Mono;
+			}
+			return VideoMode.Autodetect;
+		}
 
 		public void Play()
 		{
@@ -254,6 +303,13 @@ namespace PlayerUI
 					_stereoVideo = videoAspect < 1.5;
 					h = _stereoVideo ? h / 2 : h;
 
+					CurrentMode = StereoMode;
+
+					if(CurrentMode == VideoMode.Autodetect)
+						CurrentMode = DetectFromFileName(_fileName);
+
+					Console.WriteLine("VIDEO STEREO MODE: " + CurrentMode);
+
 					Texture2DDescription frameTextureDescription = new Texture2DDescription()
 					{
 						Width = w,
@@ -270,7 +326,7 @@ namespace PlayerUI
 
 
 					textureL = new SharpDX.Direct3D11.Texture2D(_device, frameTextureDescription);
-					if(_stereoVideo)
+					//if(_stereoVideo)
 						textureR = new SharpDX.Direct3D11.Texture2D(_device, frameTextureDescription);
 				}
 
@@ -294,17 +350,39 @@ namespace PlayerUI
 							if(ts > 0)
 							if (result && ts != lastTs)
 							{
-								if (_stereoVideo)
-								{
-									_mediaEngine.TransferVideoFrame(textureL, topRect, new SharpDX.Rectangle(0, 0, w, h), null);
-									_mediaEngine.TransferVideoFrame(textureR, bottomRect, new SharpDX.Rectangle(0, 0, w, h), null);
-								}
-								else
-								{
-									//Console.Write("Transfering frame " + ts + " " + w + " x " + h + " ... ");
-									_mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
-									//Console.WriteLine(" ... done.");
-								}
+								switch(CurrentMode)
+									{
+										case VideoMode.Autodetect:
+											if (IsStereo)
+											{
+												_mediaEngine.TransferVideoFrame(textureL, topRect, new SharpDX.Rectangle(0, 0, w, h), null);
+												_mediaEngine.TransferVideoFrame(textureR, bottomRect, new SharpDX.Rectangle(0, 0, w, h), null);
+											}
+											else
+											{
+												_mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
+											}
+											break;
+										case VideoMode.Mono:
+											_mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
+											break;
+										case VideoMode.SideBySide:
+											_mediaEngine.TransferVideoFrame(textureL, leftRect, new SharpDX.Rectangle(0, 0, w, h), null);
+											_mediaEngine.TransferVideoFrame(textureR, rightRect, new SharpDX.Rectangle(0, 0, w, h), null);
+											break;
+										case VideoMode.SideBySideReversed:
+											_mediaEngine.TransferVideoFrame(textureL, rightRect, new SharpDX.Rectangle(0, 0, w, h), null);
+											_mediaEngine.TransferVideoFrame(textureR, leftRect, new SharpDX.Rectangle(0, 0, w, h), null);
+											break;
+										case VideoMode.TopBottom:
+											_mediaEngine.TransferVideoFrame(textureL, topRect, new SharpDX.Rectangle(0, 0, w, h), null);
+											_mediaEngine.TransferVideoFrame(textureR, bottomRect, new SharpDX.Rectangle(0, 0, w, h), null);
+											break;
+										case VideoMode.TopBottomReversed:
+											_mediaEngine.TransferVideoFrame(textureR, topRect, new SharpDX.Rectangle(0, 0, w, h), null);
+											_mediaEngine.TransferVideoFrame(textureL, bottomRect, new SharpDX.Rectangle(0, 0, w, h), null);
+											break;
+									}									
 							}
 						}
 					}
@@ -420,9 +498,11 @@ namespace PlayerUI
 		private Stream webStream;
 		private ByteStream stream;
 		private Uri url;
+		private string _fileName;
 
 		public void LoadMedia(string fileName)
 		{
+			_fileName = "";
 			Stop();
 			while (_initialized == true)
 			{
@@ -442,6 +522,7 @@ namespace PlayerUI
 			}
 			else
 			{
+				_fileName = fileName;
 				//fileStream = File.OpenRead(fileName);
 				//stream = new ByteStream(fileStream);
 				//url = new Uri(fileStream.Name, UriKind.RelativeOrAbsolute);

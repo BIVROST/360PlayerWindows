@@ -572,7 +572,7 @@ namespace PlayerUI
 
 							OculusPlayback.textureL = _mediaDecoder.TextureL;
 							OculusPlayback.textureR = _mediaDecoder.TextureR;
-							OculusPlayback._stereoVideo = _mediaDecoder.IsStereo;
+							OculusPlayback._stereoVideo = _mediaDecoder.IsStereoRendered;
 							OculusPlayback.Configure(SelectedFileNameLabel, (float)_mediaDecoder.Duration);
 							OculusPlayback.Start();
 						}
@@ -590,9 +590,7 @@ namespace PlayerUI
 					AnimateIndicator(shellView.PlayIndicator);
 				});
 				
-			//});
-
-			
+			//});			
         }
 
 		

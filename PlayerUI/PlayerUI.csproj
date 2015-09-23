@@ -193,6 +193,7 @@
     <Reference Include="System.Runtime">
       <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Runtime.dll</HintPath>
     </Reference>
+    <Reference Include="System.Web" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Caliburn.Micro.2.0.1\lib\net45\System.Windows.Interactivity.dll</HintPath>
@@ -265,6 +266,7 @@
     <Compile Include="HeadsetMenuViewModel.cs" />
     <Compile Include="Logger\Logger.cs" />
     <Compile Include="Logic\Logic.cs" />
+    <Compile Include="Logic\Protocol.cs" />
     <Compile Include="Logic\ProtocolHandler.cs" />
     <Compile Include="Logic\Recents.cs" />
     <Compile Include="Logic\Settings.cs" />
