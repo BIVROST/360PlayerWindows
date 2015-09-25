@@ -70,6 +70,7 @@ namespace PlayerUI
 
 		private bool autoplay = false;
 		private MediaDecoder _mediaDecoder;
+		private bool _ready = false;
 
 		Window playerWindow;
 		Nancy.Hosting.Self.NancyHost nancy;
@@ -104,6 +105,7 @@ namespace PlayerUI
 
 			_mediaDecoder.OnReady += (duration) =>
 			{
+				_ready = true;
 				if (autoplay)
 				{
 					autoplay = false;
@@ -381,17 +383,19 @@ namespace PlayerUI
 
 		public void LoadMedia(bool autoplay = true)
 		{
+			_ready = false;
 			if (!IsFileSelected) return;
 			this.autoplay = autoplay;
-			if (!string.IsNullOrWhiteSpace(SelectedFileName))
-			{
-				if (Path.GetFileNameWithoutExtension(SelectedFileName).ToLower().Contains("fbcube"))
-					_mediaDecoder.Projection = MediaDecoder.ProjectionMode.CubeFacebook;
-				else
-					_mediaDecoder.Projection = MediaDecoder.ProjectionMode.Sphere;
-			}
+			//if (!string.IsNullOrWhiteSpace(SelectedFileName))
+			//{
+			//	if (Path.GetFileNameWithoutExtension(SelectedFileName).ToLower().Contains("fbcube"))
+			//		_mediaDecoder.Projection = MediaDecoder.ProjectionMode.CubeFacebook;
+			//	else
+			//		_mediaDecoder.Projection = MediaDecoder.ProjectionMode.Sphere;
+			//}
 
-			_mediaDecoder.LoadMedia(SelectedFileName);
+			string mediaFile = SelectedFileName;
+			Task.Factory.StartNew(() => _mediaDecoder.LoadMedia(mediaFile));
 		}
 
 		protected override void OnViewAttached(object view, object context)
@@ -548,10 +552,12 @@ namespace PlayerUI
 
 			//Task.Factory.StartNew(() =>
 			//{
-				
-				//waitForPlaybackReady.WaitOne();
 
-				//if (_mediaDecoder.LastError != null) return;
+			//waitForPlaybackReady.WaitOne();
+
+			//if (_mediaDecoder.LastError != null) return;
+
+			if (!_ready) return;
 
 				Execute.OnUIThreadAsync(() =>
 				{
@@ -570,6 +576,7 @@ namespace PlayerUI
 						shellView.TopBar.Visibility = Visibility.Visible;
 						this.DXCanvas.Visibility = Visibility.Visible;
 					});
+
 					this.DXCanvas.Scene = new Scene(_mediaDecoder.TextureL, _mediaDecoder.Projection);
 					this.DXCanvas.StartRendering();
 
@@ -607,20 +614,31 @@ namespace PlayerUI
 		public void OpenUrl()
 		{
 			OpenUrlViewModel ouvm = DialogHelper.ShowDialogOut<OpenUrlViewModel>();
-			//if (!string.IsNullOrWhiteSpace(ouvm.YoutubeId)) {
-			//	//SelectedFileName = YoutubeEngine.GetVideoUrlFromId(yavm.YoutubeId);
-				
-			//	SelectedFileName = YoutubeEngine.GetVideUrl(ouvm.YoutubeId);
-			//	IsFileSelected = true;
-			//	LoadMedia();
-			//	//Play();
-			//}
+			if (ouvm.Valid)
+			{
+				NotificationCenter.PushNotification(new NotificationViewModel("OK"));
+				if(!string.IsNullOrWhiteSpace(ouvm.VideoUrl))
+				{
+					SelectedFileName = ouvm.VideoUrl;
+					IsFileSelected = true;
+					_mediaDecoder.Projection = StreamingServices.GetServiceProjection(ouvm.Uri);
+					Execute.OnUIThreadAsync(() =>
+					{
+						LoadMedia();
+					});					
+				}
+			} else
+			{
+				NotificationCenter.PushNotification(new NotificationViewModel("Url is not valid video or streaming service address."));
+			}
 		}
 
 		public void PlayPause()
 		{
 			//space press hack
 			Execute.OnUIThread(() => shellView.VideoProgressBar.Focus());
+
+			if (!_ready) return;
 
 			if (!IsPlaying)
 			{

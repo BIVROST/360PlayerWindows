@@ -513,21 +513,22 @@ namespace PlayerUI
 			while (_initialized == true)
 			{
 				Console.WriteLine("Cannot init when initialized");
+				Stop(true);
 				Thread.Sleep(5);
 			}
 			Init();
 
-			if (fileName.Contains("http://") || fileName.Contains("https://"))
-			{
-				webStream = new System.Net.WebClient().OpenRead(fileName);
-				stream = new ByteStream(webStream);
-				url = new Uri(fileName, UriKind.Absolute);
+			//if (fileName.Contains("http://") || fileName.Contains("https://"))
+			//{
+			//	webStream = new System.Net.WebClient().OpenRead(fileName);
+			//	stream = new ByteStream(webStream);
+			//	url = new Uri(fileName, UriKind.Absolute);
 
-				_mediaEngineEx.SetSourceFromByteStream(stream, url.AbsoluteUri);
-				_mediaEngineEx.Load();
-			}
-			else
-			{
+			//	_mediaEngineEx.SetSourceFromByteStream(stream, url.AbsoluteUri);
+			//	_mediaEngineEx.Load();
+			//}
+			//else
+			//{
 				_fileName = fileName;
 				//fileStream = File.OpenRead(fileName);
 				//stream = new ByteStream(fileStream);
@@ -536,7 +537,7 @@ namespace PlayerUI
 				_mediaEngineEx.Source = fileName;
 				_mediaEngineEx.Preload = MediaEnginePreload.Automatic;
 				_mediaEngineEx.Load();
-			}
+			//}
 		}
 
 		public MediaEngine Engine { get { return this._mediaEngine; } }

@@ -37,7 +37,7 @@
     <PublisherName>VIZAO Sp z o.o.</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
-    <ApplicationRevision>54</ApplicationRevision>
+    <ApplicationRevision>56</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
@@ -299,6 +299,7 @@
     <Compile Include="Tools\NativeMethods.cs" />
     <Compile Include="Tools\RegistryBase.cs" />
     <Compile Include="Tools\RegistryContext.cs" />
+    <Compile Include="Tools\StreamingServices.cs" />
     <Compile Include="VolumeControlView.xaml.cs">
       <DependentUpon>VolumeControlView.xaml</DependentUpon>
     </Compile>

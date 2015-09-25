@@ -1,4 +1,5 @@
 ﻿using Caliburn.Micro;
+using PlayerUI.Tools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,31 +17,26 @@ namespace PlayerUI
 
 		public string Url { get; set; }
 
+		public Uri Uri { get; set; }
+
+		public string VideoUrl { get; set; }
+
+		public bool Valid { get; set; } = false;
+
 		public void Open()
 		{
-			if (string.IsNullOrWhiteSpace(Url))
-			{
-				System.Windows.MessageBox.Show("Incorrect URL");
-				TryClose();
-				return;
-			}
+			Uri uri;
+			string correctedUrl;
+			Valid = StreamingServices.CheckUrlValid(Url, out correctedUrl, out uri);
+			Uri = uri;
 
-			//var step1 = Url.Split('?');
-			//if (step1.Length == 2)
-			//{
-			//	var step2 = step1[1].Split('&');
-			//	if (step2.Length > 0)
-			//	{
-			//		var list = step2.Where(s => s.StartsWith("v=")).ToList();
-			//		if (list.Count == 1)
-			//		{
-			//			YoutubeId = list[0].Split('=')[1];
-			//		}
-			//		else System.Windows.MessageBox.Show("Incorrect URL");
-			//	}
-			//	else System.Windows.MessageBox.Show("Incorrect URL");
-			//}
-			//else System.Windows.MessageBox.Show("Incorrect URL");
+			if (Valid) Url = correctedUrl;
+			Console.WriteLine(StreamingServices.DetectService(Uri));
+			string videoUrl;
+			if(StreamingServices.TryParseVideoFile(Uri, out videoUrl))
+			{
+				VideoUrl = videoUrl;
+			}			
 
 			TryClose();
 		}
