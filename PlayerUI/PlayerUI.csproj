@@ -295,6 +295,7 @@
     <Compile Include="TestWindowViewModel.cs" />
     <Compile Include="Tools\CustomExtensions.cs" />
     <Compile Include="Tools\DeviceSelectionTool.cs" />
+    <Compile Include="Tools\GraphicTools.cs" />
     <Compile Include="Tools\NativeMethods.cs" />
     <Compile Include="Tools\RegistryBase.cs" />
     <Compile Include="Tools\RegistryContext.cs" />

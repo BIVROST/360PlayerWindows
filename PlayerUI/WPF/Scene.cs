@@ -9,6 +9,8 @@
 	using Device = SharpDX.Direct3D11.Device;
 	using System.Windows.Input;
 	using Tools;
+	using System.Linq;
+	using System.Collections.Generic;
 
 	public class Scene : IScene
     {
@@ -41,11 +43,36 @@
 
 
 		private Texture2D sharedTex;
+		private MediaDecoder.ProjectionMode projectionMode;
 		private SharpDX.DXGI.Resource resource;
 
-		public Scene(Texture2D sharedTexture)
+		public Scene(Texture2D sharedTexture, MediaDecoder.ProjectionMode projection)
 		{
 			videoTexture = sharedTexture;
+			projectionMode = projection;
+		}
+
+		public Vector2 MapCube(int index, Vector2 vector)
+		{
+			Vector2 vector2;
+			if (index != 5)
+				vector2 = new Vector2(vector.X == 1 ? 0 : 1, vector.Y);
+			else
+				vector2 = new Vector2(vector.X, vector.Y == 1?0:1);
+
+			Dictionary<int, Vector4> map = new Dictionary<int, Vector4>();
+
+			map.Add(3, new Vector4(3f, 0f / 3f, 2f, 0f));
+			map.Add(2, new Vector4(3f, 1f / 3f, 2f, 0f));
+			map.Add(4, new Vector4(3f, 2f / 3f, 2f, 0f));
+			map.Add(5, new Vector4(3f, 0f / 3f, 2f, 1f / 2f));
+			map.Add(1, new Vector4(3f, 1f / 3f, 2f, 1f / 2f));
+			map.Add(0, new Vector4(3f, 2f / 3f, 2f, 1f / 2f));
+
+			return new Vector2(
+				vector2.X / map[index].X + map[index].Y,
+				vector2.Y / map[index].Z + map[index].W
+				);
 		}
 
         void IScene.Attach(ISceneHost host)
@@ -76,7 +103,8 @@
 			basicEffect.TextureEnabled = true;
 			basicEffect.LightingEnabled = false;
 
-			primitive = SharpDX.Toolkit.Graphics.GeometricPrimitive.Sphere.New(graphicsDevice, 6, 64, true);
+			primitive = GraphicTools.CreateGeometry(projectionMode, graphicsDevice);
+
 
 			_device.ImmediateContext.Flush();
 

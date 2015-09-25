@@ -383,6 +383,9 @@ namespace PlayerUI
 		{
 			if (!IsFileSelected) return;
 			this.autoplay = autoplay;
+			if (Path.GetFileNameWithoutExtension(SelectedFileName).ToLower().Contains("fbcube")) _mediaDecoder.Projection = MediaDecoder.ProjectionMode.CubeFacebook;
+			else _mediaDecoder.Projection = MediaDecoder.ProjectionMode.Sphere;
+
 			_mediaDecoder.LoadMedia(SelectedFileName);
 		}
 
@@ -562,7 +565,7 @@ namespace PlayerUI
 						shellView.TopBar.Visibility = Visibility.Visible;
 						this.DXCanvas.Visibility = Visibility.Visible;
 					});
-					this.DXCanvas.Scene = new Scene(_mediaDecoder.TextureL);
+					this.DXCanvas.Scene = new Scene(_mediaDecoder.TextureL, _mediaDecoder.Projection);
 					this.DXCanvas.StartRendering();
 
 					Task.Factory.StartNew(() =>
@@ -573,6 +576,7 @@ namespace PlayerUI
 							OculusPlayback.textureL = _mediaDecoder.TextureL;
 							OculusPlayback.textureR = _mediaDecoder.TextureR;
 							OculusPlayback._stereoVideo = _mediaDecoder.IsStereoRendered;
+							OculusPlayback._projection = _mediaDecoder.Projection;
 							OculusPlayback.Configure(SelectedFileNameLabel, (float)_mediaDecoder.Duration);
 							OculusPlayback.Start();
 						}

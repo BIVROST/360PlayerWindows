@@ -26,6 +26,7 @@ namespace PlayerUI.Oculus
 		public static Texture2D textureR;
 		public static float radius = 4.9f;
 		public static bool _stereoVideo = false;
+		public static MediaDecoder.ProjectionMode _projection = MediaDecoder.ProjectionMode.Sphere;
 
 		public static ManualResetEvent waitForRendererStop = new ManualResetEvent(false);
 		public static bool abort = false;
@@ -286,7 +287,8 @@ namespace PlayerUI.Oculus
 				basicEffectR.LightingEnabled = false;
 			}
 
-			var primitive = SharpDX.Toolkit.Graphics.GeometricPrimitive.Sphere.New(gd, radius, 32, true);
+			//var primitive = SharpDX.Toolkit.Graphics.GeometricPrimitive.Sphere.New(gd, radius, 32, true);
+			var primitive = GraphicTools.CreateGeometry(_projection, gd);
 
 
 			// UI Rendering

@@ -33,6 +33,12 @@ namespace PlayerUI
 			TopBottomReversed
 		}
 
+		public enum ProjectionMode
+		{
+			Sphere,
+			CubeFacebook
+		}
+
 		public Error LastError;
 
 		private MediaEngine _mediaEngine;
@@ -97,7 +103,7 @@ namespace PlayerUI
 		public bool Initialized { get { return _initialized; } }
 		public VideoMode StereoMode { get; set; } = VideoMode.Autodetect;
 		public VideoMode CurrentMode { get; set; } = VideoMode.Autodetect;
-		
+		public ProjectionMode Projection { get; set; } = MediaDecoder.ProjectionMode.Sphere;
 
 		private bool _initialized = false;
 		private bool _rendering = false;
