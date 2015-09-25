@@ -435,10 +435,10 @@ namespace PlayerUI
 
 		public void SetVolume(double volume)
 		{
-			if(IsPlaying)
-			{
+			//if(IsPlaying)
+			//{
 				_mediaEngine.Volume = volume;
-			}
+			//}
 		}
 
 		public void Seek(double time)
