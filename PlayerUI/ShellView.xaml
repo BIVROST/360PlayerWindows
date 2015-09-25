@@ -6,7 +6,7 @@
 		xmlns:svgc="http://sharpvectors.codeplex.com/svgc/"
 		xmlns:sys="clr-namespace:System;assembly=mscorlib"		
         Title="ShellView" Height="600" Width="1066" MinWidth="820"  MinHeight="530" WindowStartupLocation="CenterScreen" Icon="Graphics\sygnet.ico" 
-		cal:Message.Attach="[Shortcut Control+U] = [Action Youtube]; [Event Deactivated] = [Action OnLostFocus]; [Event Activated] = [Action OnGotFocus]; [Shortcut F1] = [Action OpenSupportPage];
+		cal:Message.Attach="[Shortcut Control+U] = [Action OpenUrl]; [Event Deactivated] = [Action OnLostFocus]; [Event Activated] = [Action OnGotFocus]; [Shortcut F1] = [Action OpenSupportPage];
 		[Shortcut Tab] = [Action DisableTabPress($source, $eventArgs)];" Background="Black">
 
 	<Window.Resources>
@@ -137,7 +137,7 @@
 			<Menu DockPanel.Dock="Top" Height="22" Padding="2">
 				<MenuItem Header="File" x:Name="FileMenuItem">
 					<MenuItem Header="Open file" x:Name="OpenFile" InputGestureText="Ctrl+O"/>
-					<MenuItem Header="Open URL" x:Name="Youtube" InputGestureText="Ctrl+U"/>
+					<MenuItem Header="Open URL" x:Name="OpenUrl" InputGestureText="Ctrl+U"/>
 					<Separator />
                     <MenuItem Header="Quit" x:Name="Quit" InputGestureText="Ctrl+Q"/>
                     <Separator  />
@@ -228,7 +228,7 @@
             <!--<svgc:SvgViewbox Source="Graphics/open.svg" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="64" Grid.Row="1" Margin="100,0,0,50"/>-->
             <!--<svgc:SvgViewbox Source="Graphics/open.svg" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="64" Grid.Row="1" Margin="0,0,100,50"/>-->
 
-            <Button x:Name="_OpenUrl"  Width="64" Height="64" Margin="0,0,100,50" HorizontalAlignment="Right" VerticalAlignment="Bottom" cal:Message.Attach="Youtube">
+            <Button x:Name="_OpenUrl"  Width="64" Height="64" Margin="0,0,100,50" HorizontalAlignment="Right" VerticalAlignment="Bottom" cal:Message.Attach="OpenUrl">
                 <Button.Template>
                     <ControlTemplate TargetType="{x:Type Button}">
                         <Grid IsHitTestVisible="True" Background="Transparent" ToolTip="Open Url">

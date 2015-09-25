@@ -36,10 +36,13 @@
 		private float lerpSpeed = 3f;
 		private float targetFov = 72f;
 		private float currentFov = 72f;
+		private bool littlePlanet = false;
+		private float currentOffset = 0f;
 
 		private const float MIN_FOV = 40f;		
-		private const float DEFAULT_FOV = 72f;
-		private const float MAX_FOV = 130f;
+		private const float DEFAULT_FOV = 90f;
+		private const float DEFAULT_LITTLE_FOV = 120f;
+		private const float MAX_FOV = 150f;
 
 
 		private Texture2D sharedTex;
@@ -102,6 +105,7 @@
 
 			basicEffect.TextureEnabled = true;
 			basicEffect.LightingEnabled = false;
+			basicEffect.Sampler = graphicsDevice.SamplerStates.AnisotropicClamp;
 
 			primitive = GraphicTools.CreateGeometry(projectionMode, graphicsDevice);
 
@@ -183,7 +187,15 @@
 			Disposer.RemoveAndDispose(ref primitive);
 		}
 
+		public void StereographicProjection()
+		{
+			littlePlanet = true;
+		}
 
+		public void RectlinearProjection()
+		{
+			littlePlanet = false;
+		}
 
         void IScene.Update(TimeSpan sceneTime)
         {
@@ -194,6 +206,11 @@
 			currentRotationQuaternion = Quaternion.Lerp(currentRotationQuaternion, targetRotationQuaternion, lerpSpeed * deltaTime);
 
 			basicEffect.View = Matrix.RotationQuaternion(currentRotationQuaternion);
+			//if(littlePlanet)
+			currentOffset = Lerp(currentOffset, littlePlanet ? -3f : 0f, deltaTime * 3f);
+            basicEffect.View *= Matrix.Translation(0, 0, currentOffset);
+
+
 			//basicEffect.View = Matrix.Lerp(basicEffect.View, Matrix.RotationQuaternion(targetRotationQuaternion), 3f * deltaTime);
 		}
 
@@ -207,7 +224,7 @@
 			//currentFov = Lerp(currentFov, targetFov, 5f * deltaTime);
 			currentFov = currentFov.LerpInPlace(targetFov, 5f * deltaTime);
 			basicEffect.Projection = Matrix.PerspectiveFovRH((float)(currentFov * Math.PI / 180f), (float)16f / 9f, 0.0001f, 50.0f);
-
+			
 			if (HasFocus)
 			{
 				if (Keyboard.IsKeyDown(Key.Left))
@@ -220,7 +237,21 @@
 					MoveDelta(0f, -1f, speed * deltaTime, 4f);
 				if (Keyboard.IsKeyDown(Key.Z))
 					ResetFov();
-            }
+
+				if (projectionMode == MediaDecoder.ProjectionMode.Sphere)
+				{
+					if (Keyboard.IsKeyDown(Key.L))
+					{
+						littlePlanet = true;
+						targetFov = DEFAULT_LITTLE_FOV;
+					}
+					if (Keyboard.IsKeyDown(Key.N))
+					{
+						littlePlanet = false;
+						targetFov = DEFAULT_FOV;
+					}
+				}
+			}
 
 			primitive.Draw(basicEffect);
         }

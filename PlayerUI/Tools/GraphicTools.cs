@@ -79,7 +79,7 @@ namespace PlayerUI.Tools
 		{
 			switch (projection)
 			{
-				case MediaDecoder.ProjectionMode.Sphere: return GeometricPrimitive.Sphere.New(graphicsDevice, 6, 32, true);
+				case MediaDecoder.ProjectionMode.Sphere: return GeometricPrimitive.Sphere.New(graphicsDevice, 6, 64, true);
 				case MediaDecoder.ProjectionMode.CubeFacebook: return GenerateFacebookCube(graphicsDevice);
 				default: throw new ArgumentException("Unknown projection");
 			}

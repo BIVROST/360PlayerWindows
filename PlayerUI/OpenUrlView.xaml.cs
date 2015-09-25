@@ -15,11 +15,11 @@ using System.Windows.Shapes;
 namespace PlayerUI
 {
 	/// <summary>
-	/// Interaction logic for YoutubeAddressView.xaml
+	/// Interaction logic for OpenUrlView.xaml
 	/// </summary>
-	public partial class YoutubeAddressView : Window
+	public partial class OpenUrlView : Window
 	{
-		public YoutubeAddressView()
+		public OpenUrlView()
 		{
 			InitializeComponent();
 		}

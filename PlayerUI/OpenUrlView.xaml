@@ -1,8 +1,8 @@
-﻿<Window x:Class="PlayerUI.YoutubeAddressView"
+﻿<Window x:Class="PlayerUI.OpenUrlView"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 		xmlns:cal="http://www.caliburnproject.org"
-        Title="YoutubeAddressView" Height="80" Width="650" WindowStyle="ToolWindow" WindowStartupLocation="CenterOwner" ResizeMode="NoResize" ShowInTaskbar="False">
+        Title="Open Url" Height="80" Width="650" WindowStyle="ToolWindow" WindowStartupLocation="CenterOwner" ResizeMode="NoResize" ShowInTaskbar="False">
     <Grid FocusManager.FocusedElement="{Binding ElementName=Url}">
 		<Grid.ColumnDefinitions>
 			<ColumnDefinition Width="40" />

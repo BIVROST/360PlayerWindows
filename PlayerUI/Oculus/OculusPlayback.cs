@@ -272,6 +272,7 @@ namespace PlayerUI.Oculus
 
 			basicEffectL.TextureEnabled = true;
 			basicEffectL.LightingEnabled = false;
+			basicEffectL.Sampler = gd.SamplerStates.AnisotropicClamp;
 
 			if (_stereoVideo)
 			{
@@ -285,6 +286,7 @@ namespace PlayerUI.Oculus
 
 				basicEffectR.TextureEnabled = true;
 				basicEffectR.LightingEnabled = false;
+				basicEffectR.Sampler = gd.SamplerStates.AnisotropicClamp;
 			}
 
 			//var primitive = SharpDX.Toolkit.Graphics.GeometricPrimitive.Sphere.New(gd, radius, 32, true);

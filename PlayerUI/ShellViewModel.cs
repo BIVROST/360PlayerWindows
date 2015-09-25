@@ -383,8 +383,13 @@ namespace PlayerUI
 		{
 			if (!IsFileSelected) return;
 			this.autoplay = autoplay;
-			if (Path.GetFileNameWithoutExtension(SelectedFileName).ToLower().Contains("fbcube")) _mediaDecoder.Projection = MediaDecoder.ProjectionMode.CubeFacebook;
-			else _mediaDecoder.Projection = MediaDecoder.ProjectionMode.Sphere;
+			if (!string.IsNullOrWhiteSpace(SelectedFileName))
+			{
+				if (Path.GetFileNameWithoutExtension(SelectedFileName).ToLower().Contains("fbcube"))
+					_mediaDecoder.Projection = MediaDecoder.ProjectionMode.CubeFacebook;
+				else
+					_mediaDecoder.Projection = MediaDecoder.ProjectionMode.Sphere;
+			}
 
 			_mediaDecoder.LoadMedia(SelectedFileName);
 		}
@@ -599,17 +604,17 @@ namespace PlayerUI
 
 		
 
-		public void Youtube()
+		public void OpenUrl()
 		{
-			YoutubeAddressViewModel yavm = DialogHelper.ShowDialogOut<YoutubeAddressViewModel>();
-			if (!string.IsNullOrWhiteSpace(yavm.YoutubeId)) {
-				//SelectedFileName = YoutubeEngine.GetVideoUrlFromId(yavm.YoutubeId);
+			OpenUrlViewModel ouvm = DialogHelper.ShowDialogOut<OpenUrlViewModel>();
+			//if (!string.IsNullOrWhiteSpace(ouvm.YoutubeId)) {
+			//	//SelectedFileName = YoutubeEngine.GetVideoUrlFromId(yavm.YoutubeId);
 				
-				SelectedFileName = YoutubeEngine.GetVideUrl(yavm.YoutubeId);
-				IsFileSelected = true;
-				LoadMedia();
-				//Play();
-			}
+			//	SelectedFileName = YoutubeEngine.GetVideUrl(ouvm.YoutubeId);
+			//	IsFileSelected = true;
+			//	LoadMedia();
+			//	//Play();
+			//}
 		}
 
 		public void PlayPause()

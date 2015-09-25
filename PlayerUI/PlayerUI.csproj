@@ -322,10 +322,10 @@
     <Compile Include="WPF\MediaDecoderHelper.cs" />
     <Compile Include="WPF\Scene.cs" />
     <Compile Include="WPF\ShortcutParser.cs" />
-    <Compile Include="YoutubeAddressView.xaml.cs">
-      <DependentUpon>YoutubeAddressView.xaml</DependentUpon>
+    <Compile Include="OpenUrlView.xaml.cs">
+      <DependentUpon>OpenUrlView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="YoutubeAddressViewModel.cs" />
+    <Compile Include="OpenUrlViewModel.cs" />
     <Compile Include="YoutubeEngine.cs" />
     <Page Include="AboutView.xaml">
       <SubType>Designer</SubType>
@@ -395,7 +395,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="YoutubeAddressView.xaml">
+    <Page Include="OpenUrlView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
