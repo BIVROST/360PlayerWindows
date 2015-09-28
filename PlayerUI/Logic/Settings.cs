@@ -19,8 +19,10 @@ namespace PlayerUI
 			set { _settingsFile = value; }
 		}
 
-		public Settings(string configFile = "settings.conf")
+		public Settings(string configFile = "")
 		{
+			if (string.IsNullOrWhiteSpace(configFile))
+				configFile = System.Windows.Forms.Application.StartupPath + "settings.conf";
 			SettingsFile = configFile;
 			Load();
 		}

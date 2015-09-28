@@ -30,46 +30,87 @@ namespace PlayerUI
 		{
 			SetAddRemoveProgramsIcon();
 			AssociateFileExtensions();
-			//DeviceSelectionTool.EnumerateGraphicCards();
+
 			string[] args = Environment.GetCommandLineArgs();
+			
 			try {
 				if (AppDomain.CurrentDomain.SetupInformation.ActivationArguments != null)
 				{
 					string[] activationData = AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData;
-					if(activationData != null)
-						if(activationData.Length > 0)
+
+					if (activationData != null)
+					{
+						if (activationData.Length == 1)
+						{
 							ShellViewModel.FileFromArgs = activationData[0];
+						}
+						if(activationData.Length == 2)
+						{
+							if (activationData[0] == "--bivrost-protocol")
+							{
+								ShellViewModel.FileFromProtocol = activationData[1];
+                            }
+                        }
+					}							
 				}
+				
 			} catch(Exception ex)
 			{
 				//MessageBox.Show("ex: " + ex.Message + "\n" + ex.StackTrace);
 			}
 
+
+
 			if (mutex.WaitOne(TimeSpan.Zero, true))
 			{
 				ownMutex = true;
 
-				if (args.Length > 1)
+				if (args.Length == 2)
+				{
 					if (!string.IsNullOrWhiteSpace(args[1]))
 					{
 						ShellViewModel.FileFromArgs = args[1];
 					}
-
+				} else
+				if(args.Length == 3)
+				{
+					if (!string.IsNullOrWhiteSpace(args[1]) && !string.IsNullOrWhiteSpace(args[2]))
+					{
+						if (args[1] == "--bivrost-protocol")
+							ShellViewModel.FileFromProtocol = args[2];
+					}
+                }
+				
 				if (Logic.Instance.settings.EventMode)
+				{
 					DisplayRootViewFor<EventShellViewModel>();
+				}
 				else
-					DisplayRootViewFor<ShellViewModel>();				
+				{
+					DisplayRootViewFor<ShellViewModel>();
+				}
+				
 			}
 			else
 			{
-				
-
-				if (args.Length > 1)
+				if (args.Length == 2)
+				{
 					if (!string.IsNullOrWhiteSpace(args[1]))
 					{
 						Clipboard.SetText(args[1]);
 						NativeMethods.PostMessage((IntPtr)NativeMethods.HWND_BROADCAST, NativeMethods.WM_SHOWBIVROSTPLAYER, IntPtr.Zero, IntPtr.Zero);
 					}
+				} else if(args.Length == 3)
+				{
+					if (!string.IsNullOrWhiteSpace(args[1]) && !string.IsNullOrWhiteSpace(args[2]))
+					{
+						if (args[1] == "--bivrost-protocol")
+						{
+							Clipboard.SetText(args[2]);
+							NativeMethods.PostMessage((IntPtr)NativeMethods.HWND_BROADCAST, NativeMethods.WM_SHOWBIVROSTPLAYER, IntPtr.Zero, IntPtr.Zero);
+						}
+					}
+				}
 				Application.Shutdown();
 			}
 		}
@@ -84,8 +125,14 @@ namespace PlayerUI
 		private static void SetAddRemoveProgramsIcon()
 		{
 			//only run if deployed 
-			if (File.Exists("updated")) return;
-			File.WriteAllText("updated", "");
+			try {
+				if (File.Exists(System.Windows.Forms.Application.StartupPath + "updated")) return;
+				File.WriteAllText(System.Windows.Forms.Application.StartupPath + "updated", "");
+			}
+			catch (Exception e)
+			{
+				
+			}
 
 			if (System.Deployment.Application.ApplicationDeployment.IsNetworkDeployed)
 			{
@@ -118,7 +165,6 @@ namespace PlayerUI
 				catch (Exception ex)
 				{
 					//log an error
-					
 				}
 			}
 		}
@@ -136,9 +182,7 @@ namespace PlayerUI
 				bivrostProtocolKey = myClasses.OpenSubKey("bivrost", true);
 				bivrostProtocolKey.SetValue("URL Protocol","");
 				RegistryKey commandKey = bivrostProtocolKey.OpenSubKey(@"shell\open\command", true);
-				commandKey.SetValue("", "\"" + apppath + "\"" + " %1");
-
-
+				commandKey.SetValue("","\"" + System.Reflection.Assembly.GetExecutingAssembly().CodeBase.Substring(8).Replace('/',Path.DirectorySeparatorChar) + "\" --bivrost-protocol \"%1\"");
 			} catch(Exception exc) { }
         }
 

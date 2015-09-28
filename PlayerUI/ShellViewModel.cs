@@ -18,7 +18,8 @@ using System.Windows.Interop;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using System.Xml;
-
+using Bivrost;
+using System.Text.RegularExpressions;
 
 namespace PlayerUI
 {
@@ -84,6 +85,7 @@ namespace PlayerUI
 		public HeadsetMenuViewModel HeadsetMenu { get; set; }
 
 		public static string FileFromArgs = "";
+		public static string FileFromProtocol = "";
 
 		public NotificationCenterViewModel NotificationCenter { get; set; }
 
@@ -169,7 +171,7 @@ namespace PlayerUI
 					ShowStartupUI();
 				});
 			};
-
+			
 
 			UpdateTimeLabel();
 
@@ -203,7 +205,7 @@ namespace PlayerUI
 									System.Windows.Application.Current.Shutdown();
 								}, "restart", 60f )));
 							Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Installing update...")));
-							Updater.InstallUpdate();							
+							Task.Factory.StartNew(() => Updater.InstallUpdate());													
                         },
 						"install now"
 						)
@@ -335,9 +337,27 @@ namespace PlayerUI
 			string clipboardText = Clipboard.GetText();
 			Console.WriteLine(clipboardText);
 
-			if (clipboardText.StartsWith("bivrost://"))
+			if (clipboardText.StartsWith("bivrost:"))
 			{
-				Console.WriteLine(clipboardText);
+				try
+				{
+					var protocol = Protocol.Parse(clipboardText);
+					switch (protocol.stereoscopy)
+					{
+						case Protocol.Stereoscopy.autodetect: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.Autodetect; break;
+						case Protocol.Stereoscopy.mono: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.Mono; break;
+						case Protocol.Stereoscopy.side_by_side: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.SideBySide; break;
+						case Protocol.Stereoscopy.top_and_bottom: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.TopBottom; break;
+						case Protocol.Stereoscopy.top_and_bottom_reversed: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.TopBottomReversed; break;
+					}
+					Loop = protocol.loop.HasValue ? protocol.loop.Value : false;
+					string videoUrl = protocol.urls.First(u => Regex.IsMatch(u, @"(\b|_).mp4(\b|_)") || Regex.IsMatch(u, @"(\b|_).avi(\b|_)"));
+					if (string.IsNullOrWhiteSpace(videoUrl))
+						videoUrl = protocol.urls[0];
+					OpenUrlFrom(videoUrl);
+				}
+				catch (Exception) { }
+				
 			} else
 			{
 				OpenFileFrom(clipboardText);
@@ -367,6 +387,28 @@ namespace PlayerUI
 				//	UpdateRecents();
 				//	ShowPlaybackUI();
 				//}));
+			}
+
+			if(!string.IsNullOrWhiteSpace(FileFromProtocol))
+			{
+				try
+				{
+					var protocol = Protocol.Parse(FileFromProtocol);
+					switch(protocol.stereoscopy)
+					{
+						case Protocol.Stereoscopy.autodetect: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.Autodetect; break;
+						case Protocol.Stereoscopy.mono: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.Mono; break;
+						case Protocol.Stereoscopy.side_by_side: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.SideBySide; break;
+						case Protocol.Stereoscopy.top_and_bottom: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.TopBottom; break;
+						case Protocol.Stereoscopy.top_and_bottom_reversed: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.TopBottomReversed; break;
+					}
+					Loop = protocol.loop.HasValue ? protocol.loop.Value : false;
+					string videoUrl = protocol.urls.First(u => Regex.IsMatch(u, @"(\b|_).mp4(\b|_)") || Regex.IsMatch(u, @"(\b|_).avi(\b|_)"));
+					if (string.IsNullOrWhiteSpace(videoUrl))
+						videoUrl = protocol.urls[0];
+					OpenUrlFrom(videoUrl);
+				}
+				catch (Exception) { }
 			}
 
 			//Task.Factory.StartNew(() =>
@@ -609,6 +651,31 @@ namespace PlayerUI
 			//});			
         }
 
+		private void OpenUrlFrom(string url)
+		{
+			OpenUrlViewModel ouvm = new OpenUrlViewModel();
+			ouvm.Url = url;
+			ouvm.Open();
+
+			if (ouvm.Valid)
+			{
+				NotificationCenter.PushNotification(new NotificationViewModel("Loading..."));
+				if (!string.IsNullOrWhiteSpace(ouvm.VideoUrl))
+				{
+					SelectedFileName = ouvm.VideoUrl;
+					IsFileSelected = true;
+					_mediaDecoder.Projection = StreamingServices.GetServiceProjection(ouvm.Uri);
+					Execute.OnUIThreadAsync(() =>
+					{
+						LoadMedia();
+					});
+				}
+			}
+			else
+			{
+				NotificationCenter.PushNotification(new NotificationViewModel("Url is not valid video or streaming service address."));
+			}
+		}
 		
 
 		public void OpenUrl()
@@ -616,7 +683,7 @@ namespace PlayerUI
 			OpenUrlViewModel ouvm = DialogHelper.ShowDialogOut<OpenUrlViewModel>();
 			if (ouvm.Valid)
 			{
-				NotificationCenter.PushNotification(new NotificationViewModel("OK"));
+				NotificationCenter.PushNotification(new NotificationViewModel("Loading..."));
 				if(!string.IsNullOrWhiteSpace(ouvm.VideoUrl))
 				{
 					SelectedFileName = ouvm.VideoUrl;

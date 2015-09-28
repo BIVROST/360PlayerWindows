@@ -280,9 +280,9 @@ namespace PlayerUI
 		{
 			if (!string.IsNullOrWhiteSpace(fileName))
 			{
-				if (Regex.IsMatch(Path.GetFileNameWithoutExtension(fileName), "\b(SbS|LR)\b")) return VideoMode.SideBySide;
-				if (Regex.IsMatch(Path.GetFileNameWithoutExtension(fileName), "\b(TaB|TB)\b")) return VideoMode.TopBottom;
-				if (Regex.IsMatch(Path.GetFileNameWithoutExtension(fileName), "\bmono\b")) return VideoMode.Mono;
+				if (Regex.IsMatch(Path.GetFileNameWithoutExtension(fileName), @"(\b|_)(SbS|LR)(\b|_)")) return VideoMode.SideBySide;
+				if (Regex.IsMatch(Path.GetFileNameWithoutExtension(fileName), @"(\b|_)(TaB|TB)(\b|_)")) return VideoMode.TopBottom;
+				if (Regex.IsMatch(Path.GetFileNameWithoutExtension(fileName), @"(\b|_)mono(\b|_)")) return VideoMode.Mono;
 			}
 			return VideoMode.Autodetect;
 		}
