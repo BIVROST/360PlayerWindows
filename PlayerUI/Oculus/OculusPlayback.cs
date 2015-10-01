@@ -411,6 +411,15 @@ namespace PlayerUI.Oculus
 				// Calculate the position and orientation of each eye.
 				oculus.CalcEyePoses(trackingState.HeadPose.ThePose, hmdToEyeViewOffsets, ref eyePoses);
 
+				//// rotation quaternion to heatmap directions
+				//ShellViewModel.Instance.ClearDebugText();
+				//Vector2 v = GraphicTools.QuaternionToYawPitch(trackingState.HeadPose.ThePose.Orientation);
+				//var yawdeg = MathUtil.RadiansToDegrees(v.X);
+				//var pitchdeg = MathUtil.RadiansToDegrees(v.Y);
+				//ShellViewModel.Instance.AppendDebugText($"YAW:{yawdeg} \t\t PITCH:{pitchdeg}");
+				//ShellViewModel.Instance.UpdateDebugText();
+				////==========================================
+
 				float timeSinceStart = (float)(DateTime.Now - startTime).TotalSeconds;
 				deltaTime = (float)(DateTime.Now - lastTime).TotalSeconds;
 				lastTime = DateTime.Now;

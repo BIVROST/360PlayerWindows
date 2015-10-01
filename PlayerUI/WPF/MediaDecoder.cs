@@ -437,6 +437,7 @@ namespace PlayerUI
 		{
 			//if(IsPlaying)
 			//{
+			if(_mediaEngine != null)
 				_mediaEngine.Volume = volume;
 			//}
 		}

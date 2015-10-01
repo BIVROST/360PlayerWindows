@@ -274,5 +274,41 @@ namespace PlayerUI
 		{
 			e.Handled = true;
 		}
+
+		public Visibility DebugVisible { get; set; } = Visibility.Collapsed;
+		public void ShowDebug()
+		{
+			Execute.OnUIThreadAsync(() =>
+			{
+				DebugVisible = Visibility.Visible;
+				NotifyOfPropertyChange(() => DebugVisible);
+			});
+		}
+
+		public void HideDebug()
+		{
+			Execute.OnUIThreadAsync(() =>
+			{
+				DebugVisible = Visibility.Collapsed;
+				NotifyOfPropertyChange(() => DebugVisible);
+			});
+		}
+
+		public string DebugText { get; set; } = "";
+
+		public void AppendDebugText(string line)
+		{
+			DebugText += line + "\n";
+		}
+
+		public void ClearDebugText()
+		{
+			DebugText = "";
+		}
+
+		public void UpdateDebugText()
+		{
+			Execute.OnUIThreadAsync(() => NotifyOfPropertyChange(() => DebugText));
+		}
 	}
 }

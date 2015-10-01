@@ -1,4 +1,5 @@
-﻿using SharpDX;
+﻿using OculusWrap;
+using SharpDX;
 using SharpDX.Toolkit.Graphics;
 using System;
 using System.Collections.Generic;
@@ -85,6 +86,51 @@ namespace PlayerUI.Tools
 			}
 		}
 
+		public static Vector2 QuaternionToYawPitch(OVR.Quaternionf ovrQuatf)
+		{
+			return QuaternionToYawPitch(new Quaternion(-ovrQuatf.X, -ovrQuatf.Y, -ovrQuatf.Z, ovrQuatf.W));
+		}
+
+		public static Vector2 QuaternionToYawPitch(Quaternion q)
+		{			
+			q.Normalize();
+
+			var x = 0f;
+			var y = 0f;
+			var z = 1f;
+
+			var pole = q.X * q.W + q.Z * q.Y;
+			q = q * Quaternion.RotationYawPitchRoll(MathUtil.DegreesToRadians(90) * x, MathUtil.DegreesToRadians(90) * y, MathUtil.DegreesToRadians(90) * z);
+
+			q.Normalize();
+
+			double yaw = 0, pitch = 0;
+
+			ShellViewModel.Instance.AppendDebugText($"X: {q.X} \t Y: {q.Y} \t Z: {q.Z} \t W: {q.W}");
+
+			if (pole > 0.49999f)
+			{
+				yaw = 2f * (float)Math.Atan2(q.Y, q.X) + Math.PI * 0.5f;
+				ShellViewModel.Instance.AppendDebugText("\t" + MathUtil.RadiansToDegrees((float)yaw));
+				pitch = -Math.PI * 0.5f;
+			}
+			else if (pole < -0.49999f)
+			{
+				yaw = 2f * (float)Math.Atan2(q.Y, q.Z) - Math.PI * 0.5f;
+				ShellViewModel.Instance.AppendDebugText("\t" + MathUtil.RadiansToDegrees((float)yaw));
+				pitch = Math.PI * 0.5f;
+			}
+			else
+			{
+				yaw = Math.Atan2(2 * (q.Y * q.Z + q.W * q.X), q.W * q.W - q.X * q.X - q.Y * q.Y + q.Z * q.Z);
+				pitch = Math.Asin(-2 * (q.X * q.Z - q.W * q.Y));
+				//roll = Math.Atan2(2 * (q.X * q.Y + q.W * q.Z), q.W * q.W + q.X * q.X - q.Y * q.Y - q.Z * q.Z);
+			}
+
+			yaw = yaw > Math.PI ? yaw - 2 * Math.PI : (yaw < -Math.PI ? yaw + 2 * Math.PI : yaw);
+
+			return new Vector2((float)yaw, (float)pitch);
+		}
 
 	}
 }

@@ -25,6 +25,8 @@ namespace PlayerUI
 {
 	public partial class ShellViewModel : Screen
 	{
+		public static ShellViewModel Instance;
+
 		public enum PlayerState
 		{
 			Idle,
@@ -74,7 +76,6 @@ namespace PlayerUI
 		private bool _ready = false;
 
 		Window playerWindow;
-		Nancy.Hosting.Self.NancyHost nancy;
 
 		private AutoResetEvent waitForPlaybackReady = new AutoResetEvent(false);
 		private ManualResetEvent waitForPlaybackStop = new ManualResetEvent(false);
@@ -91,6 +92,8 @@ namespace PlayerUI
 
 		public ShellViewModel()
 		{
+			ShellViewModel.Instance = this;
+
 			var currentParser = Parser.CreateTrigger;
 			Parser.CreateTrigger = (target, triggerText) => ShortcutParser.CanParse(triggerText)
 																? ShortcutParser.CreateTrigger(triggerText)
@@ -113,7 +116,6 @@ namespace PlayerUI
 					autoplay = false;
 					Play();					
 				}
-				//Task.Factory.StartNew(() => Execute.OnUIThread(() => waitForPlaybackReady.Set()));
 			};
 
 			_mediaDecoder.OnEnded += () =>
@@ -134,20 +136,6 @@ namespace PlayerUI
 			{
 
 				if (!_mediaDecoder.IsPlaying) return;
-
-				//Task.Factory.StartNew(() =>
-				//{
-				//	Execute.OnUIThread(() =>
-				//	{
-				//		if (!lockSlider)
-				//		{
-				//			CurrentPosition = (new TimeSpan(0, 0, (int)Math.Floor(time))).ToString();
-				//			_timeValue = time;
-				//			NotifyOfPropertyChange(() => TimeValue);
-				//		}
-				//		UpdateTimeLabel();
-				//	});
-				//});
 
 				Execute.OnUIThreadAsync(() =>
 				{
@@ -213,110 +201,8 @@ namespace PlayerUI
 			});
 
 
-			//Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Installing update...")));
-
-			#region NANCY REMOTE CONTROL SERVER
-			if (Logic.Instance.settings.EnableRemoteServer) { 
-
-				// NANCY HTTP REMOTE
-				nancy = ApiServer.InitNancy(apiServer =>
-					  Execute.OnUIThread(() => {
-						  Console.WriteLine("got unity init, device_id=", ApiServer.device_id, "movies=[\n", string.Join(",\n", ApiServer.movies), "]");
-					  })
-				);
-
-				ApiServer.OnBackPressed += ApiServer_OnBackPressed;
-				ApiServer.OnStateChange += ApiServer_OnStateChange;
-				ApiServer.OnPos += ApiServer_OnPos;
-				ApiServer.OnInfo += msg => Console.WriteLine(msg);
-			}
-			#endregion
+			
 		}
-
-		#region REMOTE CONTROL HANDLERS
-
-		private ApiServer.State _serverState;
-		private void ApiServer_OnStateChange(ApiServer.State newState)
-		{
-			_serverState = newState;
-			//InfoState.Dispatcher.Invoke(() => InfoState.Content = newState);
-			switch(newState)
-			{
-				case ApiServer.State.init:
-					Rewind();
-					break;
-				case ApiServer.State.off:
-					Pause();
-					break;
-				case ApiServer.State.pause:
-					Pause();
-					break;
-				case ApiServer.State.play:
-					//if (BivrostPlayerPrototype.PlayerPrototype.IsPlaying)
-					//	UnPause();
-					//else
-					//	BivrostPlayerPrototype.PlayerPrototype.PlayLoadedFile();
-					break;
-				case ApiServer.State.stop:
-					Rewind();
-					break;
-			}
-
-			Console.WriteLine("STATE CHANGED: " + _serverState);
-		}
-
-		private void ApiServer_OnBackPressed()
-		{
-			//ApiServer.CommandMessage("back feedback "+ApiServer.status.max_id);
-			//ApiServer.CommandReset();
-
-			//Console.WriteLine("BACK PRESSED WITH STATE: " + _serverState);
-			//switch(_serverState)
-			//{
-   //            case ApiServer.State.stop:
-			//		//ApiServer.CommandReset();
-			//		//ApiServer.CommandUnPause();
-			//		Rewind();
-			//		if (BivrostPlayerPrototype.PlayerPrototype.IsPlaying)
-			//			UnPause();
-			//		else
-			//			BivrostPlayerPrototype.PlayerPrototype.PlayLoadedFile();
-			//		break;
-			//	case ApiServer.State.play:
-			//		//ApiServer.CommandReset();
-			//		Rewind();
-			//		break;
-			//	case ApiServer.State.pause:
-			//		//ApiServer.CommandUnPause();
-			//		UnPause();
-			//		break;
-			//	case ApiServer.State.init:
-			//		//ApiServer.CommandReset();
-			//		if (BivrostPlayerPrototype.PlayerPrototype.IsPlaying)
-			//			UnPause();
-			//		else
-			//			BivrostPlayerPrototype.PlayerPrototype.PlayLoadedFile();
-   //                 break;
-			//}
-		}
-
-		private void ApiServer_OnPos(System.Tuple<float, float, float> euler, float t01)
-		{
-			try { 
-				Execute.OnUIThread(() => {
-					//InfoX.Content = euler.Item1;
-					//InfoY.Content = euler.Item2;
-					//InfoZ.Content = euler.Item3;
-					//InfoT01.Content = t01;
-					if(DXCanvas.Scene != null)
-					{
-						(DXCanvas.Scene as Scene).SetLook(euler);
-					}
-				});
-			} catch(Exception) { };
-        }
-
-		#endregion
 
 
 		private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)

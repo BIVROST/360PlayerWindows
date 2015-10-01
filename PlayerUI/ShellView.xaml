@@ -514,65 +514,65 @@
 
             </StackPanel>
 
-			<StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Grid.Column="1" Height="68">
+            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Grid.Column="1" Height="68">
 
-				<TextBlock x:Name="VideoTime" Grid.Column="1" Foreground="White" Text="0:00 / 0:00" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="5 0 18 0" />
+                <TextBlock x:Name="VideoTime" Grid.Column="1" Foreground="White" Text="0:00 / 0:00" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="5 0 18 0" />
 
-                
+
 
                 <Button x:Name="OpenSettings"  Width="36" Height="36" Margin="4 0">
-					<Button.Template>
-						<ControlTemplate TargetType="{x:Type Button}">
-							<Grid IsHitTestVisible="True" Background="Transparent" ToolTip="Settings">
+                    <Button.Template>
+                        <ControlTemplate TargetType="{x:Type Button}">
+                            <Grid IsHitTestVisible="True" Background="Transparent" ToolTip="Settings">
                                 <svgc:SvgViewbox Name="Normal" Source="Graphics/settings.svg" IsHitTestVisible="False"/>
                                 <svgc:SvgViewbox Name="Hover" Source="Graphics/settings_blue.svg" Visibility="Hidden" IsHitTestVisible="False"/>
-							</Grid>
-							<ControlTemplate.Triggers>
-								<Trigger Property="IsPressed" Value="True">
-									<Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
-									<Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
-								</Trigger>
-								<Trigger Property="IsMouseOver" Value="True">
-									<Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
-									<Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
-								</Trigger>
-							</ControlTemplate.Triggers>
-						</ControlTemplate>
-					</Button.Template>
-				</Button>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+                                    <Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+                                    <Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
 
-				<Button x:Name="HeadsetSelect"  Width="36" Height="36" Margin="4 0">
-					<Button.Template>
-						<ControlTemplate TargetType="{x:Type Button}">
-							<Grid IsHitTestVisible="True" Background="Transparent" ToolTip="Oculus Playback">
-								<svgc:SvgViewbox Name="Normal" Source="Graphics/oculus.svg" IsHitTestVisible="False"/>
-								<svgc:SvgViewbox Name="Hover" Source="Graphics/oculus_blue.svg" Visibility="Hidden" IsHitTestVisible="False"/>
-							</Grid>
-							<ControlTemplate.Triggers>
-								<Trigger Property="IsPressed" Value="True">
-									<Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
-									<Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
-								</Trigger>
-								<Trigger Property="IsMouseOver" Value="True">
-									<Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
-									<Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
-								</Trigger>
-							</ControlTemplate.Triggers>
-						</ControlTemplate>
-					</Button.Template>
-				</Button>
+                <Button x:Name="HeadsetSelect"  Width="36" Height="36" Margin="4 0">
+                    <Button.Template>
+                        <ControlTemplate TargetType="{x:Type Button}">
+                            <Grid IsHitTestVisible="True" Background="Transparent" ToolTip="Oculus Playback">
+                                <svgc:SvgViewbox Name="Normal" Source="Graphics/oculus.svg" IsHitTestVisible="False"/>
+                                <svgc:SvgViewbox Name="Hover" Source="Graphics/oculus_blue.svg" Visibility="Hidden" IsHitTestVisible="False"/>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+                                    <Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+                                    <Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
 
-				<ToggleButton x:Name="VolumeButton"  Width="36" Height="36" Margin="4 0" cal:Message.Attach="[Event MouseEnter] = [Action ShowVolumeControl];
+                <ToggleButton x:Name="VolumeButton"  Width="36" Height="36" Margin="4 0" cal:Message.Attach="[Event MouseEnter] = [Action ShowVolumeControl];
 							  [Event Click] = [Action Mute]; [Event MouseWheel] = [Action VolumeMouseWheel($eventArgs)]">
                     <ToggleButton.Template>
                         <ControlTemplate TargetType="{x:Type ToggleButton}">
-							<Grid IsHitTestVisible="True" Background="Transparent" ToolTip="{Binding VolumeTooltip}">
-								<svgc:SvgViewbox Name="Normal" Source="Graphics/speaker.svg" IsHitTestVisible="False" />
+                            <Grid IsHitTestVisible="True" Background="Transparent" ToolTip="{Binding VolumeTooltip}">
+                                <svgc:SvgViewbox Name="Normal" Source="Graphics/speaker.svg" IsHitTestVisible="False" />
                                 <svgc:SvgViewbox Name="Hover" Source="Graphics/speaker_blue.svg" Visibility="Hidden" IsHitTestVisible="False"/>
                                 <svgc:SvgViewbox Name="MuteNormal" Source="Graphics/mute.svg" Visibility="Hidden" IsHitTestVisible="False"/>
                                 <svgc:SvgViewbox Name="MuteHover" Source="Graphics/mute_blue.svg" Visibility="Hidden" IsHitTestVisible="False"/>
                             </Grid>
-							<ControlTemplate.Triggers>
+                            <ControlTemplate.Triggers>
                                 <MultiTrigger>
                                     <MultiTrigger.Conditions>
                                         <Condition Property="IsPressed" Value="False" />
@@ -677,9 +677,9 @@
                                     </MultiTrigger.Setters>
                                 </MultiTrigger>
                             </ControlTemplate.Triggers>
-						</ControlTemplate>
-					</ToggleButton.Template>
-				</ToggleButton>
+                        </ControlTemplate>
+                    </ToggleButton.Template>
+                </ToggleButton>
 
                 <ToggleButton x:Name="ToggleFullscreen"  Width="36" Height="36" Margin="4 0 20 0" IsChecked="{Binding Fullscreen}">
                     <ToggleButton.Template>
@@ -820,6 +820,10 @@
                     </Button.Template>
                 </Button>-->
             </StackPanel>
-		</Grid>
-	</Grid>
+        </Grid>
+
+        <TextBlock Width="400" Height="300" Background="#cc000000" Grid.Row="1" Foreground="White" Padding="10" HorizontalAlignment="Right" Margin="20,50" VerticalAlignment="Top" 
+				   x:Name="DebugConsole" Visibility="{Binding DebugVisible}" Text="{Binding DebugText}"/>
+
+    </Grid>
 </Window>

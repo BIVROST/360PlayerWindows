@@ -58,7 +58,6 @@ namespace PlayerUI
 						socket.OnOpen = () =>
 						{
 							Console.WriteLine("Open!");
-							socket.Send("bivrost");
 						};
 						socket.OnClose = () => Console.WriteLine("Close!");
 						socket.OnMessage = message =>

@@ -81,21 +81,39 @@ namespace PlayerUI.Tools
 
 		public static string ParseFacebook(Uri uri)
 		{
-			//JSON.parse(/"spherical_hd_src":("[^"]+")/.exec(src)[1])
-			//https://www.facebook.com/StarWars/videos/1030579940326940/
+			try
+			{
+				//JSON.parse(/"spherical_hd_src":("[^"]+")/.exec(src)[1])
+				//https://www.facebook.com/StarWars/videos/1030579940326940/
 
-			RestClient client = new RestClient(uri);
-			IRestRequest request = new RestRequest(Method.GET);
-			request.AddHeader("Accept", "text/html");
-			IRestResponse response = client.Execute(request);
-			string htmlContent = response.Content;
+				RestClient client = new RestClient(uri);
+				IRestRequest request = new RestRequest(Method.GET);
+				request.AddHeader("Accept", "text/html");
+				IRestResponse response = client.Execute(request);
+				string htmlContent = response.Content;
 
-			var matches = Regex.Matches(htmlContent, "\"spherical_hd_src\":(\"[^\"]+\")");
-			var g1 = matches[0].Groups[1].Captures[0];
-			string videoFile = JsonConvert.DeserializeObject<string>(g1.Value);
+				{
+					var matches = Regex.Matches(htmlContent, "\"spherical_hd_src\":(\"[^\"]+\")");
+					if (matches.Count > 0)
+					{
+						var g1 = matches[0].Groups[1].Captures[0];
+						string videoFile = JsonConvert.DeserializeObject<string>(g1.Value);
+						return videoFile;
+					}
+				}
+				{
+					var matches = Regex.Matches(htmlContent, "\"spherical_sd_src\":(\"[^\"]+\")");
+					if (matches.Count > 0)
+					{
+						var g1 = matches[0].Groups[1].Captures[0];
+						string videoFile = JsonConvert.DeserializeObject<string>(g1.Value);
+						return videoFile;
+					}
+				}
+			}
+			catch (Exception) { }
 
-
-			return videoFile;
+			return "";			
 		}
 
 		public static string ParseYoutube(Uri uri)
@@ -105,35 +123,36 @@ namespace PlayerUI.Tools
 
 		public static string ParseVrideo(Uri uri)
 		{
-			{
-				string video4k = @"http://cdn2.vrideo.com/prod_videos/v1/" + uri.Segments.Last() + "_4k_full.mp4";
-				RestClient client = new RestClient(video4k);
-				IRestRequest request = new RestRequest(Method.HEAD);
-				request.AddHeader("Accept", "text/html");
-				IRestResponse response = client.Execute(request);
-				if (response.StatusCode == System.Net.HttpStatusCode.OK)
-					return video4k;
-			}
+			try {
+				{
+					string video4k = @"http://cdn2.vrideo.com/prod_videos/v1/" + uri.Segments.Last() + "_4k_full.mp4";
+					RestClient client = new RestClient(video4k);
+					IRestRequest request = new RestRequest(Method.HEAD);
+					request.AddHeader("Accept", "text/html");
+					IRestResponse response = client.Execute(request);
+					if (response.StatusCode == System.Net.HttpStatusCode.OK)
+						return video4k;
+				}
 
-			{
-				string video2k = @"http://cdn2.vrideo.com/prod_videos/v1/" + uri.Segments.Last() + "_2k_full.mp4";
-				RestClient client = new RestClient(video2k);
-				IRestRequest request = new RestRequest(Method.HEAD);
-				request.AddHeader("Accept", "text/html");
-				IRestResponse response = client.Execute(request);
-				if (response.StatusCode == System.Net.HttpStatusCode.OK)
-					return video2k;
-			}
-			{
-				string video1080p = @"http://cdn2.vrideo.com/prod_videos/v1/" + uri.Segments.Last() + "_1080p_full.mp4";
-				RestClient client = new RestClient(video1080p);
-				IRestRequest request = new RestRequest(Method.HEAD);
-				request.AddHeader("Accept", "text/html");
-				IRestResponse response = client.Execute(request);
-				if (response.StatusCode == System.Net.HttpStatusCode.OK)
-					return video1080p;
-			}
-
+				{
+					string video2k = @"http://cdn2.vrideo.com/prod_videos/v1/" + uri.Segments.Last() + "_2k_full.mp4";
+					RestClient client = new RestClient(video2k);
+					IRestRequest request = new RestRequest(Method.HEAD);
+					request.AddHeader("Accept", "text/html");
+					IRestResponse response = client.Execute(request);
+					if (response.StatusCode == System.Net.HttpStatusCode.OK)
+						return video2k;
+				}
+				{
+					string video1080p = @"http://cdn2.vrideo.com/prod_videos/v1/" + uri.Segments.Last() + "_1080p_full.mp4";
+					RestClient client = new RestClient(video1080p);
+					IRestRequest request = new RestRequest(Method.HEAD);
+					request.AddHeader("Accept", "text/html");
+					IRestResponse response = client.Execute(request);
+					if (response.StatusCode == System.Net.HttpStatusCode.OK)
+						return video1080p;
+				}
+			} catch(Exception) { }
 			return "";
 			//return @"http://cdn2.vrideo.com/prod_videos/v1/"+uri.Segments.Last()+"_4k_full.mp4";
 		}
@@ -145,11 +164,17 @@ namespace PlayerUI.Tools
 
 		public static string ParseLittlStar(Uri uri)
 		{
-			HtmlDocument document = DownloadDocument(uri);
+			try
+			{
+				HtmlDocument document = DownloadDocument(uri);
 
-			var node = document.DocumentNode.Descendants().Where(n => n.Name == "a" && n.GetAttributeValue("class","").Contains("download")).First().GetAttributeValue("href","");
-			
-			return node;
+				var node = document.DocumentNode.Descendants().Where(n => n.Name == "a" && n.GetAttributeValue("class", "").Contains("download")).First().GetAttributeValue("href", "");
+
+				return node;
+			}
+			catch (Exception) { }
+
+			return "";
 		}
 
 		public static MediaDecoder.ProjectionMode GetServiceProjection(Uri uri)

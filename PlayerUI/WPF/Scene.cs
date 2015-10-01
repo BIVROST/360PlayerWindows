@@ -78,7 +78,10 @@
 				);
 		}
 
-        void IScene.Attach(ISceneHost host)
+		Statistics.Heatmap heatmap;
+		float heatmapDelta = 1;
+
+		void IScene.Attach(ISceneHost host)
         {
             this.Host = host;
 
@@ -126,6 +129,9 @@
 			//	}
 			//};
 			ResetRotation();
+
+			//ShellViewModel.Instance.ShowDebug();
+			heatmap = new Statistics.Heatmap();
 		}
 
 		public void SetLook(System.Tuple<float, float,float> euler)
@@ -180,6 +186,8 @@
 
         void IScene.Detach()
         {
+			Console.WriteLine(heatmap.ToBase64());
+
 			Disposer.RemoveAndDispose(ref sharedTex);
 			Disposer.RemoveAndDispose(ref resource);
 			Disposer.RemoveAndDispose(ref graphicsDevice);
@@ -203,6 +211,7 @@
 			if (lastFrameTime == 0) lastFrameTime = currentFrameTime;
 			deltaTime = currentFrameTime - lastFrameTime;
 			lastFrameTime = currentFrameTime;
+
 			currentRotationQuaternion = Quaternion.Lerp(currentRotationQuaternion, targetRotationQuaternion, lerpSpeed * deltaTime);
 
 			basicEffect.View = Matrix.RotationQuaternion(currentRotationQuaternion);
@@ -216,6 +225,8 @@
 
 		void IScene.Render()
         {
+			
+
             Device device = this.Host.Device;
             if (device == null)
                 return;
@@ -224,7 +235,24 @@
 			//currentFov = Lerp(currentFov, targetFov, 5f * deltaTime);
 			currentFov = currentFov.LerpInPlace(targetFov, 5f * deltaTime);
 			basicEffect.Projection = Matrix.PerspectiveFovRH((float)(currentFov * Math.PI / 180f), (float)16f / 9f, 0.0001f, 50.0f);
-			
+
+
+			// rotation quaternion to heatmap directions
+			heatmapDelta += deltaTime;
+			if(heatmapDelta > 0.33333333f)
+			{
+				heatmap.TrackData(currentRotationQuaternion);
+				heatmapDelta = 0;
+			}
+
+			//ShellViewModel.Instance.ClearDebugText();
+			//Vector2 v = GraphicTools.QuaternionToYawPitch(currentRotationQuaternion);
+			//var yawdeg = MathUtil.RadiansToDegrees(v.X);
+			//var pitchdeg = MathUtil.RadiansToDegrees(v.Y);
+			//ShellViewModel.Instance.AppendDebugText($"YAW:{yawdeg} \t\t PITCH:{pitchdeg}");
+			//ShellViewModel.Instance.UpdateDebugText();
+			//==========================================
+
 			if (HasFocus)
 			{
 				if (Keyboard.IsKeyDown(Key.Left))
@@ -236,7 +264,9 @@
 				if (Keyboard.IsKeyDown(Key.Down))
 					MoveDelta(0f, -1f, speed * deltaTime, 4f);
 				if (Keyboard.IsKeyDown(Key.Z))
+				{
 					ResetFov();
+				}
 
 				if (projectionMode == MediaDecoder.ProjectionMode.Sphere)
 				{
