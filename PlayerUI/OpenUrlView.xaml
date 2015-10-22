@@ -11,7 +11,8 @@
 		</Grid.ColumnDefinitions>
 		
 		<TextBlock Text="URL:" Grid.Column="0" VerticalAlignment="Center" Margin="5"/>
-		<TextBox x:Name="Url" Text="" Grid.Column="1" VerticalAlignment="Center" Margin="5" VerticalContentAlignment="Center" Height="28" cal:Message.Attach="[Shortcut Enter] = [Action Open]" />
+		<TextBox x:Name="Url"  Text="{Binding Url, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" VerticalAlignment="Center" Margin="5" VerticalContentAlignment="Center" Height="28" 
+				 cal:Message.Attach="[Shortcut Enter] = [Action Open]" />
 		<Button x:Name="Open" Content="Open" Grid.Column="2" VerticalAlignment="Center" Margin="5" Height="28"/>
     </Grid>
 </Window>

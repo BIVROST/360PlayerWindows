@@ -1,4 +1,5 @@
-﻿using Fleck;
+﻿using BivrostAnalytics;
+using Fleck;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,6 +24,7 @@ namespace PlayerUI
 
 		public Settings settings;
 		private WebSocketServer webSocketServer;
+		public Tracker stats;
 
 		public event Action OnUpdateAvailable = delegate { };
 
@@ -42,6 +44,31 @@ namespace PlayerUI
             };
 
 			settings = new Settings();
+			
+			// SETTINGS HACK
+			//if(Properties.Settings.Default.InstallId == new Guid())
+			//{
+				Properties.Settings.Default.InstallId = Guid.NewGuid();
+				Properties.Settings.Default.Save();
+			//} else
+			//{
+				Console.WriteLine("InstallId == " + Properties.Settings.Default.InstallId);
+			//}
+
+			var OsPlatform = Environment.OSVersion.Platform.ToString();
+			var OsVersion = Environment.OSVersion.Version.ToString();
+			var OsVersionString = Environment.OSVersion.VersionString;
+			var x64 = Environment.Is64BitOperatingSystem ? "x64" : "x86";
+			var cpu = Environment.ProcessorCount;
+
+			stats = new Tracker()
+			{
+				TrackingId = "UA-68212464-1",
+				DeviceId = Properties.Settings.Default.InstallId.ToString(),
+				UserAgentString = $"BivrostAnalytics/1.0 ({OsPlatform}; {OsVersion}; {OsVersionString}; {x64}; CPU-Cores:{cpu}) {Assembly.GetEntryAssembly().GetName().Name}/{Assembly.GetEntryAssembly().GetName().Version}"
+			};
+
+			//==============
 
 			ProtocolHandler.RegisterProtocol();
 

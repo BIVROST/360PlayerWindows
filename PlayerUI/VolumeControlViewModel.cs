@@ -46,7 +46,7 @@ namespace PlayerUI
 			}
 			set
 			{
-				this._volume = value;
+                this._volume = Math.Max(0, Math.Min(value, 1));
 				NotifyOfPropertyChange(() => Volume);
 				OnVolumeChange(Volume);
 			}

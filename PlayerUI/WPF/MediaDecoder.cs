@@ -1,4 +1,5 @@
-﻿using SharpDX.Direct3D;
+﻿using SharpDX;
+using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using SharpDX.MediaFoundation;
@@ -296,7 +297,6 @@ namespace PlayerUI
 				if (!_initialized) return;
 				if (!Ready) return;
 
-
 				var hasVideo = _mediaEngine.HasVideo();
 				var hasAudio = _mediaEngine.HasAudio();
 
@@ -335,7 +335,7 @@ namespace PlayerUI
 					//if(_stereoVideo)
 						textureR = new SharpDX.Direct3D11.Texture2D(_device, frameTextureDescription);
 				}
-
+				
 				_mediaEngineEx.Play();
 				//_mediaEngineEx.Volume = 0.2;
 				IsPlaying = true;
@@ -481,9 +481,14 @@ namespace PlayerUI
 
 			lock (criticalSection)
 			{
-				_mediaEngineEx.Shutdown();
-				_mediaEngineEx.Dispose();
-				_mediaEngine.Dispose();
+                try {
+                    _mediaEngineEx.Shutdown();
+                    _mediaEngineEx.Dispose();
+                    _mediaEngine.Dispose();
+                }catch(Exception)
+                {
+
+                }
 
 
 				fileStream?.Close();
@@ -518,27 +523,27 @@ namespace PlayerUI
 				Thread.Sleep(5);
 			}
 			Init();
+            			
+			_fileName = fileName;
 
-			//if (fileName.Contains("http://") || fileName.Contains("https://"))
-			//{
-			//	webStream = new System.Net.WebClient().OpenRead(fileName);
-			//	stream = new ByteStream(webStream);
-			//	url = new Uri(fileName, UriKind.Absolute);
+            //Collection collection;
+            //MediaFactory.CreateCollection(out collection);
 
-			//	_mediaEngineEx.SetSourceFromByteStream(stream, url.AbsoluteUri);
-			//	_mediaEngineEx.Load();
-			//}
-			//else
-			//{
-				_fileName = fileName;
-				//fileStream = File.OpenRead(fileName);
-				//stream = new ByteStream(fileStream);
-				//url = new Uri(fileStream.Name, UriKind.RelativeOrAbsolute);
-				//_mediaEngineEx.SetSourceFromByteStream(stream, url.AbsoluteUri);
-				_mediaEngineEx.Source = fileName;
-				_mediaEngineEx.Preload = MediaEnginePreload.Automatic;
-				_mediaEngineEx.Load();
-			//}
+            //SourceResolver sourceResolver = new SourceResolver();
+            //var mediaSource1 = sourceResolver.CreateObjectFromURL(@"D:\TestVideos\maroon.m4a", SourceResolverFlags.MediaSource | SourceResolverFlags.ContentDoesNotHaveToMatchExtensionOrMimeType).QueryInterface<MediaSource>();
+            //var mediaSource2 = sourceResolver.CreateObjectFromURL(@"D:\TestVideos\maroon-video.mp4", SourceResolverFlags.MediaSource | SourceResolverFlags.ContentDoesNotHaveToMatchExtensionOrMimeType).QueryInterface<MediaSource>();
+            //collection.AddElement(mediaSource1);
+            //collection.AddElement(mediaSource2);
+            //MediaSource aggregateSource;
+            //MediaFactory.CreateAggregateSource(collection, out aggregateSource);
+
+            //MediaEngineSrcElementsEx
+
+
+            _mediaEngineEx.Source = _fileName;
+            _mediaEngineEx.Preload = MediaEnginePreload.Automatic;
+			_mediaEngineEx.Load();
+			
 		}
 
 		public MediaEngine Engine { get { return this._mediaEngine; } }

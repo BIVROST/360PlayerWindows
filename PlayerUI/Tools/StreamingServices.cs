@@ -18,7 +18,8 @@ namespace PlayerUI.Tools
 			Youtube,
 			Facebook,
 			Vrideo,
-			LittlStar
+			LittlStar,
+			Pornhub
 		}
 
 		public static bool CheckUrlValid(string url, out string correctedUrl, out Uri uriResult)
@@ -43,6 +44,7 @@ namespace PlayerUI.Tools
 				case "facebook.com": return Service.Facebook;
 				case "vrideo.com": return Service.Vrideo;
 				case "littlstar.com": return Service.LittlStar;
+				case "pornhub.com": return Service.Pornhub;
 				default: return Service.Url;
 			}
 		}
@@ -58,6 +60,7 @@ namespace PlayerUI.Tools
 				case Service.Youtube: TryParse = ParseYoutube; break;
 				case Service.LittlStar: TryParse = ParseLittlStar; break;
 				case Service.Vrideo: TryParse = ParseVrideo; break;
+				case Service.Pornhub: TryParse = ParsePornhub; break;
 				default: TryParse = ParseUrl; break;
 			}
 
@@ -155,6 +158,63 @@ namespace PlayerUI.Tools
 			} catch(Exception) { }
 			return "";
 			//return @"http://cdn2.vrideo.com/prod_videos/v1/"+uri.Segments.Last()+"_4k_full.mp4";
+		}
+
+		public static string ParsePornhub(Uri uri)
+		{
+			//pornhub /player_quality_720p\s*=\s*'([^']+)'/.exec(document.body.innerHTML)[1]
+
+			HtmlDocument document = DownloadDocument(uri);
+			try
+			{
+				{
+					var match = Regex.Match(document.DocumentNode.InnerHtml, @"player_quality_1080p\s*=\s*'([^']+)'");
+
+					if (match.Captures.Count > 0)
+					{
+						return match.Groups[1].Captures[0].Value;
+					}
+				}
+
+				{
+					var match = Regex.Match(document.DocumentNode.InnerHtml, @"player_quality_720p\s*=\s*'([^']+)'");
+
+					if (match.Captures.Count > 0)
+					{
+						return match.Groups[1].Captures[0].Value;
+					}
+				}
+
+				{
+					var match = Regex.Match(document.DocumentNode.InnerHtml, @"player_quality_480p\s*=\s*'([^']+)'");
+
+					if (match.Captures.Count > 0)
+					{
+						return match.Groups[1].Captures[0].Value;
+					}
+				}
+
+				{
+					var match = Regex.Match(document.DocumentNode.InnerHtml, @"player_quality_240p\s*=\s*'([^']+)'");
+
+					if (match.Captures.Count > 0)
+					{
+						return match.Groups[1].Captures[0].Value;
+					}
+				}
+
+				{
+					var match = Regex.Match(document.DocumentNode.InnerHtml, @"player_quality_180p\s*=\s*'([^']+)'");
+
+					if (match.Captures.Count > 0)
+					{
+						return match.Groups[1].Captures[0].Value;
+					}
+				}
+
+			}
+			catch (Exception) { }
+			return "";
 		}
 
 		public static string ParseUrl(Uri uri)

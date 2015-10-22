@@ -1,19 +1,27 @@
 ﻿namespace PlayerUI
 {
-	using System;
-	using SharpDX;
-	//using SharpDX.D3DCompiler;
-	using SharpDX.Direct3D11;
-	using SharpDX.DXGI;
-	using Buffer = SharpDX.Direct3D11.Buffer;
-	using Device = SharpDX.Direct3D11.Device;
-	using System.Windows.Input;
-	using Tools;
-	using System.Linq;
-	using System.Collections.Generic;
+    using System;
+    using SharpDX;
+    //using SharpDX.D3DCompiler;
+    using SharpDX.Direct3D11;
+    using SharpDX.DXGI;
+    using Buffer = SharpDX.Direct3D11.Buffer;
+    using Device = SharpDX.Direct3D11.Device;
+    using System.Windows.Input;
+    using Tools;
+    using System.Linq;
+    using System.Collections.Generic;
+    using SharpDX.XInput;
 
-	public class Scene : IScene
+    public class Scene : IScene
     {
+        //private class RefBool
+        //{
+        //    public RefBool() { }
+        //    public RefBool(bool value) { this.Value = value; }
+        //    public bool Value = false;
+        //}
+
         private ISceneHost Host;
 		private Device _device;
 
@@ -38,18 +46,21 @@
 		private float currentFov = 72f;
 		private bool littlePlanet = false;
 		private float currentOffset = 0f;
-
+        
 		private const float MIN_FOV = 40f;		
 		private const float DEFAULT_FOV = 90f;
 		private const float DEFAULT_LITTLE_FOV = 120f;
 		private const float MAX_FOV = 150f;
+        
 
-
-		private Texture2D sharedTex;
+        private Texture2D sharedTex;
 		private MediaDecoder.ProjectionMode projectionMode;
 		private SharpDX.DXGI.Resource resource;
 
-		public Scene(Texture2D sharedTexture, MediaDecoder.ProjectionMode projection)
+        public Controller xpad;
+        Dictionary<GamepadButtonFlags, bool> buttonStates = new Dictionary<GamepadButtonFlags, bool>();
+
+        public Scene(Texture2D sharedTexture, MediaDecoder.ProjectionMode projection)
 		{
 			videoTexture = sharedTexture;
 			projectionMode = projection;
@@ -132,7 +143,20 @@
 
 			//ShellViewModel.Instance.ShowDebug();
 			heatmap = new Statistics.Heatmap();
-		}
+            
+            var devices = SharpDX.RawInput.Device.GetDevices();
+            devices.ForEach(dev =>
+            {
+                if(dev.DeviceType == SharpDX.RawInput.DeviceType.Mouse)
+                    SharpDX.RawInput.Device.RegisterDevice(SharpDX.Multimedia.UsagePage.Generic, SharpDX.Multimedia.UsageId.GenericMouse, SharpDX.RawInput.DeviceFlags.None, dev.Handle);
+                Console.WriteLine($"{dev.DeviceName} :: {dev.DeviceType}");
+            });
+
+            SharpDX.RawInput.Device.MouseInput += (s, e) =>
+            {
+                Console.WriteLine("Mouse " + e.X + " " + e.Y);
+            };          
+        }
 
 		public void SetLook(System.Tuple<float, float,float> euler)
 		{
@@ -223,6 +247,21 @@
 			//basicEffect.View = Matrix.Lerp(basicEffect.View, Matrix.RotationQuaternion(targetRotationQuaternion), 3f * deltaTime);
 		}
 
+        public void ButtonOnce(State padState, GamepadButtonFlags button, Action buttonAction)
+        {
+            if(!buttonStates.ContainsKey(button))
+                buttonStates.Add(button, false);
+            if (padState.Gamepad.Buttons == button)
+            {
+                if(!buttonStates[button])
+                {
+                    buttonStates[button] = true;
+                    buttonAction();
+                }
+            }
+            else buttonStates[button] = false;
+        }
+
 		void IScene.Render()
         {
 			
@@ -245,15 +284,35 @@
 				heatmapDelta = 0;
 			}
 
-			//ShellViewModel.Instance.ClearDebugText();
-			//Vector2 v = GraphicTools.QuaternionToYawPitch(currentRotationQuaternion);
-			//var yawdeg = MathUtil.RadiansToDegrees(v.X);
-			//var pitchdeg = MathUtil.RadiansToDegrees(v.Y);
-			//ShellViewModel.Instance.AppendDebugText($"YAW:{yawdeg} \t\t PITCH:{pitchdeg}");
-			//ShellViewModel.Instance.UpdateDebugText();
-			//==========================================
+            //ShellViewModel.Instance.ClearDebugText();
+            //Vector2 v = GraphicTools.QuaternionToYawPitch(currentRotationQuaternion);
+            //var yawdeg = MathUtil.RadiansToDegrees(v.X);
+            //var pitchdeg = MathUtil.RadiansToDegrees(v.Y);
+            //ShellViewModel.Instance.AppendDebugText($"YAW:{yawdeg} \t\t PITCH:{pitchdeg}");
+            //ShellViewModel.Instance.UpdateDebugText();
+            //==========================================
 
-			if (HasFocus)
+            if (xpad.IsConnected)
+            {
+                var state = xpad.GetState();
+                float padx = state.Gamepad.LeftThumbX / 256;
+                float pady = state.Gamepad.LeftThumbY / 256;
+                Vector2 padVector = new Vector2(padx, pady);
+                if(padVector.LengthSquared() > 5)
+                {
+                    MoveDelta(-1f * padVector.X, 1f * padVector.Y, 0.02f * speed * deltaTime, 4f);
+                }
+
+                ButtonOnce(state, GamepadButtonFlags.A, () => ShellViewModel.Instance.PlayPause());
+                ButtonOnce(state, GamepadButtonFlags.Y, () => ShellViewModel.Instance.Rewind());
+                ButtonOnce(state, GamepadButtonFlags.DPadLeft, () => ShellViewModel.Instance.SeekRelative(-5));
+                ButtonOnce(state, GamepadButtonFlags.DPadRight, () => ShellViewModel.Instance.SeekRelative(5));
+                ButtonOnce(state, GamepadButtonFlags.DPadUp, () => Caliburn.Micro.Execute.OnUIThreadAsync(() => ShellViewModel.Instance.VolumeRocker.Volume += 0.1));
+                ButtonOnce(state, GamepadButtonFlags.DPadDown, () => Caliburn.Micro.Execute.OnUIThreadAsync(() => ShellViewModel.Instance.VolumeRocker.Volume -= 0.1));
+
+            }
+
+            if (HasFocus)
 			{
 				if (Keyboard.IsKeyDown(Key.Left))
 					MoveDelta(1f, 0f, speed * deltaTime, 4f);
@@ -268,7 +327,10 @@
 					ResetFov();
 				}
 
-				if (projectionMode == MediaDecoder.ProjectionMode.Sphere)
+                
+
+
+                if (projectionMode == MediaDecoder.ProjectionMode.Sphere)
 				{
 					if (Keyboard.IsKeyDown(Key.L))
 					{

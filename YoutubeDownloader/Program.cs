@@ -8,6 +8,8 @@ using RestSharp;
 using System.Text.RegularExpressions;
 using RestSharp.Contrib;
 using Newtonsoft.Json.Linq;
+using SharpDX;
+using SharpDX.MediaFoundation;
 
 namespace YoutubeDownloader
 {
@@ -37,6 +39,14 @@ namespace YoutubeDownloader
 			string urlLine = unmapped.Where(line => line.Contains("url=")).First();
 			string finalUrl = HttpUtility.UrlDecode(urlLine.Split('=')[1]);
 			Console.ReadLine();
+
+
+
+		}
+
+		static void Test()
+		{
+			
 		}
 	}
 }

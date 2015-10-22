@@ -206,11 +206,14 @@ namespace PlayerUI
 
 		public void ShowStartupUI()
 		{
-			shellView.TopBar.Visibility = Visibility.Hidden;
-			this.DXCanvas.Visibility = Visibility.Hidden;
-			ShowStartupPanel(true);
-			ShowDropFilesPanel(false);
-			shellView.VideoTime.Visibility = Visibility.Hidden;
+            Execute.OnUIThreadAsync(() =>
+            {
+                shellView.TopBar.Visibility = Visibility.Hidden;
+                this.DXCanvas.Visibility = Visibility.Hidden;
+                ShowStartupPanel(true);
+                ShowDropFilesPanel(false);
+                shellView.VideoTime.Visibility = Visibility.Hidden;
+            });			
 		}
 
 
@@ -310,5 +313,28 @@ namespace PlayerUI
 		{
 			Execute.OnUIThreadAsync(() => NotifyOfPropertyChange(() => DebugText));
 		}
-	}
+
+        public void StopAndVisualize()
+        {
+            //if(this.DXCanvas.Scene != null)
+            //{
+            //    this.DXCanvas.Scene.
+            //}
+            //Stop();
+            
+            //System.Diagnostics.Process.Start("http://bivrost360.com/heatmap-viewer/");
+            
+        }
+
+        public void SeekRelative(int v)
+        {
+            if(_mediaDecoder != null)
+            {
+                if(_mediaDecoder.Initialized && _mediaDecoder.Ready)
+                {
+                    _mediaDecoder.Seek(_mediaDecoder.CurrentPosition + v);
+                }
+            }
+        }
+    }
 }

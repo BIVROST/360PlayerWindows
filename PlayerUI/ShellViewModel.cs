@@ -20,6 +20,8 @@ using System.Windows.Threading;
 using System.Xml;
 using Bivrost;
 using System.Text.RegularExpressions;
+using SharpDX.Direct3D11;
+using SharpDX.XInput;
 
 namespace PlayerUI
 {
@@ -87,6 +89,8 @@ namespace PlayerUI
 
 		public static string FileFromArgs = "";
 		public static string FileFromProtocol = "";
+
+        private Controller xpad;
 
 		public NotificationCenterViewModel NotificationCenter { get; set; }
 
@@ -262,7 +266,9 @@ namespace PlayerUI
 			UpdateRecents();
 			ShowStartupUI();
 
-			if(File.Exists(FileFromArgs))
+            xpad = new Controller(SharpDX.XInput.UserIndex.One);
+
+            if (File.Exists(FileFromArgs))
 			{
 				OpenFileFrom(FileFromArgs);
 				//IsFileSelected = true;
@@ -307,6 +313,10 @@ namespace PlayerUI
 			//});
 
 			Logic.Instance.CheckForUpdate();
+			Logic.Instance.stats.TrackScreen("Start screen");
+			Logic.Instance.stats.TrackEvent("Application events", "Init", "Player launched");
+
+            //LegacyTest();
 		}
 
 		public void LoadMedia(bool autoplay = true)
@@ -355,6 +365,8 @@ namespace PlayerUI
 			uiVisibilityBackgrundChecker.WorkerSupportsCancellation = true;
 			uiVisibilityBackgrundChecker.DoWork += (sender, parameters) =>
 			{
+                bool xpadRestart = false;
+
 				while(!ended || uiVisibilityBackgrundChecker.CancellationPending)
 				{
 
@@ -375,6 +387,27 @@ namespace PlayerUI
 						if (Fullscreen)
 							Execute.OnUIThread(() => Mouse.OverrideCursor = Cursors.None);
 					}
+
+                    if(xpad!=null)
+                        if(xpad.IsConnected)
+                        {
+                            if (this.DXCanvas.Scene == null)
+                            {
+                                if (IsFileSelected)
+                                {
+                                    if (xpad.GetState().Gamepad.Buttons == GamepadButtonFlags.Y && !xpadRestart)
+                                    {
+                                        xpadRestart = true;
+                                        if (!_mediaDecoder.IsPlaying)
+                                            PlayPause();
+                                        else
+                                            Rewind();
+                                    }
+                                    else xpadRestart = false;
+                                }
+                                else xpadRestart = false;
+                            }
+                        }
 
 					Thread.Sleep(100);
 				}
@@ -499,13 +532,16 @@ namespace PlayerUI
 					_mediaDecoder.SetVolume(VolumeRocker.Volume);
 					_mediaDecoder.Play();
 
+					//STATS
+					Logic.Instance.stats.TrackEvent("Application events", "Play", "");
+
 					Execute.OnUIThread(() =>
 					{
 						shellView.TopBar.Visibility = Visibility.Visible;
 						this.DXCanvas.Visibility = Visibility.Visible;
 					});
 
-					this.DXCanvas.Scene = new Scene(_mediaDecoder.TextureL, _mediaDecoder.Projection);
+					this.DXCanvas.Scene = new Scene(_mediaDecoder.TextureL, _mediaDecoder.Projection) { xpad = this.xpad };
 					this.DXCanvas.StartRendering();
 
 					Task.Factory.StartNew(() =>
@@ -614,11 +650,15 @@ namespace PlayerUI
 			IsPaused = true;
 			Task.Factory.StartNew(() => {
 				_mediaDecoder.Pause();
-			});			
-			shellView.PlayPause.Visibility = Visibility.Visible;
-			shellView.Pause.Visibility = Visibility.Collapsed;
-			NotifyOfPropertyChange(() => CanPlay);
-			AnimateIndicator(shellView.PauseIndicator);
+			});
+            Execute.OnUIThreadAsync(() =>
+            {
+                shellView.PlayPause.Visibility = Visibility.Visible;
+                shellView.Pause.Visibility = Visibility.Collapsed;
+                NotifyOfPropertyChange(() => CanPlay);
+                AnimateIndicator(shellView.PauseIndicator);
+            });
+            			
 			OculusPlayback.Pause();
 		}
 
@@ -760,6 +800,7 @@ namespace PlayerUI
 			//space press hack
 			Execute.OnUIThread(() => shellView.VideoProgressBar.Focus());
 			ShowBars();
+            ShowStartupUI();
 
 			Console.WriteLine("STOP STOP STOP");
 			OculusPlayback.Stop();
@@ -775,6 +816,10 @@ namespace PlayerUI
 					if (IsPlaying || _mediaDecoder.IsEnded)
 					{
 						_mediaDecoder.Stop();
+
+						//STATS
+						Logic.Instance.stats.TrackEvent("Application events", "Stop", "");
+
 						_timeValue = 0;
 						try
 						{
@@ -802,6 +847,10 @@ namespace PlayerUI
 		{
 			ended = true;
 			Stop();
+			Task.Factory.StartNew(async () =>
+			{
+				await Logic.Instance.stats.TrackQuit();
+			});
 
 			base.TryClose(dialogResult);
 			
@@ -813,11 +862,18 @@ namespace PlayerUI
 
 		public void Rewind()
 		{
+            if(_mediaDecoder != null)
+            {
+                _mediaDecoder.Seek(0);
+                if (_mediaDecoder.IsEnded || _mediaDecoder.IsPaused)
+                        PlayPause();
+            }
 			//BivrostPlayerPrototype.PlayerPrototype.Rewind();
 		}
 
 		public void Quit()
 		{
+			//STATS
 			TryClose();
 		}
 
@@ -1005,5 +1061,35 @@ namespace PlayerUI
 			HeadsetMenu.ToggleVisibility();
 		}
 		
+
+        public void LegacyTest()
+        {
+            SharpDX.Direct3D.FeatureLevel[] _levels = new SharpDX.Direct3D.FeatureLevel[] { SharpDX.Direct3D.FeatureLevel.Level_10_0 };
+            Device _device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.BgraSupport | DeviceCreationFlags.VideoSupport, _levels);
+            
+            SharpDX.Direct3D11.Texture2DDescription frameTextureDescription = new SharpDX.Direct3D11.Texture2DDescription()
+            {
+                Width = 1920,
+                Height = 1080,
+                MipLevels = 1,
+                ArraySize = 1,
+                Format = SharpDX.DXGI.Format.B8G8R8A8_UNorm,
+                Usage = SharpDX.Direct3D11.ResourceUsage.Default,
+                SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
+                BindFlags = BindFlags.RenderTarget | SharpDX.Direct3D11.BindFlags.ShaderResource,
+                CpuAccessFlags = CpuAccessFlags.None,
+                OptionFlags = ResourceOptionFlags.Shared
+            };
+
+
+            Texture2D textureL = new SharpDX.Direct3D11.Texture2D(_device, frameTextureDescription);
+            SharpDX.DXGI.Surface surface = textureL.QueryInterface<SharpDX.DXGI.Surface>();
+
+            LegacyPlayer.MediaDecoderLegacy md = new LegacyPlayer.MediaDecoderLegacy(surface.NativePointer);
+            md.OpenUrl(@"D:\TestVideos\maroon.mp4");
+
+            this.DXCanvas.Scene = new Scene(textureL, MediaDecoder.ProjectionMode.Sphere);
+            this.DXCanvas.StartRendering();
+        }
 	}
 }
