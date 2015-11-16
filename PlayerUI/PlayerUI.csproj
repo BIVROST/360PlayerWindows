@@ -34,10 +34,10 @@
     <InstallUrl>http://bivrost360.com/VBwii4uwo5/download/desktop/</InstallUrl>
     <TargetCulture>en</TargetCulture>
     <ProductName>Bivrost 360Player</ProductName>
-    <PublisherName>VIZAO Sp z o.o.</PublisherName>
+    <PublisherName>BIVROST Sp z o.o.</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
-    <ApplicationRevision>66</ApplicationRevision>
+    <ApplicationRevision>74</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
@@ -71,10 +71,11 @@
     <ApplicationIcon>Graphics\fileassoc.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>C77BE0EB13C7E824BC5B74B34F731B75309D3121</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>2290B8E9CE25C9DBC397CC3660CBE578E05ED5FE</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>PlayerUI_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestKeyFile>
+    </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
     <GenerateManifests>true</GenerateManifests>
@@ -89,7 +90,13 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>PlayerUI_TemporaryKey.pfx</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>bivrost-strong-playerui.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TargetZone>Internet</TargetZone>
+  </PropertyGroup>
+  <PropertyGroup>
+    <DelaySign>true</DelaySign>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Caliburn.Micro, Version=2.0.2.0, Culture=neutral, PublicKeyToken=8e5891231f2ed21f, processorArchitecture=MSIL">
@@ -286,6 +293,7 @@
     </Compile>
     <Compile Include="HeadsetMenuViewModel.cs" />
     <Compile Include="Logger\Logger.cs" />
+    <Compile Include="Logic\BrowserPluginManagement.cs" />
     <Compile Include="Logic\GoogleTracker.cs" />
     <Compile Include="Logic\Logic.cs" />
     <Compile Include="Logic\Protocol.cs" />
@@ -325,6 +333,7 @@
     <Compile Include="Tools\RegistryBase.cs" />
     <Compile Include="Tools\RegistryContext.cs" />
     <Compile Include="Tools\StreamingServices.cs" />
+    <Compile Include="Tools\TimeoutBool.cs" />
     <Compile Include="VolumeControlView.xaml.cs">
       <DependentUpon>VolumeControlView.xaml</DependentUpon>
     </Compile>
@@ -449,6 +458,8 @@
     <None Include="app.manifest">
       <SubType>Designer</SubType>
     </None>
+    <None Include="bivrost-codesign.pfx" />
+    <None Include="bivrost-strong-playerui.snk" />
     <None Include="packages.config" />
     <None Include="PlayerUI_TemporaryKey.pfx" />
     <None Include="Properties\Settings.settings">

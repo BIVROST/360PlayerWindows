@@ -132,8 +132,34 @@ namespace PlayerUI
 				if(Updater.CheckForUpdate())
 				{
 					OnUpdateAvailable();
-				}
-            });			
+				}                
+            });
 		}
+
+        public void CheckForBrowsers()
+        {
+            return;
+
+            Task.Factory.StartNew(() =>
+            {
+                if(!Properties.Settings.Default.browserPluginQuestionShown)
+                {
+                    var result = MessageBox.Show("Install browser integration extensions?", "Browser addons", MessageBoxButton.YesNo);
+                    if(result == MessageBoxResult.Yes)
+                    {
+                        if(BrowserPluginManagement.CheckFirefox())
+                        {
+                            BrowserPluginManagement.InstallFirefoxPlugin();
+                        }
+                        if (BrowserPluginManagement.CheckChrome())
+                        {
+                            BrowserPluginManagement.InstallChromePlugin();
+                        }
+                        Properties.Settings.Default.browserPluginQuestionShown = true;
+                        Properties.Settings.Default.Save();
+                    }
+                }
+            });
+        }
 	}
 }

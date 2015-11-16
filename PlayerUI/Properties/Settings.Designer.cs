@@ -69,5 +69,17 @@ namespace PlayerUI.Properties {
                 this["RecentFiles"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool browserPluginQuestionShown {
+            get {
+                return ((bool)(this["browserPluginQuestionShown"]));
+            }
+            set {
+                this["browserPluginQuestionShown"] = value;
+            }
+        }
     }
 }

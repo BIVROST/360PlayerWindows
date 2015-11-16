@@ -10,7 +10,7 @@ using System.Windows;
 [assembly: AssemblyTitle("Bivrost 360Player")]
 [assembly: AssemblyDescription("Bivrost 360Player - Virtual Reality Movie Player")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("VIZAO Sp z o.o.")]
+[assembly: AssemblyCompany("BIVROST Sp z o.o.")]
 [assembly: AssemblyProduct("Bivrost 360Player")]
 [assembly: AssemblyCopyright("Copyright ©  2015")]
 [assembly: AssemblyTrademark("")]

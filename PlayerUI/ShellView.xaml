@@ -510,6 +510,7 @@
                     </ToggleButton.Template>
                 </ToggleButton>
 
+                <TextBlock x:Name="BufferingStatus" Grid.Column="1" Foreground="White" Text="Buffering media..." HorizontalAlignment="Right" VerticalAlignment="Center" Margin="18 0 18 0" />
 
 
             </StackPanel>

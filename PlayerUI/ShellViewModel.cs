@@ -91,6 +91,7 @@ namespace PlayerUI
 		public static string FileFromProtocol = "";
 
         private Controller xpad;
+        private static TimeoutBool urlLoadLock = false;
 
 		public NotificationCenterViewModel NotificationCenter { get; set; }
 
@@ -118,6 +119,7 @@ namespace PlayerUI
 				if (autoplay)
 				{
 					autoplay = false;
+                    urlLoadLock = false;
 					Play();					
 				}
 			};
@@ -156,16 +158,41 @@ namespace PlayerUI
 
 			_mediaDecoder.OnError += (error) =>
 			{
-				Execute.OnUIThreadAsync(() =>
+                urlLoadLock = false;
+                Execute.OnUIThreadAsync(() =>
 				{
 					NotificationCenter.PushNotification(MediaDecoderHelper.GetNotification(error));
 					SelectedFileName = null;
 					ShowStartupUI();
 				});
 			};
-			
 
-			UpdateTimeLabel();
+            _mediaDecoder.OnBufferingStarted += () =>
+            {
+                Execute.OnUIThreadAsync(() =>
+                {
+                    shellView.BufferingStatus.Visibility = Visibility.Visible;
+                });
+            };
+
+            _mediaDecoder.OnBufferingEnded += () =>
+            {
+                Execute.OnUIThreadAsync(() =>
+                {
+                    shellView.BufferingStatus.Visibility = Visibility.Collapsed;
+                });                
+            };
+
+            _mediaDecoder.OnProgress += (progress) =>
+            {
+                Execute.OnUIThreadAsync(() =>
+                {
+                    shellView.BufferingStatus.Text = $"Buffering... {progress}";
+                });
+            };
+
+
+            UpdateTimeLabel();
 
 			VolumeRocker = new VolumeControlViewModel();
 			VolumeRocker.Volume = 0.5;
@@ -241,7 +268,11 @@ namespace PlayerUI
 						case Protocol.Stereoscopy.top_and_bottom_reversed: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.TopBottomReversed; break;
 					}
 					Loop = protocol.loop.HasValue ? protocol.loop.Value : false;
-					string videoUrl = protocol.urls.First(u => Regex.IsMatch(u, @"(\b|_).mp4(\b|_)") || Regex.IsMatch(u, @"(\b|_).avi(\b|_)"));
+					string videoUrl = protocol.urls.FirstOrDefault((u) => {
+                        var b1 = Regex.IsMatch(u, @"(\b|_).mp4(\b|_)");
+                        var b2 = Regex.IsMatch(u, @"(\b|_).avi(\b|_)");
+                        return b1 || b2;
+                    });
 					if (string.IsNullOrWhiteSpace(videoUrl))
 						videoUrl = protocol.urls[0];
 					OpenUrlFrom(videoUrl);
@@ -254,54 +285,66 @@ namespace PlayerUI
 			}
 		}
 
-		protected override void OnViewLoaded(object view)
-		{
-			base.OnViewLoaded(view);
+        protected override void OnViewLoaded(object view)
+        {
+            base.OnViewLoaded(view);
 
-			HwndSource source = HwndSource.FromHwnd(new WindowInteropHelper(playerWindow).Handle);
-			source.AddHook(new HwndSourceHook(WndProc));
+            HwndSource source = HwndSource.FromHwnd(new WindowInteropHelper(playerWindow).Handle);
+            source.AddHook(new HwndSourceHook(WndProc));
 
-			this.DXCanvas.StopRendering();
+            this.DXCanvas.StopRendering();
 
-			UpdateRecents();
-			ShowStartupUI();
+            shellView.BufferingStatus.Visibility = Visibility.Collapsed;
+
+            UpdateRecents();
+            ShowStartupUI();
 
             xpad = new Controller(SharpDX.XInput.UserIndex.One);
 
             if (File.Exists(FileFromArgs))
-			{
-				OpenFileFrom(FileFromArgs);
-				//IsFileSelected = true;
-				//SelectedFileName = FileFromArgs;
-				//Play();
-				//Task.Factory.StartNew(() => Execute.OnUIThread(() => {
-				//	Recents.AddRecent(SelectedFileName);
-				//	UpdateRecents();
-				//	ShowPlaybackUI();
-				//}));
-			}
+            {
+                OpenFileFrom(FileFromArgs);
+                //IsFileSelected = true;
+                //SelectedFileName = FileFromArgs;
+                //Play();
+                //Task.Factory.StartNew(() => Execute.OnUIThread(() => {
+                //	Recents.AddRecent(SelectedFileName);
+                //	UpdateRecents();
+                //	ShowPlaybackUI();
+                //}));
+            }
 
-			if(!string.IsNullOrWhiteSpace(FileFromProtocol))
-			{
-				try
-				{
-					var protocol = Protocol.Parse(FileFromProtocol);
-					switch(protocol.stereoscopy)
-					{
-						case Protocol.Stereoscopy.autodetect: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.Autodetect; break;
-						case Protocol.Stereoscopy.mono: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.Mono; break;
-						case Protocol.Stereoscopy.side_by_side: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.SideBySide; break;
-						case Protocol.Stereoscopy.top_and_bottom: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.TopBottom; break;
-						case Protocol.Stereoscopy.top_and_bottom_reversed: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.TopBottomReversed; break;
-					}
-					Loop = protocol.loop.HasValue ? protocol.loop.Value : false;
-					string videoUrl = protocol.urls.First(u => Regex.IsMatch(u, @"(\b|_).mp4(\b|_)") || Regex.IsMatch(u, @"(\b|_).avi(\b|_)"));
-					if (string.IsNullOrWhiteSpace(videoUrl))
-						videoUrl = protocol.urls[0];
-					OpenUrlFrom(videoUrl);
-				}
-				catch (Exception) { }
-			}
+            Task.Factory.StartNew(() => {
+                if (!string.IsNullOrWhiteSpace(FileFromProtocol))
+                {
+                    try
+                    {
+                        var protocol = Protocol.Parse(FileFromProtocol);
+                        switch (protocol.stereoscopy)
+                        {
+                            case Protocol.Stereoscopy.autodetect: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.Autodetect; break;
+                            case Protocol.Stereoscopy.mono: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.Mono; break;
+                            case Protocol.Stereoscopy.side_by_side: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.SideBySide; break;
+                            case Protocol.Stereoscopy.top_and_bottom: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.TopBottom; break;
+                            case Protocol.Stereoscopy.top_and_bottom_reversed: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.TopBottomReversed; break;
+                        }
+                        Loop = protocol.loop.HasValue ? protocol.loop.Value : false;
+                        string videoUrl = protocol.urls.FirstOrDefault((u) => {
+                            var b1 = Regex.IsMatch(u, @"(\b|_).mp4(\b|_)");
+                            var b2 = Regex.IsMatch(u, @"(\b|_).avi(\b|_)");
+                            return b1 || b2;
+                        });
+                        if (string.IsNullOrWhiteSpace(videoUrl))
+                            videoUrl = protocol.urls[0];
+                        OpenUrlFrom(videoUrl);
+                    }
+                    catch (Exception) { }
+                }
+            });
+            
+            
+
+			
 
 			//Task.Factory.StartNew(() =>
 			//{
@@ -313,7 +356,8 @@ namespace PlayerUI
 			//});
 
 			Logic.Instance.CheckForUpdate();
-			Logic.Instance.stats.TrackScreen("Start screen");
+            Logic.Instance.CheckForBrowsers();
+            Logic.Instance.stats.TrackScreen("Start screen");
 			Logic.Instance.stats.TrackEvent("Application events", "Init", "Player launched");
 
             //LegacyTest();
@@ -541,7 +585,7 @@ namespace PlayerUI
 						this.DXCanvas.Visibility = Visibility.Visible;
 					});
 
-					this.DXCanvas.Scene = new Scene(_mediaDecoder.TextureL, _mediaDecoder.Projection) { xpad = this.xpad };
+                    this.DXCanvas.Scene = new Scene(_mediaDecoder.TextureL, _mediaDecoder.Projection) { xpad = this.xpad };
 					this.DXCanvas.StartRendering();
 
 					Task.Factory.StartNew(() =>
@@ -575,28 +619,47 @@ namespace PlayerUI
 
 		private void OpenUrlFrom(string url)
 		{
-			OpenUrlViewModel ouvm = new OpenUrlViewModel();
-			ouvm.Url = url;
-			ouvm.Open();
+            if (urlLoadLock)
+            {
+                return;
+            }                
 
-			if (ouvm.Valid)
-			{
-				NotificationCenter.PushNotification(new NotificationViewModel("Loading..."));
-				if (!string.IsNullOrWhiteSpace(ouvm.VideoUrl))
-				{
-					SelectedFileName = ouvm.VideoUrl;
-					IsFileSelected = true;
-					_mediaDecoder.Projection = StreamingServices.GetServiceProjection(ouvm.Uri);
-					Execute.OnUIThreadAsync(() =>
-					{
-						LoadMedia();
-					});
-				}
-			}
-			else
-			{
-				NotificationCenter.PushNotification(new NotificationViewModel("Url is not valid video or streaming service address."));
-			}
+            urlLoadLock = true;
+
+
+            Execute.OnUIThreadAsync(() =>
+            {
+                NotificationCenter.PushNotification(new NotificationViewModel("Checking url..."));
+                OpenUrlViewModel ouvm = new OpenUrlViewModel();
+                ouvm.Url = url;
+                Task.Factory.StartNew(() => {
+                    ouvm.Open();
+
+                    Execute.OnUIThreadAsync(() =>
+                    {
+                        if (ouvm.Valid)
+                        {
+                            NotificationCenter.PushNotification(new NotificationViewModel("Loading..."));
+                            if (!string.IsNullOrWhiteSpace(ouvm.VideoUrl))
+                            {
+                                SelectedFileName = ouvm.VideoUrl;
+                                IsFileSelected = true;
+                                _mediaDecoder.Projection = StreamingServices.GetServiceProjection(ouvm.Uri);
+                                Execute.OnUIThreadAsync(() =>
+                                {
+                                    LoadMedia();
+                                });
+                            }
+                        }
+                        else
+                        {
+                            NotificationCenter.PushNotification(new NotificationViewModel("Url is not valid video or streaming service address."));
+                            urlLoadLock = false;
+                        }
+                    });
+                });
+                
+            });
 		}
 		
 
@@ -769,7 +832,7 @@ namespace PlayerUI
 					if (IsPlaying)
 					{
 						waitForPlaybackStop.Reset();
-						Stop();						
+						Stop();
 						waitForPlaybackStop.WaitOne();						
 					} else
 					{
@@ -1001,12 +1064,20 @@ namespace PlayerUI
 
 		public void OnLostFocus()
 		{
-			if (IsPlaying) ((Scene)this.DXCanvas.Scene).HasFocus = false;
+            if (IsPlaying)
+            {
+                if(this.DXCanvas.Scene != null)
+                    ((Scene)this.DXCanvas.Scene).HasFocus = false;
+            }
 		}
 
 		public void OnGotFocus()
 		{
-			if (IsPlaying) ((Scene)this.DXCanvas.Scene).HasFocus = true;
+            if (IsPlaying)
+            {
+                if (this.DXCanvas.Scene != null)
+                    ((Scene)this.DXCanvas.Scene).HasFocus = true;
+            }
 		}
 
 		public void ShowVolumeControl()

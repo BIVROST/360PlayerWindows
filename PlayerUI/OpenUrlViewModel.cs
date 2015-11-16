@@ -72,7 +72,11 @@ namespace PlayerUI
 
 			//TryClose();
 
-			
+			if(view == null)
+            {
+                Process();
+                return;
+            }
 
 			Task.Factory.StartNew(() =>
 			{
@@ -92,15 +96,16 @@ namespace PlayerUI
 			{
 				RestClient client = new RestClient(uri);
 				IRestRequest request = new RestRequest(Method.HEAD);
-				//request.AddHeader("Accept", "text/html");
+				request.AddHeader("Accept", "text/html");
 				IRestResponse response = client.Execute(request);
 				if (response.StatusCode != System.Net.HttpStatusCode.OK)
 				{
-					Execute.OnUIThreadAsync(() =>
-					{
-						Valid = false;
-						TryClose();
-					});
+                    if(view != null)
+					    Execute.OnUIThreadAsync(() =>
+					    {
+						    Valid = false;
+						    TryClose();
+					    });
                     return;
 
 				}
@@ -118,10 +123,11 @@ namespace PlayerUI
 					VideoUrl = videoUrl;
 				}
 			}
-			Execute.OnUIThreadAsync(() =>
-			{
-				TryClose();
-			});
+            if (view != null)
+                Execute.OnUIThreadAsync(() =>
+			    {
+				    TryClose();
+			    });
 		}
 
 	}

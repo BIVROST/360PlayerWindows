@@ -112,12 +112,10 @@
 
 			resource = videoTexture.QueryInterface<SharpDX.DXGI.Resource>();
 			sharedTex = _device.OpenSharedResource<Texture2D>(resource.SharedHandle);
+            
+            basicEffect.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(graphicsDevice, sharedTex);
 
-
-			basicEffect.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(graphicsDevice, sharedTex);
-
-
-			basicEffect.TextureEnabled = true;
+            basicEffect.TextureEnabled = true;
 			basicEffect.LightingEnabled = false;
 			basicEffect.Sampler = graphicsDevice.SamplerStates.AnisotropicClamp;
 
@@ -210,7 +208,7 @@
 
         void IScene.Detach()
         {
-			Console.WriteLine(heatmap.ToBase64());
+			//Console.WriteLine(heatmap.ToBase64());
 
 			Disposer.RemoveAndDispose(ref sharedTex);
 			Disposer.RemoveAndDispose(ref resource);

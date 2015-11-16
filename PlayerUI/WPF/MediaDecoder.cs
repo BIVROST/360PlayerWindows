@@ -96,6 +96,16 @@ namespace PlayerUI
 				}
 			}
 		}
+
+        //public int BufferLevel
+        //{
+        //    get
+        //    {
+        //        return _mediaEngineEx.
+        //    }
+        //}
+
+
 		public bool Ready { get; private set; }
 
 		public double Duration { get { return _mediaEngineEx.Duration; } }
@@ -125,8 +135,11 @@ namespace PlayerUI
 		public event Action<Error> OnError = delegate { };
 		public event Action OnAbort = delegate { };
 		public event Action<double> OnTimeUpdate = delegate { };
+        public event Action OnBufferingStarted = delegate { };
+        public event Action OnBufferingEnded = delegate { };
+        public event Action<double> OnProgress = delegate { };
 
-		VideoNormalizedRect topRect = new VideoNormalizedRect()
+        VideoNormalizedRect topRect = new VideoNormalizedRect()
 		{
 			Left = 0,
 			Top = 0,
@@ -213,7 +226,6 @@ namespace PlayerUI
 			return "Video MP4|*.mp4|Video M4V|*.m4v|Video MOV|*.mov|Video AVI|*.avi|Video WMV|*.wmv";
 		}
 
-
 		public void Init()
 		{
 			LastError = null;
@@ -266,7 +278,37 @@ namespace PlayerUI
 							Console.WriteLine(string.Format("ENDED {0}, {1}", param1, param2));
 							OnEnded();
 							break;
-					}
+                        case MediaEngineEvent.BufferingStarted:
+                            OnBufferingStarted();
+                            break;
+                        case MediaEngineEvent.BufferingEnded:
+                            OnBufferingEnded();
+                            break;
+                        //case MediaEngineEvent.Progress:
+
+                        //    var currentTime = _mediaEngineEx.CurrentTime;
+                        //    var ranges = _mediaEngineEx.Buffered.Length;
+                        //    double progress = 0;
+      
+                        //    for (int it = 0; it < ranges; it++)
+                        //    {
+                        //        double start;
+                        //        double end;
+                        //        _mediaEngineEx.Buffered.GetStart(it, out start);
+                        //        _mediaEngineEx.Buffered.GetEnd(it, out end);
+                        //        if(currentTime >= start && currentTime <= end)
+                        //        {
+                        //            progress = (end - currentTime);
+                        //        }
+                        //        Console.WriteLine($"t={currentTime} Range {it} start {start} ; end {end}");
+                        //    }
+
+                        //    Console.WriteLine($"OnProgress {param1} ; {param2}");
+
+                        //    OnProgress(progress);
+                        //    break;
+
+                    }
 				};
 
 				_mediaEngineEx = _mediaEngine.QueryInterface<MediaEngineEx>();
