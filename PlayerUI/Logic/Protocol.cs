@@ -29,7 +29,8 @@ namespace Bivrost
 
         protected Protocol(string link)
         {
-            Uri uri = new Uri(link);
+
+			Uri uri = new Uri(link);
             var query=HttpUtility.ParseQueryString(uri.Query);
 
             if (uri.Scheme != "bivrost")

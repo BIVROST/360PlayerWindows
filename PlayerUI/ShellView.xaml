@@ -146,9 +146,16 @@
                 <MenuItem Header="Navigate">
                     <MenuItem Header="Play/Pause" InputGestureText="Space" cal:Message.Attach="[Event Click] = [Action PlayPause]" />
                     <MenuItem Header="Stop" cal:Message.Attach="[Event Click] = [Action Stop]" />
-                    <MenuItem Header="Reset zoom" InputGestureText="Ctrl+0" cal:Message.Attach="[Event Click] = [Action ResetFov]" />
+                    <MenuItem Header="Rewind" InputGestureText="Ctrl+R" cal:Message.Attach="[Event Click] = [Action Rewind]" />
                 </MenuItem>
-				<MenuItem Header="Options">
+                <MenuItem Header="View">
+                    <MenuItem Header="Normal (gnomic) projection" InputGestureText="N" cal:Message.Attach="[Event Click] = [Action NormalProjection]" />
+                    <MenuItem Header="Little planet (stereographic) projection" InputGestureText="L"  cal:Message.Attach="[Event Click] = [Action LittlePlanetProjection]" />
+                    <MenuItem Header="Reset zoom (fov)" InputGestureText="Ctrl+0" cal:Message.Attach="[Event Click] = [Action ResetFov]" />
+                    <Separator />
+                    <MenuItem Header="Reset zoom (fov)" InputGestureText="Ctrl+0" cal:Message.Attach="[Event Click] = [Action ResetFov]" />
+                </MenuItem>
+                <MenuItem Header="Options">
 					<MenuItem Header="Settings" cal:Message.Attach="[Event Click] = [Action OpenSettings]" InputGestureText="Ctrl+P"/>
 				</MenuItem>
 				<MenuItem Header="Help">

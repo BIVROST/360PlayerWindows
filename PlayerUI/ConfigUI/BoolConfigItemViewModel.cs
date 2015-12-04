@@ -12,5 +12,6 @@ namespace PlayerUI.ConfigUI
 
 		public bool ReadOnly { get; set; } = false;
 		public bool Enabled { get { return !this.ReadOnly; } }
+
 	}
 }

@@ -1,191 +1,67 @@
-﻿End User License Agreement
-
-The present agreement constitutes a legally binding agreement between the Licensee and KOLOR, a sole-proprietor limited liability company with a capital of 8.000,00 €, the head office of which is situated at 73800 FRANCIN (FRANCE), 112 Voie Albert Einstein, registered in the CHAMBERY trade register under reference 479 247 751, represented by Mr. Alexandre JENNY, Executive Manager, in accordance with the law and current company articles, domiciled in this function at the aforementioned head office.
-
-Hereafter referred to as “KOLOR”,
-
-KOLOR’s business activity is design, production, development and distribution of software. KOLOR grants the right of use software that plays 360° videos. The software is called "KOLOR EYES DESKTOP PLAYER".
-
-1. Definitions
-
-- « KOLOR EYES DESKTOP PLAYER »: 360 video player software developed by KOLOR that operates on WINDOWS, MAC OS and LINUX operating systems.
-
-- “Example code” : example of software in source code format indicated in the Documentation or directories such as the "sample code", "examples" or "Sample Application Code";
-
-- “Licensee” : any physical person or physical legal representative of a legal person using the Licensee tools;
-
-- “Documentation” : means the written materials accompanying the present agreement, including, for example, technical documentation and user manual;
-
-- “Source file of the KOLOR EYES DESKTOP PLAYER software” : means the source code files included in the directory trees provided with the present agreement;
-
-2. Contractual documents
-
-In order of priority, contractual documents consist of: 
-- the present agreement;
-- general terms of use of KOLOR website.
-
-In case of contradiction between any provision of any of these documents, document layout senior prevail in any event.
-
-3. Purpose
-
-The present agreement is a license by which KOLOR grants a license to the Licensee, and the Licensee accepts, a non-exclusive, non-assignable and non-transferable right to use the KOLOR EYES DESKTOP PLAYER software developed by KOLOR. The present agreement also defines the conditions under which the Licensee uses the various features offered by this KOLOR EYES DESKTOP PLAYER software.
-
-4. Acceptance of the provisions of the agreement
-
-Any use of the KOLOR EYES DESKTOP PLAYER software is subject to acceptance of and compliance with the present agreement.
-
-KOLOR also reserves the right to change its KOLOR EYES DESKTOP PLAYER software. Technical changes may occur without notice.
-
-By continuing to use the KOLOR EYES DESKTOP PLAYER software after an amendment to the present agreement, the Licensee is deemed to have accepted such changes.
-
-KOLOR also reserves the right to change its KOLOR EYES DESKTOP PLAYER software. Technical changes may occur without notice.
-
-5. Assistance
-
-The Licensee has access to on-line assistance via a forum, on a web-page accessible at the following address: http://www.kolor.com/forum. The Licensee must have previously consulted the Frequently Asked Questions (“FAQ”) which are accessible on the company's website : http://www.kolor.com.
-
-6. Term and duration
-
-The present agreement shall enter into force from the date of installation of the software KOLOR EYES DESKTOP PLAYER on the computer of the Licensee.
-The present agreement is concluded for the duration of the software legal protection.
-
-7. Financial conditions
-
-This license is granted free of charges.
-
-8. Intellectual property
-
-8.1. Intellectual property contents of the KOLOR company
-
-KOLOR is and remains the owner of all software and non-software components of the KOLOR EYES DESKTOP PLAYER software, including:
-- source code
-- Example code,
-- Documentation,
-- Source files,
-- examples of Applications
-- any information, elements of know-how, specification documents and more generally all the design elements of the KOLOR EYES DESKTOP PLAYER SOFTWARE,
-- intellectual and industrial property rights to all design elements of the KOLOR EYES DESKTOP PLAYER software,
-- trademarks, patents, names, acronyms, logos, colors, graphics, or other signs that could be used, produced or implemented by KOLOR through the use of the KOLOR EYES DESKTOP PLAYER software;
-
-Therefore, the Licensee undertakes not to reproduce in any form whatsoever, directly or indirectly, the items listed in the preceding paragraph, as well as alter the trademarks, patents, names, acronyms, logos, colors, graphics or other signs appearing on the elements provided by KOLOR, and more generally to use or exploit these elements other than the right to use it in accordance with the terms of this license. 
-The Licensee is not allowed to:
-
-- use or access, or attempt to use or access, the features that are not displayed or activated by the KOLOR EYES DESKTOP PLAYER software,
-- bypass the digital rights management (DRM) or, more generally, any technical limitations contain in the software KOLOR EYES DESKTOP PLAYER.
-- make available to others in any manner whatsoever, directly or indirectly executable files KOLOR EYES DESKTOP PLAYER software to be used or reproduced without prior permission from KOLOR,
-- rent or lease the KOLOR EYES DESKTOP PLAYER software,
-- grant all or part of the right of use of the software KOLOR EYES DESKTOP PLAYER under sub-license or other equivalent contract.
-
-Licensee undertakes not to register on its behalf or on behalf of others, patent protection, copyright or any form of registration of intellectual property rights, in France or abroad for one or more software component of the KOLOR EYES DESKTOP PLAYER software or incorporating one or more component of the KOLOR EYES DESKTOP PLAYER software or of KOLOR’s website.
-
-8.2. Scope of the of the rights granted under the Agreement
-
-By the present agreement, KOLOR grants to the Licensee a non-exclusive, non-assignable and non-transferable license to use the KOLOR EYES DESKTOP PLAYER software for the sole purpose of 360 video editing operations.
-
-This license is granted for one user only. In case this license is acquired for the need of the business of a company, the license is limited to one computer only.
-
-8.3. Decompilation
-
-Performing any reverse engineering, decompile, disassemble or attempt to discover the source code of all or part of the KOLOR EYES DESKTOP PLAYER software that is provided in compiled or object code size, is prohibited, except to the extent that it is explicitly permitted to decompile under applicable law.
-
-9. Updating and maintenance
-
-KOLOR can improve or modify the KOLOR EYES DESKTOP PLAYER software at any time and without notice. Available updating will be governed by the provisions of the present agreement unless updating is governed by a separate license in which case the terms of that license will govern.
-
-KOLOR is not bounded by an obligation to provide technical maintenance of the KOLOR EYES DESKTOP PLAYER software.
-
-10. Electronic mail – Correspondence – Security – Convention on proof
-
-The parties and/or parties' representatives may, for the purposes of the present agreement, communicate by means of electronic mail, more specifically on the Internet.
-
-The Parties agree that the e-mails sent properly establish the content of their exchanges and, if required, their commitments.
-
-The records stored in KOLOR’s computer systems under reasonable security conditions, will be considered as a proof of communications of the feedback and of different transmissions of information between each Licensee and KOLOR.
-
-The email archiving is done in a reliable and sustainable support in order to correspond to a faithful and durable copy, in accordance with Article 1348 of the (French) Civil Code.
-
-In case of conflict between KOLOR’s registers and any Licensee’s written document or electronic file, the parties agree that KOLOR’s registers will take precedence over Licensee’s document and will be admitted to as evidence.
-
-11. Liability
-
-11.1. KOLOR’s liability
-
-It is expressly agreed that KOLOR is only bounded by an obligation of means for the purpose of executing this Agreement.
-
-The Licensee expressly acknowledges that he uses KOLOR EYES DESKTOP PLAYER software at its own risks and he is entitled to perform any appropriate checking, under his sole responsibility. The software is delivered “as it stands”, without any warranties other than those which cannot be excluded under applicable law, in particular, the absence of any claim of a third party on the software, from the acquisition of the full license by paying the license fee.
-
-The Licensee declares and acknowledge by the present agreement that he has ascertained that the software corresponds to his requirements and that he has the capacity to use the software correctly and that he does not have to undertake training or have his staff undertake training for this purpose. The Licensee acknowledges receipt from KOLOR of all information required for him to judge the compatibility of the software with his requirements and to take every precaution required for its use.
-
-KOLOR cannot be held responsible for Licensee’s video viewed by using the software KOLOR EYES DESKTOP PLAYER.
-
-KOLOR cannot be held responsible for any trouble arising from Licensee’s video playback.
-
-Under the present agreement, it follows as a result of information brought to the attention of the Licensee that KOLOR fulfilled its obligation to provide advice and information on the characteristics of the KOLOR EYES DESKTOP PLAYER software and features provided.
-
-Moreover, because of the characteristics and limitations of the Internet, KOLOR cannot be held responsible for any misuse of passwords, PINs, and more generally any personal data transmitted via the Internet.
-
-The Licensee declares that he accepts the characteristics, risks and limitations of the Internet and that he acknowledges that the Internet presents risks and imperfections, which, in particular, may lead to temporary drops in performance, increased response time, or temporary server unavailability and acknowledges that he alone is responsible for the consequences of downloading the software on the network. The Licensee undertakes to take the appropriate steps to protect his system, his data, software and network from contamination by any virus transmitted during connection time.
-
-The Licensee declares that he accepts and acknowledges that he alone is responsible for the consequences of incompatibility with software already installed on his workstation or for potential conflicts with any part of such software.
-
-The Licensee declares and acknowledges that the KOLOR shall not accept any civil liability to the user for any damage resulting directly or indirectly from the software results obtained not being esthetic, pertinent, reliable or suited to a specific use.
-
-Any direct or indirect damages, associated with system or data corruption, non-availability of systems or data, for any period, or breach of data confidentiality are excluded. Moreover, KOLOR shall accept no liability for accidental destruction of the user’s or third party’s data that have not been backed-up on a reliable external medium, in accordance with standard recommendations.
-
-In no event will KOLOR be liable for any direct or indirect damages whatsoever, including (without limitation) financial loss, loss of business profits, loss of confidential or other information, business interruption, bodily damage, invasion of privacy, failure to meet obligations due to a negligent act, or for any other pecuniary loss resulting from or associated with the use or impossibility to use the software or to benefit from maintenance or the provision or faulty provision of maintenance services, or the execution of the obligations under this agreement, even if KOLOR has been informed of the possibility of said damages.
-
-The parties expressly dismiss any implicit or explicit warranty with respect to high risk activities.
-
-12. Assignment
-
-Any total or partial transfer of the rights and obligations set out in this agreement, due to the Licensee, is prohibited, whether against payment or free of charge.
-
-KOLOR may assign to any legal person of his choice, or all of the rights and obligations specified in the present agreement. KOLOR undertakes to inform the Licensee in case of any assignment mentioned above.
-
-13. Force majeure
-
-As a first step, cases of force majeure suspend the contract.
-
-If force majeure has duration of more than three months, the agreement will be automatically terminated, unless the parties came to an agreement. Events considered as force majeure or unforeseeable circumstances include those usually retained by the jurisprudence of French courts.
-
-14. Termination
-
-The present agreement shall be automatically terminated in the event of a breach of any provision of this agreement or in the case of unauthorized use of the KOLOR EYES DESKTOP PLAYER software. In this event, the Licensee shall delete all issues and copies of the software, on all their supports (all other rights of either party and all other provisions of this agreement shall remain following termination).
-
-15. Consequences of termination
-
-In case of the termination, for whatever reason, the following provisions of the present agreement shall continue to apply and remain in full effect:
-
-- Article "Intellectual Property";
-- Article "Responsibility";
-- Article "Electronic mail – Correspondence – Security – Convention on proof”.
-
-16. Non disclosure - Confidentiality
-
-Licensee undertakes no to disclose to third parties information revealed by KOLOR, as well as information that a party knows of the fact of the execution of the present agreement.
-
-17. General provisions
-
-None of the parties can make a commitment on name and / or on behalf of another.
-
-Moreover, each party is solely responsible for its acts, allegations, commitments, services and employees.
-
-In case of difficulties in interpretation between any of the titles at the head of clauses and any of the clauses, the titles will be declared non-existent.
-
-18. Contract amendment – Complete agreement
-
-The present agreement constitutes the complete commitment existing between the parties. It supersedes all prior commitments, whether written or oral, relating to the subject of the present agreement.
-
-The parties agree that any tolerance or renunciation of one of the parties in the application of all or part of the obligations specified in the present agreement, whatever the frequency or the duration, shall not constitute an amendment to the present agreement, or be such as to establish any rights.
-
-19. Clause divisibility
-
-Should any one of the stipulations of the present agreement become null and void or have no force of obligation or be inopposable, this shall not entail the other stipulations becoming null and void, having no force of obligation or being opposable; these stipulations shall maintain their full effect
-
-20. Law applicable – Contract language - Dispute
-
-The Agreement is governed by French law, to the exclusion of any other national legislation. The contract being drafted in two languages, the Parties acknowledge that both versions are valid. The parties to the present agreement undertake to make every reasonable effort to settle amicably any dispute that might arise from the terms of the present agreement. However, should it not prove possible to resolve the matter in this manner, it will be brought before the competent courts within the jurisdiction of the LYON Court of Appeal.
-
-21. Oculus Rift
-
-End User also agrees to be bound by the Oculus EULA, which can be reached by clicking on the following link: <https://share.oculusvr.com/terms-and-conditions>
+﻿Licence for Non-Commercial
+Use of Bivrost Desktop
+rev. as of 2015-11-25
+
+Section 1
+For the purposes of this licence, the following terms are defined as follows:
+1) Bivrost Desktop – computer software created by the Bivrost Developer, used for displaying panoramic videos; Bivrost Desktop offers features and specifications listed in its Documentation; to be operational, Bivrost Desktop requires third-party software listed in the Documentation, specifically: an operating system, drivers and libraries;
+2) Documentation – a description of operation, hardware and software requirements, intended use and features of Bivrost Desktop, provided together with Bivrost Desktop or contained on Bivrost’s Website;
+3) Client – a natural person engaged in no economic activity, or consumer; the term ‘Client’ shall exclude legal persons and entities without legal personality, granted legal capacity under the provisions of separate law;
+4) Non-Commercial Use – utilizing the software for private purposes, unrelated to any registered or unregistered economic activity; Non-Commercial Use must not bring any direct or indirect income;
+5) Licence – the licence for Bivrost Desktop;
+6) Bivrost’s Website – an Internet service run by the Bivrost Developer, currently hosted at: www.bivrost360.com; the Bivrost Developer reserves the right to change the URL address of the website, notifying its users by means of leaving an appropriate notice under the previous address at least one month in advance;
+7) Bivrost Developer – BIVROST Sp. z o.o. with sit in Warsaw, Wlodzimierza Perzynskiego 20/22, 01-883, registered at the XIII Commercial Division of the District Court for the capital city of Warsaw, under KRS number 0000584360,with the paid in capital in the amount PLN 50 000, with its NIP number 118-211-45-71, Regon number 362940085.
+
+Section 2
+Pursuant to the provisions of the Licence and the Law on Copyright and Related Rights (JoL No. 24, Item 83 as amended), the Bivrost Developer grants the Client, free of charge, with a non-exclusive, indefinite and irrevocable licence for the use of Bivrost Desktop. The Licence shall be granted as soon as it is accepted by the Client.
+
+Section 3
+The Bivrost Developer declares to be the developer of Bivrost Desktop and owner of all economic rights to the computer software in question. To dispel possible doubts, the Bivrost Developer points out that Bivrost Desktop is distributed together with third-party libraries, listed in Section 8 herein and necessary for proper operation of Bivrost Desktop, that are subject to separate licences permitting the Client to use and distribute these libraries according to terms and conditions specified therein.
+
+Section 4
+1. Under this Licence, the Client is entitled to use Bivrost Desktop for non-commercial purposes in accordance with its intended use and within the following scope of activities:
+	1) keeping Bivrost Desktop in computer storage owned by the Client;
+	2) creating backup copies for the Client’s own purposes, while making the simultaneous use of the backup copy impossible;
+	3) utilizing Bivrost Desktop (including its entry, display, application, transfer and storage) by the Client himself, within the scope defined by its intended use. 
+2. The scope of the Licence covers:
+	1) entire world;
+	2) indefinite time;
+	3) unlimited number of computers running Bivrost Desktop, providing all such computers are owned by the Client.
+3. Without written consent from the Bivrost Developer, the Client shall not:
+	1) use Bivrost Desktop for purposes other than non-commercial;
+	2) make Bivrost Desktop available to third parties in its entirety or in parts, specifically make it downloadable via the Internet;
+	3) store Bivrost Desktop on computers that are not owned by the Client;
+	4) modify Bivrost Desktop in a way that falls outside of permitted configuration specified in the Documentation;
+	5) create any Bivrost Desktop-based derivative products;
+	6) apply Bivrost Desktop or its part within another computer software, regardless of its form;
+	7) sublicense third parties or transfer rights granted and duties imposed under this Licence to third parties.
+
+Section 5
+The Client is entitled to create backup copies of Bivrost Desktop for his own purposes. Each backup copy shall be kept safe to avoid its loss or damage, to protect it from unauthorized access as well as to make it unavailable as long as it is not needed. The copy stored shall be properly marked to indicate the entity holding the copyrights.
+
+Section 6
+1. It is prohibited to execute the right to utilize Bivrost Desktop beyond the scope granted by this Licence, unless such execution is allowed under mandatory provisions of law.
+2. The Client shall immediately notify the Bivrost Developer of actual or suspected misuse of Bivrost Desktop copies obtained by the Client under this Licence.
+3. The Bivrost Developer may want to control whether Bivrost Desktop is utilized by Clients in accordance with its intended use and the provisions of this Licence.
+
+Section 7
+1. No warranty for Bivrost Desktop is granted.
+2. The Bivrost Developer shall be held harmless from liability for any damage, direct or indirect, incurred by the Client or third parties as a result of the use of Bivrost Desktop, except for damage incurred through the fault of the Bivrost Developer. Specifically, the Bivrost Developer assumes no liability for possible loss of profits.
+3. This clause shall be without prejudice to liabilities imposed on the Bivrost Developer by applicable regulations, specifically the laws on consumer rights protection. 
+
+Section 8
+To be fully operational, Bivrost Desktop requires the following libraries distributed under the following licences:
+1) Caliburn Micro 3.0.0 – MIT licence published at: https://raw.githubusercontent.com/Caliburn-Micro/Caliburn.Micro/master/License.txt
+2) Fleck 0.13.0.57 – MIT licence published at: http://opensource.org/licenses/mit-license.php
+3) HtmlAgilityPack 1.4.9 – MSPL license published at: http://opensource.org/licenses/mit-license.php
+4) Newtonsoft.Json 7.0.1 – MIT license published at: https://raw.githubusercontent.com/JamesNK/Newtonsoft.Json/master/LICENSE.md
+5) RestSharp 105.2.3 – Apache License 2.0 license published at: https://github.com/restsharp/RestSharp/blob/master/LICENSE.txt
+6) SharpDX 2.6.3 – MIT license published at: http://sharpdx.org/License.txt
+7) SharpVectors 1.0 – BSD license published at: http://sharpvectors.codeplex.com/license
+8) ManagedOSVR – Apache License 2.0 license published at: http://www.apache.org/licenses/LICENSE-2.0
+
+Section 9
+1. This Licence rescinds and replaces all previous agreements made by the parties hereto.
+2. Any amendments to this Licence must be made in writing, otherwise being null and void. The Bivrost Developer may make Bivrost Desktop available under different licences or amend the provisions of the Licence for agreements entered into in the future.
+3. This Licence shall be governed by Polish law.
+4. Any disputes arising from this Licence shall be adjudicated in the court of venue for the Bivrost Developer, unless mandatory provisions of law provide otherwise.

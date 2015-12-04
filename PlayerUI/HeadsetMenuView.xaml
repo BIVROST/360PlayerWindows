@@ -10,10 +10,32 @@
     <Grid>
             <Rectangle Fill="#99000000" RadiusX="8" RadiusY="8" Stroke="#00a7f5" StrokeThickness="1.5" />
             <StackPanel>
-                <Button x:Name="SelectVive" Width="18" Height="18" Margin="8 8 8 4" IsEnabled="False">
+
+            <Button x:Name="SelectAuto" Width="18" Height="18" Margin="8 8 8 4">
+                <Button.Template>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Grid IsHitTestVisible="True" Background="Transparent" ToolTip="Autodetect VR headset">
+                            <svgc:SvgViewbox Name="Normal" Source="Graphics/search.svg" IsHitTestVisible="False"/>
+                            <svgc:SvgViewbox Name="Hover" Source="Graphics/search_blue.svg" Visibility="Hidden" IsHitTestVisible="False"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+                                <Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+                                <Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+
+            <Button x:Name="SelectVive" Width="18" Height="18" Margin="8 8 8 4" IsEnabled="False" Visibility="Collapsed">
                     <Button.Template>
                         <ControlTemplate TargetType="{x:Type Button}">
-                            <Grid IsHitTestVisible="True" Background="Transparent">
+                            <Grid IsHitTestVisible="True" Background="Transparent" ToolTip="Use HTC Vive">
                                 <svgc:SvgViewbox Name="Normal" Source="Graphics/htcvive.svg" IsHitTestVisible="False"/>
                                 <svgc:SvgViewbox Name="Hover" Source="Graphics/htcvive_blue.svg" Visibility="Hidden" IsHitTestVisible="False"/>
                             </Grid>
@@ -31,10 +53,10 @@
                     </Button.Template>
                 </Button>
 
-                <Button x:Name="SelectOSVR"  Width="18" Height="18" Margin="8 4" IsEnabled="False">
+                <Button x:Name="SelectOSVR"  Width="18" Height="18" Margin="8 4" >
                     <Button.Template>
                         <ControlTemplate TargetType="{x:Type Button}">
-                            <Grid IsHitTestVisible="True" Background="Transparent">
+							<Grid IsHitTestVisible="True" Background="Transparent" ToolTip="Use OSVR headset">
                                 <svgc:SvgViewbox Name="Normal" Source="Graphics/osvr.svg" IsHitTestVisible="False"/>
                                 <svgc:SvgViewbox Name="Hover" Source="Graphics/osvr_blue.svg" Visibility="Hidden" IsHitTestVisible="False"/>
                             </Grid>
@@ -52,10 +74,10 @@
                     </Button.Template>
                 </Button>
 
-                <Button x:Name="SelectRift"  Width="18" Height="18" Margin="8 4 8 8">
+                <Button x:Name="SelectRift"  Width="18" Height="18" Margin="8 4">
                     <Button.Template>
                         <ControlTemplate TargetType="{x:Type Button}">
-                            <Grid IsHitTestVisible="True" Background="Transparent">
+                            <Grid IsHitTestVisible="True" Background="Transparent" ToolTip="Use Oculus Rift">
                                 <svgc:SvgViewbox Name="Normal" Source="Graphics/oculusrift.svg" IsHitTestVisible="False"/>
                                 <svgc:SvgViewbox Name="Hover" Source="Graphics/oculusrift_blue.svg" Visibility="Hidden" IsHitTestVisible="False"/>
                             </Grid>
@@ -73,6 +95,27 @@
                     </Button.Template>
                 </Button>
 
-            </StackPanel>
+            <Button x:Name="SelectOff" Width="18" Height="18" Margin="8 4 8 8" >
+                <Button.Template>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Grid IsHitTestVisible="True" Background="Transparent" ToolTip="Disable headset playback">
+                            <svgc:SvgViewbox Name="Normal" Source="Graphics/power.svg" IsHitTestVisible="False"/>
+                            <svgc:SvgViewbox Name="Hover" Source="Graphics/power_blue.svg" Visibility="Hidden" IsHitTestVisible="False"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+                                <Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Normal" Property="Visibility" Value="Hidden"/>
+                                <Setter TargetName="Hover" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+
+        </StackPanel>
         </Grid>
 </UserControl>

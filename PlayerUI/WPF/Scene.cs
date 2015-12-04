@@ -1,19 +1,20 @@
 ﻿namespace PlayerUI
 {
-    using System;
-    using SharpDX;
-    //using SharpDX.D3DCompiler;
-    using SharpDX.Direct3D11;
-    using SharpDX.DXGI;
-    using Buffer = SharpDX.Direct3D11.Buffer;
-    using Device = SharpDX.Direct3D11.Device;
-    using System.Windows.Input;
-    using Tools;
-    using System.Linq;
-    using System.Collections.Generic;
-    using SharpDX.XInput;
+	using System;
+	using SharpDX;
+	//using SharpDX.D3DCompiler;
+	using SharpDX.Direct3D11;
+	using SharpDX.DXGI;
+	using Buffer = SharpDX.Direct3D11.Buffer;
+	using Device = SharpDX.Direct3D11.Device;
+	using System.Windows.Input;
+	using Tools;
+	using System.Linq;
+	using System.Collections.Generic;
+	using SharpDX.XInput;
 
-    public class Scene : IScene
+
+	public class Scene : IScene
     {
         //private class RefBool
         //{
@@ -59,6 +60,11 @@
 
         public Controller xpad;
         Dictionary<GamepadButtonFlags, bool> buttonStates = new Dictionary<GamepadButtonFlags, bool>();
+
+		private OSVR.ClientKit.ClientContext context;
+		private OSVR.ClientKit.DisplayConfig displayConfig;
+		private bool useOSVR = false;
+		private bool overrideManual = false;
 
         public Scene(Texture2D sharedTexture, MediaDecoder.ProjectionMode projection)
 		{
@@ -152,9 +158,25 @@
 
             SharpDX.RawInput.Device.MouseInput += (s, e) =>
             {
-                Console.WriteLine("Mouse " + e.X + " " + e.Y);
-            };          
-        }
+                //Console.WriteLine("Mouse " + e.X + " " + e.Y);
+            };
+
+			useOSVR = Logic.Instance.settings.UserOSVRTracking;
+			if(useOSVR)
+			{
+				OSVR.ClientKit.ClientContext.PreloadNativeLibraries();
+				context = new OSVR.ClientKit.ClientContext("com.bivrost360.desktopplayer");
+				displayConfig = context.GetDisplayConfig();
+				for (int retry = 0; retry < 5; retry++)
+					if (displayConfig == null)
+						displayConfig = context.GetDisplayConfig();
+				if (displayConfig == null) return;
+				do
+				{
+					context.update();
+				} while (!displayConfig.CheckDisplayStartup());
+			}
+		}
 
 		public void SetLook(System.Tuple<float, float,float> euler)
 		{
@@ -229,6 +251,8 @@
 
         void IScene.Update(TimeSpan sceneTime)
         {
+			
+
 			var currentFrameTime = (float)sceneTime.TotalMilliseconds * 0.001f;
 			if (lastFrameTime == 0) lastFrameTime = currentFrameTime;
 			deltaTime = currentFrameTime - lastFrameTime;
@@ -236,8 +260,17 @@
 
 			currentRotationQuaternion = Quaternion.Lerp(currentRotationQuaternion, targetRotationQuaternion, lerpSpeed * deltaTime);
 
-			basicEffect.View = Matrix.RotationQuaternion(currentRotationQuaternion);
-			//if(littlePlanet)
+			if (useOSVR && !overrideManual)
+			{
+				context.update();
+				var viewerPose = displayConfig.GetViewerPose(0);
+				Quaternion oq = new Quaternion(-(float)viewerPose.rotation.x, -(float)viewerPose.rotation.y, -(float)viewerPose.rotation.z, (float)viewerPose.rotation.w);
+				basicEffect.View = Matrix.RotationQuaternion(oq);
+			}
+			else {
+				basicEffect.View = Matrix.RotationQuaternion(currentRotationQuaternion);
+			}
+
 			currentOffset = Lerp(currentOffset, littlePlanet ? -3f : 0f, deltaTime * 3f);
             basicEffect.View *= Matrix.Translation(0, 0, currentOffset);
 
@@ -325,8 +358,17 @@
 					ResetFov();
 				}
 
-                
-
+				if (useOSVR) {
+					if(Keyboard.IsKeyDown(Key.T))
+					{
+						if(tUp)
+						{
+							overrideManual = !overrideManual;
+							tUp = false;
+						}
+					}
+					if (Keyboard.IsKeyUp(Key.T)) tUp = true;
+				}
 
                 if (projectionMode == MediaDecoder.ProjectionMode.Sphere)
 				{
@@ -343,8 +385,10 @@
 				}
 			}
 
-			primitive.Draw(basicEffect);
+			primitive?.Draw(basicEffect);
         }
+
+		private bool tUp = false;
 
 		private float Lerp(float value1, float value2, float amount)
 		{

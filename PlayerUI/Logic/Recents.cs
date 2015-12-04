@@ -20,9 +20,15 @@ namespace PlayerUI
 		{
 			try
 			{
-				File.WriteAllText("recents", JsonConvert.SerializeObject(recentFiles), Encoding.UTF8);
+				string dataFoler = Logic.LocalDataDirectory;//Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\BivrostPlayer";
+				if (!Directory.Exists(dataFoler))
+					Directory.CreateDirectory(dataFoler);
+				string recentConfig = dataFoler + "recents";
+				File.WriteAllText(recentConfig, JsonConvert.SerializeObject(recentFiles), Encoding.UTF8);
 			}
-			catch (Exception) { }
+			catch (Exception exc) {
+				Console.WriteLine("[EXC] " + exc.Message);
+			}
 		}
 
 		public static void Remove(string file)
@@ -33,20 +39,30 @@ namespace PlayerUI
 
 		public static void Load()
 		{
-			
-			if (File.Exists("recents"))
-			{
 				try
 				{
-					List<string> tempRecents = JsonConvert.DeserializeObject<List<string>>(File.ReadAllText("recents", Encoding.UTF8));
-					if (tempRecents != null)
+				string dataFoler = Logic.LocalDataDirectory;//Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\BivrostPlayer";
+					if (!Directory.Exists(dataFoler))
+						Directory.CreateDirectory(dataFoler);
+					string recentConfig = dataFoler + "recents";
+
+
+
+					if (File.Exists(recentConfig))
 					{
-						recentFiles.Clear();
-						recentFiles.AddRange(tempRecents);
+
+						List<string> tempRecents = JsonConvert.DeserializeObject<List<string>>(File.ReadAllText(recentConfig, Encoding.UTF8));
+						if (tempRecents != null)
+						{
+							recentFiles.Clear();
+							recentFiles.AddRange(tempRecents);
+						}
 					}
 				}
-				catch (Exception) { }
-			}
+				catch (Exception exc) {
+					Console.WriteLine("[EXC] " + exc.Message);
+				}
+			
 		}
 
 		public static void AddRecent(string file)

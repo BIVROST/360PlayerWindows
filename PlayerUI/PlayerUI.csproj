@@ -31,15 +31,16 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <InstallUrl>http://bivrost360.com/VBwii4uwo5/download/desktop/</InstallUrl>
+    <InstallUrl>http://download.bivrost360.com/player-desktop/</InstallUrl>
+    <UpdateUrl>http://download.bivrost360.com/player-desktop/</UpdateUrl>
     <TargetCulture>en</TargetCulture>
     <ProductName>Bivrost 360Player</ProductName>
     <PublisherName>BIVROST Sp z o.o.</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
-    <ApplicationRevision>74</ApplicationRevision>
+    <ApplicationRevision>128</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <UseApplicationTrust>false</UseApplicationTrust>
+    <UseApplicationTrust>true</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -115,16 +116,12 @@
       <HintPath>..\packages\Fleck.0.13.0.57\lib\net40\Fleck.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="GoogleAnalyticsTracker.Core, Version=4.1.2.0, Culture=neutral, PublicKeyToken=04ab204e84b117c0, processorArchitecture=MSIL">
-      <HintPath>..\packages\GoogleAnalyticsTracker.Core.4.1.2\lib\portable-net45+win+wp80\GoogleAnalyticsTracker.Core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="GoogleAnalyticsTracker.Simple, Version=4.1.2.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\GoogleAnalyticsTracker.Simple.4.1.2\lib\net45\GoogleAnalyticsTracker.Simple.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="HtmlAgilityPack, Version=1.4.9.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
       <HintPath>..\packages\HtmlAgilityPack.1.4.9\lib\Net45\HtmlAgilityPack.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Jint, Version=2.6.0.0, Culture=neutral, PublicKeyToken=2e92ba9c8d81157f, processorArchitecture=MSIL">
+      <HintPath>..\packages\Jint.2.7.1\lib\portable-net40+sl50+win+WindowsPhoneApp81+wp80\Jint.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
@@ -215,12 +212,10 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Net" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Net.Http.WebRequest" />
-    <Reference Include="System.Runtime">
-      <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5.2\Facades\System.Runtime.dll</HintPath>
-    </Reference>
     <Reference Include="System.Web" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -256,11 +251,19 @@
       <DependentUpon>BoolConfigItemView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ConfigUI\BoolConfigItemViewModel.cs" />
+    <Compile Include="ConfigUI\ButtonConfigItemView.xaml.cs">
+      <DependentUpon>ButtonConfigItemView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ConfigUI\ButtonConfigItemViewModel.cs" />
     <Compile Include="ConfigUI\ConfigItemBase.cs" />
     <Compile Include="ConfigUI\ConfigurationView.xaml.cs">
       <DependentUpon>ConfigurationView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ConfigUI\ConfigurationViewModel.cs" />
+    <Compile Include="ConfigUI\EnumConfigItemView.xaml.cs">
+      <DependentUpon>EnumConfigItemView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ConfigUI\EnumConfigItemViewModel.cs" />
     <Compile Include="ConfigUI\PathConfigItemView.xaml.cs">
       <DependentUpon>PathConfigItemView.xaml</DependentUpon>
     </Compile>
@@ -294,13 +297,11 @@
     <Compile Include="HeadsetMenuViewModel.cs" />
     <Compile Include="Logger\Logger.cs" />
     <Compile Include="Logic\BrowserPluginManagement.cs" />
-    <Compile Include="Logic\GoogleTracker.cs" />
     <Compile Include="Logic\Logic.cs" />
     <Compile Include="Logic\Protocol.cs" />
     <Compile Include="Logic\ProtocolHandler.cs" />
     <Compile Include="Logic\Recents.cs" />
     <Compile Include="Logic\Settings.cs" />
-    <Compile Include="Logic\Stats.cs" />
     <Compile Include="Logic\Updater.cs" />
     <Compile Include="NotificationCenterView.xaml.cs">
       <DependentUpon>NotificationCenterView.xaml</DependentUpon>
@@ -315,6 +316,8 @@
     <Compile Include="Oculus\OculusPlaybackUI.cs" />
     <Compile Include="Oculus\OculusUIDebug.cs" />
     <Compile Include="Oculus\SharpDXHelpers.cs" />
+    <Compile Include="OSVRKit\OSVRPlayback.cs" />
+    <Compile Include="OSVRKit\OSVRPlaybackUI.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="SettingsWindowView.xaml.cs">
       <DependentUpon>SettingsWindowView.xaml</DependentUpon>
@@ -372,7 +375,15 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="ConfigUI\ButtonConfigItemView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="ConfigUI\ConfigurationView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ConfigUI\EnumConfigItemView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -478,6 +489,60 @@
     <Resource Include="logo.png" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Graphics\power_blue.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Graphics\power.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Graphics\search_blue.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Graphics\search.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="x86\msvcp120.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="x86\msvcr120.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="x86\osvr-ver.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="x86\osvrClient.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="x86\osvrClientKit.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="x86\osvrCommon.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="x86\osvrConnection.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="x86\osvrJointClientKit.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="x86\osvrPluginHost.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="x86\osvrPluginKit.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="x86\osvrServer.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="x86\osvrUSBSerial.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="x86\osvrUtil.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="x86\osvrVRPNServer.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Resource Include="EULA.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
@@ -664,6 +729,48 @@
     <Content Include="x64\DllOvr.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="x64\msvcp120.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="x64\msvcr120.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="x64\osvr-ver.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="x64\osvrClient.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="x64\osvrClientKit.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="x64\osvrCommon.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="x64\osvrConnection.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="x64\osvrJointClientKit.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="x64\osvrPluginHost.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="x64\osvrPluginKit.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="x64\osvrServer.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="x64\osvrUSBSerial.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="x64\osvrUtil.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="x64\osvrVRPNServer.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="x86\DllOvr.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -680,18 +787,15 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup>
-    <FileAssociation Include=".mp4">
-      <Visible>False</Visible>
-      <Description>mp4 movie</Description>
-      <Progid>Video</Progid>
-      <DefaultIcon>Graphics\fileassoc.ico</DefaultIcon>
-    </FileAssociation>
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <ProjectReference Include="..\BivrostAnalytics\BivrostAnalytics.csproj">
       <Project>{30c06ae1-7390-488d-bd15-8ee43ec76308}</Project>
       <Name>BivrostAnalytics</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\Gawson\Documents\GitHub\Managed-OSVR\ClientKit\ClientKit.csproj">
+      <Project>{9ab9f53d-1f42-4045-8dfc-9d389d44bb35}</Project>
+      <Name>ClientKit</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
@@ -713,4 +817,7 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <Target Name="BeforePublish">
+    <Exec Command="&quot;C:\Program Files (x86)\Microsoft SDKs\Windows\v7.1A\bin\signtool.exe&quot; sign /f &quot;$(ProjectDir)bivrost-codesign.pfx&quot; /p &quot;ES/FEt@.T2z:^&gt;54&quot; /v &quot;$(ProjectDir)obj\$(ConfigurationName)\$(TargetFileName)&quot;" />
+  </Target>
 </Project>

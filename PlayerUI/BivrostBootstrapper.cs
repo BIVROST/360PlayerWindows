@@ -28,8 +28,26 @@ namespace PlayerUI
 
 		protected override void OnStartup(object sender, System.Windows.StartupEventArgs e)
 		{
-			SetAddRemoveProgramsIcon();
-			AssociateFileExtensions();
+			System.Windows.Forms.Application.EnableVisualStyles();
+
+			if (ApplicationDeployment.IsNetworkDeployed)
+			{
+				Logic.LocalDataDirectory = ApplicationDeployment.CurrentDeployment.DataDirectory + "\\";
+
+				SetAddRemoveProgramsIcon();
+				AssociateFileExtensions();
+			} else
+			{
+				{
+					string path = (new System.Uri(Assembly.GetExecutingAssembly().CodeBase)).AbsolutePath;
+					Logic.LocalDataDirectory = Path.GetDirectoryName(path) + "\\";
+				}
+
+			}
+
+
+			
+			
 
 			string[] args = Environment.GetCommandLineArgs();
 			
@@ -60,6 +78,14 @@ namespace PlayerUI
 			}
 
 
+			try
+			{
+				mutex.WaitOne(TimeSpan.Zero, true);
+			}
+			catch(AbandonedMutexException exc)
+			{
+				mutex.ReleaseMutex();
+			}
 
 			if (mutex.WaitOne(TimeSpan.Zero, true))
 			{
@@ -117,6 +143,19 @@ namespace PlayerUI
 
 		protected override void OnExit(object sender, EventArgs e)
 		{
+			try
+			{
+				if (!string.IsNullOrWhiteSpace(Logic.LocalDataDirectory))
+				{
+					foreach (string s in Directory.EnumerateFiles(Logic.LocalDataDirectory))
+					{
+						//MessageBox.Show(s);
+						File.Copy(s, Path.GetFileName(s), true);
+					}
+				}
+			}
+			catch (Exception exc) { }
+
 			base.OnExit(sender, e);
 			if(ownMutex)
 				mutex.ReleaseMutex();
@@ -176,6 +215,7 @@ namespace PlayerUI
 				string publisherName = GetPublisher("Bivrost 360Player");
 				string apppath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Programs), publisherName, "Bivrost 360Player.appref-ms");
 				RegistryKey myClasses = Registry.CurrentUser.OpenSubKey(@"Software\Classes", true);
+				if(myClasses == null) myClasses = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Classes", true);
 				RegistryKey bivrostProtocolKey = myClasses.OpenSubKey("bivrost");
 				if (bivrostProtocolKey == null)
 					myClasses.CreateSubKey(@"bivrost\shell\open\command");

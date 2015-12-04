@@ -322,8 +322,23 @@ namespace PlayerUI
             //}
             //Stop();
             
-            //System.Diagnostics.Process.Start("http://bivrost360.com/heatmap-viewer/");
-            
+            //System.Diagnostics.Process.Start("http://bivrost360.com/heatmap-viewer/");   
+        }
+
+		public void NormalProjection()
+		{
+			if (this.DXCanvas.Scene != null)
+			{
+				((Scene)this.DXCanvas.Scene).RectlinearProjection();
+			}
+		}
+
+		public void LittlePlanetProjection()
+		{
+			if(this.DXCanvas.Scene != null)
+			{
+				((Scene)this.DXCanvas.Scene).StereographicProjection();
+			}
         }
 
         public void SeekRelative(int v)

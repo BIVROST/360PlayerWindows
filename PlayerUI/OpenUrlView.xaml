@@ -14,5 +14,10 @@
 		<TextBox x:Name="Url"  Text="{Binding Url, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" VerticalAlignment="Center" Margin="5" VerticalContentAlignment="Center" Height="28" 
 				 cal:Message.Attach="[Shortcut Enter] = [Action Open]" />
 		<Button x:Name="Open" Content="Open" Grid.Column="2" VerticalAlignment="Center" Margin="5" Height="28"/>
+
+        <Grid Grid.ColumnSpan="3" Background="White" Visibility="Collapsed" x:Name="progressBar">
+			<ProgressBar Margin="8,8" IsIndeterminate="True"/>
+		</Grid>
+		
     </Grid>
 </Window>

@@ -3,10 +3,13 @@ using Newtonsoft.Json;
 using RestSharp;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace PlayerUI.Tools
 {
@@ -121,8 +124,186 @@ namespace PlayerUI.Tools
 
 		public static string ParseYoutube(Uri uri)
 		{
-			return "";
+            try
+            {
+				#region experimental code
+				/*
+                HtmlDocument document = DownloadDocument(uri);
+                var html = document.DocumentNode.InnerHtml;
+
+                var match = Regex.Match(html, "(?<=ytplayer.config = )(.*)(?=;ytplayer.load)");
+                var g = match.Groups[1].Value;
+
+                var json = JsonConvert.DeserializeObject(g);
+
+                Newtonsoft.Json.Linq.JValue a = (Newtonsoft.Json.Linq.JValue)(json as Newtonsoft.Json.Linq.JObject)["args"]["url_encoded_fmt_stream_map"];
+                string fmt = a.Value.ToString();
+                string[] fmtTab = fmt.Split(',');
+
+                string hdline = fmtTab.Where(l => l.Contains("quality=hd720"))?.First();
+                string[] hdconfig = hdline.Split('&');
+                Dictionary<string, string> config = hdconfig.ToDictionary(t => t.Split('=')[0], t => t.Split('=')[1]);
+                string url = HttpUtility.UrlDecode(config["url"]);
+                //if (config.ContainsKey("s"))
+                //    url += "&signature=" + config["s"];
+
+                Uri u = new Uri(url, UriKind.Absolute);
+                System.Collections.Specialized.NameValueCollection query = HttpUtility.ParseQueryString(u.Query);
+                string sparams = HttpUtility.UrlDecode(query["sparams"]);
+
+                sparams.Split(',').ToList().ForEach(sp =>
+                {
+                    Console.WriteLine("PARAM: " + sp + " => " + (query.AllKeys.Contains(sp) ? "OK" : "--"));
+                });
+
+                var node = document.DocumentNode.ChildNodes["html"].ChildNodes["head"].ChildNodes.First(n => {
+                    return n.Attributes.Any(attr => attr.Name == "name" && attr.Value == "player/base");
+                });
+                string src = node.Attributes["src"].Value;
+                string script;
+
+                {
+                    //RestClient client = new RestClient("https:" + src);
+                    RestClient client = new RestClient("http://bivrost360.com/js-test.js");
+                    IRestRequest request = new RestRequest();                    
+                    IRestResponse response = client.Execute(request);
+                    if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                    {
+                        script = response.Content;
+
+                        Jint.Engine jint = new Jint.Engine();
+                        jint.Execute(script);
+
+
+                        var value = jint.Invoke("cr", config["s"]);
+                        //int it = 1;
+                        //scriptLines.ToList().ForEach(sl =>
+                        //{
+                        //    try {
+                        //        jint.Execute(sl);
+                        //    } catch(Exception jintExc)
+                        //    {
+                        //        Console.WriteLine("[JINT EXC] " + jintExc.Message);
+                        //    }
+                        //    it++;
+                        //});
+                        url += "&signature=" + value.ToString();
+                        ;
+                    }
+                }
+                */
+				#endregion
+
+				string dataFoler = Logic.LocalDataDirectory; // Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+				//if (!Directory.Exists(dataFoler + "\\BivrostPlayer"))
+				//	Directory.CreateDirectory(dataFoler + "\\BivrostPlayer");
+				string ytdl = dataFoler + "youtube-dl.exe";
+
+				if (!File.Exists(ytdl))
+				{
+					YoutubeUpdate();	
+				} else if(!IsYoutubeUpToDate())
+				{
+					YoutubeUpdate();
+				}
+
+				int code;
+				string url = YoutubeDL("-f 22 -g " + uri.AbsoluteUri, out code);
+				return url;
+            }
+            catch (Exception exc) {
+                Console.WriteLine("[EXC] " + exc.Message);
+                return "";
+            }
 		}
+
+
+		private static bool IsYoutubeUpToDate()
+		{
+			string latestVersion = null;
+			RestClient client = new RestClient("http://yt-dl.org/latest/version");
+			IRestRequest request = new RestRequest();
+			IRestResponse response = client.Execute(request);
+			if (response.StatusCode == System.Net.HttpStatusCode.OK)
+			{
+				latestVersion = response.Content.Trim();
+			}
+
+			if(!string.IsNullOrWhiteSpace(latestVersion))
+			{
+				int code;
+				string version = YoutubeDL("--version", out code);
+				if (version == latestVersion) return true;
+			}
+
+			return false;
+		}
+
+		private static void YoutubeUpdate()
+		{
+			try {
+				string dataFoler = Logic.LocalDataDirectory; //Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+				//if (!Directory.Exists(dataFoler + "\\BivrostPlayer"))
+				//	Directory.CreateDirectory(dataFoler + "\\BivrostPlayer");
+				string ytdl = dataFoler + "youtube-dl.exe";
+
+				if (File.Exists(ytdl))
+				{
+					File.Delete(ytdl);
+				}
+
+				RestClient client = new RestClient("https://yt-dl.org/latest/youtube-dl.exe");
+				IRestRequest request = new RestRequest();
+				IRestResponse response = client.Execute(request);
+				if (response.StatusCode == System.Net.HttpStatusCode.OK)
+				{
+					File.WriteAllBytes(ytdl, response.RawBytes);
+				}
+			} catch (Exception exc) {
+				return;
+			};
+		}
+
+		private static string YoutubeDL(string arguments, out int exitCode)
+		{
+			try
+			{		
+				string dataFoler = Logic.LocalDataDirectory; //Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+				//if (!Directory.Exists(dataFoler + "\\BivrostPlayer"))
+				//	Directory.CreateDirectory(dataFoler + "\\BivrostPlayer");
+				string ytdl = dataFoler + "youtube-dl.exe";
+
+				Process process = new Process();
+				ProcessStartInfo start = new ProcessStartInfo(ytdl);
+				start.Arguments = arguments;
+				start.CreateNoWindow = true;
+				start.RedirectStandardOutput = true;
+				start.RedirectStandardError = true;
+				start.UseShellExecute = false;
+
+				process.StartInfo = start;
+				StringBuilder output = new StringBuilder();
+				process.OutputDataReceived += (sender, e) => { output.AppendLine(e.Data); };
+				process.ErrorDataReceived += (sender, e) => { output.AppendLine(e.Data); };
+
+				process.Start();
+
+				process.BeginOutputReadLine();
+				process.BeginErrorReadLine();
+
+				process.WaitForExit();
+				exitCode = process.ExitCode;
+
+				return output.ToString().Trim();
+
+			} catch(Exception exc)
+			{
+				exitCode = -1;
+				return "";
+			}
+        }
+
+
 
 		public static string ParseVrideo(Uri uri)
 		{
@@ -229,6 +410,18 @@ namespace PlayerUI.Tools
 				HtmlDocument document = DownloadDocument(uri);
 
 				var node = document.DocumentNode.Descendants().Where(n => n.Name == "a" && n.GetAttributeValue("class", "").Contains("download")).First().GetAttributeValue("href", "");
+
+				return node;
+			}
+			catch (Exception) { }
+
+			try
+			{
+				HtmlDocument document = DownloadDocument(uri);
+
+				var node = document.DocumentNode.Descendants()
+					.Where(n => n.Name == "meta" && n.GetAttributeValue("property", "").Contains("og:video") && n.GetAttributeValue("content","").EndsWith(".mp4"))
+					.First().GetAttributeValue("content", "");
 
 				return node;
 			}

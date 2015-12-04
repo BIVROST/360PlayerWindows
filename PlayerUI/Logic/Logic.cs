@@ -11,8 +11,25 @@ using System.Windows;
 
 namespace PlayerUI
 {
+	public enum HeadsetMode
+	{
+		Auto,
+		OSVR,
+		Oculus,
+		Disable
+	}
+
+	public enum ScreenSelection
+	{
+		One,
+		Two,
+		Three
+	}
+
 	public class Logic
 	{
+		public static string LocalDataDirectory = "";// Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\BivrostPlayer";
+
 		private static Logic _instance = null;
 		public static Logic Instance {
 			get {
@@ -40,20 +57,21 @@ namespace PlayerUI
 			currentDomain.UnhandledException += (sender, e) =>
 			{
 				Console.WriteLine("Exception supressed. Success.");
-				//MessageBox.Show("Exception supressed. Success. ");
-            };
-
+            };			
 			settings = new Settings();
 			
-			// SETTINGS HACK
-			//if(Properties.Settings.Default.InstallId == new Guid())
-			//{
-				Properties.Settings.Default.InstallId = Guid.NewGuid();
-				Properties.Settings.Default.Save();
-			//} else
-			//{
-				Console.WriteLine("InstallId == " + Properties.Settings.Default.InstallId);
-			//}
+
+			ConfigureSettingsActions();
+
+			if (settings.InstallId == Guid.Empty)
+			{
+				settings.InstallId = Guid.NewGuid();
+				settings.Save();
+			}
+			else
+			{
+				Console.WriteLine("InstallId == " + settings.InstallId);
+			}
 
 			var OsPlatform = Environment.OSVersion.Platform.ToString();
 			var OsVersion = Environment.OSVersion.Version.ToString();
@@ -64,7 +82,7 @@ namespace PlayerUI
 			stats = new Tracker()
 			{
 				TrackingId = "UA-68212464-1",
-				DeviceId = Properties.Settings.Default.InstallId.ToString(),
+				DeviceId = settings.InstallId.ToString(),
 				UserAgentString = $"BivrostAnalytics/1.0 ({OsPlatform}; {OsVersion}; {OsVersionString}; {x64}; CPU-Cores:{cpu}) {Assembly.GetEntryAssembly().GetName().Name}/{Assembly.GetEntryAssembly().GetName().Version}"
 			};
 
@@ -136,30 +154,105 @@ namespace PlayerUI
             });
 		}
 
-        public void CheckForBrowsers()
-        {
-            return;
+		private void ConfigureSettingsActions()
+		{
+			settings.InstallPlugins = () =>
+			{
+				settings.BrowserPluginQuestionShown = false;
+				CheckForBrowsers();
+			};
 
-            Task.Factory.StartNew(() =>
-            {
-                if(!Properties.Settings.Default.browserPluginQuestionShown)
-                {
-                    var result = MessageBox.Show("Install browser integration extensions?", "Browser addons", MessageBoxButton.YesNo);
-                    if(result == MessageBoxResult.Yes)
-                    {
-                        if(BrowserPluginManagement.CheckFirefox())
-                        {
-                            BrowserPluginManagement.InstallFirefoxPlugin();
-                        }
-                        if (BrowserPluginManagement.CheckChrome())
-                        {
-                            BrowserPluginManagement.InstallChromePlugin();
-                        }
-                        Properties.Settings.Default.browserPluginQuestionShown = true;
-                        Properties.Settings.Default.Save();
-                    }
-                }
-            });
-        }
+			settings.ResetInstallId = () =>
+			{
+				var result = System.Windows.Forms.MessageBox.Show("Do you really want to reset installation ID?", "Installation ID", System.Windows.Forms.MessageBoxButtons.YesNo);
+				if(result ==  System.Windows.Forms.DialogResult.Yes)
+				{
+					settings.InstallId = Guid.NewGuid();
+					settings.Save();
+					System.Windows.Forms.Application.Restart();
+					System.Windows.Application.Current.Shutdown();
+				}
+			};
+
+			settings.ResetConfiguration = () =>
+			{
+				var result = System.Windows.Forms.MessageBox.Show("Reset configuration to default?", "Configuration", System.Windows.Forms.MessageBoxButtons.YesNo);
+				if (result ==  System.Windows.Forms.DialogResult.Yes)
+				{
+					try
+					{
+						System.IO.File.Delete(settings.SettingsFile);
+						System.Windows.Forms.Application.Restart();
+						System.Windows.Application.Current.Shutdown();
+					}
+					catch (Exception exc) { }					
+				}
+			};
+		}
+
+		public void CheckForBrowsers()
+		{
+			if (string.IsNullOrWhiteSpace(Logic.LocalDataDirectory)) return;
+
+			if (!settings.BrowserPluginQuestionShown)
+			{
+				
+
+				Task.Factory.StartNew(() =>
+				{
+					var result = System.Windows.Forms.MessageBox.Show("Install browser integration extensions?", "Browser addons", System.Windows.Forms.MessageBoxButtons.YesNoCancel);
+
+					if (result == System.Windows.Forms.DialogResult.Yes)
+					{
+					
+						try {
+							if (BrowserPluginManagement.CheckFirefox())
+							{
+								BrowserPluginManagement.InstallFirefoxPlugin();
+							}
+						}
+						catch (Exception exc) { }
+
+						try
+						{
+							if (BrowserPluginManagement.CheckChrome())
+							{
+								BrowserPluginManagement.InstallChromePlugin();
+							}
+						}
+						catch (Exception exc) {  }
+
+						settings.BrowserPluginAccepted = true;
+						settings.BrowserPluginQuestionShown = true;
+						
+						settings.Save();
+						
+					}
+					else if (result == System.Windows.Forms.DialogResult.No)
+					{
+						settings.BrowserPluginQuestionShown = true;
+						settings.Save();
+					}
+				});
+			}
+			else
+			{
+				Task.Factory.StartNew(() =>
+				{
+					if (settings.BrowserPluginAccepted)
+					{
+						if (BrowserPluginManagement.CheckFirefox())
+						{
+							BrowserPluginManagement.InstallFirefoxPlugin();
+						}
+						if (BrowserPluginManagement.CheckChrome())
+						{
+							BrowserPluginManagement.InstallChromePlugin();
+						}
+					}
+				});
+			}				
+		}
+
 	}
 }

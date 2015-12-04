@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PlayerUI.Oculus
+namespace PlayerUI
 {
 	public static class SharpDXHelpers
 	{
@@ -44,10 +44,16 @@ namespace PlayerUI.Oculus
 		/// <summary>
 		/// Converts an ovrQuatf to a SharpDX Quaternion.
 		/// </summary>
-		public static Quaternion ToQuaternion(OVR.Quaternionf ovrQuatf)
+		public static SharpDX.Quaternion ToQuaternion(OVR.Quaternionf ovrQuatf)
 		{
-			return new Quaternion(ovrQuatf.X, ovrQuatf.Y, ovrQuatf.Z, ovrQuatf.W);
+			return new SharpDX.Quaternion(ovrQuatf.X, ovrQuatf.Y, ovrQuatf.Z, ovrQuatf.W);
 		}
+
+
+        public static SharpDX.Quaternion ToQuaternion(OSVR.ClientKit.Quaternion osvrQuatf)
+        {
+            return new SharpDX.Quaternion((float)osvrQuatf.x, (float)osvrQuatf.y, (float)osvrQuatf.z, (float)osvrQuatf.w);
+        }
 
 		/// <summary>
 		/// Creates a Direct3D texture description, based on the SharpDX texture description.

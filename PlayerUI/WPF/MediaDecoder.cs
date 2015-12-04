@@ -330,6 +330,15 @@ namespace PlayerUI
 			return VideoMode.Autodetect;
 		}
 
+
+		private MediaSource CreateMediaSource(string sURL)
+		{
+			SourceResolver sourceResolver = new SourceResolver();
+			ComObject comObject;
+			comObject = sourceResolver.CreateObjectFromURL(sURL, SourceResolverFlags.MediaSource | SourceResolverFlags.ContentDoesNotHaveToMatchExtensionOrMimeType);
+			return comObject.QueryInterface<MediaSource>();
+		}
+
 		public void Play()
 		{
 			lock(criticalSection)
@@ -345,7 +354,7 @@ namespace PlayerUI
 				if (hasVideo)
 				{
 					_mediaEngine.GetNativeVideoSize(out w, out h);
-
+					
 
 					float videoAspect = ((float)w) / ((float)h);
 					_stereoVideo = videoAspect < 1.5;
@@ -600,3 +609,4 @@ namespace PlayerUI
 
 	}
 }
+

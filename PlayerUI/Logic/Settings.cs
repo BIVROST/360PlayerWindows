@@ -13,16 +13,21 @@ namespace PlayerUI
 	{
 		#region settings management
 		private string _settingsFile = "";
-		private string SettingsFile
+		[JsonIgnore]
+		public string SettingsFile
 		{
 			get { return _settingsFile; }
-			set { _settingsFile = value; }
+			private set { _settingsFile = value; }
 		}
 
 		public Settings(string configFile = "")
 		{
 			if (string.IsNullOrWhiteSpace(configFile))
-				configFile = System.Windows.Forms.Application.StartupPath + "settings.conf";
+			{
+				configFile = Logic.LocalDataDirectory + "settings.conf"; //Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\BivrostPlayer\\settings.conf";
+				//if (!Directory.Exists(Path.GetDirectoryName(configFile)))
+				//	Directory.CreateDirectory(Path.GetDirectoryName(configFile));
+			}
 			SettingsFile = configFile;
 			Load();
 		}
@@ -46,6 +51,12 @@ namespace PlayerUI
 		}
 		#endregion
 
+
+		public bool BrowserPluginQuestionShown { get; set; } = false;
+		public bool BrowserPluginAccepted { get; set; } = false;
+		public Guid InstallId { get; set; } = Guid.Empty;
+
+
 		public bool EnableRemoteServer { get; set; } = false;
 		public bool EventMode { get; set; } = false;		
 		public string EventModeSingleFile { get; set; } = "";		
@@ -58,15 +69,43 @@ namespace PlayerUI
 		public bool AutoPlay { get; set; } = true;
 		public bool AutoLoad { get; set; } = true;
 
-		[SettingsProperty("Start in fullscreen", ConfigItemType.Bool)]
+		//[SettingsProperty("Start in fullscreen", ConfigItemType.Bool)]
 		public bool StartInFullScreen { get; set; } = false;
 
-		[SettingsProperty("Use mouse to look around when Oculus Rift connected", ConfigItemType.Bool)]
+		//[SettingsProperty("Use mouse to look around when Oculus Rift connected", ConfigItemType.Bool)]
 		public bool UseMouseLookWithOculus { get; set; } = true;
 
-		[SettingsProperty("Use Oculus Rift if available", ConfigItemType.Bool)]
+		//[SettingsProperty("Use Oculus Rift if available", ConfigItemType.Bool)]
 		public bool UseOculusWhenConnected { get; set; } = true;
 
+		[SettingsProperty("Default VR headset mode", ConfigItemType.Enum)]
+		public HeadsetMode HeadsetUsage { get; set; } = HeadsetMode.Auto;
+		[SettingsProperty("OSVR screen number", ConfigItemType.Enum)]
+		public ScreenSelection OSVRScreen { get; set; } = ScreenSelection.Two;
 
+		[JsonIgnore]
+		[SettingsAdvancedProperty("Reset Analytics ID", ConfigItemType.Action, Caption = "Reset ID")]
+		public System.Action ResetInstallId { get; set; } = () => { };
+
+		[JsonIgnore]
+		[SettingsAdvancedProperty("Reset player configuration", ConfigItemType.Action, Caption = "Reset")]
+		public System.Action ResetConfiguration { get; set; } = () => { };
+
+		[JsonIgnore]
+		[SettingsProperty("Install browsers plugins", ConfigItemType.Action, Caption = "Install plugins")]
+		public System.Action InstallPlugins { get; set; } = () => { };
+
+		[SettingsAdvancedProperty("User OSVR tracking in window", ConfigItemType.Bool)]
+		public bool UserOSVRTracking { get; set; } = false;
+		[SettingsAdvancedProperty("Merge manual and headset input", ConfigItemType.Bool)]
+		public bool MergeInputs { get; set; } = false;
+
+	}
+
+	public enum TestEnum
+	{
+		Raz,
+		Dwa,
+		Trzy
 	}
 }

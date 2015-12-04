@@ -41,6 +41,7 @@ namespace PlayerUI
 		public string VideoLength { get; set; }
 		public string CurrentPosition { get; set; }
 		public string VideoTime { get; set; }
+		public HeadsetMode HeadsetUsage { get; set; }
         
 		public bool IsPlaying { get { return _mediaDecoder.IsPlaying; }	}
 		public bool IsPaused { get; set; }
@@ -148,7 +149,8 @@ namespace PlayerUI
 					if (!lockSlider)
 					{
 						OculusPlayback.UpdateTime((float)time);
-						CurrentPosition = (new TimeSpan(0, 0, (int)Math.Floor(time))).ToString();
+                        OSVRKit.OSVRPlayback.UpdateTime((float)time);
+                        CurrentPosition = (new TimeSpan(0, 0, (int)Math.Floor(time))).ToString();
 						_timeValue = time;
 						NotifyOfPropertyChange(() => TimeValue);
 					}
@@ -202,13 +204,31 @@ namespace PlayerUI
 			};
 
 			HeadsetMenu = new HeadsetMenuViewModel();
+			HeadsetMenu.OnAuto += () => Task.Factory.StartNew(() =>
+			{
+				Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Automatic headset detection selected.")));
+				this.HeadsetUsage = HeadsetMode.Auto;
+			});
 			HeadsetMenu.OnRift += () => Task.Factory.StartNew(() =>
 			{
-				if (OculusPlayback.IsOculusPresent())
-					Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Automatic Oculus Rift playback selected.")));
-				else
-					Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Oculus Rift not detected.")));
+				Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Oculus Rift playback selected.")));
+				this.HeadsetUsage = HeadsetMode.Oculus;
 			});
+			HeadsetMenu.OnOSVR += () => Task.Factory.StartNew(() =>
+			{
+				Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("OSVR playback selected.")));
+				this.HeadsetUsage = HeadsetMode.OSVR;
+			});
+			HeadsetMenu.OnDisable += () => Task.Factory.StartNew(() =>
+			{
+				Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Headset playback disabled.")));
+				this.HeadsetUsage = HeadsetMode.Disable;
+			});
+
+
+
+			this.HeadsetUsage = Logic.Instance.settings.HeadsetUsage;
+			
 
 			Logic.Instance.OnUpdateAvailable += () => Execute.OnUIThreadAsync(() =>
 			{
@@ -249,7 +269,7 @@ namespace PlayerUI
 
 		public void BringToFront()
 		{
-			playerWindow.Activate();
+			Execute.OnUIThreadAsync(() => playerWindow.Activate());
 
 			string clipboardText = Clipboard.GetText();
 			Console.WriteLine(clipboardText);
@@ -314,13 +334,16 @@ namespace PlayerUI
                 //}));
             }
 
-            Task.Factory.StartNew(() => {
+			//FileFromProtocol = @"bivrost:https://www.youtube.com/watch?v=edcJ_JNeyhg";
+
+			Task.Factory.StartNew(() => {
                 if (!string.IsNullOrWhiteSpace(FileFromProtocol))
                 {
                     try
                     {
                         var protocol = Protocol.Parse(FileFromProtocol);
-                        switch (protocol.stereoscopy)
+
+						switch (protocol.stereoscopy)
                         {
                             case Protocol.Stereoscopy.autodetect: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.Autodetect; break;
                             case Protocol.Stereoscopy.mono: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.Mono; break;
@@ -336,13 +359,19 @@ namespace PlayerUI
                         });
                         if (string.IsNullOrWhiteSpace(videoUrl))
                             videoUrl = protocol.urls[0];
-                        OpenUrlFrom(videoUrl);
+
+						OpenUrlFrom(videoUrl);
                     }
                     catch (Exception) { }
                 }
             });
-            
-            
+
+            OSVRKit.OSVRPlayback.OnGotFocus += () => Task.Factory.StartNew(() => {
+                Execute.OnUIThreadAsync(() =>
+                {
+                    shellView.Activate();
+                });
+            }); 
 
 			
 
@@ -590,19 +619,46 @@ namespace PlayerUI
 
 					Task.Factory.StartNew(() =>
 					{
-						if (OculusPlayback.IsOculusPresent())
-						{
+                        while(OculusPlayback.Lock || OSVRKit.OSVRPlayback.Lock)
+                        {
+                            Thread.Sleep(50);
+                        }
 
-							OculusPlayback.textureL = _mediaDecoder.TextureL;
-							OculusPlayback.textureR = _mediaDecoder.TextureR;
-							OculusPlayback._stereoVideo = _mediaDecoder.IsStereoRendered;
-							OculusPlayback._projection = _mediaDecoder.Projection;
-							OculusPlayback.Configure(SelectedFileNameLabel, (float)_mediaDecoder.Duration);
-							OculusPlayback.Start();
-						}
-						else
+						if (this.HeadsetUsage == HeadsetMode.Auto || this.HeadsetUsage == HeadsetMode.Oculus)
 						{
-							Console.WriteLine("No Oculus connected");
+							if (OculusPlayback.IsOculusPresent())
+							{
+								Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Oculus Rift detected. Starting VR playback...")));
+								OculusPlayback.textureL = _mediaDecoder.TextureL;
+								OculusPlayback.textureR = _mediaDecoder.TextureR;
+								OculusPlayback._stereoVideo = _mediaDecoder.IsStereoRendered;
+								OculusPlayback._projection = _mediaDecoder.Projection;
+								OculusPlayback.Configure(SelectedFileNameLabel, (float)_mediaDecoder.Duration);
+								OculusPlayback.Start();
+							}
+							else
+							{
+								Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Oculus Rift not detected.")));
+								Console.WriteLine("No Oculus connected");
+							}
+						}
+
+						if (this.HeadsetUsage == HeadsetMode.Auto || this.HeadsetUsage == HeadsetMode.OSVR)
+						{
+							if (OSVRKit.OSVRPlayback.IsOculusPresent())
+							{
+								Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("OSVR detected. Starting VR playback...")));
+								OSVRKit.OSVRPlayback.textureL = _mediaDecoder.TextureL;
+								OSVRKit.OSVRPlayback.textureR = _mediaDecoder.TextureR;
+								OSVRKit.OSVRPlayback._stereoVideo = _mediaDecoder.IsStereoRendered;
+								OSVRKit.OSVRPlayback._projection = _mediaDecoder.Projection;
+								OSVRKit.OSVRPlayback.Configure(SelectedFileNameLabel, (float)_mediaDecoder.Duration);
+								OSVRKit.OSVRPlayback.Start();
+							} else
+							{
+								Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("OSVR not detected.")));
+								Console.WriteLine("No OSVR connected");
+							}
 						}
 					});				
 
@@ -723,6 +779,7 @@ namespace PlayerUI
             });
             			
 			OculusPlayback.Pause();
+            OSVRKit.OSVRPlayback.Pause();
 		}
 
 		public void UnPause()
@@ -736,7 +793,8 @@ namespace PlayerUI
 			NotifyOfPropertyChange(() => CanPlay);
 			AnimateIndicator(shellView.PlayIndicator);
 			OculusPlayback.UnPause();
-		}
+            OSVRKit.OSVRPlayback.UnPause();
+        }
 
 		public void OpenFile()
 		{
@@ -843,6 +901,7 @@ namespace PlayerUI
 							it--;
 						}
 					}
+					_mediaDecoder.Projection = MediaDecoder.ProjectionMode.Sphere;
 					IsFileSelected = true;
 					SelectedFileName = file;
 					Execute.OnUIThread(() => LoadMedia());
@@ -866,8 +925,11 @@ namespace PlayerUI
             ShowStartupUI();
 
 			Console.WriteLine("STOP STOP STOP");
-			OculusPlayback.Stop();
-			Execute.OnUIThread(() =>
+
+            OculusPlayback.Stop();
+            OSVRKit.OSVRPlayback.Stop();
+
+            Execute.OnUIThread(() =>
 			{
 				shellView.TopBar.Visibility = Visibility.Hidden;
 				this.DXCanvas.Visibility = Visibility.Hidden;

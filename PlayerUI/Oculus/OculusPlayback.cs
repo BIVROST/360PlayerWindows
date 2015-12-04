@@ -41,6 +41,7 @@ namespace PlayerUI.Oculus
 		private static SharpDX.Toolkit.Graphics.BasicEffect basicEffectR;
 
 		private static bool _playbackLock = false;
+        public static bool Lock { get { return _playbackLock; } }
 
 		public static void Start()
 		{
@@ -92,9 +93,10 @@ namespace PlayerUI.Oculus
 				return false;
 			} else
 			{
-				int numberOfHMD = oculus.Hmd_Detect();
+                var result = oculus.Detect(1000);                
 				oculus.Dispose();
-				return numberOfHMD > 0 ? true : false;
+                bool detected = result.IsOculusHMDConnected == 1 && result.IsOculusServiceRunning == 1;
+				return detected;
 			}
 		}
 
@@ -109,38 +111,40 @@ namespace PlayerUI.Oculus
 			bool success = oculus.Initialize();
 			if (!success)
 			{
-				MessageBox.Show("Failed to initialize the Oculus runtime library.", "Uh oh", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				System.Windows.Forms.MessageBox.Show("Failed to initialize the Oculus runtime library.", "Uh oh", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				return;
 			}
 
-			// Use the head mounted display, if it's available, otherwise use the debug HMD.
-			int numberOfHeadMountedDisplays = oculus.Hmd_Detect();
-			if (numberOfHeadMountedDisplays > 0)
-				hmd = oculus.Hmd_Create(0);
-			else
-				hmd = oculus.Hmd_CreateDebug(OculusWrap.OVR.HmdType.DK2);
+            // Use the head mounted display, if it's available, otherwise use the debug HMD.
+            //int numberOfHeadMountedDisplays = oculus.Hmd_Detect();
+            //if (numberOfHeadMountedDisplays > 0)
+            //	hmd = oculus.Hmd_Create(0);
+            //else
+            //	hmd = oculus.Hmd_CreateDebug(OculusWrap.OVR.HmdType.DK2);
+            OVR.GraphicsLuid graphicsLuid;
+            hmd = oculus.Hmd_Create(out graphicsLuid);
 
 			if (hmd == null)
 			{
-				MessageBox.Show("Oculus Rift not detected.", "Uh oh", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				System.Windows.Forms.MessageBox.Show("Oculus Rift not detected.", "Uh oh", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				return;
 			}
 
 			if (hmd.ProductName == string.Empty)
-				MessageBox.Show("The HMD is not enabled.", "There's a tear in the Rift", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				System.Windows.Forms.MessageBox.Show("The HMD is not enabled.", "There's a tear in the Rift", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
 			// Specify which head tracking capabilities to enable.
-			hmd.SetEnabledCaps(OVR.HmdCaps.LowPersistence | OVR.HmdCaps.DynamicPrediction);
+			hmd.SetEnabledCaps(OVR.HmdCaps.DebugDevice);
 
 			// Start the sensor which informs of the Rift's pose and motion
-			hmd.ConfigureTracking(OVR.TrackingCaps.ovrTrackingCap_Orientation | OVR.TrackingCaps.ovrTrackingCap_MagYawCorrection | OVR.TrackingCaps.ovrTrackingCap_Position, OVR.TrackingCaps.None);
+			hmd.ConfigureTracking(OVR.TrackingCaps.Orientation | OVR.TrackingCaps.MagYawCorrection, OVR.TrackingCaps.None);
 
 			// Create a set of layers to submit.
 			EyeTexture[] eyeTextures = new EyeTexture[2];
 			OVR.ovrResult result;
 
 			// Create DirectX drawing device.
-			SharpDX.Direct3D11.Device device = new Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.Debug | DeviceCreationFlags.BgraSupport, new SharpDX.Direct3D.FeatureLevel[] { SharpDX.Direct3D.FeatureLevel.Level_10_0 });
+			SharpDX.Direct3D11.Device device = new Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.BgraSupport, new SharpDX.Direct3D.FeatureLevel[] { SharpDX.Direct3D.FeatureLevel.Level_10_0 });
 
 			// Create DirectX Graphics Interface factory, used to create the swap chain.
 			Factory factory = new Factory();
@@ -213,7 +217,7 @@ namespace PlayerUI.Oculus
 				OVR.D3D11.D3D11_TEXTURE2D_DESC swapTextureDescriptionD3D11 = SharpDXHelpers.CreateTexture2DDescription(eyeTexture.Texture2DDescription);
 
 				// Create a SwapTextureSet, which will contain the textures to render to, for the current eye.
-				result = hmd.CreateSwapTextureSetD3D11(device.NativePointer, ref swapTextureDescriptionD3D11, out eyeTexture.SwapTextureSet);
+				result = hmd.CreateSwapTextureSetD3D11(device.NativePointer, ref swapTextureDescriptionD3D11, OVR.D3D11.SwapTextureSetD3D11Flags.None, out eyeTexture.SwapTextureSet);
 				WriteErrorDetails(oculus, result, "Failed to create swap texture set.");
 
 				// Create room for each DirectX texture in the SwapTextureSet.
@@ -404,9 +408,11 @@ namespace PlayerUI.Oculus
 			while (!abort)
 			{
 				OVR.Vector3f[] hmdToEyeViewOffsets = { eyeTextures[0].HmdToEyeViewOffset, eyeTextures[1].HmdToEyeViewOffset };
-				OVR.FrameTiming frameTiming = hmd.GetFrameTiming(0);
-				OVR.TrackingState trackingState = hmd.GetTrackingState(frameTiming.DisplayMidpointSeconds);
-				OVR.Posef[] eyePoses = new OVR.Posef[2];
+                //OVR.FrameTiming frameTiming = hmd.GetFrameTiming(0);
+                //OVR.TrackingState trackingState = hmd.GetTrackingState(frameTiming.DisplayMidpointSeconds);
+                double displayMidpoint = hmd.GetPredictedDisplayTime(0);
+                OVR.TrackingState trackingState = hmd.GetTrackingState(displayMidpoint);
+                OVR.Posef[] eyePoses = new OVR.Posef[2];
 
 				// Calculate the position and orientation of each eye.
 				oculus.CalcEyePoses(trackingState.HeadPose.ThePose, hmdToEyeViewOffsets, ref eyePoses);

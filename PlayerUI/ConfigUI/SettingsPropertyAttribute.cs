@@ -9,6 +9,7 @@ namespace PlayerUI.ConfigUI
 	public class SettingsPropertyAttribute : Attribute
 	{
 		public string DisplayName = "";
+		public string Caption = "";
 		public ConfigItemType Type = ConfigItemType.String;
 		public bool ReadOnly = false;
 
@@ -29,6 +30,8 @@ namespace PlayerUI.ConfigUI
 		Bool,
 		String,
 		Path,
-		Int
+		Int,
+		Enum,
+		Action
 	}
 }

@@ -8,8 +8,28 @@
         mc:Ignorable="d"
         Title="About" Height="300" Width="300" WindowStartupLocation="CenterOwner" WindowStyle="ToolWindow" MinWidth="400" MinHeight="280" ShowInTaskbar="False">
     <Grid>
-        <TextBlock Text="Bivrost 360Player is using 3rd party libraries and components." HorizontalAlignment="Center"
+		<Grid.RowDefinitions>
+			<RowDefinition Height="*" />
+			<RowDefinition Height="48" />
+		</Grid.RowDefinitions>
+		<RichTextBox Margin="8" BorderThickness="1" Padding="20">
+			<FlowDocument>
+				<Paragraph>
+					<Bold>BIVROST 360Player Beta</Bold>
+					<LineBreak />
+					v1.0
+				</Paragraph>
+				<Paragraph>
+					Contact support at:
+					<Hyperlink>support@bivrost360.com</Hyperlink>
+				</Paragraph>
+				
+			</FlowDocument>
+		</RichTextBox>
+
+		<TextBlock Text="Bivrost 360Player is using 3rd party libraries and components." HorizontalAlignment="Center"
 				   VerticalAlignment="Bottom" Margin="8,50" TextWrapping="Wrap" cal:Message.Attach="[Event MouseDown] = [Action ShowLibs]" Cursor="Hand"/>
-        <Button x:Name="OpenEULA" Content="License" Width="120" Height="28" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="8"/>
+
+		<Button x:Name="OpenEULA" Content="Read License" Width="120" Height="28" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="8" Grid.Row="1"/>
     </Grid>
 </Window>

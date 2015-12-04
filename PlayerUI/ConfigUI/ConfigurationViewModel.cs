@@ -39,6 +39,13 @@ namespace PlayerUI.ConfigUI
 					case ConfigItemType.String:
 						TargetCollection.Add(new StringConfigItemViewModel(attr, () => (string)property.GetValue(settings, null), (value) => property.SetValue(settings, value, null)));
 						break;
+					case ConfigItemType.Enum:
+						Type enumType = p.PropertyType;
+						TargetCollection.Add(new EnumConfigItemViewModel(attr, () => (int)property.GetValue(settings, null), (value) => property.SetValue(settings, value, null), enumType));
+						break;
+					case ConfigItemType.Action:
+						TargetCollection.Add(new ButtonConfigItemViewModel(attr, () => { ((System.Action)property.GetValue(settings))(); }));
+						break;
 				}
 			});
 
@@ -46,7 +53,8 @@ namespace PlayerUI.ConfigUI
 
 		public void Save()
 		{
-			ConfigItems.ToList().ForEach(ci => ((IConfigItemBase)ci).Save());
+			ConfigItems.Where(ci => ci is IConfigItemBase).ToList().ForEach(ci => ((IConfigItemBase)ci).Save());
+			ConfigAdvancedItems.Where(ci => ci is IConfigItemBase).ToList().ForEach(ci => ((IConfigItemBase)ci).Save());
 			Logic.Instance.settings.Save();
 			TryClose();
 		}

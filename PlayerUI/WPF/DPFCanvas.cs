@@ -205,44 +205,49 @@
 
         void Render(TimeSpan sceneTime)
         {
-            SharpDX.Direct3D11.Device device = this.Device;
-            if (device == null)
-                return;
+			try {
+				SharpDX.Direct3D11.Device device = this.Device;
+				if (device == null)
+					return;
 
-			if (device.IsDisposed)
+				if (device.IsDisposed)
+				{
+					NeedsReloading();
+					return;
+				}
+
+				Texture2D renderTarget = this.RenderTarget;
+				if (renderTarget == null)
+					return;
+
+				int targetWidth = renderTarget.Description.Width;
+				int targetHeight = renderTarget.Description.Height;
+
+				device.ImmediateContext.OutputMerger.SetTargets(this.DepthStencilView, this.RenderTargetView);
+				device.ImmediateContext.Rasterizer.SetViewport(new Viewport(0, 0, targetWidth, targetHeight, 0.0f, 1.0f));
+
+				device.ImmediateContext.ClearRenderTargetView(this.RenderTargetView, this.ClearColor);
+				device.ImmediateContext.ClearDepthStencilView(this.DepthStencilView, DepthStencilClearFlags.Depth | DepthStencilClearFlags.Stencil, 1.0f, 0);
+
+
+
+				if (this.Scene != null)
+				{
+					if (!this.SceneAttached)
+					{
+						this.SceneAttached = true;
+						this.RenderScene.Attach(this);
+					}
+
+					this.Scene.Update(this.RenderTimer.Elapsed);
+					this.Scene.Render();
+				}
+
+				device.ImmediateContext.Flush();
+			} catch(Exception exc)
 			{
-				NeedsReloading();
-				return;
+				Console.WriteLine("[EXC] " + exc.Message);
 			}
-
-            Texture2D renderTarget = this.RenderTarget;
-            if (renderTarget == null)
-                return;
-
-            int targetWidth = renderTarget.Description.Width;
-            int targetHeight = renderTarget.Description.Height;
-
-            device.ImmediateContext.OutputMerger.SetTargets(this.DepthStencilView, this.RenderTargetView);
-			device.ImmediateContext.Rasterizer.SetViewport(new Viewport(0, 0, targetWidth, targetHeight, 0.0f, 1.0f));
-
-			device.ImmediateContext.ClearRenderTargetView(this.RenderTargetView, this.ClearColor);
-			device.ImmediateContext.ClearDepthStencilView(this.DepthStencilView, DepthStencilClearFlags.Depth | DepthStencilClearFlags.Stencil, 1.0f, 0);
-			
-			
-
-            if (this.Scene != null)
-            {
-                if (!this.SceneAttached)
-                {
-                    this.SceneAttached = true;
-                    this.RenderScene.Attach(this);
-                }
-
-                this.Scene.Update(this.RenderTimer.Elapsed);
-                this.Scene.Render();
-            }
-			
-			device.ImmediateContext.Flush();			
         }
 
         private void OnIsFrontBufferAvailableChanged(object sender, DependencyPropertyChangedEventArgs e)

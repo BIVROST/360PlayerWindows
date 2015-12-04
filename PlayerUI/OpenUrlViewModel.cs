@@ -85,6 +85,7 @@ namespace PlayerUI
 
 			view.Open.IsEnabled = false;
 			view.Url.IsEnabled = false;
+			view.progressBar.Visibility = System.Windows.Visibility.Visible;
         }
 
 		private void Process()
