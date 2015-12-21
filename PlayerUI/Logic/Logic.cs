@@ -95,6 +95,10 @@ namespace PlayerUI
 			Task.Factory.StartNew(() =>
 			{
 				webSocketServer = new WebSocketServer("ws://127.0.0.1:24876"); // PORT "BIVRO" 24876
+				//var cert = Certificate.CreateSelfSignCertificatePfx(null, DateTime.Now, DateTime.Now.AddYears(2));
+				//var x509 = new System.Security.Cryptography.X509Certificates.X509Certificate2(cert);
+				//webSocketServer.Certificate = x509;
+				//webSocketServer.EnabledSslProtocols = System.Security.Authentication.SslProtocols.Default;
 				webSocketServer.SupportedSubProtocols = new string[] { "bivrost" };
                 try
 				{
@@ -136,6 +140,8 @@ namespace PlayerUI
 			}
 			catch (Exception) { }
 		}
+
+		
 
 		public void ReloadPlayer()
 		{

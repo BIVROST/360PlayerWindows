@@ -38,7 +38,7 @@
     <PublisherName>BIVROST Sp z o.o.</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
-    <ApplicationRevision>128</ApplicationRevision>
+    <ApplicationRevision>129</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>true</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
@@ -100,6 +100,10 @@
     <DelaySign>true</DelaySign>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="BouncyCastle.Crypto, Version=1.7.4137.9688, Culture=neutral, PublicKeyToken=a4292a325f69b123, processorArchitecture=MSIL">
+      <HintPath>..\packages\BouncyCastle.1.7.0\lib\Net40-Client\BouncyCastle.Crypto.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Caliburn.Micro, Version=2.0.2.0, Culture=neutral, PublicKeyToken=8e5891231f2ed21f, processorArchitecture=MSIL">
       <HintPath>..\packages\Caliburn.Micro.Core.3.0.0-beta1\lib\net45\Caliburn.Micro.dll</HintPath>
       <Private>True</Private>
@@ -297,12 +301,14 @@
     <Compile Include="HeadsetMenuViewModel.cs" />
     <Compile Include="Logger\Logger.cs" />
     <Compile Include="Logic\BrowserPluginManagement.cs" />
+    <Compile Include="Logic\Certificate.cs" />
     <Compile Include="Logic\Logic.cs" />
     <Compile Include="Logic\Protocol.cs" />
     <Compile Include="Logic\ProtocolHandler.cs" />
     <Compile Include="Logic\Recents.cs" />
     <Compile Include="Logic\Settings.cs" />
     <Compile Include="Logic\Updater.cs" />
+    <Compile Include="Logic\WebSocketHelper.cs" />
     <Compile Include="NotificationCenterView.xaml.cs">
       <DependentUpon>NotificationCenterView.xaml</DependentUpon>
     </Compile>

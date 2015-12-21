@@ -353,11 +353,15 @@ namespace PlayerUI
 
 				if (hasVideo)
 				{
-					_mediaEngine.GetNativeVideoSize(out w, out h);
+					_mediaEngineEx.GetNativeVideoSize(out w, out h);
+					int cx, cy;
+					_mediaEngineEx.GetVideoAspectRatio(out cx, out cy);
+					var s3d = _mediaEngineEx.IsStereo3D;
+					var sns = _mediaEngineEx.NumberOfStreams;
 					
 
 					float videoAspect = ((float)w) / ((float)h);
-					_stereoVideo = videoAspect < 1.5;
+					_stereoVideo = videoAspect < 1.3;
 					h = _stereoVideo ? h / 2 : h;
 
 					CurrentMode = StereoMode;
