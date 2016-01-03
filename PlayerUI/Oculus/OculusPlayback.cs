@@ -85,18 +85,25 @@ namespace PlayerUI.Oculus
 		{
 			if (_playbackLock) return true;
 			Wrap oculus = new Wrap();
-
-			bool success = oculus.Initialize();
-			if(!success)
+			try {
+				bool success = oculus.Initialize();
+			
+				if (!success)
+				{
+					oculus.Dispose();
+					return false;
+				} else
+				{
+					var result = oculus.Detect(1000);                
+					oculus.Dispose();
+					bool detected = result.IsOculusHMDConnected == 1 && result.IsOculusServiceRunning == 1;
+					return detected;
+				}
+			}
+			catch (Exception exc)
 			{
 				oculus.Dispose();
 				return false;
-			} else
-			{
-                var result = oculus.Detect(1000);                
-				oculus.Dispose();
-                bool detected = result.IsOculusHMDConnected == 1 && result.IsOculusServiceRunning == 1;
-				return detected;
 			}
 		}
 

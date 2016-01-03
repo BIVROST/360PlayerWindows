@@ -44,6 +44,7 @@ namespace PlayerUI.OSVRKit
 
         private static bool _playbackLock = false;
         public static bool Lock { get { return _playbackLock; } }
+		private static object localCritical = new object();
 
         public static void Start()
         {
@@ -126,7 +127,43 @@ namespace PlayerUI.OSVRKit
             return false;
         }
 
-        private static void Render()
+		private static SharpDX.Toolkit.Graphics.GraphicsDevice _gd;
+		private static Device _device;
+
+		static void ResizeTexture(Texture2D tL, Texture2D tR)
+		{
+			if (MediaDecoder.Instance.TextureReleased) return;
+			
+			var tempL = textureL;
+			var tempR = textureR;
+
+			lock (localCritical)
+			{
+				basicEffectL.Texture.Dispose();
+				basicEffectR.Texture.Dispose();
+				textureL = tL;
+				textureR = tR;
+
+				var resourceL = textureL.QueryInterface<SharpDX.DXGI.Resource>();
+				var sharedTexL = _device.OpenSharedResource<Texture2D>(resourceL.SharedHandle);
+				basicEffectL.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexL);
+				resourceL?.Dispose();
+				sharedTexL?.Dispose();
+
+				if (_stereoVideo)
+				{
+					var resourceR = textureR.QueryInterface<SharpDX.DXGI.Resource>();
+					var sharedTexR = _device.OpenSharedResource<Texture2D>(resourceR.SharedHandle);
+					basicEffectR.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexR);
+					resourceR?.Dispose();
+					sharedTexR?.Dispose();
+				}
+				//_device.ImmediateContext.Flush();
+			}
+			
+		}
+
+		private static void Render()
         {
             _playbackLock = true;
 
@@ -310,6 +347,9 @@ namespace PlayerUI.OSVRKit
 
             SharpDX.Toolkit.Graphics.GraphicsDevice gd = SharpDX.Toolkit.Graphics.GraphicsDevice.New(device);
 
+			MediaDecoder.Instance.OnFormatChanged += ResizeTexture;
+
+
             var resourceL = textureL.QueryInterface<SharpDX.DXGI.Resource>();
             var sharedTexL = device.OpenSharedResource<Texture2D>(resourceL.SharedHandle);
 
@@ -459,17 +499,20 @@ namespace PlayerUI.OSVRKit
                             basicEffectR.Projection = projectionMatrix;
                         }
 
-                        if (_stereoVideo)
-                        {
-                            if (eye == 0)
-                                primitive.Draw(basicEffectL);
-                            if (eye == 1)
-                                primitive.Draw(basicEffectR);
-                        }
-                        else
-                            primitive.Draw(basicEffectL);
+						lock (localCritical)
+						{
+							if (_stereoVideo)
+							{
+								if (eye == 0)
+									primitive.Draw(basicEffectL);
+								if (eye == 1)
+									primitive.Draw(basicEffectR);
+							}
+							else
+								primitive.Draw(basicEffectL);
+						}
 
-                        DrawUI();
+						DrawUI();
                         RenderUI(deltaTime);
 
                     }
@@ -480,10 +523,12 @@ namespace PlayerUI.OSVRKit
                 swapChain.Present(0, PresentFlags.None);
             });
 
-            #endregion
-            //debugWindow.Stop();
+			#endregion
+			//debugWindow.Stop();
 
-            waitForRendererStop.Set();
+			MediaDecoder.Instance.OnFormatChanged -= ResizeTexture;
+
+			waitForRendererStop.Set();
 
             swapChain.SetFullscreenState(false, null);
 

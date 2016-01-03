@@ -603,7 +603,7 @@ namespace PlayerUI
 					DisplayName = DisplayString + " - " + SelectedFileNameLabel;
 
 					_mediaDecoder.SetVolume(VolumeRocker.Volume);
-					_mediaDecoder.Play();
+					//_mediaDecoder.Play();
 
 					//STATS
 					Logic.Instance.stats.TrackEvent("Application events", "Play", "");
@@ -616,6 +616,8 @@ namespace PlayerUI
 
                     this.DXCanvas.Scene = new Scene(_mediaDecoder.TextureL, _mediaDecoder.Projection) { xpad = this.xpad };
 					this.DXCanvas.StartRendering();
+
+					_mediaDecoder.Play();
 
 					Task.Factory.StartNew(() =>
 					{

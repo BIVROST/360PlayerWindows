@@ -97,14 +97,15 @@ namespace PlayerUI
 			}
 		}
 
-        //public int BufferLevel
-        //{
-        //    get
-        //    {
-        //        return _mediaEngineEx.
-        //    }
-        //}
+		//public int BufferLevel
+		//{
+		//    get
+		//    {
+		//        return _mediaEngineEx.
+		//    }
+		//}
 
+		public int formatCounter = 0;
 
 		public bool Ready { get; private set; }
 
@@ -138,6 +139,11 @@ namespace PlayerUI
         public event Action OnBufferingStarted = delegate { };
         public event Action OnBufferingEnded = delegate { };
         public event Action<double> OnProgress = delegate { };
+
+		//public event Action OnReleaseTexture = delegate { };
+		public event Action<Texture2D, Texture2D> OnFormatChanged = delegate { };
+		private bool textureReleased = true;
+		public bool TextureReleased { get { return textureReleased; } }
 
         VideoNormalizedRect topRect = new VideoNormalizedRect()
 		{
@@ -284,30 +290,31 @@ namespace PlayerUI
                         case MediaEngineEvent.BufferingEnded:
                             OnBufferingEnded();
                             break;
-                        //case MediaEngineEvent.Progress:
+                        case MediaEngineEvent.FormatChange:
+							Console.WriteLine("FormatChange " + formatCounter);
+							Task.Factory.StartNew(() =>
+							{
+								lock (criticalSection)
+								{
+									
+									Texture2D tempL = textureL;
+									Texture2D tempR = textureR;
+									_mediaEngineEx.GetNativeVideoSize(out w, out h);
+									
+									textureReleased = true;
+									
+									textureL = CreateTexture(_device, w, h);
+									textureR = CreateTexture(_device, w, h);
+									textureReleased = false;
 
-                        //    var currentTime = _mediaEngineEx.CurrentTime;
-                        //    var ranges = _mediaEngineEx.Buffered.Length;
-                        //    double progress = 0;
-      
-                        //    for (int it = 0; it < ranges; it++)
-                        //    {
-                        //        double start;
-                        //        double end;
-                        //        _mediaEngineEx.Buffered.GetStart(it, out start);
-                        //        _mediaEngineEx.Buffered.GetEnd(it, out end);
-                        //        if(currentTime >= start && currentTime <= end)
-                        //        {
-                        //            progress = (end - currentTime);
-                        //        }
-                        //        Console.WriteLine($"t={currentTime} Range {it} start {start} ; end {end}");
-                        //    }
+									//OnReleaseTexture();
+									OnFormatChanged(textureL, textureR);
 
-                        //    Console.WriteLine($"OnProgress {param1} ; {param2}");
-
-                        //    OnProgress(progress);
-                        //    break;
-
+									tempL?.Dispose();
+									tempR?.Dispose();
+								}
+							});
+							break;
                     }
 				};
 
@@ -339,6 +346,32 @@ namespace PlayerUI
 			return comObject.QueryInterface<MediaSource>();
 		}
 
+		public static Guid ToGuid(long value)
+		{
+			byte[] guidData = new byte[16];
+			Array.Copy(BitConverter.GetBytes(value), guidData, 8);
+			return new Guid(guidData);
+		}
+
+		public static Texture2D CreateTexture(SharpDX.Direct3D11.Device _device, int width, int height)
+		{
+			Texture2DDescription frameTextureDescription = new Texture2DDescription()
+			{
+				Width = width,
+				Height = height,
+				MipLevels = 1,
+				ArraySize = 1,
+				Format = Format.B8G8R8A8_UNorm,
+				Usage = ResourceUsage.Default,
+				SampleDescription = new SampleDescription(1, 0),
+				BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
+				CpuAccessFlags = CpuAccessFlags.None,
+				OptionFlags = ResourceOptionFlags.Shared
+			};
+
+			return new SharpDX.Direct3D11.Texture2D(_device, frameTextureDescription);
+		}
+
 		public void Play()
 		{
 			lock(criticalSection)
@@ -353,6 +386,10 @@ namespace PlayerUI
 
 				if (hasVideo)
 				{
+					//SharpDX.Win32.Variant variant;
+					//_mediaEngineEx.GetStreamAttribute(1, MediaTypeAttributeKeys.FrameSize.Guid, out variant);
+
+
 					_mediaEngineEx.GetNativeVideoSize(out w, out h);
 					int cx, cy;
 					_mediaEngineEx.GetVideoAspectRatio(out cx, out cy);
@@ -371,24 +408,25 @@ namespace PlayerUI
 
 					Console.WriteLine("VIDEO STEREO MODE: " + CurrentMode);
 
-					Texture2DDescription frameTextureDescription = new Texture2DDescription()
-					{
-						Width = w,
-						Height = h,
-						MipLevels = 1,
-						ArraySize = 1,
-						Format = Format.B8G8R8A8_UNorm,
-						Usage = ResourceUsage.Default,
-						SampleDescription = new SampleDescription(1, 0),
-						BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
-						CpuAccessFlags = CpuAccessFlags.None,
-						OptionFlags = ResourceOptionFlags.Shared
-					};
+					//Texture2DDescription frameTextureDescription = new Texture2DDescription()
+					//{
+					//	Width = w,
+					//	Height = h,
+					//	MipLevels = 1,
+					//	ArraySize = 1,
+					//	Format = Format.B8G8R8A8_UNorm,
+					//	Usage = ResourceUsage.Default,
+					//	SampleDescription = new SampleDescription(1, 0),
+					//	BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
+					//	CpuAccessFlags = CpuAccessFlags.None,
+					//	OptionFlags = ResourceOptionFlags.Shared
+					//};
 
 
-					textureL = new SharpDX.Direct3D11.Texture2D(_device, frameTextureDescription);
-					//if(_stereoVideo)
-						textureR = new SharpDX.Direct3D11.Texture2D(_device, frameTextureDescription);
+					//textureL = new SharpDX.Direct3D11.Texture2D(_device, frameTextureDescription);
+					//textureR = new SharpDX.Direct3D11.Texture2D(_device, frameTextureDescription);
+					//textureL = CreateTexture(_device, w, h);
+					//textureR = CreateTexture(_device, w, h);
 				}
 				
 				_mediaEngineEx.Play();
@@ -403,15 +441,18 @@ namespace PlayerUI
 				{
 					lock (criticalSection)
 					{
+						if(!textureReleased)
 						if (!_mediaEngine.IsPaused || manualRender)
 						{
 							manualRender = false;
+							//waitForResize.WaitOne();
+
 							long lastTs = ts;
 							bool result = _mediaEngine.OnVideoStreamTick(out ts);
 							if(ts > 0)
 							if (result && ts != lastTs)
 							{
-								switch(CurrentMode)
+								switch (CurrentMode)
 									{
 										case VideoMode.Autodetect:
 											if (IsStereo)
@@ -517,7 +558,9 @@ namespace PlayerUI
 		
 		public void Stop(bool force = false)
 		{
-			
+			textureReleased = true;
+			//OnReleaseTexture();			
+
 			if (!force)
 			{
 				if (!_initialized) return;
@@ -570,6 +613,7 @@ namespace PlayerUI
 		public void LoadMedia(string fileName)
 		{
 			_fileName = "";
+			textureReleased = true;
 			Stop();
 			while (_initialized == true)
 			{

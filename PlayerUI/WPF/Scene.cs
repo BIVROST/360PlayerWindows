@@ -27,10 +27,16 @@
 		private Device _device;
 
 		private Texture2D videoTexture;
+		private bool textureReleased = true;
+		private bool pollForTexture = false;
+
+		private object localCritical = new object();
+
 
 		SharpDX.Toolkit.Graphics.GraphicsDevice graphicsDevice;
 		SharpDX.Toolkit.Graphics.BasicEffect basicEffect;
 		SharpDX.Toolkit.Graphics.GeometricPrimitive primitive;
+		SharpDX.Toolkit.Graphics.GeometricPrimitive primitive2;
 
 		private float yaw = 0;
 		private float pitch = 0;
@@ -98,54 +104,72 @@
 		Statistics.Heatmap heatmap;
 		float heatmapDelta = 1;
 
+		void ResizeTexture(Texture2D tL, Texture2D tR)
+		{
+			if(MediaDecoder.Instance.TextureReleased) return;
+			var tempResource = resource;
+			var tempSharedTex = sharedTex;
+			var tempVideotexture = videoTexture;
+
+			lock(localCritical)
+			{
+				//resource?.Dispose();
+				//sharedTex?.Dispose();
+				//videoTexture?.Dispose();
+
+				videoTexture = tL;
+
+				resource = videoTexture.QueryInterface<SharpDX.DXGI.Resource>();
+				sharedTex = _device.OpenSharedResource<Texture2D>(resource.SharedHandle);
+
+				basicEffect.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(graphicsDevice, sharedTex);
+				resource.Dispose();
+				sharedTex.Dispose();
+				//textureReleased = false;
+
+				//_device.ImmediateContext.Flush();
+			}
+			tempResource?.Dispose();
+			tempSharedTex?.Dispose();
+			tempVideotexture?.Dispose();
+		}
+
+		//void ReleaseTexture()
+		//{
+		//	textureReleased = true;
+		//}
+
 		void IScene.Attach(ISceneHost host)
         {
             this.Host = host;
-
             _device = host.Device;
 
             if (_device == null)
                 throw new Exception("Scene host device is null");
 
-
 			graphicsDevice = SharpDX.Toolkit.Graphics.GraphicsDevice.New(_device);
 			basicEffect = new SharpDX.Toolkit.Graphics.BasicEffect(graphicsDevice);
-			
+
+			MediaDecoder.Instance.OnFormatChanged += ResizeTexture;
+			//MediaDecoder.Instance.OnReleaseTexture += ReleaseTexture;
+
 			basicEffect.Projection = Matrix.PerspectiveFovRH((float)(72f * Math.PI / 180f), (float)16f/9f, 0.0001f, 50.0f);
 			basicEffect.World = Matrix.Identity;
 
 			basicEffect.PreferPerPixelLighting = false;
 
-			resource = videoTexture.QueryInterface<SharpDX.DXGI.Resource>();
-			sharedTex = _device.OpenSharedResource<Texture2D>(resource.SharedHandle);
-            
-            basicEffect.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(graphicsDevice, sharedTex);
+			ResizeTexture(MediaDecoder.Instance.TextureL, MediaDecoder.Instance.TextureL);
 
-            basicEffect.TextureEnabled = true;
+			basicEffect.TextureEnabled = true;
 			basicEffect.LightingEnabled = false;
 			basicEffect.Sampler = graphicsDevice.SamplerStates.AnisotropicClamp;
 
 			primitive = GraphicTools.CreateGeometry(projectionMode, graphicsDevice);
-
+			primitive2 = SharpDX.Toolkit.Graphics.GeometricPrimitive.Plane.New(graphicsDevice, 1f,1f);
 
 			_device.ImmediateContext.Flush();
-
-			//BivrostPlayerPrototype.PlayerPrototype.LookChanged += (look) =>
-			//{
-			//	if (remoteRotationOverride)
-			//	{
-			//		Matrix lerpMatrix = Matrix.Lerp(basicEffect.View, remoteRotation, 1 / 15f);
-			//		basicEffect.View = lerpMatrix;
-			//             } else { 
-			//		pitch = MathUtil.Clamp(pitch, (float)-Math.PI/2f, (float)Math.PI / 2f);
-			//		Quaternion q1 = Quaternion.RotationYawPitchRoll(yaw, 0, 0);
-			//		Quaternion q2 = Quaternion.RotationYawPitchRoll(0, pitch, 0);
-			//		basicEffect.View = look * Matrix.RotationQuaternion(q2 * q1);
-			//	}
-			//};
 			ResetRotation();
-
-			//ShellViewModel.Instance.ShowDebug();
+			
 			heatmap = new Statistics.Heatmap();
             
             var devices = SharpDX.RawInput.Device.GetDevices();
@@ -155,11 +179,6 @@
                     SharpDX.RawInput.Device.RegisterDevice(SharpDX.Multimedia.UsagePage.Generic, SharpDX.Multimedia.UsageId.GenericMouse, SharpDX.RawInput.DeviceFlags.None, dev.Handle);
                 Console.WriteLine($"{dev.DeviceName} :: {dev.DeviceType}");
             });
-
-            SharpDX.RawInput.Device.MouseInput += (s, e) =>
-            {
-                //Console.WriteLine("Mouse " + e.X + " " + e.Y);
-            };
 
 			useOSVR = Logic.Instance.settings.UserOSVRTracking;
 			if(useOSVR)
@@ -232,6 +251,9 @@
         {
 			//Console.WriteLine(heatmap.ToBase64());
 
+			MediaDecoder.Instance.OnFormatChanged -= ResizeTexture;
+			//MediaDecoder.Instance.OnReleaseTexture -= ReleaseTexture;
+
 			Disposer.RemoveAndDispose(ref sharedTex);
 			Disposer.RemoveAndDispose(ref resource);
 			Disposer.RemoveAndDispose(ref graphicsDevice);
@@ -251,7 +273,12 @@
 
         void IScene.Update(TimeSpan sceneTime)
         {
-			
+			//if (pollForTexture)
+			//	if (!MediaDecoder.Instance.TextureReleased)
+			//	{
+			//		ResizeTexture(MediaDecoder.Instance.TextureL, MediaDecoder.Instance.TextureR);
+			//		pollForTexture = false;
+			//	}
 
 			var currentFrameTime = (float)sceneTime.TotalMilliseconds * 0.001f;
 			if (lastFrameTime == 0) lastFrameTime = currentFrameTime;
@@ -384,8 +411,20 @@
 					}
 				}
 			}
+			//if (!textureReleased)
+			//{
 
-			primitive?.Draw(basicEffect);
+			lock (localCritical)
+			{
+				primitive?.Draw(basicEffect);
+			}
+
+			//	basicEffect.World = Matrix.Identity;
+			//	basicEffect.View = Matrix.Identity;
+			//	basicEffect.Projection = Matrix.Identity;
+
+			//	primitive2.Draw(basicEffect);
+			//}
         }
 
 		private bool tUp = false;
