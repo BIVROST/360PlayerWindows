@@ -617,7 +617,7 @@ namespace PlayerUI
                     this.DXCanvas.Scene = new Scene(_mediaDecoder.TextureL, _mediaDecoder.Projection) { xpad = this.xpad };
 					this.DXCanvas.StartRendering();
 
-					_mediaDecoder.Play();
+					
 
 					Task.Factory.StartNew(() =>
 					{
@@ -626,10 +626,13 @@ namespace PlayerUI
                             Thread.Sleep(50);
                         }
 
+						bool detected = false;
+
 						if (this.HeadsetUsage == HeadsetMode.Auto || this.HeadsetUsage == HeadsetMode.Oculus)
 						{
 							if (OculusPlayback.IsOculusPresent())
 							{
+								detected = true;
 								Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Oculus Rift detected. Starting VR playback...")));
 								OculusPlayback.textureL = _mediaDecoder.TextureL;
 								OculusPlayback.textureR = _mediaDecoder.TextureR;
@@ -645,6 +648,7 @@ namespace PlayerUI
 							}
 						}
 
+						if(!detected)
 						if (this.HeadsetUsage == HeadsetMode.Auto || this.HeadsetUsage == HeadsetMode.OSVR)
 						{
 							if (OSVRKit.OSVRPlayback.IsOculusPresent())
@@ -662,7 +666,9 @@ namespace PlayerUI
 								Console.WriteLine("No OSVR connected");
 							}
 						}
-					});				
+					});
+
+					_mediaDecoder.Play();
 
 					shellView.PlayPause.Visibility = Visibility.Collapsed;
 					shellView.Pause.Visibility = Visibility.Visible;
@@ -928,44 +934,45 @@ namespace PlayerUI
 
 			Console.WriteLine("STOP STOP STOP");
 
-            OculusPlayback.Stop();
-            OSVRKit.OSVRPlayback.Stop();
+			this.DXCanvas.Scene = null;
+
+			OculusPlayback.Stop();
+			OSVRKit.OSVRPlayback.Stop();
 
             Execute.OnUIThread(() =>
 			{
 				shellView.TopBar.Visibility = Visibility.Hidden;
 				this.DXCanvas.Visibility = Visibility.Hidden;
 			});			
-			this.DXCanvas.Scene = null;
-			
-				Task.Factory.StartNew(() =>
+						
+			Task.Factory.StartNew(() =>
+			{
+				if (IsPlaying || _mediaDecoder.IsEnded)
 				{
-					if (IsPlaying || _mediaDecoder.IsEnded)
+					_mediaDecoder.Stop();
+
+					//STATS
+					Logic.Instance.stats.TrackEvent("Application events", "Stop", "");
+
+					_timeValue = 0;
+					try
 					{
-						_mediaDecoder.Stop();
-
-						//STATS
-						Logic.Instance.stats.TrackEvent("Application events", "Stop", "");
-
-						_timeValue = 0;
-						try
+						Execute.OnUIThread(() =>
 						{
-							Execute.OnUIThread(() =>
-							{
-								NotifyOfPropertyChange(() => TimeValue);
-								NotifyOfPropertyChange(() => CanPlay);
-								CurrentPosition = (new TimeSpan(0, 0, 0)).ToString();
-								UpdateTimeLabel();
+							NotifyOfPropertyChange(() => TimeValue);
+							NotifyOfPropertyChange(() => CanPlay);
+							CurrentPosition = (new TimeSpan(0, 0, 0)).ToString();
+							UpdateTimeLabel();
 
-								shellView.PlayPause.Visibility = Visibility.Visible;
-								shellView.Pause.Visibility = Visibility.Collapsed;
+							shellView.PlayPause.Visibility = Visibility.Visible;
+							shellView.Pause.Visibility = Visibility.Collapsed;
 
-								this.DXCanvas.StopRendering();
-							});
-						}
-						catch (Exception) { }
+							this.DXCanvas.StopRendering();
+						});
 					}
-				});
+					catch (Exception) { }
+				}
+			});
 			
 			waitForPlaybackStop.Set();
 		}

@@ -42,6 +42,7 @@ namespace PlayerUI.Oculus
 
 		private static bool _playbackLock = false;
         public static bool Lock { get { return _playbackLock; } }
+		private static object localCritical = new object();
 
 		public static void Start()
 		{
@@ -105,6 +106,49 @@ namespace PlayerUI.Oculus
 				oculus.Dispose();
 				return false;
 			}
+		}
+
+
+		private static SharpDX.Toolkit.Graphics.GraphicsDevice _gd;
+		private static Device _device;
+
+		static void ResizeTexture(Texture2D tL, Texture2D tR)
+		{
+			if (MediaDecoder.Instance.TextureReleased) return;
+
+			var tempL = textureL;
+			var tempR = textureR;
+
+			lock (localCritical)
+			{
+				basicEffectL.Texture?.Dispose();
+				textureL = tL;
+
+				if (_stereoVideo)
+				{
+					basicEffectR.Texture?.Dispose();
+					textureR = tR;
+				}
+
+
+
+				var resourceL = textureL.QueryInterface<SharpDX.DXGI.Resource>();
+				var sharedTexL = _device.OpenSharedResource<Texture2D>(resourceL.SharedHandle);
+				basicEffectL.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexL);
+				resourceL?.Dispose();
+				sharedTexL?.Dispose();
+
+				if (_stereoVideo)
+				{
+					var resourceR = textureR.QueryInterface<SharpDX.DXGI.Resource>();
+					var sharedTexR = _device.OpenSharedResource<Texture2D>(resourceR.SharedHandle);
+					basicEffectR.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexR);
+					resourceR?.Dispose();
+					sharedTexR?.Dispose();
+				}
+				//_device.ImmediateContext.Flush();
+			}
+
 		}
 
 		private static void Render()
@@ -273,13 +317,18 @@ namespace PlayerUI.Oculus
 
 			SharpDX.Toolkit.Graphics.GraphicsDevice gd = SharpDX.Toolkit.Graphics.GraphicsDevice.New(device);
 
-			var resourceL = textureL.QueryInterface<SharpDX.DXGI.Resource>();
-			var sharedTexL = device.OpenSharedResource<Texture2D>(resourceL.SharedHandle);
+			_device = device;
+			_gd = gd;
+
+			MediaDecoder.Instance.OnFormatChanged += ResizeTexture;
+
+			//var resourceL = textureL.QueryInterface<SharpDX.DXGI.Resource>();
+			//var sharedTexL = device.OpenSharedResource<Texture2D>(resourceL.SharedHandle);
 
 			basicEffectL = new SharpDX.Toolkit.Graphics.BasicEffect(gd);
 
 			basicEffectL.PreferPerPixelLighting = false;
-			basicEffectL.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(gd, sharedTexL);
+			//basicEffectL.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(gd, sharedTexL);
 
 			basicEffectL.TextureEnabled = true;
 			basicEffectL.LightingEnabled = false;
@@ -287,18 +336,20 @@ namespace PlayerUI.Oculus
 
 			if (_stereoVideo)
 			{
-				var resourceR = textureR.QueryInterface<SharpDX.DXGI.Resource>();
-				var sharedTexR = device.OpenSharedResource<Texture2D>(resourceR.SharedHandle);
+				//var resourceR = textureR.QueryInterface<SharpDX.DXGI.Resource>();
+				//var sharedTexR = device.OpenSharedResource<Texture2D>(resourceR.SharedHandle);
 
 				basicEffectR = new SharpDX.Toolkit.Graphics.BasicEffect(gd);
 
 				basicEffectR.PreferPerPixelLighting = false;
-				basicEffectR.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(gd, sharedTexR);
+				//basicEffectR.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(gd, sharedTexR);
 
 				basicEffectR.TextureEnabled = true;
 				basicEffectR.LightingEnabled = false;
 				basicEffectR.Sampler = gd.SamplerStates.AnisotropicClamp;
 			}
+
+			ResizeTexture(MediaDecoder.Instance.TextureL, MediaDecoder.Instance.TextureL);
 
 			//var primitive = SharpDX.Toolkit.Graphics.GeometricPrimitive.Sphere.New(gd, radius, 32, true);
 			var primitive = GraphicTools.CreateGeometry(_projection, gd);
@@ -448,7 +499,7 @@ namespace PlayerUI.Oculus
 					int textureIndex = eyeTexture.SwapTextureSet.CurrentIndex++;
 
 					immediateContext.OutputMerger.SetRenderTargets(eyeTexture.DepthStencilView, eyeTexture.RenderTargetViews[textureIndex]);
-					immediateContext.ClearRenderTargetView(eyeTexture.RenderTargetViews[textureIndex], Color.CornflowerBlue);
+					immediateContext.ClearRenderTargetView(eyeTexture.RenderTargetViews[textureIndex], Color.Black);
 					immediateContext.ClearDepthStencilView(eyeTexture.DepthStencilView, DepthStencilClearFlags.Depth | DepthStencilClearFlags.Stencil, 1.0f, 0);
 					immediateContext.Rasterizer.SetViewport(eyeTexture.Viewport);
 
@@ -482,16 +533,18 @@ namespace PlayerUI.Oculus
 						basicEffectR.View = viewMatrix;
 						basicEffectR.Projection = projectionMatrix;
 					}
-
-					if (_stereoVideo)
+					lock (localCritical)
 					{
-						if (eyeIndex == 0)
+						if (_stereoVideo)
+						{
+							if (eyeIndex == 0)
+								primitive.Draw(basicEffectL);
+							if (eyeIndex == 1)
+								primitive.Draw(basicEffectR);
+						}
+						else
 							primitive.Draw(basicEffectL);
-						if (eyeIndex == 1)
-							primitive.Draw(basicEffectR);
 					}
-					else
-						primitive.Draw(basicEffectL);
 
 					DrawUI();
 					RenderUI(deltaTime);
@@ -506,6 +559,8 @@ namespace PlayerUI.Oculus
 
 			#endregion
 			//debugWindow.Stop();
+
+			MediaDecoder.Instance.OnFormatChanged -= ResizeTexture;
 
 			waitForRendererStop.Set();
 

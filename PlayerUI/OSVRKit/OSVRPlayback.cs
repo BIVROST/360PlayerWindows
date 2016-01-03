@@ -87,25 +87,34 @@ namespace PlayerUI.OSVRKit
             abort = true;
         }
 
+		private static bool _preloaded = false;
+		private static int _selectedOutput = 0;
+
         public static bool IsOculusPresent()
         {
-            ClientContext.PreloadNativeLibraries();
+			if (!_preloaded)
+			{
+				ClientContext.PreloadNativeLibraries();
+				_preloaded = true;
+			}
 
             if (_playbackLock) return true;
 
             using (ClientContext context = new ClientContext("com.osvr.exampleclients.managed.DisplayParameter"))
             {
-                for (int retry = 0; retry < 5; retry++)
+                for (int retry = 0; retry < 10; retry++)
                     using (var displayConfig = context.GetDisplayConfig())
                     {
                         // GetDisplayConfig can sometimes fail, returning null
                         if (displayConfig != null)
                         {
+							int contextRetry = 0;
                             do
                             {
                                 context.update();
-                            } while (!displayConfig.CheckDisplayStartup());
-
+								Thread.Sleep(10);
+								contextRetry++;
+                            } while (!displayConfig.CheckDisplayStartup() || contextRetry < 20);
 
                             var numDisplayInputs = displayConfig.GetNumDisplayInputs();
 
@@ -139,10 +148,16 @@ namespace PlayerUI.OSVRKit
 
 			lock (localCritical)
 			{
-				basicEffectL.Texture.Dispose();
-				basicEffectR.Texture.Dispose();
+				basicEffectL.Texture?.Dispose();
 				textureL = tL;
-				textureR = tR;
+
+				if (_stereoVideo)
+				{
+					basicEffectR.Texture?.Dispose();
+					textureR = tR;
+				}
+				
+				
 
 				var resourceL = textureL.QueryInterface<SharpDX.DXGI.Resource>();
 				var sharedTexL = _device.OpenSharedResource<Texture2D>(resourceL.SharedHandle);
@@ -173,15 +188,18 @@ namespace PlayerUI.OSVRKit
             ClientContext context = new ClientContext("com.bivrost360.desktopplayer");
             var displayConfig = context.GetDisplayConfig();
 
-            for (int retry = 0; retry < 5; retry++)
+            for (int retry = 0; retry < 10; retry++)
                 if (displayConfig == null)
                     displayConfig = context.GetDisplayConfig();
             if (displayConfig == null) return;
 
+			int contextRetry = 0;
             do
             {
                 context.update();
-            } while (!displayConfig.CheckDisplayStartup());
+				contextRetry++;
+				Thread.Sleep(10);
+            } while (!displayConfig.CheckDisplayStartup() || contextRetry < 20);
 
 
             var numDisplayInputs = displayConfig.GetNumDisplayInputs();
@@ -254,18 +272,24 @@ namespace PlayerUI.OSVRKit
             // Create DirectX drawing device.
             //SharpDX.Direct3D11.Device device = new Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.BgraSupport, new SharpDX.Direct3D.FeatureLevel[] { SharpDX.Direct3D.FeatureLevel.Level_10_0 });
             Device device;
-            Device.CreateWithSwapChain(DriverType.Hardware, DeviceCreationFlags.BgraSupport, desc, out device, out swapChain);
+            Device.CreateWithSwapChain(DriverType.Hardware, DeviceCreationFlags.BgraSupport, desc, out device, out swapChain);			
 
             // Create DirectX Graphics Interface factory, used to create the swap chain.
             Factory factory;// = new Factory();
 
             factory = swapChain.GetParent<Factory>();
             factory.MakeWindowAssociation(form.Handle, WindowAssociationFlags.IgnoreAll);
+			form.FormBorderStyle = FormBorderStyle.None;
+			form.TopMost = true;
 
             DeviceContext immediateContext = device.ImmediateContext;
 
             {
                 SharpDX.DXGI.Device2 dxgiDevice = device.QueryInterface<SharpDX.DXGI.Device2>();
+
+				//var bounds = dxgiDevice.Adapter.Outputs[1].Description.DesktopBounds;
+				//form.DesktopBounds = new System.Drawing.Rectangle(bounds.X, bounds.Y, bounds.Width, bounds.Height);
+
 				//dxgiDevice.Adapter.Outputs.ToList().ForEach(o =>
 				//{
 				//    if (o.Description.DeviceName.EndsWith("2"))
@@ -279,33 +303,51 @@ namespace PlayerUI.OSVRKit
 					switch (Logic.Instance.settings.OSVRScreen)
 					{
 						case ScreenSelection.One:
-							swapChain.SetFullscreenState(true, dxgiDevice.Adapter.Outputs[0]);
+							//swapChain.SetFullscreenState(true, dxgiDevice.Adapter.Outputs[0]);
+							_selectedOutput = 0;
 							break;
 						case ScreenSelection.Two:
 							if (dxgiDevice.Adapter.Outputs.Length > 1)
-								swapChain.SetFullscreenState(true, dxgiDevice.Adapter.Outputs[1]);
-							else
-								swapChain.SetFullscreenState(true, dxgiDevice.Adapter.Outputs[0]);
+							{
+								//swapChain.SetFullscreenState(true, dxgiDevice.Adapter.Outputs[1]);
+								_selectedOutput = 1;
+							}
+							else {
+								//swapChain.SetFullscreenState(true, dxgiDevice.Adapter.Outputs[0]);
+								_selectedOutput = 0;
+							}
 							break;
 						case ScreenSelection.Three:
 							if (dxgiDevice.Adapter.Outputs.Length > 2)
-								swapChain.SetFullscreenState(true, dxgiDevice.Adapter.Outputs[2]);
+							{
+								//swapChain.SetFullscreenState(true, dxgiDevice.Adapter.Outputs[2]);
+								_selectedOutput = 2;
+							}
 							else {
 								if (dxgiDevice.Adapter.Outputs.Length > 1)
-									swapChain.SetFullscreenState(true, dxgiDevice.Adapter.Outputs[1]);
-								else
-									swapChain.SetFullscreenState(true, dxgiDevice.Adapter.Outputs[0]);
+								{
+									//swapChain.SetFullscreenState(true, dxgiDevice.Adapter.Outputs[1]);
+									_selectedOutput = 1;
+								}
+								else {
+									//swapChain.SetFullscreenState(true, dxgiDevice.Adapter.Outputs[0]);
+									_selectedOutput = 0;
+								}
 							}
 							break;
 					}
-				} else
+
+					var bounds = dxgiDevice.Adapter.Outputs[_selectedOutput].Description.DesktopBounds;
+					form.DesktopBounds = new System.Drawing.Rectangle(bounds.X, bounds.Y, bounds.Width, bounds.Height);
+				}
+				else
 				{
 					return;
 				}
 
 
-                //swapChain.SetFullscreenState(true, target);
-            }
+				//swapChain.SetFullscreenState(true, target);
+			}
 
 
 
@@ -347,16 +389,19 @@ namespace PlayerUI.OSVRKit
 
             SharpDX.Toolkit.Graphics.GraphicsDevice gd = SharpDX.Toolkit.Graphics.GraphicsDevice.New(device);
 
+			_device = device;
+			_gd = gd;
+
 			MediaDecoder.Instance.OnFormatChanged += ResizeTexture;
 
 
-            var resourceL = textureL.QueryInterface<SharpDX.DXGI.Resource>();
-            var sharedTexL = device.OpenSharedResource<Texture2D>(resourceL.SharedHandle);
+            //var resourceL = textureL.QueryInterface<SharpDX.DXGI.Resource>();
+            //var sharedTexL = device.OpenSharedResource<Texture2D>(resourceL.SharedHandle);
 
             basicEffectL = new SharpDX.Toolkit.Graphics.BasicEffect(gd);
 
             basicEffectL.PreferPerPixelLighting = false;
-            basicEffectL.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(gd, sharedTexL);
+            //basicEffectL.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(gd, sharedTexL);
 
             basicEffectL.TextureEnabled = true;
             basicEffectL.LightingEnabled = false;
@@ -364,21 +409,23 @@ namespace PlayerUI.OSVRKit
 
             if (_stereoVideo)
             {
-                var resourceR = textureR.QueryInterface<SharpDX.DXGI.Resource>();
-                var sharedTexR = device.OpenSharedResource<Texture2D>(resourceR.SharedHandle);
+                //var resourceR = textureR.QueryInterface<SharpDX.DXGI.Resource>();
+                //var sharedTexR = device.OpenSharedResource<Texture2D>(resourceR.SharedHandle);
 
                 basicEffectR = new SharpDX.Toolkit.Graphics.BasicEffect(gd);
 
                 basicEffectR.PreferPerPixelLighting = false;
-                basicEffectR.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(gd, sharedTexR);
+                //basicEffectR.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(gd, sharedTexR);
 
                 basicEffectR.TextureEnabled = true;
                 basicEffectR.LightingEnabled = false;
                 basicEffectR.Sampler = gd.SamplerStates.AnisotropicClamp;
             }
 
-            //var primitive = SharpDX.Toolkit.Graphics.GeometricPrimitive.Sphere.New(gd, radius, 32, true);
-            var primitive = GraphicTools.CreateGeometry(_projection, gd);
+			ResizeTexture(MediaDecoder.Instance.TextureL, MediaDecoder.Instance.TextureL);
+
+			//var primitive = SharpDX.Toolkit.Graphics.GeometricPrimitive.Sphere.New(gd, radius, 32, true);
+			var primitive = GraphicTools.CreateGeometry(_projection, gd);
 
 
             // UI Rendering
@@ -415,7 +462,11 @@ namespace PlayerUI.OSVRKit
 
             RenderLoop.Run(form, () =>
             {
-                if (abort) form.Close();
+				if (abort)
+				{
+					form.Close();
+					return;
+				}				
 
                 if(first)
                 {
@@ -461,28 +512,28 @@ namespace PlayerUI.OSVRKit
                         viewMatrix.Transpose();
 
 
-                        float fov2 = (float)(102.57f * Math.PI / 180f);
+                        float fov2 = (float)(90f * Math.PI / 180f);
 
-                        //Matrix projectionMatrix = Matrix.PerspectiveFovRH(fov2, viewport.Width / (float)viewport.Height, 0.001f, 100.0f);
-                        Matrix projectionMatrix = new Matrix()
-                        {
-                            M11 = projectionf.M0,
-                            M12 = projectionf.M1,
-                            M13 = projectionf.M2,
-                            M14 = projectionf.M3,
-                            M21 = projectionf.M4,
-                            M22 = projectionf.M5,
-                            M23 = projectionf.M6,
-                            M24 = projectionf.M7,
-                            M31 = projectionf.M8,
-                            M32 = projectionf.M9,
-                            M33 = projectionf.M10,
-                            M34 = projectionf.M11,
-                            M41 = projectionf.M12,
-                            M42 = projectionf.M13,
-                            M43 = projectionf.M14,
-                            M44 = projectionf.M15,
-                        };
+                        Matrix projectionMatrix = Matrix.PerspectiveFovRH(fov2, viewport.Width / (float)viewport.Height, 0.001f, 100.0f);
+                        //Matrix projectionMatrix = new Matrix()
+                        //{
+                        //    M11 = projectionf.M0,
+                        //    M12 = projectionf.M1,
+                        //    M13 = projectionf.M2,
+                        //    M14 = projectionf.M3,
+                        //    M21 = projectionf.M4,
+                        //    M22 = projectionf.M5,
+                        //    M23 = projectionf.M6,
+                        //    M24 = projectionf.M7,
+                        //    M31 = projectionf.M8,
+                        //    M32 = projectionf.M9,
+                        //    M33 = projectionf.M10,
+                        //    M34 = projectionf.M11,
+                        //    M41 = projectionf.M12,
+                        //    M42 = projectionf.M13,
+                        //    M43 = projectionf.M14,
+                        //    M44 = projectionf.M15,
+                        //};
 
                         basicEffectL.World = Matrix.Identity;
                         basicEffectL.View = viewMatrix;
@@ -530,41 +581,45 @@ namespace PlayerUI.OSVRKit
 
 			waitForRendererStop.Set();
 
-            swapChain.SetFullscreenState(false, null);
+			//swapChain.SetFullscreenState(false, null);
 
-            context.Dispose();
-            
-            immediateContext.ClearState();
-            immediateContext.Flush();
-            immediateContext.Dispose();
-            backBuffer.Dispose();
-            renderView.Dispose();
-            depthView.Dispose();
-            depthBuffer.Dispose();
-            factory.Dispose();
-            swapChain.Dispose();
 
-            // Release all 2D resources
-            basicEffectL.Dispose();
-            if (_stereoVideo)
-                basicEffectR.Dispose();
 
-            //target2d.Dispose();
-            //uiSurface.Dispose();
-            //uiTexture.Dispose();			
-            //factory2d.Dispose();
-            DisposeUI();
+			immediateContext.ClearState();
+			immediateContext.Flush();
+			immediateContext.Dispose();
 
-            // Disposing the device, before the hmd, will cause the hmd to fail when disposing.
-            // Disposing the device, after the hmd, will cause the dispose of the device to fail.
-            // It looks as if the hmd steals ownership of the device and destroys it, when it's shutting down.
-            // device.Dispose();
+			swapChain.Dispose();
 
-            //hmd.Dispose();
-            //oculus.Dispose();
+			backBuffer.Dispose();
+			renderView.Dispose();
+			depthView.Dispose();
+			depthBuffer.Dispose();
+			factory.Dispose();
 
-            _playbackLock = false;
-        }
+			//swapChain.Dispose();
+
+			// Release all 2D resources
+			basicEffectL.Dispose();
+			if (_stereoVideo)
+				basicEffectR.Dispose();
+
+
+			DisposeUI();
+
+			// Disposing the device, before the hmd, will cause the hmd to fail when disposing.
+			// Disposing the device, after the hmd, will cause the dispose of the device to fail.
+			// It looks as if the hmd steals ownership of the device and destroys it, when it's shutting down.
+			// device.Dispose();
+			_gd.Dispose();
+			_device.Dispose();
+
+			//hmd.Dispose();
+			//oculus.Dispose();
+
+			context.Dispose();
+			_playbackLock = false;
+		}
 
         public static event Action OnGotFocus = delegate {};
 

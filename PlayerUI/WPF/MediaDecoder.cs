@@ -45,6 +45,8 @@ namespace PlayerUI
 		private MediaEngine _mediaEngine;
 		private MediaEngineEx _mediaEngineEx;
 		private object criticalSection = new object();
+		private bool waitForFormatChange = false;
+		private bool formatChangePending = false;
 
 		private long ts;
 		private bool _stereoVideo = false;
@@ -291,29 +293,36 @@ namespace PlayerUI
                             OnBufferingEnded();
                             break;
                         case MediaEngineEvent.FormatChange:
-							Console.WriteLine("FormatChange " + formatCounter);
-							Task.Factory.StartNew(() =>
-							{
-								lock (criticalSection)
-								{
-									
-									Texture2D tempL = textureL;
-									Texture2D tempR = textureR;
-									_mediaEngineEx.GetNativeVideoSize(out w, out h);
-									
-									textureReleased = true;
-									
-									textureL = CreateTexture(_device, w, h);
-									textureR = CreateTexture(_device, w, h);
-									textureReleased = false;
+							Console.WriteLine("[!!!] FormatChange " + formatCounter++);
+							formatChangePending = true;
+							//Task.Factory.StartNew(() =>
+							//{
+								//if (_mediaEngineEx.IsDisposed) break;
+								//if (_mediaEngineEx.IsEnded) break;
 
-									//OnReleaseTexture();
-									OnFormatChanged(textureL, textureR);
+								//lock (criticalSection)
+								//{
+								//	if (_mediaEngineEx.IsDisposed) break;
+								//	if (_mediaEngineEx.IsEnded) break;
+									
+									//Texture2D tempL = textureL;
+									//Texture2D tempR = textureR;
+									//_mediaEngineEx.GetNativeVideoSize(out w, out h);
+									
+									//textureReleased = true;
+									
+									//textureL = CreateTexture(_device, w, h);
+									//textureR = CreateTexture(_device, w, h);
+									//textureReleased = false;
 
-									tempL?.Dispose();
-									tempR?.Dispose();
-								}
-							});
+									////OnReleaseTexture();
+									//OnFormatChanged(textureL, textureR);
+									//if (waitForFormatChange) waitForFormatChange = false;
+
+									//tempL?.Dispose();
+									//tempR?.Dispose();
+								//}
+							//});
 							break;
                     }
 				};
@@ -395,7 +404,7 @@ namespace PlayerUI
 					_mediaEngineEx.GetVideoAspectRatio(out cx, out cy);
 					var s3d = _mediaEngineEx.IsStereo3D;
 					var sns = _mediaEngineEx.NumberOfStreams;
-					
+
 
 					float videoAspect = ((float)w) / ((float)h);
 					_stereoVideo = videoAspect < 1.3;
@@ -403,7 +412,7 @@ namespace PlayerUI
 
 					CurrentMode = StereoMode;
 
-					if(CurrentMode == VideoMode.Autodetect)
+					if (CurrentMode == VideoMode.Autodetect)
 						CurrentMode = DetectFromFileName(_fileName);
 
 					Console.WriteLine("VIDEO STEREO MODE: " + CurrentMode);
@@ -428,7 +437,7 @@ namespace PlayerUI
 					//textureL = CreateTexture(_device, w, h);
 					//textureR = CreateTexture(_device, w, h);
 				}
-				
+
 				_mediaEngineEx.Play();
 				//_mediaEngineEx.Volume = 0.2;
 				IsPlaying = true;
@@ -441,50 +450,77 @@ namespace PlayerUI
 				{
 					lock (criticalSection)
 					{
+						if(formatChangePending)
+						{
+							formatChangePending = false;
+							Texture2D tempL = textureL;
+							Texture2D tempR = textureR;
+							_mediaEngineEx.GetNativeVideoSize(out w, out h);
+
+							textureReleased = true;
+
+							textureL = CreateTexture(_device, w, h);
+							textureR = CreateTexture(_device, w, h);
+							textureReleased = false;
+
+							//OnReleaseTexture();
+							OnFormatChanged(textureL, textureR);
+							if (waitForFormatChange) waitForFormatChange = false;
+
+							tempL?.Dispose();
+							tempR?.Dispose();
+						}
+
 						if(!textureReleased)
 						if (!_mediaEngine.IsPaused || manualRender)
 						{
 							manualRender = false;
-							//waitForResize.WaitOne();
-
-							long lastTs = ts;
+								//waitForResize.WaitOne();
+								if(formatCounter == 0)
+									Console.WriteLine("[!!!] Render " + formatCounter++);
+								long lastTs = ts;
 							bool result = _mediaEngine.OnVideoStreamTick(out ts);
 							if(ts > 0)
 							if (result && ts != lastTs)
 							{
-								switch (CurrentMode)
-									{
-										case VideoMode.Autodetect:
-											if (IsStereo)
+										try {
+											switch (CurrentMode)
 											{
-												_mediaEngine.TransferVideoFrame(textureL, topRect, new SharpDX.Rectangle(0, 0, w, h), null);
-												_mediaEngine.TransferVideoFrame(textureR, bottomRect, new SharpDX.Rectangle(0, 0, w, h), null);
+												case VideoMode.Autodetect:
+													if (IsStereo)
+													{
+														_mediaEngine.TransferVideoFrame(textureL, topRect, new SharpDX.Rectangle(0, 0, w, h), null);
+														_mediaEngine.TransferVideoFrame(textureR, bottomRect, new SharpDX.Rectangle(0, 0, w, h), null);
+													}
+													else
+													{
+														_mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
+													}
+													break;
+												case VideoMode.Mono:
+													_mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
+													break;
+												case VideoMode.SideBySide:
+													_mediaEngine.TransferVideoFrame(textureL, leftRect, new SharpDX.Rectangle(0, 0, w, h), null);
+													_mediaEngine.TransferVideoFrame(textureR, rightRect, new SharpDX.Rectangle(0, 0, w, h), null);
+													break;
+												case VideoMode.SideBySideReversed:
+													_mediaEngine.TransferVideoFrame(textureL, rightRect, new SharpDX.Rectangle(0, 0, w, h), null);
+													_mediaEngine.TransferVideoFrame(textureR, leftRect, new SharpDX.Rectangle(0, 0, w, h), null);
+													break;
+												case VideoMode.TopBottom:
+													_mediaEngine.TransferVideoFrame(textureL, topRect, new SharpDX.Rectangle(0, 0, w, h), null);
+													_mediaEngine.TransferVideoFrame(textureR, bottomRect, new SharpDX.Rectangle(0, 0, w, h), null);
+													break;
+												case VideoMode.TopBottomReversed:
+													_mediaEngine.TransferVideoFrame(textureR, topRect, new SharpDX.Rectangle(0, 0, w, h), null);
+													_mediaEngine.TransferVideoFrame(textureL, bottomRect, new SharpDX.Rectangle(0, 0, w, h), null);
+													break;
 											}
-											else
-											{
-												_mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
-											}
-											break;
-										case VideoMode.Mono:
-											_mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
-											break;
-										case VideoMode.SideBySide:
-											_mediaEngine.TransferVideoFrame(textureL, leftRect, new SharpDX.Rectangle(0, 0, w, h), null);
-											_mediaEngine.TransferVideoFrame(textureR, rightRect, new SharpDX.Rectangle(0, 0, w, h), null);
-											break;
-										case VideoMode.SideBySideReversed:
-											_mediaEngine.TransferVideoFrame(textureL, rightRect, new SharpDX.Rectangle(0, 0, w, h), null);
-											_mediaEngine.TransferVideoFrame(textureR, leftRect, new SharpDX.Rectangle(0, 0, w, h), null);
-											break;
-										case VideoMode.TopBottom:
-											_mediaEngine.TransferVideoFrame(textureL, topRect, new SharpDX.Rectangle(0, 0, w, h), null);
-											_mediaEngine.TransferVideoFrame(textureR, bottomRect, new SharpDX.Rectangle(0, 0, w, h), null);
-											break;
-										case VideoMode.TopBottomReversed:
-											_mediaEngine.TransferVideoFrame(textureR, topRect, new SharpDX.Rectangle(0, 0, w, h), null);
-											_mediaEngine.TransferVideoFrame(textureL, bottomRect, new SharpDX.Rectangle(0, 0, w, h), null);
-											break;
-									}									
+										} catch (Exception exc)
+										{
+											Console.WriteLine("Playback exception " + exc.Message);
+										}
 							}
 						}
 					}
@@ -599,6 +635,9 @@ namespace PlayerUI
 				textureL?.Dispose();
 				textureR?.Dispose();
 
+				textureL = null;
+				textureR = null;
+
 				_initialized = false;	
 			}
 			
@@ -614,6 +653,7 @@ namespace PlayerUI
 		{
 			_fileName = "";
 			textureReleased = true;
+			waitForFormatChange = true;
 			Stop();
 			while (_initialized == true)
 			{
@@ -625,21 +665,22 @@ namespace PlayerUI
             			
 			_fileName = fileName;
 
-            //Collection collection;
-            //MediaFactory.CreateCollection(out collection);
+			//Collection collection;
+			//MediaFactory.CreateCollection(out collection);
 
-            //SourceResolver sourceResolver = new SourceResolver();
-            //var mediaSource1 = sourceResolver.CreateObjectFromURL(@"D:\TestVideos\maroon.m4a", SourceResolverFlags.MediaSource | SourceResolverFlags.ContentDoesNotHaveToMatchExtensionOrMimeType).QueryInterface<MediaSource>();
-            //var mediaSource2 = sourceResolver.CreateObjectFromURL(@"D:\TestVideos\maroon-video.mp4", SourceResolverFlags.MediaSource | SourceResolverFlags.ContentDoesNotHaveToMatchExtensionOrMimeType).QueryInterface<MediaSource>();
-            //collection.AddElement(mediaSource1);
-            //collection.AddElement(mediaSource2);
-            //MediaSource aggregateSource;
-            //MediaFactory.CreateAggregateSource(collection, out aggregateSource);
+			//SourceResolver sourceResolver = new SourceResolver();
+			//var mediaSource1 = sourceResolver.CreateObjectFromURL(@"D:\TestVideos\maroon.m4a", SourceResolverFlags.MediaSource | SourceResolverFlags.ContentDoesNotHaveToMatchExtensionOrMimeType).QueryInterface<MediaSource>();
+			//var mediaSource2 = sourceResolver.CreateObjectFromURL(@"D:\TestVideos\maroon-video.mp4", SourceResolverFlags.MediaSource | SourceResolverFlags.ContentDoesNotHaveToMatchExtensionOrMimeType).QueryInterface<MediaSource>();
+			//collection.AddElement(mediaSource1);
+			//collection.AddElement(mediaSource2);
+			//MediaSource aggregateSource;
+			//MediaFactory.CreateAggregateSource(collection, out aggregateSource);
 
-            //MediaEngineSrcElementsEx
-
-
-            _mediaEngineEx.Source = _fileName;
+			//MediaEngineSrcElementsEx
+			formatCounter = 0;
+			textureReleased = true;
+			waitForFormatChange = true;
+			_mediaEngineEx.Source = _fileName;
             _mediaEngineEx.Preload = MediaEnginePreload.Automatic;
 			_mediaEngineEx.Load();
 			
