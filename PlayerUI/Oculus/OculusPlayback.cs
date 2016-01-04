@@ -82,6 +82,11 @@ namespace PlayerUI.Oculus
 			abort = true;
 		}
 
+		public static void Reset()
+		{
+			abort = false;
+		}
+
 		public static bool IsOculusPresent()
 		{
 			if (_playbackLock) return true;

@@ -626,6 +626,9 @@ namespace PlayerUI
                             Thread.Sleep(50);
                         }
 
+						OculusPlayback.Reset();
+						OSVRKit.OSVRPlayback.Reset();
+
 						bool detected = false;
 
 						if (this.HeadsetUsage == HeadsetMode.Auto || this.HeadsetUsage == HeadsetMode.Oculus)

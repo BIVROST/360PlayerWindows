@@ -58,8 +58,9 @@ namespace PlayerUI.OSVRKit
                 try
                 {
                     Render();
-                }
-                catch (Exception) { }
+					_playbackLock = false;
+				}
+                catch (Exception) { _playbackLock = false; }
             });
         }
 
@@ -87,6 +88,11 @@ namespace PlayerUI.OSVRKit
             abort = true;
         }
 
+		public static void Reset()
+		{
+			abort = false;
+		}
+
 		private static bool _preloaded = false;
 		private static int _selectedOutput = 0;
 
@@ -99,40 +105,52 @@ namespace PlayerUI.OSVRKit
 			}
 
             if (_playbackLock) return true;
+			int mainRetry = 3;
 
-            using (ClientContext context = new ClientContext("com.osvr.exampleclients.managed.DisplayParameter"))
-            {
-                for (int retry = 0; retry < 10; retry++)
-                    using (var displayConfig = context.GetDisplayConfig())
-                    {
-                        // GetDisplayConfig can sometimes fail, returning null
-                        if (displayConfig != null)
-                        {
-							int contextRetry = 0;
-                            do
-                            {
-                                context.update();
-								Thread.Sleep(10);
-								contextRetry++;
-                            } while (!displayConfig.CheckDisplayStartup() || contextRetry < 20);
+			do
+			{
+				using (ClientContext context = new ClientContext("com.bivrost360.desktopplayer"))
+				{
+					for (int retry = 0; retry < 12; retry++)
+						using (var displayConfig = context.GetDisplayConfig())
+						{
+							if (abort)
+							{
+								context.Dispose();
+								return false;
+							}
+							// GetDisplayConfig can sometimes fail, returning null
+							if (displayConfig != null)
+							{
+								int contextRetry = 0;
+								do
+								{
+									context.update();
+									if (abort)
+									{
+										context.Dispose();
+										return false;
+									}
+									Thread.Sleep(1);
+									contextRetry++;
+								} while (!displayConfig.CheckDisplayStartup() || contextRetry < 300);
 
-                            var numDisplayInputs = displayConfig.GetNumDisplayInputs();
+								var numDisplayInputs = displayConfig.GetNumDisplayInputs();
 
-                            for (byte displayInputIndex = 0; displayInputIndex < numDisplayInputs; displayInputIndex++)
-                            {
-                                var displayDimensions = displayConfig.GetDisplayDimensions(displayInputIndex);
-                                Console.WriteLine("Display input {0} is width {1} and height {2}",
-                                    displayInputIndex, displayDimensions.Width, displayDimensions.Height);
-                            }
+								for (byte displayInputIndex = 0; displayInputIndex < numDisplayInputs; displayInputIndex++)
+								{
+									var displayDimensions = displayConfig.GetDisplayDimensions(displayInputIndex);
+									Console.WriteLine("Display input {0} is width {1} and height {2}",
+										displayInputIndex, displayDimensions.Width, displayDimensions.Height);
+								}
 
-                            var numViewers = displayConfig.GetNumViewers();
+								var numViewers = displayConfig.GetNumViewers();
 
-                            if (numViewers > 0) return true;
-                        }
-                        else
-                            return false;
-                    }
-            }
+								if (numViewers > 0) return true;
+							}
+						}
+				}
+			} while (mainRetry-- > 0);
             return false;
         }
 
@@ -182,36 +200,85 @@ namespace PlayerUI.OSVRKit
         {
             _playbackLock = true;
 
-            //Wrap oculus = new Wrap();
-            //Hmd hmd;
+			//Wrap oculus = new Wrap();
+			//Hmd hmd;
 
-            ClientContext context = new ClientContext("com.bivrost360.desktopplayer");
-            var displayConfig = context.GetDisplayConfig();
+			int mainRetry = 5;
+			ClientContext context;
+			do
+			{
+				context = new ClientContext("com.bivrost360.desktopplayer");
+				Thread.Sleep(50);
+			}
+			while (context == null && mainRetry-- > 0);
 
-            for (int retry = 0; retry < 10; retry++)
-                if (displayConfig == null)
-                    displayConfig = context.GetDisplayConfig();
-            if (displayConfig == null) return;
+			DisplayConfig displayConfig = null;
 
-			int contextRetry = 0;
-            do
-            {
-                context.update();
-				contextRetry++;
-				Thread.Sleep(10);
-            } while (!displayConfig.CheckDisplayStartup() || contextRetry < 20);
+			for (int retry = 0; retry < 12; retry++)
+			{
+				if (abort)
+				{
+					context.Dispose();
+					_playbackLock = false;
+					return;
+				}
 
+				displayConfig = context.GetDisplayConfig();
+
+				//if (displayConfig == null)
+				//	displayConfig = context.GetDisplayConfig();
+				//if (displayConfig == null)
+				//{
+				//	context.Dispose();
+				//	_playbackLock = false;
+				//	return;
+				//}
+
+				if (displayConfig != null)
+				{
+					int contextRetry = 0;
+					do
+					{
+						context.update();
+						contextRetry++;
+						if (abort)
+						{
+							context.Dispose();
+							_playbackLock = false;
+							return;
+						}
+						Thread.Sleep(1);
+					} while (!displayConfig.CheckDisplayStartup() || contextRetry < 300);
+					if (displayConfig.CheckDisplayStartup()) break;
+				}
+			}
+			if(displayConfig == null)
+			{
+				context.Dispose();
+				_playbackLock = false;
+				return;
+			}
 
             var numDisplayInputs = displayConfig.GetNumDisplayInputs();
-            if (numDisplayInputs != 1) return;
+            if (numDisplayInputs != 1)
+			{
+				context.Dispose();
+				_playbackLock = false;
+				return;
+			}
 
             var displayDimensions = displayConfig.GetDisplayDimensions(0);
             var numViewers = displayConfig.GetNumViewers();
 
-            if (numViewers != 1) return;
+            if (numViewers != 1)
+			{
+				context.Dispose();
+				_playbackLock = false;
+				return;
+			}
 
 
-            var form = new RenderForm("BIVROST - OSVR");
+			var form = new RenderForm("BIVROST - OSVR");
             form.Width = displayDimensions.Width;
             form.Height = displayDimensions.Height;
             form.ShowInTaskbar = false;
@@ -342,6 +409,8 @@ namespace PlayerUI.OSVRKit
 				}
 				else
 				{
+					context.Dispose();
+					_playbackLock = false;
 					return;
 				}
 
@@ -617,7 +686,9 @@ namespace PlayerUI.OSVRKit
 			//hmd.Dispose();
 			//oculus.Dispose();
 
+			displayConfig.Dispose();
 			context.Dispose();
+
 			_playbackLock = false;
 		}
 
