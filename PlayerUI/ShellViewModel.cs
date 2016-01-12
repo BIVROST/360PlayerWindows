@@ -264,14 +264,24 @@ namespace PlayerUI
 				BringToFront();
 				handled = true;
 			}
+			if(msg == NativeMethods.WM_COPYDATA)
+			{				
+				NativeMethods.COPYDATASTRUCT cps = (NativeMethods.COPYDATASTRUCT)System.Runtime.InteropServices.Marshal.PtrToStructure(lParam, typeof(NativeMethods.COPYDATASTRUCT));
+				string data = cps.lpData;				
+
+				BringToFront(data);
+				handled = true;
+			}
 			return IntPtr.Zero;
 		}
 
-		public void BringToFront()
+		public void BringToFront(string wmText = "")
 		{
 			Execute.OnUIThreadAsync(() => playerWindow.Activate());
 
-			string clipboardText = Clipboard.GetText();
+			//string clipboardText = Clipboard.GetText();
+			string clipboardText = wmText;
+
 			Console.WriteLine(clipboardText);
 
 			if (clipboardText.StartsWith("bivrost:"))
@@ -311,6 +321,8 @@ namespace PlayerUI
 
             HwndSource source = HwndSource.FromHwnd(new WindowInteropHelper(playerWindow).Handle);
             source.AddHook(new HwndSourceHook(WndProc));
+
+			
 
             this.DXCanvas.StopRendering();
 
@@ -487,8 +499,7 @@ namespace PlayerUI
 			};
 
 			uiVisibilityBackgrundChecker.RunWorkerAsync();
-			
-        }
+		}
 
 		private DateTime lastUIMove;
 		private DateTime lastCursorMove;

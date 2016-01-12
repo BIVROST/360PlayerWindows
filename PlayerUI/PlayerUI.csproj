@@ -31,15 +31,14 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <InstallUrl>http://download.bivrost360.com/player-desktop/</InstallUrl>
-    <UpdateUrl>http://download.bivrost360.com/player-desktop/</UpdateUrl>
+    <InstallUrl>http://download.bivrost360.com/player-desktop/canary/</InstallUrl>
     <TargetCulture>en</TargetCulture>
     <ProductName>Bivrost 360Player</ProductName>
     <PublisherName>BIVROST Sp z o.o.</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <TrustUrlParameters>true</TrustUrlParameters>
-    <ApplicationRevision>138</ApplicationRevision>
+    <ApplicationRevision>163</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>true</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
@@ -340,6 +339,7 @@
     <Compile Include="Tools\DeviceSelectionTool.cs" />
     <Compile Include="Tools\GraphicTools.cs" />
     <Compile Include="Tools\NativeMethods.cs" />
+    <Compile Include="Tools\PublishInfo.cs" />
     <Compile Include="Tools\RegistryBase.cs" />
     <Compile Include="Tools\RegistryContext.cs" />
     <Compile Include="Tools\StreamingServices.cs" />

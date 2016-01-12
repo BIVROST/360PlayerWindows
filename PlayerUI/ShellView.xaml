@@ -150,9 +150,8 @@
                 </MenuItem>
                 <MenuItem Header="View">
                     <MenuItem Header="Normal (gnomic) projection" InputGestureText="N" cal:Message.Attach="[Event Click] = [Action NormalProjection]" />
-                    <MenuItem Header="Little planet (stereographic) projection" InputGestureText="L"  cal:Message.Attach="[Event Click] = [Action LittlePlanetProjection]" />
-                    <MenuItem Header="Reset zoom (fov)" InputGestureText="Ctrl+0" cal:Message.Attach="[Event Click] = [Action ResetFov]" />
-                    <Separator />
+					<MenuItem Header="Little planet (stereographic) projection" InputGestureText="L"  cal:Message.Attach="[Event Click] = [Action LittlePlanetProjection]" />
+					<Separator />
                     <MenuItem Header="Reset zoom (fov)" InputGestureText="Ctrl+0" cal:Message.Attach="[Event Click] = [Action ResetFov]" />
                 </MenuItem>
                 <MenuItem Header="Options">
