@@ -13,6 +13,7 @@ using System.Web;
 
 namespace PlayerUI.Tools
 {
+	[Obsolete]
 	public class StreamingServices
 	{
 		public enum Service

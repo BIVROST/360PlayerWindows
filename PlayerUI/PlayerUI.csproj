@@ -342,6 +342,7 @@
     <Compile Include="Tools\NativeMethods.cs" />
     <Compile Include="Tools\RegistryBase.cs" />
     <Compile Include="Tools\RegistryContext.cs" />
+    <Compile Include="StreamingServices\StreamingServiceResult.cs" />
     <Compile Include="Tools\StreamingServices.cs" />
     <Compile Include="Tools\TimeoutBool.cs" />
     <Compile Include="VolumeControlView.xaml.cs">
