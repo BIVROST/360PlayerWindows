@@ -26,6 +26,7 @@ namespace PlayerUI
 			Initialize();
 		}
 
+
 		protected override void OnStartup(object sender, System.Windows.StartupEventArgs e)
 		{
 			System.Windows.Forms.Application.EnableVisualStyles();
@@ -34,8 +35,13 @@ namespace PlayerUI
 			{
 				Logic.LocalDataDirectory = ApplicationDeployment.CurrentDeployment.DataDirectory + "\\";
 
-				SetAddRemoveProgramsIcon();
-				AssociateFileExtensions();
+				Task.Factory.StartNew(() =>
+				{
+					CopyApplicationReference();
+					SetAddRemoveProgramsIcon();
+					AssociateFileExtensions();
+				});
+
 			} else
 			{
 				{
@@ -45,37 +51,22 @@ namespace PlayerUI
 
 			}
 
-
 			
-			
-
 			string[] args = Environment.GetCommandLineArgs();
 			
 			try {
 				if (AppDomain.CurrentDomain.SetupInformation.ActivationArguments != null)
 				{
-					string[] activationData = AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData;
-
-					if (activationData != null)
-					{
-						if (activationData.Length == 1)
-						{
-							ShellViewModel.FileFromArgs = activationData[0];
-						}
-						if(activationData.Length == 2)
-						{
-							if (activationData[0] == "--bivrost-protocol")
-							{
-								ShellViewModel.FileFromProtocol = activationData[1];
-                            }
-                        }
-					}							
+					args = AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData;
 				}
 				
 			} catch(Exception ex)
 			{
 				//MessageBox.Show("ex: " + ex.Message + "\n" + ex.StackTrace);
 			}
+
+
+
 
 
 			try
@@ -91,21 +82,18 @@ namespace PlayerUI
 			{
 				ownMutex = true;
 
-				if (args.Length == 2)
-				{
-					if (!string.IsNullOrWhiteSpace(args[1]))
+				if(args != null)
+					if(args.Length>0)
 					{
-						ShellViewModel.FileFromArgs = args[1];
+						if(args[0].StartsWith("bivrost:"))
+						{
+							ShellViewModel.FileFromProtocol = args[args.Length - 1];
+						}
+						else
+						{
+							ShellViewModel.FileFromArgs = args[args.Length - 1];
+						}
 					}
-				} else
-				if(args.Length == 3)
-				{
-					if (!string.IsNullOrWhiteSpace(args[1]) && !string.IsNullOrWhiteSpace(args[2]))
-					{
-						if (args[1] == "--bivrost-protocol")
-							ShellViewModel.FileFromProtocol = args[2];
-					}
-                }
 				
 				if (Logic.Instance.settings.EventMode)
 				{
@@ -119,42 +107,69 @@ namespace PlayerUI
 			}
 			else
 			{
-				if (args.Length == 2)
+				if (args.Length > 0)
 				{
-					if (!string.IsNullOrWhiteSpace(args[1]))
+					if (!string.IsNullOrWhiteSpace(args[args.Length - 1]))
 					{
-						Clipboard.SetText(args[1]);
-						NativeMethods.PostMessage((IntPtr)NativeMethods.HWND_BROADCAST, NativeMethods.WM_SHOWBIVROSTPLAYER, IntPtr.Zero, IntPtr.Zero);
-					}
-				} else if(args.Length == 3)
-				{
-					if (!string.IsNullOrWhiteSpace(args[1]) && !string.IsNullOrWhiteSpace(args[2]))
-					{
-						if (args[1] == "--bivrost-protocol")
+						string str = args[args.Length - 1];
+						var cds = new NativeMethods.COPYDATASTRUCT
 						{
-							Clipboard.SetText(args[2]);
-							NativeMethods.PostMessage((IntPtr)NativeMethods.HWND_BROADCAST, NativeMethods.WM_SHOWBIVROSTPLAYER, IntPtr.Zero, IntPtr.Zero);
-						}
+							dwData = new IntPtr(3),
+							cbData = str.Length + 1,
+							lpData = str
+						};
+
+						//MessageBox.Show("Sending: " + cds.lpData);
+
+						IntPtr bwin = GetPlayerWindow();
+						NativeMethods.SendMessage(bwin, NativeMethods.WM_COPYDATA, IntPtr.Zero, ref cds);
+
+
+						//Clipboard.SetText(args[1]);
+						//NativeMethods.PostMessage((IntPtr)NativeMethods.HWND_BROADCAST, NativeMethods.WM_SHOWBIVROSTPLAYER, IntPtr.Zero, IntPtr.Zero);
+
+						//string str = args[0];
+						//var cds = new NativeMethods.COPYDATASTRUCT
+						//{
+						//	dwData = new IntPtr(3),
+						//	cbData = str.Length + 1,
+						//	lpData = str
+						//};
+						//IntPtr bwin = NativeMethods.FindWindow(null, "Bivrost 360Player");
+						//NativeMethods.SendMessage(bwin, NativeMethods.WM_COPYDATA, IntPtr.Zero, ref cds);
+
 					}
-				}
+				} 
+
+				//	else if(args.Length == 3)
+				//{
+				//	if (!string.IsNullOrWhiteSpace(args[1]) && !string.IsNullOrWhiteSpace(args[2]))
+				//	{
+				//		if (args[1] == "--bivrost-protocol")
+				//		{
+				//			Clipboard.SetText(args[2]);
+				//			NativeMethods.PostMessage((IntPtr)NativeMethods.HWND_BROADCAST, NativeMethods.WM_SHOWBIVROSTPLAYER, IntPtr.Zero, IntPtr.Zero);
+				//		}
+				//	}
+				//}
 				Application.Shutdown();
 			}
 		}
 
 		protected override void OnExit(object sender, EventArgs e)
 		{
-			try
-			{
-				if (!string.IsNullOrWhiteSpace(Logic.LocalDataDirectory))
-				{
-					foreach (string s in Directory.EnumerateFiles(Logic.LocalDataDirectory))
-					{
-						//MessageBox.Show(s);
-						File.Copy(s, Path.GetFileName(s), true);
-					}
-				}
-			}
-			catch (Exception exc) { }
+			//try
+			//{
+			//	if (!string.IsNullOrWhiteSpace(Logic.LocalDataDirectory))
+			//	{
+			//		foreach (string s in Directory.EnumerateFiles(Logic.LocalDataDirectory))
+			//		{
+			//			//MessageBox.Show(s);
+			//			File.Copy(s, Path.GetFileName(s), true);
+			//		}
+			//	}
+			//}
+			//catch (Exception exc) { }
 
 			base.OnExit(sender, e);
 			if(ownMutex)
@@ -208,8 +223,26 @@ namespace PlayerUI
 			}
 		}
 
+		public static void CopyApplicationReference()
+		{
+			try
+			{
+				// http://download.bivrost360.com/player-desktop/canary/BivrostPlayer.application#BivrostPlayer.application, Culture=en, PublicKeyToken=8b49056c26c8df4d, processorArchitecture=msil
+				if(!File.Exists(Logic.LocalDataDirectory + "Bivrost360Player.appref-ms"))
+				{
+					string appref = $"http://download.bivrost360.com/player-desktop/canary/BivrostPlayer.application#BivrostPlayer.application, Culture=en, PublicKeyToken={PublishInfo.ApplicationIdentity.PublicKeyToken}, processorArchitecture={PublishInfo.ApplicationIdentity.ProcessorArchitecture.ToString().ToLower()}";
+					File.WriteAllText(Logic.LocalDataDirectory + "Bivrost360Player.appref-ms", appref, Encoding.GetEncoding(1200));
+                }
+			} catch(Exception)
+			{
+
+			}
+		}
+
 		public static void AssociateFileExtensions()
 		{
+
+			//PROTOCOL REGISTRATION
 			try {
 				
 				string publisherName = GetPublisher("Bivrost 360Player");
@@ -222,9 +255,62 @@ namespace PlayerUI
 				bivrostProtocolKey = myClasses.OpenSubKey("bivrost", true);
 				bivrostProtocolKey.SetValue("URL Protocol","");
 				RegistryKey commandKey = bivrostProtocolKey.OpenSubKey(@"shell\open\command", true);
-				commandKey.SetValue("","\"" + System.Reflection.Assembly.GetExecutingAssembly().CodeBase.Substring(8).Replace('/',Path.DirectorySeparatorChar) + "\" --bivrost-protocol \"%1\"");
+				//commandKey.SetValue("","\"" + System.Reflection.Assembly.GetExecutingAssembly().CodeBase.Substring(8).Replace('/',Path.DirectorySeparatorChar) + "\" --bivrost-protocol \"%1\"");
+				commandKey.SetValue("", "rundll32.exe dfshim.dll,ShOpenVerbShortcut " + Logic.LocalDataDirectory + "Bivrost360Player.appref-ms" +"|%1");
 			} catch(Exception exc) { }
-        }
+
+
+			////VIDEO FILES CONTEXT MENU
+			//try
+			//{
+			//	RegistryKey bivrostMenuCommandKey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Classes\SystemFileAssociations\.mp4\Shell\Open in 360Player\Command", true);
+			//	if (bivrostMenuCommandKey == null)
+			//		bivrostMenuCommandKey = Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Classes\SystemFileAssociations\.mp4\Shell\Open in 360Player\Command");
+
+			//	RegistryKey bivrostMenuKey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Classes\SystemFileAssociations\.mp4\Shell\Open in 360Player", true);				
+			//	string iconSourcePath = Path.Combine(System.Windows.Forms.Application.StartupPath, "Graphics\\fileassoc.ico");
+			//	bivrostMenuKey.SetValue("Icon", iconSourcePath);
+
+			//	bivrostMenuCommandKey.SetValue("", "rundll32.exe dfshim.dll,ShOpenVerbShortcut " + Logic.LocalDataDirectory + "Bivrost360Player.appref-ms" + "|%1");
+
+			//	bivrostMenuCommandKey.Close();
+			//	bivrostMenuKey.Close();
+			//}
+			//catch (Exception exc) {
+			//	//MessageBox.Show(exc.Message + "\n\n" + exc.StackTrace);
+			//}
+			AssociateExtension(".mp4");
+			AssociateExtension(".m4v");
+			AssociateExtension(".mov");
+			AssociateExtension(".avi");
+			AssociateExtension(".wmv");
+		}
+
+		private static void AssociateExtension(string extension)
+		{
+			if (!extension.StartsWith(".")) extension = "." + extension;
+
+			//VIDEO FILES CONTEXT MENU
+			try
+			{
+				RegistryKey bivrostMenuCommandKey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Classes\SystemFileAssociations\" + extension + @"\Shell\Open in 360Player\Command", true);
+				if (bivrostMenuCommandKey == null)
+					bivrostMenuCommandKey = Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Classes\SystemFileAssociations\" + extension + @"\Shell\Open in 360Player\Command");
+
+				RegistryKey bivrostMenuKey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Classes\SystemFileAssociations\" + extension + @"\Shell\Open in 360Player", true);
+				string iconSourcePath = Path.Combine(System.Windows.Forms.Application.StartupPath, "Graphics\\fileassoc.ico");
+				bivrostMenuKey.SetValue("Icon", iconSourcePath);
+
+				bivrostMenuCommandKey.SetValue("", "rundll32.exe dfshim.dll,ShOpenVerbShortcut " + Logic.LocalDataDirectory + "Bivrost360Player.appref-ms" + "|%1");
+
+				bivrostMenuCommandKey.Close();
+				bivrostMenuKey.Close();
+			}
+			catch (Exception exc)
+			{
+				//MessageBox.Show(exc.Message + "\n\n" + exc.StackTrace);
+			}
+		}
 
 		public static string GetPublisher(string application)
 		{
@@ -245,6 +331,37 @@ namespace PlayerUI
 			}
 		}
 
+		private static string GetPublicKeyTokenFromAssembly(Assembly assembly)
+		{
+			var bytes = assembly.GetName().GetPublicKeyToken();
+			if (bytes == null || bytes.Length == 0)
+				return "None";
+			var publicKeyToken = string.Empty;
+			for (int i = 0; i < bytes.GetLength(0); i++)
+				publicKeyToken += string.Format("{0:x2}", bytes[i]);
+			return publicKeyToken;
+		}
 
+		private static IntPtr GetPlayerWindow()
+		{
+			IntPtr playerPointer = IntPtr.Zero;
+
+			NativeMethods.EnumWindows((in1, in2) =>
+			{
+				StringBuilder sb = new StringBuilder(256);
+				NativeMethods.GetWindowText(in1, sb, 256);
+				string text = sb.ToString();
+				if (text.StartsWith("Bivrost 360Player"))
+				{
+					StringBuilder sbname = new StringBuilder(256);
+					NativeMethods.GetClassName(in1, sbname, 256);
+					Console.WriteLine("Found Bivrost player window with class: " + sbname.ToString());
+					playerPointer = in1;
+				}
+				return true;
+			}, IntPtr.Zero);
+
+			return playerPointer;
+		}
 	}
 }
