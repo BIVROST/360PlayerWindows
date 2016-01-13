@@ -55,71 +55,57 @@ namespace PlayerUI.Streaming
 			throw new StreamParsingFailed("Quality unknown: " + quality);
 		}
 
-		public async override Task<ServiceResult> TryParse(string url)
+		public override ServiceResult TryParse(string url)
 		{
 			var result = new ServiceResult() { originalURL = url };
 			//				var cdn =/\bcdn:\s * "([^"]*)"/.exec(document.body.innerHTML)[1];
 			//	 var cdn_dir =/\bcdn_dir:\s * "([^"]*)"/.exec(document.body.innerHTML)[1];
 			string id = UriToId(url);
-			string jsonString = await HTTPGetStringAsync("http://www.vrideo.com/api/v1/videos?video_ids=" + id);
+			string jsonString = HTTPGetString("http://www.vrideo.com/api/v1/videos?video_ids=" + id);
 			JObject metadata = (JObject)JObject.Parse(jsonString)["items"][0];
 			result.projection = ParseProjection((string)metadata["projection"]);
-			string stereo = (string)metadata["stereo_video"];
+			result.stereoscopy = ParseStereo((string)metadata["stereo_video"]);
 			result.title = (string)metadata["title"];
 
-			foreach (var format in (JObject)metadata["attributes"]["available_format_details"])
+			foreach (JProperty format in metadata["attributes"]["available_format_details"].Children<JProperty>())
 			{
-				VideoContainer container = (VideoContainer)Enum.Parse(typeof(VideoContainer), format.Key);
-				foreach (string q in (JArray)format.Value)
+				VideoContainer container = (VideoContainer)Enum.Parse(typeof(VideoContainer), format.Name);
+				foreach (JToken q in format.Value.Children<JToken>())
 				{
-					var quality = ParseQuality(q);
-					if (!quality.HasValue)
-						break; // ignore low quality
+					var quality = ParseQuality((string)q);
+					if (!quality.HasValue) {
+						Warn("Ignoring very low quality: " + (string)q);
+						continue;
+					}
+					var urlKey = "video_file_path_" + format.Name + "_" + (string)q;
 					VideoStream video = new VideoStream()
 					{
 						container = container,
 						quality = quality.Value,
-						url = (string)metadata["attributes"]["video_file_path_" + quality + "_full." + container],
+						url = (string)metadata["attributes"][urlKey],
 						hasAudio = true
 					};
-					result.VideoStreams.Add(video);
+					if(video.url == null) {
+						Warn("no video url?");
+					}
+					else
+						result.VideoStreams.Add(video);
 				}
 			}
 
-			//string format_details = metadata.attributes.available_format_details[format];
-			//var quality;
-
 			return result;
+		}
 
-			//				["480p", "720p", "1080p", "2k", "4k"].forEach(function(q)
-			//		{
-			//			if (format_details.indexOf(q) > -1)
-			//				quality = q;
-			//		});
-			//            var videourl = cdn + cdn_dir + "/v1/" + id + "_" + quality + "_full." + format;
-			//		// alternatywa:
-			//		var videourlalt;
-			//		["480p", "720p", "1080p", "2k", "4k"].forEach(function(q)
-			//		{
-			//			var k = "video_file_path_" + format + "_" + q;
-			//			var a = metadata.items[0].attributes;
-			//			if (a.hasOwnProperty(k))
-			//				videourlalt = a[k];
-			//		});
-			//            if(confirm([
-			//					 url,
-			//					 videourl,
-			//					 projection,
-			//					 stereo,
-			//					 title,
-			//					 quality+" ("+format_details.join(", ")+")" 
-			//            ].join("\n")))
-			//                location.href=videourl;
-			//        }
-			//};
-			//xhr.open("GET", );
-			//    xhr.send();
-			//})();	
+		private MediaDecoder.VideoMode ParseStereo(string stereo)
+		{
+			switch(stereo) {
+				case "not3d":	return MediaDecoder.VideoMode.Mono;
+				case "sbs_left_on_left": return MediaDecoder.VideoMode.SideBySide;
+				case "sbs_right_on_left": return MediaDecoder.VideoMode.SideBySideReversed;
+				case "t2b_left_on_top": return MediaDecoder.VideoMode.TopBottom;
+				case "t2b_right_on_top": return MediaDecoder.VideoMode.TopBottomReversed;
+			}
+			throw new StreamParsingFailed("Unknown stereoscopy: " + stereo);
 		}
 	}
 

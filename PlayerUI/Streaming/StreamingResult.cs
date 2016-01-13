@@ -151,8 +151,8 @@ namespace PlayerUI.Streaming
 		{
 			foreach(var parser in parsers)
 				if(parser.CanParse(uri)) {
-					ServiceResult result=await parser.TryParse(uri);
-					return result;
+					//ServiceResult result=await parser.TryParse(uri);
+					//return result;
 				}
 			return null;
 		}
@@ -165,8 +165,12 @@ namespace PlayerUI.Streaming
 
 		#region util
 
+		protected void Warn(string message) {
+			Console.WriteLine("[" + GetType().Name + " warning]: " + message);
+		}
+
 		HttpClient client;
-		protected async Task<string> HTTPGetStringAsync(string uri) {
+		public async Task<string> HTTPGetStringAsync(string uri) {
 			if(client == null)
 				client= new HttpClient() { MaxResponseContentBufferSize = 1000000 };
 			var response = await client.GetStringAsync(uri);
@@ -192,7 +196,7 @@ namespace PlayerUI.Streaming
 		/// </summary>
 		/// <param name="url">url of the service</param>
 		/// <returns>true if succeeded</returns>
-		public abstract Task<ServiceResult> TryParse(string uri);
+		public abstract ServiceResult TryParse(string uri);
 		
 	}
 

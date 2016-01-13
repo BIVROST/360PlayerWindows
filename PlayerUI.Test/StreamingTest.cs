@@ -64,34 +64,75 @@ namespace PlayerUI.Test
 			// TODO
 		}
 
+		[TestMethod]
+		public async Task CanAsync() {
+			await Task.Delay(2000);
+		}
+
 
 		[TestMethod]
-		public async Task CanParseStream()
+		public async Task CanHttpAsync() {
+			var parser = new Streaming.VrideoParser();
+			var result = await parser.HTTPGetStringAsync("http://www.vrideo.com/watch/bh4WvTc4");
+		}
+
+		[TestMethod]
+		public void CanParseStream()
 		{
 			var parser = new PlayerUI.Streaming.VrideoParser();
-			var result = await parser.TryParse("vrideo.com/watch/KLOtqZE");
+			var result = parser.TryParse("vrideo.com/watch/KLOtqZE");
 			Assert.IsTrue(result.VideoStreams.Count > 0, "no video streams");
+			Assert.IsFalse(result.VideoStreams.Exists(vs => vs.url == null), "some url contains nulls");
+			Assert.IsTrue(result.VideoStreams.Exists(vs => vs.url == "http://cdn2.vrideo.com/prod_videos/v1/KLOtqZE_4k_full.mp4"), "did not find mp4 4k");
 			Assert.AreEqual(MediaDecoder.ProjectionMode.Sphere, result.projection);
 			Assert.AreEqual(MediaDecoder.VideoMode.Mono, result.stereoscopy);
 		}
 
 		[TestMethod]
-		public async Task ParsesTaB()
+		public void ParsesTaB()
 		{
 			var parser = new Streaming.VrideoParser();
-			var result = await parser.TryParse("http://www.vrideo.com/watch/bh4WvTc4");
+			var result = parser.TryParse("http://www.vrideo.com/watch/bh4WvTc4");
 			Assert.AreEqual(MediaDecoder.VideoMode.TopBottom, result.stereoscopy);
 		}
 
 		[TestMethod]
-		public async Task ParsesSbS()
+		public void ParsesSbS()
 		{
 			var parser = new Streaming.VrideoParser();
-			var result = await parser.TryParse("http://www.vrideo.com/watch/FomUnwO");
+			var result = parser.TryParse("http://www.vrideo.com/watch/FomUnwO");
 			Assert.AreEqual(MediaDecoder.VideoMode.SideBySide, result.stereoscopy);
 		}
 
+		[TestMethod]
+		public void FailsOnFisheye()
+		{
+			var parser = new Streaming.VrideoParser();
+			try
+			{
+				var result = parser.TryParse("http://www.vrideo.com/watch/5W44H7Y");
+				Assert.Fail("did not fail on fisheye");
+			}
+			catch (Streaming.StreamNotSupported)
+			{
+				// pass
+			}
+		}
 
+		[TestMethod]
+		public void FailsOnDome()
+		{
+			var parser = new Streaming.VrideoParser();
+			try
+			{
+				var result = parser.TryParse("http://www.vrideo.com/watch/tH270XQ");
+				Assert.Fail("did not fail on dome");
+			}
+			catch (Streaming.StreamNotSupported)
+			{
+				// pass
+			}
+		}
 
 	}
 }
