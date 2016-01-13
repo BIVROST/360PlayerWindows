@@ -17,7 +17,8 @@
 				<Paragraph>
 					<Bold>BIVROST 360Player Beta</Bold>
 					<LineBreak />
-					v1.0
+					v
+					<TextBlock x:Name="Version"/>
 				</Paragraph>
 				<Paragraph>
 					Contact support at:

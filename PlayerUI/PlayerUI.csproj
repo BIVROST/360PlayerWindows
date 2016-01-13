@@ -38,7 +38,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <TrustUrlParameters>true</TrustUrlParameters>
-    <ApplicationRevision>163</ApplicationRevision>
+    <ApplicationRevision>165</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>true</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
@@ -796,13 +796,13 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <ProjectReference Include="..\..\Managed-OSVR\ClientKit\ClientKit.csproj">
+      <Project>{9ab9f53d-1f42-4045-8dfc-9d389d44bb35}</Project>
+      <Name>ClientKit</Name>
+    </ProjectReference>
     <ProjectReference Include="..\BivrostAnalytics\BivrostAnalytics.csproj">
       <Project>{30c06ae1-7390-488d-bd15-8ee43ec76308}</Project>
       <Name>BivrostAnalytics</Name>
-    </ProjectReference>
-    <ProjectReference Include="C:\Users\Gawson\Documents\GitHub\Managed-OSVR\ClientKit\ClientKit.csproj">
-      <Project>{9ab9f53d-1f42-4045-8dfc-9d389d44bb35}</Project>
-      <Name>ClientKit</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
