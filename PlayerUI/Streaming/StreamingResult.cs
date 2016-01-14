@@ -1,13 +1,11 @@
-﻿using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Runtime.Serialization;
 using RestSharp;
+using System.Linq;
+
+[assembly: System.Runtime.CompilerServices.InternalsVisibleToAttribute("PlayerUI.Test")]
 
 namespace PlayerUI.Streaming
 {
@@ -126,11 +124,17 @@ namespace PlayerUI.Streaming
 		/// </summary>
 		public MediaDecoder.ProjectionMode projection = MediaDecoder.ProjectionMode.Sphere;
 
-		//public VideoStream BestQualityVideoStream {
-		//	get {
-		//		return VideoStreams.ToList().Aggregate((agg, next) => next.quality > agg.quality ? next : agg);
-		//	}
-		//}
+		/// <summary>
+		/// Returns highest resolution video stream that is of specific type.
+		/// </summary>
+		/// <param name="containerType"></param>
+		/// <returns>VideoStream or null when not found</returns>
+		public VideoStream BestQualityVideoStream(VideoContainer containerType)
+		{
+			return VideoStreams.ToList()
+				.FindAll(vs => vs.container == containerType)
+				.Aggregate((agg, next) => next.quality > agg.quality ? next : agg);
+		}
 
 	}
 
@@ -146,13 +150,13 @@ namespace PlayerUI.Streaming
 		/// Returns a fully parsed streaming service result with audio and video url and metadata,
 		/// </summary>
 		/// <param name="uri">url of the service</param>
-		/// <returns>Streaming service result or null on failure</returns>
-		public async Task<ServiceResult> GetStreamingInfo(string uri)
+		/// <returns>Streaming service result or null when this url is not supported</returns>
+		/// <exception>Throws a StreamingNotSupported, StreamNetworkFailure or StreamParsingFailed on errors</exception>
+		public ServiceResult GetStreamingInfo(string uri)
 		{
 			foreach(var parser in parsers)
 				if(parser.CanParse(uri)) {
-					//ServiceResult result=await parser.TryParse(uri);
-					//return result;
+					return parser.Parse(uri);
 				}
 			return null;
 		}
@@ -169,26 +173,44 @@ namespace PlayerUI.Streaming
 			Console.WriteLine("[" + GetType().Name + " warning]: " + message);
 		}
 
-		HttpClient client;
-		public async Task<string> HTTPGetStringAsync(string uri) {
-			if(client == null)
-				client= new HttpClient() { MaxResponseContentBufferSize = 1000000 };
-			var response = await client.GetStringAsync(uri);
-			return response;
+		static HttpClient client;
+		internal static async Task<string> HTTPGetStringAsync(string uri) {
+			try {
+				if (client == null)
+					client = new HttpClient() { MaxResponseContentBufferSize = 1000000 };
+				var response = await client.GetAsync(uri);
+				if (!response.IsSuccessStatusCode)
+					throw new StreamNetworkFailue("Status " + response.StatusCode, uri);
+				return await response.Content.ReadAsStringAsync(); ;
+			}
+			catch (HttpRequestException e) {
+				throw new StreamNetworkFailue("HttpRequestException " + e.Message, uri);
+			}
 		}
 
-		protected string HTTPGetString(string uri)
+		internal static string HTTPGetString(string uri)
 		{
 			RestClient client = new RestClient(uri);
 			IRestRequest request = new RestRequest(Method.GET);
 			// request.AddHeader("Accept", "text/html");
 			IRestResponse response = client.Execute(request);
+
+			if((int)response.StatusCode < 200 || (int)response.StatusCode >= 400)
+				throw new StreamNetworkFailue("Status "+response.StatusCode, uri);
+
+			if (response.ErrorException != null)
+				throw new StreamNetworkFailue(response.ErrorMessage, uri); 
 			return response.Content;
 		}
 
 		#endregion
 
-
+		/// <summary>
+		/// Checks if the uri can be parsed by this class.
+		/// If this returns true, no other classes are involved.
+		/// </summary>
+		/// <param name="uri"></param>
+		/// <returns>true if this class understands this uri</returns>
 		public abstract bool CanParse(string uri);
 
 		/// <summary>
@@ -196,24 +218,45 @@ namespace PlayerUI.Streaming
 		/// </summary>
 		/// <param name="url">url of the service</param>
 		/// <returns>true if succeeded</returns>
-		public abstract ServiceResult TryParse(string uri);
+		public abstract ServiceResult Parse(string uri);
 		
 	}
 
 
+	public abstract class StreamException : Exception {
+		public StreamException(string message) : base(message) { }
+	}
+
+	/// <summary>
+	/// Thrown when the stream is not understood. API change, possible bug, etc.
+	/// </summary>
 	[Serializable]
-	internal class StreamParsingFailed : Exception
+	public class StreamParsingFailed : StreamException
 	{
-		public StreamParsingFailed(string message) : base(message)
-		{
+		public StreamParsingFailed(string message) : base(message) { }
+	}
+
+	/// <summary>
+	/// Thrown when the stream is understood, but the player does not support it.
+	/// </summary>
+	[Serializable]
+	public class StreamNotSupported : StreamException
+	{
+		public StreamNotSupported(string reason) : base(reason) { }
+	}
+
+	/// <summary>
+	/// Thrown on network errors
+	/// </summary>
+	[Serializable]
+	public class StreamNetworkFailue : StreamException
+	{
+		public string Uri { get; protected set;  }
+		public StreamNetworkFailue(string reason, string uri) : base(reason) {
+			Uri = uri;
 		}
 	}
 
-	[Serializable]
-	public class StreamNotSupported : Exception
-	{
-		public StreamNotSupported(string reason) : base(reason)
-		{
-		}
-	}
+
+
 }

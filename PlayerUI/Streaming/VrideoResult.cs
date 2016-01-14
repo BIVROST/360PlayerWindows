@@ -1,12 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Runtime.Serialization;
 
 namespace PlayerUI.Streaming
 {
@@ -19,13 +13,13 @@ namespace PlayerUI.Streaming
 			return Regex.IsMatch(uri, @"^(https?://)?(www.)?vrideo.com/watch/.+", RegexOptions.IgnoreCase);
 		}
 
-		public string UriToId(string uri)
+		internal string UriToId(string uri)
 		{
 			var match = Regex.Match(uri, @"vrideo.com/watch/([a-zA-Z0-9]+)", RegexOptions.IgnoreCase);
 			return match.Groups[1].Captures[0].Value;
 		}
 
-		public MediaDecoder.ProjectionMode ParseProjection(string projection)
+		internal MediaDecoder.ProjectionMode ParseProjection(string projection)
 		{
 			switch (projection)
 			{
@@ -41,8 +35,7 @@ namespace PlayerUI.Streaming
 			}
 		}
 
-
-		public VideoQuality? ParseQuality(string quality)
+		internal VideoQuality? ParseQuality(string quality)
 		{
 			switch (quality)
 			{
@@ -55,11 +48,21 @@ namespace PlayerUI.Streaming
 			throw new StreamParsingFailed("Quality unknown: " + quality);
 		}
 
-		public override ServiceResult TryParse(string url)
+		internal MediaDecoder.VideoMode ParseStereo(string stereo)
 		{
-			var result = new ServiceResult() { originalURL = url };
-			//				var cdn =/\bcdn:\s * "([^"]*)"/.exec(document.body.innerHTML)[1];
-			//	 var cdn_dir =/\bcdn_dir:\s * "([^"]*)"/.exec(document.body.innerHTML)[1];
+			switch(stereo) {
+				case "not3d":	return MediaDecoder.VideoMode.Mono;
+				case "sbs_left_on_left": return MediaDecoder.VideoMode.SideBySide;
+				case "sbs_right_on_left": return MediaDecoder.VideoMode.SideBySideReversed;
+				case "t2b_left_on_top": return MediaDecoder.VideoMode.TopBottom;
+				case "t2b_right_on_top": return MediaDecoder.VideoMode.TopBottomReversed;
+			}
+			throw new StreamParsingFailed("Unknown stereoscopy: " + stereo);
+		}
+
+		public override ServiceResult Parse(string url)
+		{
+			var result = new ServiceResult() { originalURL = url, serviceName = "Vrideo" };
 			string id = UriToId(url);
 			string jsonString = HTTPGetString("http://www.vrideo.com/api/v1/videos?video_ids=" + id);
 			JObject metadata = (JObject)JObject.Parse(jsonString)["items"][0];
@@ -73,7 +76,8 @@ namespace PlayerUI.Streaming
 				foreach (JToken q in format.Value.Children<JToken>())
 				{
 					var quality = ParseQuality((string)q);
-					if (!quality.HasValue) {
+					if (!quality.HasValue)
+					{
 						Warn("Ignoring very low quality: " + (string)q);
 						continue;
 					}
@@ -85,7 +89,8 @@ namespace PlayerUI.Streaming
 						url = (string)metadata["attributes"][urlKey],
 						hasAudio = true
 					};
-					if(video.url == null) {
+					if (video.url == null)
+					{
 						Warn("no video url?");
 					}
 					else
@@ -96,17 +101,6 @@ namespace PlayerUI.Streaming
 			return result;
 		}
 
-		private MediaDecoder.VideoMode ParseStereo(string stereo)
-		{
-			switch(stereo) {
-				case "not3d":	return MediaDecoder.VideoMode.Mono;
-				case "sbs_left_on_left": return MediaDecoder.VideoMode.SideBySide;
-				case "sbs_right_on_left": return MediaDecoder.VideoMode.SideBySideReversed;
-				case "t2b_left_on_top": return MediaDecoder.VideoMode.TopBottom;
-				case "t2b_right_on_top": return MediaDecoder.VideoMode.TopBottomReversed;
-			}
-			throw new StreamParsingFailed("Unknown stereoscopy: " + stereo);
-		}
 	}
 
 }

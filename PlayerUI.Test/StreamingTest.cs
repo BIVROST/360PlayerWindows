@@ -52,35 +52,90 @@ namespace PlayerUI.Test
 			}
 		}
 
-		[TestMethod]
-		public void CanParseStereo()
-		{
-			// TODO
-		}
+		//[TestMethod]
+		//public void CanParseStereo()
+		//{
+		//	// TODO
+		//}
 
-		[TestMethod]
-		public void CanParseProjection()
-		{
-			// TODO
-		}
+		//[TestMethod]
+		//public void CanParseProjection()
+		//{
+		//	// TODO
+		//}
 
 		[TestMethod]
 		public async Task CanAsync() {
 			await Task.Delay(2000);
 		}
 
+		[TestMethod]
+		public async Task CanHttpAsync()
+		{
+			var result = await Streaming.ServiceParser.HTTPGetStringAsync("http://example.com/");
+		}
 
 		[TestMethod]
-		public async Task CanHttpAsync() {
-			var parser = new Streaming.VrideoParser();
-			var result = await parser.HTTPGetStringAsync("http://www.vrideo.com/watch/bh4WvTc4");
+		public async Task CanDetectHttpFailAsync()
+		{
+			try
+			{
+				await Streaming.ServiceParser.HTTPGetStringAsync("http://example.com/404");
+				Assert.Fail("404 detection failed");
+			}
+			catch (Streaming.StreamNetworkFailue) {; }
+
+			try
+			{
+				await Streaming.ServiceParser.HTTPGetStringAsync("http://127.0.0.1:6666/");
+				Assert.Fail("connection failure detection failed");
+			}
+			catch (Streaming.StreamNetworkFailue) {; }
+
+			try
+			{
+				await Streaming.ServiceParser.HTTPGetStringAsync("http://thisdomainshouldntexistasdasd.net/");
+				Assert.Fail("dns failure detection failed");
+			}
+			catch (Streaming.StreamNetworkFailue) {; }
+		}
+
+		[TestMethod]
+		public void CanHttp()
+		{
+			Streaming.ServiceParser.HTTPGetString("http://example.com/");
+		}
+
+		[TestMethod]
+		public void CanDetectHttpFail()
+		{
+			try
+			{
+				Streaming.ServiceParser.HTTPGetString("http://example.com/404");
+				Assert.Fail("404 detection failed");
+			}
+			catch (Streaming.StreamNetworkFailue) {; }
+
+			try
+			{
+				Streaming.ServiceParser.HTTPGetString("http://127.0.0.1:6666/");
+				Assert.Fail("connection failure detection failed");
+			}
+			catch (Streaming.StreamNetworkFailue) {; }
+
+			try
+			{
+				Streaming.ServiceParser.HTTPGetString("http://thisdomainshouldntexistasdasd.net/");
+				Assert.Fail("dns failure detection failed");
+			}
+			catch (Streaming.StreamNetworkFailue) {; }
 		}
 
 		[TestMethod]
 		public void CanParseStream()
 		{
-			var parser = new PlayerUI.Streaming.VrideoParser();
-			var result = parser.TryParse("vrideo.com/watch/KLOtqZE");
+			var parser = new Streaming.VrideoParser();
+			var result = parser.Parse("vrideo.com/watch/KLOtqZE");
 			Assert.IsTrue(result.VideoStreams.Count > 0, "no video streams");
 			Assert.IsFalse(result.VideoStreams.Exists(vs => vs.url == null), "some url contains nulls");
 			Assert.IsTrue(result.VideoStreams.Exists(vs => vs.url == "http://cdn2.vrideo.com/prod_videos/v1/KLOtqZE_4k_full.mp4"), "did not find mp4 4k");
@@ -92,7 +147,7 @@ namespace PlayerUI.Test
 		public void ParsesTaB()
 		{
 			var parser = new Streaming.VrideoParser();
-			var result = parser.TryParse("http://www.vrideo.com/watch/bh4WvTc4");
+			var result = parser.Parse("http://www.vrideo.com/watch/bh4WvTc4");
 			Assert.AreEqual(MediaDecoder.VideoMode.TopBottom, result.stereoscopy);
 		}
 
@@ -100,7 +155,7 @@ namespace PlayerUI.Test
 		public void ParsesSbS()
 		{
 			var parser = new Streaming.VrideoParser();
-			var result = parser.TryParse("http://www.vrideo.com/watch/FomUnwO");
+			var result = parser.Parse("http://www.vrideo.com/watch/FomUnwO");
 			Assert.AreEqual(MediaDecoder.VideoMode.SideBySide, result.stereoscopy);
 		}
 
@@ -110,7 +165,7 @@ namespace PlayerUI.Test
 			var parser = new Streaming.VrideoParser();
 			try
 			{
-				var result = parser.TryParse("http://www.vrideo.com/watch/5W44H7Y");
+				var result = parser.Parse("http://www.vrideo.com/watch/5W44H7Y");
 				Assert.Fail("did not fail on fisheye");
 			}
 			catch (Streaming.StreamNotSupported)
@@ -125,7 +180,7 @@ namespace PlayerUI.Test
 			var parser = new Streaming.VrideoParser();
 			try
 			{
-				var result = parser.TryParse("http://www.vrideo.com/watch/tH270XQ");
+				var result = parser.Parse("http://www.vrideo.com/watch/tH270XQ");
 				Assert.Fail("did not fail on dome");
 			}
 			catch (Streaming.StreamNotSupported)
