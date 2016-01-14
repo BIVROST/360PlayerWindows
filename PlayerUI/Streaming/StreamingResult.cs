@@ -141,6 +141,16 @@ namespace PlayerUI.Streaming
 
 	public class StreamingFactory {
 
+		protected StreamingFactory() { }
+
+		private static StreamingFactory instance;
+		public static StreamingFactory Instance { 
+			get {
+					if (instance == null)
+						instance = new StreamingFactory();
+					return instance;
+			} 
+		}
 
 		protected ServiceParser[] parsers = new ServiceParser[] {
 			new VrideoParser()

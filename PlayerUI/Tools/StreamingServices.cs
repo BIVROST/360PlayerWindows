@@ -308,38 +308,7 @@ namespace PlayerUI.Tools
 
 		public static string ParseVrideo(Uri uri)
 		{
-			try {
-				{
-					string video4k = @"http://cdn2.vrideo.com/prod_videos/v1/" + uri.Segments.Last() + "_4k_full.mp4";
-					RestClient client = new RestClient(video4k);
-					IRestRequest request = new RestRequest(Method.HEAD);
-					request.AddHeader("Accept", "text/html");
-					IRestResponse response = client.Execute(request);
-					if (response.StatusCode == System.Net.HttpStatusCode.OK)
-						return video4k;
-				}
-
-				{
-					string video2k = @"http://cdn2.vrideo.com/prod_videos/v1/" + uri.Segments.Last() + "_2k_full.mp4";
-					RestClient client = new RestClient(video2k);
-					IRestRequest request = new RestRequest(Method.HEAD);
-					request.AddHeader("Accept", "text/html");
-					IRestResponse response = client.Execute(request);
-					if (response.StatusCode == System.Net.HttpStatusCode.OK)
-						return video2k;
-				}
-				{
-					string video1080p = @"http://cdn2.vrideo.com/prod_videos/v1/" + uri.Segments.Last() + "_1080p_full.mp4";
-					RestClient client = new RestClient(video1080p);
-					IRestRequest request = new RestRequest(Method.HEAD);
-					request.AddHeader("Accept", "text/html");
-					IRestResponse response = client.Execute(request);
-					if (response.StatusCode == System.Net.HttpStatusCode.OK)
-						return video1080p;
-				}
-			} catch(Exception) { }
-			return "";
-			//return @"http://cdn2.vrideo.com/prod_videos/v1/"+uri.Segments.Last()+"_4k_full.mp4";
+			return Streaming.StreamingFactory.Instance.GetStreamingInfo(uri.AbsoluteUri).BestQualityVideoStream(Streaming.VideoContainer.mp4).url;
 		}
 
 		public static string ParsePornhub(Uri uri)
