@@ -466,16 +466,20 @@ namespace PlayerUI
 									{
 										textureL = CreateTexture(_device, w, h);
 										textureR = CreateTexture(_device, w, h);
-										_mediaEngine.TransferVideoFrame(textureL, topRect, new SharpDX.Rectangle(0, 0, w, h), null);
-										_mediaEngine.TransferVideoFrame(textureR, bottomRect, new SharpDX.Rectangle(0, 0, w, h), null);
+										//_mediaEngine.TransferVideoFrame(textureL, topRect, new SharpDX.Rectangle(0, 0, w, h), null);
+										//_mediaEngine.TransferVideoFrame(textureR, bottomRect, new SharpDX.Rectangle(0, 0, w, h), null);
 									}
 									else
 									{
-										_mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
+										textureL = CreateTexture(_device, w, h);
+										textureR = CreateTexture(_device, w, h);
+										//_mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
 									}
 									break;
 								case VideoMode.Mono:
-									_mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
+									textureL = CreateTexture(_device, w, h);
+									textureR = CreateTexture(_device, w, h);
+									//_mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
 									break;
 
 								case VideoMode.SideBySide:
