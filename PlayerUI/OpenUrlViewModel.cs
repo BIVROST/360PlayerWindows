@@ -34,6 +34,8 @@ namespace PlayerUI
 
 		public string VideoUrl { get; set; }
 
+		public Streaming.ServiceResult ServiceResult { get; set; }
+
 		public bool Valid { get; set; } = false;
 
 		public void Open()
@@ -119,9 +121,32 @@ namespace PlayerUI
 				Url = correctedUrl;
 				//Console.WriteLine(StreamingServices.DetectService(Uri));
 				string videoUrl;
-				if (StreamingServices.TryParseVideoFile(Uri, out videoUrl))
+				Streaming.ServiceResult serviceResult;
+				try
 				{
-					VideoUrl = videoUrl;
+					if (StreamingServices.TryParseVideoFile(Uri, out videoUrl, out serviceResult))
+					{
+						VideoUrl = videoUrl;
+						ServiceResult = serviceResult;
+					}
+				}
+				catch(Streaming.StreamNotSupported exc)
+				{
+					Execute.OnUIThreadAsync(() =>
+						ShellViewModel.Instance.NotificationCenter.PushNotification(new NotificationViewModel("Video projection not yet supported."))
+					);
+				}
+				catch(Streaming.StreamParsingFailed exc)
+				{
+					Execute.OnUIThreadAsync(() =>
+						ShellViewModel.Instance.NotificationCenter.PushNotification(new NotificationViewModel("Parsing failed. Unable to open the video."))
+					);
+				}
+				catch (Exception exc)
+				{
+					Execute.OnUIThreadAsync(() =>
+						ShellViewModel.Instance.NotificationCenter.PushNotification(new NotificationViewModel("Media not supported."))
+					); ;
 				}
 			}
             if (view != null)

@@ -53,10 +53,15 @@ namespace PlayerUI.Tools
 			}
 		}
 
-		public static bool TryParseVideoFile(Uri uri, out string fileUrl)
+
+		public delegate string ParseFunc(Uri input, out Streaming.ServiceResult serviceResult);
+
+
+		public static bool TryParseVideoFile(Uri uri, out string fileUrl, out Streaming.ServiceResult serviceResult)
 		{
 			Service detectedService = DetectService(uri);
-			Func<Uri, string> TryParse;
+			ParseFunc TryParse;		
+			
 
 			switch (detectedService)
 			{
@@ -68,7 +73,7 @@ namespace PlayerUI.Tools
 				default: TryParse = ParseUrl; break;
 			}
 
-			fileUrl = TryParse(uri);
+			fileUrl = TryParse(uri, out serviceResult);
 
 			return !string.IsNullOrWhiteSpace(fileUrl);
 		}
@@ -86,8 +91,11 @@ namespace PlayerUI.Tools
 		}
 
 
-		public static string ParseFacebook(Uri uri)
+		public static string ParseFacebook(Uri uri, out Streaming.ServiceResult serviceResult)
 		{
+			// HACK
+			serviceResult = null;
+
 			try
 			{
 				//JSON.parse(/"spherical_hd_src":("[^"]+")/.exec(src)[1])
@@ -123,10 +131,13 @@ namespace PlayerUI.Tools
 			return "";			
 		}
 
-		public static string ParseYoutube(Uri uri)
+		public static string ParseYoutube(Uri uri, out Streaming.ServiceResult serviceResult)
 		{
-            try
-            {
+			// HACK
+			serviceResult = null;
+
+			try
+			{
 				#region experimental code
 				/*
                 HtmlDocument document = DownloadDocument(uri);
@@ -306,13 +317,17 @@ namespace PlayerUI.Tools
 
 
 
-		public static string ParseVrideo(Uri uri)
+		public static string ParseVrideo(Uri uri, out Streaming.ServiceResult serviceResult)
 		{
-			return Streaming.StreamingFactory.Instance.GetStreamingInfo(uri.AbsoluteUri).BestQualityVideoStream(Streaming.VideoContainer.mp4).url;
+			serviceResult = Streaming.StreamingFactory.Instance.GetStreamingInfo(uri.AbsoluteUri);
+			return serviceResult.BestQualityVideoStream(Streaming.VideoContainer.mp4).url;
 		}
 
-		public static string ParsePornhub(Uri uri)
+		public static string ParsePornhub(Uri uri, out Streaming.ServiceResult serviceResult)
 		{
+			// HACK
+			serviceResult = null;
+
 			//pornhub /player_quality_720p\s*=\s*'([^']+)'/.exec(document.body.innerHTML)[1]
 
 			HtmlDocument document = DownloadDocument(uri);
@@ -368,13 +383,19 @@ namespace PlayerUI.Tools
 			return "";
 		}
 
-		public static string ParseUrl(Uri uri)
+		public static string ParseUrl(Uri uri, out Streaming.ServiceResult serviceResult)
 		{
+			// HACK
+			serviceResult = null;
+
 			return uri.ToString();
 		}
 
-		public static string ParseLittlStar(Uri uri)
+		public static string ParseLittlStar(Uri uri, out Streaming.ServiceResult serviceResult)
 		{
+			// HACK
+			serviceResult = null;
+
 			try
 			{
 				HtmlDocument document = DownloadDocument(uri);

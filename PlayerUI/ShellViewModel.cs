@@ -61,12 +61,16 @@ namespace PlayerUI
 		private string _selectedFileName = "";
 		public string SelectedFileNameLabel {
 			get {
+				if (!string.IsNullOrWhiteSpace(SelectedFileTitle)) return SelectedFileTitle;
 				if (SelectedFileName.ToLower().StartsWith("http")) return "web stream";
 				return Path.GetFileNameWithoutExtension(SelectedFileName);
 			}
 		}
 		public string SelectedFileName { get { return _selectedFileName; } set { this._selectedFileName = value; NotifyOfPropertyChange(() => SelectedFileName); } }
 		public bool IsFileSelected { get; set; }
+
+		public string SelectedFileTitle { get; set; } = "";
+		public string SelectedFileDescription { get; set; } = "";
 
 		public DPFCanvas DXCanvas;
 		public ShellView shellView;
@@ -707,7 +711,9 @@ namespace PlayerUI
 
             Execute.OnUIThreadAsync(() =>
             {
-                NotificationCenter.PushNotification(new NotificationViewModel("Checking url..."));
+				SelectedFileTitle = "";
+
+				NotificationCenter.PushNotification(new NotificationViewModel("Checking url..."));
                 OpenUrlViewModel ouvm = new OpenUrlViewModel();
                 ouvm.Url = url;
                 Task.Factory.StartNew(() => {
@@ -722,8 +728,17 @@ namespace PlayerUI
                             {
                                 SelectedFileName = ouvm.VideoUrl;
                                 IsFileSelected = true;
-                                _mediaDecoder.Projection = StreamingServices.GetServiceProjection(ouvm.Uri);
-                                Execute.OnUIThreadAsync(() =>
+								if (ouvm.ServiceResult != null)
+								{
+									_mediaDecoder.Projection = ouvm.ServiceResult.projection;
+									_mediaDecoder.StereoMode = ouvm.ServiceResult.stereoscopy;
+									SelectedFileTitle = ouvm.ServiceResult.title;
+								}
+								else {
+									_mediaDecoder.Projection = StreamingServices.GetServiceProjection(ouvm.Uri);
+								}
+								
+								Execute.OnUIThreadAsync(() =>
                                 {
                                     LoadMedia();
                                 });
@@ -743,6 +758,8 @@ namespace PlayerUI
 
 		public void OpenUrl()
 		{
+			SelectedFileTitle = "";
+
 			OpenUrlViewModel ouvm = DialogHelper.ShowDialogOut<OpenUrlViewModel>();
 			if (ouvm.Valid)
 			{
@@ -751,7 +768,17 @@ namespace PlayerUI
 				{
 					SelectedFileName = ouvm.VideoUrl;
 					IsFileSelected = true;
-					_mediaDecoder.Projection = StreamingServices.GetServiceProjection(ouvm.Uri);
+
+					if (ouvm.ServiceResult != null)
+					{
+						_mediaDecoder.Projection = ouvm.ServiceResult.projection;
+						_mediaDecoder.StereoMode = ouvm.ServiceResult.stereoscopy;
+						SelectedFileTitle = ouvm.ServiceResult.title;
+					}
+					else {
+						_mediaDecoder.Projection = StreamingServices.GetServiceProjection(ouvm.Uri);
+					}
+
 					Execute.OnUIThreadAsync(() =>
 					{
 						LoadMedia();
@@ -925,6 +952,7 @@ namespace PlayerUI
 					}
 					_mediaDecoder.Projection = MediaDecoder.ProjectionMode.Sphere;
 					IsFileSelected = true;
+					SelectedFileTitle = "";
 					SelectedFileName = file;
 					Execute.OnUIThread(() => LoadMedia());
 					Task.Factory.StartNew(() => Execute.OnUIThread(() => {

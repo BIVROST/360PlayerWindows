@@ -459,8 +459,42 @@ namespace PlayerUI
 
 							textureReleased = true;
 
-							textureL = CreateTexture(_device, w, h);
-							textureR = CreateTexture(_device, w, h);
+							switch (CurrentMode)
+							{
+								case VideoMode.Autodetect:
+									if (IsStereo)
+									{
+										textureL = CreateTexture(_device, w, h);
+										textureR = CreateTexture(_device, w, h);
+										_mediaEngine.TransferVideoFrame(textureL, topRect, new SharpDX.Rectangle(0, 0, w, h), null);
+										_mediaEngine.TransferVideoFrame(textureR, bottomRect, new SharpDX.Rectangle(0, 0, w, h), null);
+									}
+									else
+									{
+										_mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
+									}
+									break;
+								case VideoMode.Mono:
+									_mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
+									break;
+
+								case VideoMode.SideBySide:
+								case VideoMode.SideBySideReversed:
+									textureL = CreateTexture(_device, w/2, h);
+									textureR = CreateTexture(_device, w/2, h);
+									//_mediaEngine.TransferVideoFrame(textureL, rightRect, new SharpDX.Rectangle(0, 0, w, h), null);
+									//_mediaEngine.TransferVideoFrame(textureR, leftRect, new SharpDX.Rectangle(0, 0, w, h), null);
+									break;
+								case VideoMode.TopBottom:
+								case VideoMode.TopBottomReversed:
+									textureL = CreateTexture(_device, w, h/2);
+									textureR = CreateTexture(_device, w, h/2);
+									//_mediaEngine.TransferVideoFrame(textureR, topRect, new SharpDX.Rectangle(0, 0, w, h), null);
+									//_mediaEngine.TransferVideoFrame(textureL, bottomRect, new SharpDX.Rectangle(0, 0, w, h), null);
+									break;
+							}
+
+							
 							textureReleased = false;
 
 							//OnReleaseTexture();
@@ -651,6 +685,8 @@ namespace PlayerUI
 
 		public void LoadMedia(string fileName)
 		{
+			Console.WriteLine("Load media: " + fileName);
+
 			_fileName = "";
 			textureReleased = true;
 			waitForFormatChange = true;
