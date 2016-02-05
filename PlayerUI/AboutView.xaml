@@ -6,30 +6,67 @@
         xmlns:local="clr-namespace:PlayerUI"
 		xmlns:cal="http://www.caliburnproject.org"
         mc:Ignorable="d"
-        Title="About" Height="300" Width="300" WindowStartupLocation="CenterOwner" WindowStyle="ToolWindow" MinWidth="400" MinHeight="280" ShowInTaskbar="False">
-    <Grid>
+        Title="About" Height="300" Width="300" WindowStartupLocation="CenterOwner" ResizeMode="NoResize" MinWidth="400" MinHeight="280" ShowInTaskbar="False">
+    <Grid x:Name="windowRoot">
 		<Grid.RowDefinitions>
 			<RowDefinition Height="*" />
 			<RowDefinition Height="48" />
 		</Grid.RowDefinitions>
-		<RichTextBox Margin="8" BorderThickness="1" Padding="20">
-			<FlowDocument>
+		
+		
+		<RichTextBox Margin="8" BorderThickness="1" Padding="20" SelectionBrush="{x:Null}" IsReadOnlyCaretVisible="False" IsReadOnly="False">
+			<RichTextBox.Resources>
+				<Style x:Key="HyperlinkButton" TargetType="Button">
+					<Setter Property="Template">
+						<Setter.Value>
+							<ControlTemplate TargetType="Button">
+								<ContentPresenter />
+							</ControlTemplate>
+						</Setter.Value>
+					</Setter>
+				</Style>
+			</RichTextBox.Resources>
+			<local:EnabledFlowDocument FontFamily="Segoe" FontSize="12">
 				<Paragraph>
 					<Bold>BIVROST 360Player Beta</Bold>
 					<LineBreak />
 					v
 					<TextBlock Text="{Binding Version}"/>
 				</Paragraph>
+				
 				<Paragraph>
 					Contact support at:
-					<Hyperlink>support@bivrost360.com</Hyperlink>
+					<!--<Hyperlink Cursor="Hand">support@bivrost360.com</Hyperlink>-->
+
+					<Button Style="{StaticResource HyperlinkButton}" Focusable="False" Cursor="Hand" cal:Message.Attach="[Event Click] = [Action ContactSupport]">
+						<TextBlock Margin="0,0,0,-3">
+							<Hyperlink Focusable="True">support@bivrost360.com</Hyperlink>
+						</TextBlock>
+					</Button>
 				</Paragraph>
-				
-			</FlowDocument>
+
+				<Paragraph>
+					This software is free and can be used only for noncommercial purposes. To purchase the commercial licence please contact us: 
+					<Button Style="{StaticResource HyperlinkButton}" Focusable="False" Cursor="Hand" cal:Message.Attach="[Event Click] = [Action ContactCommercial]">
+						<TextBlock Margin="0,0,0,-3">
+								<Hyperlink Focusable="True">contact@bivrost360.com</Hyperlink>
+						</TextBlock>
+					</Button>
+				</Paragraph>
+
+				<Paragraph>
+					<Button Style="{StaticResource HyperlinkButton}" Focusable="False" Cursor="Hand" cal:Message.Attach="[Event Click] = [Action ShowLibs]">
+						<TextBlock Margin="0,0,0,-3">
+								Bivrost 360Player is using 3rd party libraries and components.
+						</TextBlock>
+					</Button>
+				</Paragraph>
+
+			</local:EnabledFlowDocument>
 		</RichTextBox>
 
-		<TextBlock Text="Bivrost 360Player is using 3rd party libraries and components." HorizontalAlignment="Center"
-				   VerticalAlignment="Bottom" Margin="8,50" TextWrapping="Wrap" cal:Message.Attach="[Event MouseDown] = [Action ShowLibs]" Cursor="Hand"/>
+		<!--<TextBlock Text="Bivrost 360Player is using 3rd party libraries and components." HorizontalAlignment="Center"
+				   VerticalAlignment="Bottom" Margin="8,50" TextWrapping="Wrap" cal:Message.Attach="[Event MouseDown] = [Action ShowLibs]" Cursor="Hand"/>-->
 
 		<Button x:Name="OpenEULA" Content="Read License" Width="120" Height="28" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="8" Grid.Row="1"/>
     </Grid>

@@ -62,7 +62,8 @@ namespace PlayerUI
 		public string SelectedFileNameLabel {
 			get {
 				if (!string.IsNullOrWhiteSpace(SelectedFileTitle)) return SelectedFileTitle;
-				if (SelectedFileName.ToLower().StartsWith("http")) return "web stream";
+				if(!string.IsNullOrWhiteSpace(SelectedFileName))
+					if (SelectedFileName.ToLower().StartsWith("http")) return "web stream";
 				return Path.GetFileNameWithoutExtension(SelectedFileName);
 			}
 		}
@@ -83,6 +84,8 @@ namespace PlayerUI
 		private bool _ready = false;
 
 		Window playerWindow;
+		Nancy.Hosting.Self.NancyHost remoteControl;
+		float remoteTime = 0;
 
 		private AutoResetEvent waitForPlaybackReady = new AutoResetEvent(false);
 		private ManualResetEvent waitForPlaybackStop = new ManualResetEvent(false);
@@ -405,8 +408,142 @@ namespace PlayerUI
             Logic.Instance.stats.TrackScreen("Start screen");
 			Logic.Instance.stats.TrackEvent("Application events", "Init", "Player launched");
 
-            //LegacyTest();
+			//LegacyTest();
+
+
+			if (Logic.Instance.settings.EnableRemoteControl)
+				EnableRemoteControl();
+			if (Logic.Instance.settings.UseBlackBackground)
+				shellView.mainGrid.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Black);
+			if (Logic.Instance.settings.DisableUI)
+			{
+				shellView.controlBar.Visibility = Visibility.Collapsed;
+				shellView.TopBar.Visibility = Visibility.Collapsed;
+				shellView._OpenUrl.Visibility = Visibility.Collapsed;
+				shellView._OpenFile.Visibility = Visibility.Collapsed;
+			}
 		}
+
+		private void EnableRemoteControl()
+		{
+			Task.Factory.StartNew(() =>
+			{
+				remoteControl = ApiServer.InitNancy(apiServer =>
+					{
+						Log("got unity init, device_id=" + ApiServer.device_id + " movies=[\n" + string.Join(",\n", ApiServer.movies) + "]", ConsoleColor.DarkGreen);
+						Log("init complete", ConsoleColor.DarkGreen);
+					}
+				);		
+
+				ApiServer.OnBackPressed += () =>
+				{
+					Log("[remote] back pressed", ConsoleColor.DarkGreen);
+				};
+
+				ApiServer.OnStateChange += (state) => {
+					Log("[remote] state changed: " + state, ConsoleColor.DarkGreen);
+
+					switch(state)
+					{
+						//case ApiServer.State.off:
+						//	Execute.OnUIThreadAsync(() =>
+						//	{
+						//		if(IsPlaying)
+						//			Stop();
+						//	});
+						//	break;
+
+						case ApiServer.State.pause:
+							Execute.OnUIThreadAsync(() =>
+							{
+								if (IsPlaying && !IsPaused)
+								{
+									Pause();
+									_mediaDecoder.Seek(remoteTime);
+								}
+							});
+							break;
+
+						case ApiServer.State.play:
+							Execute.OnUIThreadAsync(() =>
+							{
+								if (!_ready)
+									OpenFileFrom(SelectedFileName);
+								else
+									PlayPause();
+							});
+							break;
+
+						case ApiServer.State.stop:
+							Execute.OnUIThreadAsync(() =>
+							{
+								if (IsPlaying)
+									Stop();
+							});
+							break;
+					}
+				};
+
+				ApiServer.OnConfirmPlay += (path) =>
+				{
+					Log("[remote] path = " + path, ConsoleColor.Green);
+					string remoteFile = path.Split('/').Last();
+					if(File.Exists(Logic.Instance.settings.RemoteControlMovieDirectory + Path.DirectorySeparatorChar + remoteFile))
+					{
+						IsFileSelected = true;
+						SelectedFileName = Logic.Instance.settings.RemoteControlMovieDirectory + Path.DirectorySeparatorChar + remoteFile;
+					} else
+					{
+						IsFileSelected = false;
+						SelectedFileName = "";
+
+						Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Requested file \"" + remoteFile + "\" not found in video library.", 
+							() => {
+								System.Diagnostics.Process.Start(Logic.Instance.settings.RemoteControlMovieDirectory);
+							}, "open folder")));
+					}
+				};
+
+				ApiServer.OnPos += (euler, t) =>
+				{
+					//Log("[remote] position = " + euler.Item1 + ", " + euler.Item2 + ", " + euler.Item3, ConsoleColor.DarkGreen);
+					//remoteTime = (float)(t * MaxTime);
+					//if (DXCanvas.Scene != null)
+					//{
+					//	((Scene)DXCanvas.Scene).SetLook(euler);
+					//}
+				};
+
+				ApiServer.OnPosQuaternion += (quat, t) =>
+				{
+					//Log("[remote] position = " + quat.Item1 + ", " + euler.Item2 + ", " + euler.Item3, ConsoleColor.DarkGreen);
+					remoteTime = (float)(t * MaxTime);
+					if (DXCanvas.Scene != null)
+					{
+						((Scene)DXCanvas.Scene).SetLook(quat);
+					}
+				};
+
+
+
+				ApiServer.OnInfo += (msg) => {
+					Log("[remote] msg = " + msg, ConsoleColor.DarkGreen);
+				};
+
+				
+
+			});		
+
+		}
+
+		private void Log(string message, ConsoleColor color)
+		{
+			var oldColor = Console.ForegroundColor;
+			Console.ForegroundColor = color;
+			Console.WriteLine(message);
+			Console.ForegroundColor = oldColor;
+		}
+
 
 		public void LoadMedia(bool autoplay = true)
 		{
@@ -795,7 +932,8 @@ namespace PlayerUI
 			//space press hack
 			Execute.OnUIThread(() => shellView.VideoProgressBar.Focus());
 
-			if (!_ready) return;
+			if (!_ready)
+				return;
 
 			if (!IsPlaying)
 			{
@@ -968,7 +1106,7 @@ namespace PlayerUI
 		public void Stop()
 		{
 			Console.WriteLine("FILE ENDED");
-			if (Fullscreen) ToggleFullscreen(true);
+			if (Fullscreen) if(!Logic.Instance.settings.DoNotExitFullscreenOnStop) ToggleFullscreen(true);
 			//space press hack
 			Execute.OnUIThread(() => shellView.VideoProgressBar.Focus());
 			ShowBars();
@@ -1049,6 +1187,9 @@ namespace PlayerUI
 
 		public void Quit()
 		{
+			if (remoteControl != null)
+				remoteControl.Stop();
+
 			//STATS
 			TryClose();
 		}

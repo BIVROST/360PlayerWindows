@@ -207,6 +207,12 @@
 			//remoteRotation = Matrix.RotationYawPitchRoll(MathUtil.DegreesToRadians(euler.Item2), MathUtil.DegreesToRadians(euler.Item1), MathUtil.DegreesToRadians(euler.Item3));
 		}
 
+		public void SetLook(System.Tuple<float,float,float,float> quat)
+		{
+			targetRotationQuaternion = new Quaternion(quat.Item1, quat.Item2, -quat.Item3, quat.Item4);
+			lerpSpeed = 9f;
+		}
+
 		public void SetVideoTexture(Texture2D sharedTexture)
 		{
 			this.videoTexture = sharedTexture;

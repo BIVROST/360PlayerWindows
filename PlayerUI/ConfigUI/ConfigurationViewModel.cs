@@ -1,4 +1,5 @@
 ﻿using Caliburn.Micro;
+using PlayerUI.Tools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -49,6 +50,12 @@ namespace PlayerUI.ConfigUI
 				}
 			});
 
+		}
+
+		protected override void OnViewReady(object view)
+		{
+			base.OnViewReady(view);
+			IconHelper.RemoveIcon(view as System.Windows.Window);
 		}
 
 		public void Save()

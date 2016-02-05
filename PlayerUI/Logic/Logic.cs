@@ -115,7 +115,23 @@ namespace PlayerUI
 							{
 								case "version":
 									var assembly = System.Reflection.Assembly.GetExecutingAssembly().GetName();
-									socket.Send(assembly.Name + ";" + assembly.Version.ToString());
+									string Version = "";
+									try
+									{
+										if (Tools.PublishInfo.ApplicationIdentity != null)
+											Version = Tools.PublishInfo.ApplicationIdentity.Version.ToString();
+									}
+									catch (Exception) { }
+									if (string.IsNullOrWhiteSpace(Version))
+									{
+										if (Assembly.GetExecutingAssembly() != null)
+											Version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+										else
+											Version = "( not supported )";
+									}
+
+
+									socket.Send(assembly.Name + ";" + Version);
 									break;
 
 								default:

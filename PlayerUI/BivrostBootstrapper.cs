@@ -78,7 +78,7 @@ namespace PlayerUI
 				mutex.ReleaseMutex();
 			}
 
-			if (mutex.WaitOne(TimeSpan.Zero, true))
+			if (mutex.WaitOne(TimeSpan.Zero, true) || System.Diagnostics.Debugger.IsAttached)
 			{
 				ownMutex = true;
 
@@ -172,8 +172,13 @@ namespace PlayerUI
 			//catch (Exception exc) { }
 
 			base.OnExit(sender, e);
-			if(ownMutex)
-				mutex.ReleaseMutex();
+			try {
+				if (ownMutex)
+					mutex.ReleaseMutex();
+			} catch(Exception exc)
+			{
+				System.Diagnostics.Debug.WriteLine("Releasing mutex: " + exc.Message);
+			}
 		}
 
 		private static void SetAddRemoveProgramsIcon()

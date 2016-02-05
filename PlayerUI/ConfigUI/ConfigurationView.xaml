@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:PlayerUI.ConfigUI"
 		xmlns:cal="http://www.caliburnproject.org"
         mc:Ignorable="d"
-        Title="ConfigurationView" Height="300" Width="300" MinWidth="460" MinHeight="460" WindowStyle="ToolWindow" WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
+        Title="ConfigurationView" Height="300" Width="300" MinWidth="460" MinHeight="460" WindowStartupLocation="CenterOwner" ResizeMode="NoResize" ShowInTaskbar="False">
     <Grid Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>

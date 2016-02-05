@@ -69,7 +69,7 @@ namespace PlayerUI
 		public bool AutoPlay { get; set; } = true;
 		public bool AutoLoad { get; set; } = true;
 
-		//[SettingsProperty("Start in fullscreen", ConfigItemType.Bool)]
+		[SettingsProperty("Start in fullscreen", ConfigItemType.Bool)]
 		public bool StartInFullScreen { get; set; } = false;
 
 		//[SettingsProperty("Use mouse to look around when Oculus Rift connected", ConfigItemType.Bool)]
@@ -99,6 +99,34 @@ namespace PlayerUI
 		public bool UserOSVRTracking { get; set; } = false;
 		[SettingsAdvancedProperty("Merge manual and headset input", ConfigItemType.Bool)]
 		public bool MergeInputs { get; set; } = false;
+
+
+		//Remote control settings
+
+#if DEBUG 
+		[SettingsAdvancedProperty("Enable http remote control", ConfigItemType.Bool)]
+#endif
+		public bool EnableRemoteControl { get; set; } = false;
+
+#if DEBUG
+		[SettingsAdvancedProperty("Movie directory for remote control playback", ConfigItemType.Path)]
+#endif
+		public string RemoteControlMovieDirectory { get; set; } = "";
+
+#if DEBUG
+		[SettingsAdvancedProperty("Use black background in player window", ConfigItemType.Bool)]
+#endif
+		public bool UseBlackBackground { get; set; } = false;
+
+#if DEBUG
+		[SettingsAdvancedProperty("Do not exit fullscreen on movie stop", ConfigItemType.Bool)]
+#endif
+		public bool DoNotExitFullscreenOnStop { get; set; } = false;
+
+#if DEBUG
+		[SettingsAdvancedProperty("Disable UI", ConfigItemType.Bool)]
+#endif
+		public bool DisableUI { get; set; } = false;
 
 	}
 

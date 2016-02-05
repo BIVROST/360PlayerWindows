@@ -207,7 +207,7 @@
             </Grid>
         </Grid>
 
-        <Grid Grid.Row="1" Width="400" Height="400" x:Name="StartupPanel">
+        <Grid Grid.Row="1" Width="400" Height="400" x:Name="StartupPanel" >
             <svgc:SvgViewbox Source="Graphics/bivrostlogo.svg" HorizontalAlignment="Center" VerticalAlignment="Center" Width="400" />
 
             <Button x:Name="_OpenFile"  Width="64" Height="64" Margin="100,0,0,50" HorizontalAlignment="Left" VerticalAlignment="Bottom" cal:Message.Attach="OpenFile">

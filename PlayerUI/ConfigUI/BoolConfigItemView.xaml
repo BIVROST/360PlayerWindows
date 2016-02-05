@@ -4,10 +4,12 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:PlayerUI.ConfigUI"
+			 xmlns:cal="http://www.caliburnproject.org"
              mc:Ignorable="d" 
              d:DesignHeight="22" d:DesignWidth="300" HorizontalAlignment="Stretch">
     <StackPanel Orientation="Horizontal">
         <CheckBox IsChecked="{Binding Value}" Margin="8,2,4,2" VerticalAlignment="Center"/>
-        <TextBlock x:Name="DisplayName" Text="Path option display name" Margin="4,2,8,2" VerticalAlignment="Center" IsEnabled="{Binding Enabled}"/>
+        <TextBlock x:Name="DisplayName" Text="Path option display name" Margin="4,2,8,2" VerticalAlignment="Center" IsEnabled="{Binding Enabled}"
+				   cal:Message.Attach="[Event PreviewMouseDown] = [Action ToggleValue]"/>
     </StackPanel>
 </UserControl>

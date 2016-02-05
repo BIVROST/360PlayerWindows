@@ -1,4 +1,5 @@
 ﻿using Caliburn.Micro;
+using PlayerUI.Tools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,13 +16,23 @@ namespace PlayerUI
 			DisplayName = "About Bivrost Player";
 			try
 			{
-				Version = Tools.PublishInfo.ApplicationIdentity.Version.ToString();
+				if(Tools.PublishInfo.ApplicationIdentity != null)
+					Version = Tools.PublishInfo.ApplicationIdentity.Version.ToString();
 			}
 			catch (Exception) { }
 			if(string.IsNullOrWhiteSpace(Version))
 			{
-				Version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-			} 
+				if (Assembly.GetExecutingAssembly() != null)
+					Version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+				else
+					Version = "( not supported )";
+			}
+		}
+
+		protected override void OnViewReady(object view)
+		{
+			base.OnViewReady(view);
+			IconHelper.RemoveIcon(view as System.Windows.Window);
 		}
 
 		public void OpenEULA()
@@ -35,5 +46,18 @@ namespace PlayerUI
 		}
 
 		public string Version { get; set; }
+
+
+		public void ContactSupport()
+		{
+			//mailto:someone@example.com?subject=This%20is%20the%20subject&cc=someone_else@example.com&body=This%20is%20the%20body
+			System.Diagnostics.Process.Start("mailto:support@bivrost360.com");
+			//SystemInfo.Info();
+		}
+
+		public void ContactCommercial()
+		{
+			System.Diagnostics.Process.Start("mailto:contact@bivrost360.com");
+		}
 	}
 }

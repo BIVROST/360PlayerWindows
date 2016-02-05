@@ -1,4 +1,5 @@
 ﻿using Caliburn.Micro;
+using PlayerUI.Tools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,6 +29,11 @@ namespace PlayerUI
 		public bool StartInFullScreen { get { return Logic.Instance.settings.StartInFullScreen; } set { Logic.Instance.settings.StartInFullScreen = value; } }
 		public string AutoPlayFile { get { return Logic.Instance.settings.AutoPlayFile; } set { Logic.Instance.settings.AutoPlayFile = value; } }
 
+		protected override void OnViewReady(object view)
+		{
+			base.OnViewReady(view);
+			IconHelper.RemoveIcon(view as System.Windows.Window);
+		}
 
 		public void Reboot()
 		{
