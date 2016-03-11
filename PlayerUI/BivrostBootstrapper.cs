@@ -7,6 +7,7 @@ using System.Deployment.Application;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,14 +22,35 @@ namespace PlayerUI
 		static Mutex mutex = new Mutex(true, "{41F397A7-D196-4C6F-B75A-616069D45DAD}");
 		bool ownMutex = false;
 
+		[DllImport("kernel32", SetLastError = true, CharSet = CharSet.Ansi)]
+		private static extern IntPtr LoadLibrary([MarshalAs(UnmanagedType.LPStr)]string lpFileName);
+
 		public BivrostBootstrapper()
 		{
 			Initialize();
 		}
 
+		void AddPathPatch()
+		{
+			var assembly = System.Uri.UnescapeDataString((new System.Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase)).AbsolutePath);
+			var assemblyPath = Path.GetDirectoryName(assembly);
+
+			if (IntPtr.Size == 8)
+			{
+				//x64
+				//var success = LoadLibrary(assemblyPath + Path.DirectorySeparatorChar + "x64" + Path.DirectorySeparatorChar + "msvcr120.dll");
+			}
+			else
+			{
+				//x86
+				//var success = LoadLibrary(assemblyPath + Path.DirectorySeparatorChar + "x86" + Path.DirectorySeparatorChar + "msvcr120.dll");
+			}
+		}
 
 		protected override void OnStartup(object sender, System.Windows.StartupEventArgs e)
 		{
+			//AddPathPatch();
+
 			System.Windows.Forms.Application.EnableVisualStyles();
 
 			if (ApplicationDeployment.IsNetworkDeployed)

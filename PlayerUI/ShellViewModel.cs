@@ -90,7 +90,7 @@ namespace PlayerUI
 		private AutoResetEvent waitForPlaybackReady = new AutoResetEvent(false);
 		private ManualResetEvent waitForPlaybackStop = new ManualResetEvent(false);
 
-		private const string DisplayString = "Bivrost 360Player ™ BETA";
+		private const string DisplayString = "Bivrost 360Player ™ BETA {0} - FOR NON-COMMERCIAL USE";
 
 		public VolumeControlViewModel VolumeRocker { get; set; }
 		public HeadsetMenuViewModel HeadsetMenu { get; set; }
@@ -112,7 +112,7 @@ namespace PlayerUI
 																? ShortcutParser.CreateTrigger(triggerText)
 																: currentParser(target, triggerText);
 
-			DisplayName = DisplayString;
+			DisplayName = string.Format(DisplayString, "");
 			CurrentPosition = "00:00:00";
 			VideoLength = "00:00:00";
 
@@ -752,7 +752,8 @@ namespace PlayerUI
 					MaxTime = _mediaDecoder.Duration;
 					VideoLength = (new TimeSpan(0, 0, (int)Math.Floor(_mediaDecoder.Duration))).ToString();
 					UpdateTimeLabel();
-					DisplayName = DisplayString + " - " + SelectedFileNameLabel;
+					//DisplayName = DisplayString + " - " + SelectedFileNameLabel;
+					DisplayName = string.Format(DisplayString, " - now playing: " + SelectedFileNameLabel);
 
 					_mediaDecoder.SetVolume(VolumeRocker.Volume);
 					//_mediaDecoder.Play();
@@ -1123,6 +1124,8 @@ namespace PlayerUI
 			{
 				shellView.TopBar.Visibility = Visibility.Hidden;
 				this.DXCanvas.Visibility = Visibility.Hidden;
+
+				DisplayName = string.Format(DisplayString, "");
 			});			
 						
 			Task.Factory.StartNew(() =>

@@ -234,6 +234,12 @@ namespace PlayerUI
 			System.Diagnostics.Process.Start("http://www.bivrost360.com");
 		}
 
+		public void OpenBuyPage()
+		{
+			if (Fullscreen) ToggleFullscreen(true);
+			System.Diagnostics.Process.Start("mailto:contact@bivrost360.com?subject=Licence%20purchase");
+		}
+
 		public void DisableTabPress(object sender, object e)
 		{ 			
 			Console.WriteLine("tabstop");

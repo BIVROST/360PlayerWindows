@@ -250,6 +250,7 @@ namespace PlayerUI
 				MediaEngineAttributes attr = new MediaEngineAttributes();
 				attr.VideoOutputFormat = (int)SharpDX.DXGI.Format.B8G8R8A8_UNorm;
 				attr.DxgiManager = _dxgiManager;
+				//attr.Set(MediaTypeAttributeKeys.TransferFunction.Guid, VideoTransferFunction.Func10);
 
 				_mediaEngine = new MediaEngine(mediaEngineFactory, attr, MediaEngineCreateFlags.None);
 
@@ -330,6 +331,7 @@ namespace PlayerUI
 				_mediaEngineEx = _mediaEngine.QueryInterface<MediaEngineEx>();
 				_mediaEngineEx.EnableWindowlessSwapchainMode(true);
 
+
 				mediaEngineFactory.Dispose();
 				_initialized = true;
 			}
@@ -340,7 +342,9 @@ namespace PlayerUI
 			if (!string.IsNullOrWhiteSpace(fileName))
 			{
 				if (Regex.IsMatch(Path.GetFileNameWithoutExtension(fileName), @"(\b|_)(SbS|LR)(\b|_)")) return VideoMode.SideBySide;
+				if (Regex.IsMatch(Path.GetFileNameWithoutExtension(fileName), @"(\b|_)(RL)(\b|_)")) return VideoMode.SideBySideReversed;
 				if (Regex.IsMatch(Path.GetFileNameWithoutExtension(fileName), @"(\b|_)(TaB|TB)(\b|_)")) return VideoMode.TopBottom;
+				if (Regex.IsMatch(Path.GetFileNameWithoutExtension(fileName), @"(\b|_)(BaT|BT)(\b|_)")) return VideoMode.TopBottomReversed;
 				if (Regex.IsMatch(Path.GetFileNameWithoutExtension(fileName), @"(\b|_)mono(\b|_)")) return VideoMode.Mono;
 			}
 			return VideoMode.Autodetect;
@@ -370,7 +374,7 @@ namespace PlayerUI
 				Height = height,
 				MipLevels = 1,
 				ArraySize = 1,
-				Format = Format.B8G8R8A8_UNorm,
+				Format = Format.B8G8R8X8_UNorm,
 				Usage = ResourceUsage.Default,
 				SampleDescription = new SampleDescription(1, 0),
 				BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
@@ -416,6 +420,9 @@ namespace PlayerUI
 						CurrentMode = DetectFromFileName(_fileName);
 
 					Console.WriteLine("VIDEO STEREO MODE: " + CurrentMode);
+
+					if (CurrentMode != VideoMode.Mono && CurrentMode != VideoMode.Autodetect) _stereoVideo = true;
+
 
 					//Texture2DDescription frameTextureDescription = new Texture2DDescription()
 					//{
@@ -547,12 +554,12 @@ namespace PlayerUI
 													_mediaEngine.TransferVideoFrame(textureR, leftRect, new SharpDX.Rectangle(0, 0, w, h), null);
 													break;
 												case VideoMode.TopBottom:
-													_mediaEngine.TransferVideoFrame(textureL, topRect, new SharpDX.Rectangle(0, 0, w, h), null);
-													_mediaEngine.TransferVideoFrame(textureR, bottomRect, new SharpDX.Rectangle(0, 0, w, h), null);
+													_mediaEngine.TransferVideoFrame(textureL, topRect, new SharpDX.Rectangle(0, 0, w, h/2), null);
+													_mediaEngine.TransferVideoFrame(textureR, bottomRect, new SharpDX.Rectangle(0, 0, w, h/2), null);
 													break;
 												case VideoMode.TopBottomReversed:
-													_mediaEngine.TransferVideoFrame(textureR, topRect, new SharpDX.Rectangle(0, 0, w, h), null);
-													_mediaEngine.TransferVideoFrame(textureL, bottomRect, new SharpDX.Rectangle(0, 0, w, h), null);
+													_mediaEngine.TransferVideoFrame(textureR, topRect, new SharpDX.Rectangle(0, 0, w, h/2), null);
+													_mediaEngine.TransferVideoFrame(textureL, bottomRect, new SharpDX.Rectangle(0, 0, w, h/2), null);
 													break;
 											}
 										} catch (Exception exc)

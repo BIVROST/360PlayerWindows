@@ -491,7 +491,7 @@ namespace PlayerUI.OSVRKit
                 basicEffectR.Sampler = gd.SamplerStates.AnisotropicClamp;
             }
 
-			ResizeTexture(MediaDecoder.Instance.TextureL, MediaDecoder.Instance.TextureL);
+			ResizeTexture(MediaDecoder.Instance.TextureL, _stereoVideo ? MediaDecoder.Instance.TextureR : MediaDecoder.Instance.TextureL);
 
 			//var primitive = SharpDX.Toolkit.Graphics.GeometricPrimitive.Sphere.New(gd, radius, 32, true);
 			var primitive = GraphicTools.CreateGeometry(_projection, gd);

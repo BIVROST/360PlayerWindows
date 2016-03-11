@@ -35,6 +35,8 @@
 
 		SharpDX.Toolkit.Graphics.GraphicsDevice graphicsDevice;
 		SharpDX.Toolkit.Graphics.BasicEffect basicEffect;
+		SharpDX.Toolkit.Graphics.Effect customEffect;
+
 		SharpDX.Toolkit.Graphics.GeometricPrimitive primitive;
 		SharpDX.Toolkit.Graphics.GeometricPrimitive primitive2;
 
@@ -149,6 +151,15 @@
 
 			graphicsDevice = SharpDX.Toolkit.Graphics.GraphicsDevice.New(_device);
 			basicEffect = new SharpDX.Toolkit.Graphics.BasicEffect(graphicsDevice);
+			
+			//==============
+			SharpDX.Toolkit.Graphics.EffectCompiler compiler = new SharpDX.Toolkit.Graphics.EffectCompiler();
+			var shaderCode = compiler.CompileFromFile("Shaders/GammaShader.fx");
+			customEffect = new SharpDX.Toolkit.Graphics.Effect(graphicsDevice, shaderCode.EffectData);
+			//==============
+
+
+
 
 			MediaDecoder.Instance.OnFormatChanged += ResizeTexture;
 			//MediaDecoder.Instance.OnReleaseTexture += ReleaseTexture;
@@ -309,6 +320,8 @@
 
 
 			//basicEffect.View = Matrix.Lerp(basicEffect.View, Matrix.RotationQuaternion(targetRotationQuaternion), 3f * deltaTime);
+
+			customEffect.Parameters["WorldViewProj"].SetValue(basicEffect.World * basicEffect.View * basicEffect.Projection);
 		}
 
         public void ButtonOnce(State padState, GamepadButtonFlags button, Action buttonAction)
@@ -422,7 +435,8 @@
 
 			lock (localCritical)
 			{
-				primitive?.Draw(basicEffect);
+				//primitive?.Draw(basicEffect);
+				primitive?.Draw(customEffect);
 			}
 
 			//	basicEffect.World = Matrix.Identity;
