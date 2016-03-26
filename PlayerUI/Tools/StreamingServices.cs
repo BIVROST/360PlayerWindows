@@ -59,17 +59,20 @@ namespace PlayerUI.Tools
 
 		public static bool TryParseVideoFile(Uri uri, out string fileUrl, out Streaming.ServiceResult serviceResult)
 		{
+			serviceResult = Streaming.StreamingFactory.Instance.GetStreamingInfo(uri.AbsoluteUri);
+			if(serviceResult != null) {
+				fileUrl = serviceResult.BestQualityVideoStream(Streaming.VideoContainer.mp4).url;
+				return true;
+			}
+
 			Service detectedService = DetectService(uri);
-			ParseFunc TryParse;		
-			
+			ParseFunc TryParse;
 
 			switch (detectedService)
 			{
 				case Service.Facebook: TryParse = ParseFacebook; break;
 				case Service.Youtube: TryParse = ParseYoutube; break;
 				case Service.LittlStar: TryParse = ParseLittlStar; break;
-				case Service.Vrideo: TryParse = ParseVrideo; break;
-				case Service.Pornhub: TryParse = ParsePornhub; break;
 				default: TryParse = ParseUrl; break;
 			}
 
@@ -313,75 +316,7 @@ namespace PlayerUI.Tools
 				exitCode = -1;
 				return "";
 			}
-        }
-
-
-
-		public static string ParseVrideo(Uri uri, out Streaming.ServiceResult serviceResult)
-		{
-			serviceResult = Streaming.StreamingFactory.Instance.GetStreamingInfo(uri.AbsoluteUri);
-			return serviceResult.BestQualityVideoStream(Streaming.VideoContainer.mp4).url;
-		}
-
-		public static string ParsePornhub(Uri uri, out Streaming.ServiceResult serviceResult)
-		{
-			// HACK
-			serviceResult = null;
-
-			//pornhub /player_quality_720p\s*=\s*'([^']+)'/.exec(document.body.innerHTML)[1]
-
-			HtmlDocument document = DownloadDocument(uri);
-			try
-			{
-				{
-					var match = Regex.Match(document.DocumentNode.InnerHtml, @"player_quality_1080p\s*=\s*'([^']+)'");
-
-					if (match.Captures.Count > 0)
-					{
-						return match.Groups[1].Captures[0].Value;
-					}
-				}
-
-				{
-					var match = Regex.Match(document.DocumentNode.InnerHtml, @"player_quality_720p\s*=\s*'([^']+)'");
-
-					if (match.Captures.Count > 0)
-					{
-						return match.Groups[1].Captures[0].Value;
-					}
-				}
-
-				{
-					var match = Regex.Match(document.DocumentNode.InnerHtml, @"player_quality_480p\s*=\s*'([^']+)'");
-
-					if (match.Captures.Count > 0)
-					{
-						return match.Groups[1].Captures[0].Value;
-					}
-				}
-
-				{
-					var match = Regex.Match(document.DocumentNode.InnerHtml, @"player_quality_240p\s*=\s*'([^']+)'");
-
-					if (match.Captures.Count > 0)
-					{
-						return match.Groups[1].Captures[0].Value;
-					}
-				}
-
-				{
-					var match = Regex.Match(document.DocumentNode.InnerHtml, @"player_quality_180p\s*=\s*'([^']+)'");
-
-					if (match.Captures.Count > 0)
-					{
-						return match.Groups[1].Captures[0].Value;
-					}
-				}
-
-			}
-			catch (Exception) { }
-			return "";
-		}
+      }
 
 		public static string ParseUrl(Uri uri, out Streaming.ServiceResult serviceResult)
 		{
