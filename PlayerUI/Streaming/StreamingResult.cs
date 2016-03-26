@@ -153,7 +153,8 @@ namespace PlayerUI.Streaming
 		}
 
 		protected ServiceParser[] parsers = new ServiceParser[] {
-			new VrideoParser()
+			new VrideoParser(),
+			new PornhubParser()
 		};
 
 		/// <summary>

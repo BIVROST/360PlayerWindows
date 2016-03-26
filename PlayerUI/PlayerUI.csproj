@@ -340,6 +340,7 @@
     <Compile Include="SettingsWindowViewModel.cs" />
     <Compile Include="ShellViewModelUIBehaviours.cs" />
     <Compile Include="Statistics\Heatmap.cs" />
+    <Compile Include="Streaming\PornhubResult.cs" />
     <Compile Include="Streaming\VrideoResult.cs" />
     <Compile Include="TestWindowView.xaml.cs">
       <DependentUpon>TestWindowView.xaml</DependentUpon>

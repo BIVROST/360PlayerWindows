@@ -36,8 +36,9 @@ namespace PlayerUI
 
 		public enum ProjectionMode
 		{
-			Sphere,
-			CubeFacebook
+			Sphere,	// Equirectangular 360x180
+			CubeFacebook,
+			Dome	// Equirectangular 180x180
 		}
 
 		public Error LastError;
