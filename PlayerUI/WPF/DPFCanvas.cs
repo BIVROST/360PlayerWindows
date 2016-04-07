@@ -247,6 +247,8 @@
 			} catch(Exception exc)
 			{
 				Console.WriteLine("[EXC] " + exc.Message);
+				Console.WriteLine("[EXC] " + exc.StackTrace);
+				;
 			}
         }
 

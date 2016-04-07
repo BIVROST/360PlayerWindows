@@ -512,6 +512,9 @@
     <Resource Include="logo.png" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Graphics\BIVROST-tm-white.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Graphics\power_blue.svg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
