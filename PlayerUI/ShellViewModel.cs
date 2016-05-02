@@ -329,9 +329,7 @@ namespace PlayerUI
             HwndSource source = HwndSource.FromHwnd(new WindowInteropHelper(playerWindow).Handle);
             source.AddHook(new HwndSourceHook(WndProc));
 
-			
-
-            this.DXCanvas.StopRendering();
+			this.DXCanvas.StopRendering();
 
             shellView.BufferingStatus.Visibility = Visibility.Collapsed;
 
@@ -422,6 +420,27 @@ namespace PlayerUI
 				shellView._OpenUrl.Visibility = Visibility.Collapsed;
 				shellView._OpenFile.Visibility = Visibility.Collapsed;
 			}
+
+#if DEBUG
+			Task.Factory.StartNew(async () =>
+			{
+				try
+				{
+					long seconds = await Bivrost.LicenseNinja.Verify(Logic.Instance.settings.ProductCode, Logic.Instance.settings.LicenseCode, Logic.Instance.settings.InstallId.ToString());
+				}
+				catch (Bivrost.LicenseNinja.LicenseException err)
+				{
+					Logic.Instance.settings.LicenseCode = "";
+					Logic.Instance.settings.Save();
+
+					Execute.OnUIThread(() =>
+					{
+						OpenLicenseManagement();
+					});
+				}
+			});
+#endif
+
 		}
 
 		private void EnableRemoteControl()
@@ -568,6 +587,10 @@ namespace PlayerUI
 			shellView = view as ShellView;
 			DXCanvas = shellView.Canvas1;
 			playerWindow = (view as Window);
+
+#if !DEBUG
+			shellView.BetaActivationMenu.Visibility = Visibility.Collapsed;
+#endif
 
 			shellView.PlayPause.Visibility = Visibility.Visible;
 			shellView.Pause.Visibility = Visibility.Collapsed;

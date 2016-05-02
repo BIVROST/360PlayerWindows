@@ -101,9 +101,15 @@ namespace PlayerUI
 		public bool MergeInputs { get; set; } = false;
 
 
+		//License settings
+#if DEBUG
+		public string ProductCode = "360player-beta-canary-sample";
+		public string LicenseCode = "";
+#endif
+
 		//Remote control settings
 
-#if DEBUG 
+#if DEBUG
 		[SettingsAdvancedProperty("Enable http remote control", ConfigItemType.Bool)]
 #endif
 		public bool EnableRemoteControl { get; set; } = false;

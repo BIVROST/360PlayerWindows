@@ -31,14 +31,14 @@
     <UpdatePeriodically>true</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <InstallUrl>http://download.bivrost360.com/player-desktop/</InstallUrl>
+    <InstallUrl>http://download.bivrost360.com/player-desktop/canary/</InstallUrl>
     <TargetCulture>en</TargetCulture>
     <ProductName>Bivrost 360Player</ProductName>
     <PublisherName>BIVROST Sp z o.o.</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <TrustUrlParameters>true</TrustUrlParameters>
-    <ApplicationRevision>178</ApplicationRevision>
+    <ApplicationRevision>179</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>true</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
@@ -308,6 +308,10 @@
       <DependentUpon>HeadsetMenuView.xaml</DependentUpon>
     </Compile>
     <Compile Include="HeadsetMenuViewModel.cs" />
+    <Compile Include="LicenseManagementView.xaml.cs">
+      <DependentUpon>LicenseManagementView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="LicenseManagementViewModel.cs" />
     <Compile Include="Logger\Logger.cs" />
     <Compile Include="Logic\BrowserPluginManagement.cs" />
     <Compile Include="Logic\Certificate.cs" />
@@ -350,6 +354,7 @@
     <Compile Include="Tools\DeviceSelectionTool.cs" />
     <Compile Include="Tools\GraphicTools.cs" />
     <Compile Include="Tools\IconHelper.cs" />
+    <Compile Include="Tools\LicenseNinja.cs" />
     <Compile Include="Tools\NativeMethods.cs" />
     <Compile Include="Tools\PublishInfo.cs" />
     <Compile Include="Tools\RegistryBase.cs" />
@@ -434,6 +439,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="HeadsetMenuView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="LicenseManagementView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -617,6 +626,7 @@
     </Content>
     <Content Include="Graphics\fullscreen_blue.svg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="Graphics\gyro.svg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

@@ -73,7 +73,8 @@ namespace PlayerUI
         {
 			try
 			{
-				string ffPlugin = @"https://download.bivrost360.com/ff-plugin/bivrost_360player_connector-1.0-fx-windows.xpi";
+				//string ffPlugin = @"https://download.bivrost360.com/ff-plugin/bivrost_360player_connector-1.0-fx-windows.xpi";
+				string ffPlugin = @"https://download.bivrost360.com/ff-plugin/firefox-connector-extension@bivrost360.com.xpi";
 
 				var client = new RestSharp.RestClient(ffPlugin);
 				var request = new RestSharp.RestRequest("");

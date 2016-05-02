@@ -54,7 +54,7 @@ namespace PlayerUI.Test
 			var result = parser.Parse("http://www.pornhub.com/view_video.php?viewkey=439767200");
 			Assert.IsTrue(result.VideoStreams.Count > 0, "no video streams");
 			Assert.IsFalse(result.VideoStreams.Exists(vs => vs.url == null), "some url contains nulls");
-			Assert.IsTrue(result.VideoStreams.Exists(vs => vs.url.StartsWith("http://cdn1.hqvideo.pornhub.phncdn.com/videos/201603/18/71403731/")), "did not find url");
+			Assert.IsTrue(result.VideoStreams.Exists(vs => vs.url.StartsWith("http://cdn")), "no urls starting with cdn");
 			Assert.AreEqual(MediaDecoder.ProjectionMode.Dome, result.projection);
 			Assert.AreEqual(MediaDecoder.VideoMode.SideBySide, result.stereoscopy);
 		}
