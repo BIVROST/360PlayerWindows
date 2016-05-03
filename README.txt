@@ -1,7 +1,7 @@
 Bivrost 360Player development hints
 ===================================
 
-1. OSVR dlls missing
+1. OSVR dlls missing (ClientKit project)
 
 Install https://github.com/OSVR/Managed-OSVR to ../Managed-OSVR (relative to bivrost-player-windows project dir)
 

@@ -1,0 +1,29 @@
+﻿<Window x:Class="PlayerRemote.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:PlayerRemote"
+        mc:Ignorable="d"
+        Title="Control API Demo" Height="350" Width="600">
+	<Grid>
+
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="350" />
+			<ColumnDefinition Width="*" />
+		</Grid.ColumnDefinitions>
+
+		<TextBox IsReadOnly="True" Text="..." Name="log" Grid.Column="1" TextWrapping="WrapWithOverflow" HorizontalAlignment="Stretch" Margin="5"></TextBox>
+
+		<ScrollViewer Grid.Column="0" Margin="2" Padding="5">
+			<StackPanel x:Name="Panel">
+				<!--<StackPanel.Resources>
+					<Style TargetType="{x:Type Control}">
+						<Setter Property="Margin" Value="40"/>
+					</Style>
+				</StackPanel.Resources>-->
+			</StackPanel>
+
+		</ScrollViewer>
+	</Grid>
+</Window>

@@ -1287,7 +1287,7 @@ namespace PlayerUI
 						   else
 						   {
 
-						   }
+						   }	
 					   }
 					   _waitingForDoubleClickTimeout = false;
 				   });
