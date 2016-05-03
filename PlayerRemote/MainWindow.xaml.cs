@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using RestSharp;
+using System.Collections.Generic;
+using System.Threading;
 
 namespace PlayerRemote
 {
@@ -12,6 +14,7 @@ namespace PlayerRemote
 	/// </summary>
 	public partial class MainWindow : Window
 	{
+		private ControlAPI api;
 
 		TextBlock AddLabel(string text)
 		{
@@ -37,7 +40,21 @@ namespace PlayerRemote
 		{
 			Button btn = new Button() { Margin = new Thickness(4) };
 			btn.Content = label;
-			btn.Click += async (s, e) => await handler();
+			btn.Click += async (s, e) =>
+			{
+				try
+				{
+					await handler();
+				}
+				catch (TaskCanceledException ex)
+				{
+					Console.WriteLine("task was canceled");
+				}
+				catch(Exception ex) 
+				{
+					Console.WriteLine(ex.ToString());
+				}
+			};
 			Panel.Children.Add(btn);
 			return btn;
 		}
@@ -104,10 +121,10 @@ namespace PlayerRemote
 		{
 			InitializeComponent();
 
-			ControlAPI api = new ControlAPI("https://127.0.0.1:8080/", APIDebugger);
+			api = new ControlAPI("http://127.0.0.1:8080/v1/", APIDebugger);
 
 
-			var url = AddInput("API URL", "https://127.0.0.1:8080/");
+			var url = AddInput("API URL", "http://127.0.0.1:8080/v1/");
 			Button btn = new Button();
 			btn.Content = "change URL";
 			btn.Click += (s, e) =>
@@ -117,7 +134,7 @@ namespace PlayerRemote
 
 			AddTitle("GET /v1/");
 			AddLabel("Returns the version of the API");
-			AddButton("run", api.Version);
+			AddButton("run", async () => await api.Version());
 			AddSeparator();
 
 			AddTitle("POST /v1/info");
@@ -126,7 +143,7 @@ namespace PlayerRemote
 			AddSeparator();
 
 			AddTitle("GET /v1/movies");
-			AddButton("run", api.Movies);
+			AddButton("run", async () => await api.Movies());
 			AddSeparator();
 
 			AddTitle("GET /v1/load");
@@ -141,26 +158,77 @@ namespace PlayerRemote
 			AddSeparator();
 
 			AddTitle("GET /v1/stop-and-reset");
-			AddButton("run", api.StopAndReset);
+			AddButton("run", async () => await api.StopAndReset());
 			AddSeparator();
 
 			AddTitle("GET /v1/pause");
-			AddButton("run", api.Pause);
+			AddButton("run", async () => await api.Pause());
 			AddSeparator();
 
 			AddTitle("GET /v1/unpause");
-			AddButton("run", api.Unpause);
+			AddButton("run", async () => await api.Unpause());
 			AddSeparator();
 
 			AddTitle("GET /v1/playing");
-			AddButton("run", api.Playing);
+			AddButton("run", async () => await api.Playing());
 			AddSeparator();
 
+			AddTitle("GET /v1/events");
+			cts = null;
+			Button btncancel = null;
+			Button btnrunonce = null;
+			Button btnrununtilcanceled = null;
+			btncancel=AddButton("cancel", async () => { 
+				if(cts != null)
+					cts.Cancel();
+				cts = null;
+				btncancel.IsEnabled = false;
+				btnrunonce.IsEnabled = btnrununtilcanceled.IsEnabled = true;
+				return true;  
+			});
+			btncancel.IsEnabled = false;
 
+			btnrunonce = AddButton("run once", async () => {
+				if (cts != null)
+					cts.Cancel(false);
+				cts = new CancellationTokenSource();
+				btncancel.IsEnabled = true;
+				btnrunonce.IsEnabled = btnrununtilcanceled.IsEnabled = false;
+				try {
+					var events = await api.GetEventsOnce(cts.Token);
+					return events;
+				} finally {
+					btncancel.IsEnabled = false;
+					btnrunonce.IsEnabled = btnrununtilcanceled.IsEnabled = true;
+				}
+			});
+
+			btnrununtilcanceled=AddButton("run until canceled", async () => {
+				if (cts != null)
+					cts.Cancel(false);
+				cts = new CancellationTokenSource();
+				btncancel.IsEnabled = true;
+				btnrunonce.IsEnabled = btnrununtilcanceled.IsEnabled = false;
+				try {
+					await api.GetEvents(ie => {
+						log.Dispatcher.BeginInvoke(new Action(
+							() => log.Text += string.Format("EVENT: {0}={1}", ie.name, ie.arg)));
+					}, cts.Token);
+					return true;
+				}
+				finally {
+					btncancel.IsEnabled = false;
+					btnrunonce.IsEnabled = btnrununtilcanceled.IsEnabled = true;
+				}
+			});
 		}
+
+		private CancellationTokenSource cts;
+
 
 		private void APIDebugger(RestRequest request, IRestResponse response, RestClient client)
 		{
+
 			StringBuilder sb = new StringBuilder();
 			sb.AppendLine(DateTime.Now.ToString());
 			sb.AppendFormat("{0} {1} ", request.Method, client.BuildUri(request));
@@ -169,6 +237,8 @@ namespace PlayerRemote
 
 			sb.AppendFormat("\n\nRESPONSE ({0} {1} {2}):\n", response.StatusCode, response.ContentType, response.ContentEncoding);
 			sb.Append(response.Content);
+
+			Console.WriteLine(sb.ToString());
 
 			log.Dispatcher.BeginInvoke(new Action(() => {
 				log.Text = sb.ToString();

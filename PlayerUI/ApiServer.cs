@@ -10,6 +10,7 @@ using Nancy;
 using Nancy.Hosting.Self;
 using Nancy.ModelBinding;
 using System.Globalization;
+using System.Collections.Concurrent;
 
 /// <summary>
 /// Wymaga pakietów z NuGet:
@@ -172,8 +173,8 @@ namespace PlayerUI
 				euler = new Tuple<float, float, float>(float.Parse(q.euler_x, CultureInfo.InvariantCulture), float.Parse(q.euler_y, CultureInfo.InvariantCulture), float.Parse(q.euler_z, CultureInfo.InvariantCulture));
 				t01 = float.Parse(q.t01, CultureInfo.InvariantCulture);
 				var quat = new Tuple<float, float, float, float>(
-					float.Parse(q.quat_x, CultureInfo.InvariantCulture), 
-					float.Parse(q.quat_y, CultureInfo.InvariantCulture), 
+					float.Parse(q.quat_x, CultureInfo.InvariantCulture),
+					float.Parse(q.quat_y, CultureInfo.InvariantCulture),
 					float.Parse(q.quat_z, CultureInfo.InvariantCulture),
 					float.Parse(q.quat_w, CultureInfo.InvariantCulture)
 					);
@@ -223,6 +224,116 @@ namespace PlayerUI
 
 				return status.ToJson();
 			};
+
+			/// control API
+
+			/// TODO
+			Get["/movies"] = p => JsonConvert.SerializeObject(new string[] { "TODO", "list", "movies" });
+			Get["/load"] = p => { bool autoplay = p.autoplay; string movie = p.movie; return "true"; };
+			Get["/seek"] = p => { float t = p.t; return "true"; };
+			Get["/stop-and-reset"] = p => "true";
+			Get["/pause"] = p => "true";
+			Get["/unpause"] = p => "true";
+			Get["/playing"] = p => JsonConvert.SerializeObject(new PlayingInfo() 
+					{ is_playing = true, movie="fake", 
+					  quat_x=0.1f, quat_y=0.4f, quat_z=0.2f, quat_w=(float)Math.Sqrt(0.1*0.1 + 0.4*0.4 + 0.2+0.2), 
+					  t=13.37f, tmax=66.60f	}
+			);
+			/// END TODO
+
+			Get["/events"] = p =>
+			{
+				OutgoingEvent ev;
+				// timeout after 10 seconds and return an empty array
+				if (outgoingEvents.TryTake(out ev, TimeSpan.FromSeconds(10)))
+				{
+					var r = new List<OutgoingEvent> { ev };
+					while (outgoingEvents.TryTake(out ev, TimeSpan.FromMilliseconds(0.1)))
+						r.Add(ev);
+					// ignore all events older than 5 sec
+					r.RemoveAll(e => e.created.Elapsed > TimeSpan.FromMilliseconds(5000));
+					return JsonConvert.SerializeObject(r);
+				}
+
+				return "[]";
+			};
+
+			// temp
+			Get["/__eventtester"] = p =>
+			{
+				AddOutgoingEvent("ev1", "arg1");
+				AddOutgoingEvent("ev2", "arg2");
+				AddOutgoingEvent("ev3", "arg3");
+				return "\"done\"";
+			};
+		}
+
+		static BlockingCollection<OutgoingEvent> outgoingEvents = new BlockingCollection<OutgoingEvent>();
+
+		class OutgoingEvent {
+			public string name;
+			public string arg;
+
+			[JsonIgnore]
+			public Stopwatch created=new Stopwatch();
+		}
+
+		public static void AddOutgoingEvent(string name, string arg) {
+			var og = new OutgoingEvent() { name = name, arg = arg };
+			og.created.Start();
+			outgoingEvents.Add(og);
+		}
+
+
+
+
+
+		public struct PlayingInfo
+		{
+
+			/// <summary>
+			/// The path to the current movie.
+			/// </summary>
+			public string movie;
+
+			/// <summary>
+			/// The current camera orientation quaternion
+			/// </summary>
+			public float quat_x;
+
+			/// <summary>
+			/// The current camera orientation quaternion
+			/// </summary>
+			public float quat_y;
+
+			/// <summary>
+			/// The current camera orientation quaternion
+			/// </summary>
+			public float quat_z;
+
+			/// <summary>
+			/// The current camera orientation quaternion
+			/// </summary>
+			public float quat_w;
+
+
+			/// <summary>
+			/// Current playback time
+			/// </summary>
+			public float t;
+
+
+			/// <summary>
+			/// Movie length
+			/// </summary>
+			public float tmax;
+
+
+			/// <summary>
+			/// Is the movie is currently playing
+			/// </summary>
+			public bool is_playing;
+
 		}
 
 	}

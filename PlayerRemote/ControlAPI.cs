@@ -3,6 +3,8 @@ using System;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Globalization;
+using System.Collections.Generic;
+using System.Threading;
 
 namespace PlayerRemote
 {
@@ -157,11 +159,42 @@ namespace PlayerRemote
 			apiDebugger(request, response);
 			return JsonConvert.DeserializeObject<PlayingInfo>(response.Content);
 		}
+
+
+		public async Task<List<IncommingEvent>> GetEventsOnce(CancellationToken cancelToken)
+		{
+			while (!cancelToken.IsCancellationRequested)
+			{
+				RestRequest request = new RestRequest("events", Method.GET);
+				IRestResponse response = await client.ExecuteTaskAsync(request, cancelToken);
+				apiDebugger(request, response);
+				var r = JsonConvert.DeserializeObject<List<IncommingEvent>>(response.Content);
+				if (r.Count > 0)
+					return r;
+			}
+			return new List<IncommingEvent>();
+		}
+
+
+		public async Task GetEvents(Action<IncommingEvent> eventHandler, CancellationToken cancelToken)
+		{
+			while (!cancelToken.IsCancellationRequested)
+			{
+				RestRequest request = new RestRequest("events", Method.GET);
+				IRestResponse response = await client.ExecuteTaskAsync(request, cancelToken);
+				apiDebugger(request, response);
+				JsonConvert.DeserializeObject<List<IncommingEvent>>(response.Content).ForEach(eventHandler);
+			}
+		}
 		#endregion
 
 	}
 
-
+	public class IncommingEvent
+	{
+		public string name;
+		public string arg;
+	}
 
 
 	public struct PlayingInfo
