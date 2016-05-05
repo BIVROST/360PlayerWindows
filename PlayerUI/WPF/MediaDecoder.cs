@@ -447,8 +447,9 @@ namespace PlayerUI
 				}
 
 				_mediaEngineEx.Play();
-				//_mediaEngineEx.Volume = 0.2;
-				IsPlaying = true;
+                ShellViewModel.SendEvent("moviePlaybackStarted");
+                //_mediaEngineEx.Volume = 0.2;
+                IsPlaying = true;
 			}
 
 			Task t = Task.Factory.StartNew(() =>
@@ -613,10 +614,17 @@ namespace PlayerUI
 
 		public void SetVolume(double volume)
 		{
-			//if(IsPlaying)
-			//{
-			if(_mediaEngine != null)
-				_mediaEngine.Volume = volume;
+            //if(IsPlaying)
+            //{
+            if (_mediaEngine != null)
+            {
+                try
+                {
+                    if(!_mediaEngine.IsDisposed)
+                        _mediaEngine.Volume = volume;
+                }
+                catch (Exception) { }
+            }
 			//}
 		}
 
@@ -629,7 +637,8 @@ namespace PlayerUI
 					if (!_mediaEngineEx.IsSeeking)
 					{
 						_mediaEngineEx.CurrentTime = time;
-						if (IsPaused)
+                        ShellViewModel.SendEvent("movieSeek", time);
+                        if (IsPaused)
 						{
 							manualRender = true;
 						}

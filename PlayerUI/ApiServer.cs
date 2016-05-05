@@ -121,7 +121,18 @@ namespace PlayerUI
 		public static void CommandSeek(float t) { status.Command("seek01", t.ToString("00000.00")); }
 		public static void CommandReinit() { status.Command("reinit"); }
 
-		public static event Action<ApiServer> OnInit;
+
+        // Control API handlers
+        public static Func<string[]> CommandMoviesHandler = null;
+        public static Func<string, bool, bool> CommandLoadHandler = null;
+        public static Func<float, bool> CommandSeekHandler = null;
+        public static Func<bool> CommandStopAndResetHandler = null;
+        public static Func<bool> CommandPauseHandler = null;
+        public static Func<bool> CommandUnpauseHandler = null;
+        public static Func<PlayingInfo> CommandPlayingHandler = null;
+        
+
+        public static event Action<ApiServer> OnInit;
 		public static event Action<State> OnStateChange;
 		public static event Action<Tuple<float, float, float>, float> OnPos;
 		public static event Action<Tuple<float, float, float, float>, float> OnPosQuaternion;
@@ -129,117 +140,135 @@ namespace PlayerUI
 		public static event Action<string> OnInfo;
 		public static event Action<string> OnConfirmPlay;
 
-		#endregion
+        #endregion
 
-		/// <summary>
-		/// Wywoływane automatycznie przez Nancy
-		/// </summary>
-		public ApiServer() : base("/v1/")
-		{
-			Get["/"] = _ => "api v1";
+        /// <summary>
+        /// Wywoływane automatycznie przez Nancy
+        /// </summary>
+        public ApiServer() : base("/v1/")
+        {
+            Get["/"] = _ => "api v1";
 
-			Post["/init"] = p =>
-			{
-				status = new Status();
-				device_id = null;
-				t01 = 0;
-				euler = new Tuple<float, float, float>(0, 0, 0);
-				state = State.init;
+            Post["/init"] = p =>
+            {
+                status = new Status();
+                device_id = null;
+                t01 = 0;
+                euler = new Tuple<float, float, float>(0, 0, 0);
+                state = State.init;
 
-				var q = Request.Query;
-				device_id = q.device_id;
-				movies = this.Bind<List<MovieContainer>>().ConvertAll(mc => mc.movie).ToArray();
+                var q = Request.Query;
+                device_id = q.device_id;
+                movies = this.Bind<List<MovieContainer>>().ConvertAll(mc => mc.movie).ToArray();
 
-				if (OnInit != null)
-					OnInit(this);
+                if (OnInit != null)
+                    OnInit(this);
 
-				return status.ToJson();
-			};
+                return status.ToJson();
+            };
 
-			Get["/state-change"] = p =>
-			{
-				var q = Request.Query;
-				state = System.Enum.Parse(typeof(State), q.state);
+            Get["/state-change"] = p =>
+            {
+                var q = Request.Query;
+                state = System.Enum.Parse(typeof(State), q.state);
 
-				if (OnStateChange != null)
-					OnStateChange(state);
+                if (OnStateChange != null)
+                    OnStateChange(state);
 
-				return status.ToJson();
-			};
+                return status.ToJson();
+            };
 
-			Get["/pos"] = p =>
-			{
-				var q = Request.Query;
-				euler = new Tuple<float, float, float>(float.Parse(q.euler_x, CultureInfo.InvariantCulture), float.Parse(q.euler_y, CultureInfo.InvariantCulture), float.Parse(q.euler_z, CultureInfo.InvariantCulture));
-				t01 = float.Parse(q.t01, CultureInfo.InvariantCulture);
-				var quat = new Tuple<float, float, float, float>(
-					float.Parse(q.quat_x, CultureInfo.InvariantCulture),
-					float.Parse(q.quat_y, CultureInfo.InvariantCulture),
-					float.Parse(q.quat_z, CultureInfo.InvariantCulture),
-					float.Parse(q.quat_w, CultureInfo.InvariantCulture)
-					);
+            Get["/pos"] = p =>
+            {
+                var q = Request.Query;
+                euler = new Tuple<float, float, float>(float.Parse(q.euler_x, CultureInfo.InvariantCulture), float.Parse(q.euler_y, CultureInfo.InvariantCulture), float.Parse(q.euler_z, CultureInfo.InvariantCulture));
+                t01 = float.Parse(q.t01, CultureInfo.InvariantCulture);
+                var quat = new Tuple<float, float, float, float>(
+                    float.Parse(q.quat_x, CultureInfo.InvariantCulture),
+                    float.Parse(q.quat_y, CultureInfo.InvariantCulture),
+                    float.Parse(q.quat_z, CultureInfo.InvariantCulture),
+                    float.Parse(q.quat_w, CultureInfo.InvariantCulture)
+                    );
 
-				if (OnPos != null)
-					OnPos(euler, t01);
+                if (OnPos != null)
+                    OnPos(euler, t01);
 
-				if (OnPosQuaternion != null)
-					OnPosQuaternion(quat, t01);
+                if (OnPosQuaternion != null)
+                    OnPosQuaternion(quat, t01);
 
-				return status.ToJson();
-			};
+                return status.ToJson();
+            };
 
-			Get["/back"] = _ =>
-			{
-				if (OnBackPressed != null)
-					OnBackPressed();
+            Get["/back"] = _ =>
+            {
+                if (OnBackPressed != null)
+                    OnBackPressed();
 
-				return status.ToJson();
-			};
+                return status.ToJson();
+            };
 
-			Get["/ack"] = p =>
-			{
-				var q = Request.Query;
-				int max_id = q.max_id;
-				status.Ack(max_id);
+            Get["/ack"] = p =>
+            {
+                var q = Request.Query;
+                int max_id = q.max_id;
+                status.Ack(max_id);
 
-				return status.ToJson();
-			};
+                return status.ToJson();
+            };
 
-			Post["/info"] = p =>
-			{
-				string message = Request.Form["message"];
+            Post["/info"] = p =>
+            {
+                string message = Request.Form["message"];
 
-				if (OnInfo != null)
-					OnInfo(message);
+                if (OnInfo != null)
+                    OnInfo(message);
 
-				return status.ToJson();
-			};
+                return status.ToJson();
+            };
 
-			Post["/confirm-play"] = p =>
-			{
-				string path = Request.Form["path"];
+            Post["/confirm-play"] = p =>
+            {
+                string path = Request.Form["path"];
 
-				if (OnConfirmPlay != null)
-					OnConfirmPlay(path);
+                if (OnConfirmPlay != null)
+                    OnConfirmPlay(path);
 
-				return status.ToJson();
-			};
+                return status.ToJson();
+            };
 
-			/// control API
+            /// control API
 
-			/// TODO
-			Get["/movies"] = p => JsonConvert.SerializeObject(new string[] { "TODO", "list", "movies" });
-			Get["/load"] = p => { bool autoplay = p.autoplay; string movie = p.movie; return "true"; };
-			Get["/seek"] = p => { float t = p.t; return "true"; };
-			Get["/stop-and-reset"] = p => "true";
-			Get["/pause"] = p => "true";
-			Get["/unpause"] = p => "true";
-			Get["/playing"] = p => JsonConvert.SerializeObject(new PlayingInfo() 
-					{ is_playing = true, movie="fake", 
-					  quat_x=0.1f, quat_y=0.4f, quat_z=0.2f, quat_w=(float)Math.Sqrt(0.1*0.1 + 0.4*0.4 + 0.2+0.2), 
-					  t=13.37f, tmax=66.60f	}
-			);
-			/// END TODO
+            /// TODO
+            //Get["/movies"] = p => JsonConvert.SerializeObject(new string[] { "TODO", "list", "movies" });
+            Get["/movies"] = p => JsonConvert.SerializeObject(CommandMoviesHandler == null ? new string[] { } : CommandMoviesHandler());
+
+            //Get["/load"] = p => { bool autoplay = p.autoplay; string movie = p.movie; return "true"; };
+            Get["/load"] = p =>
+            {
+                var q = Request.Query;
+                return JsonConvert.SerializeObject(CommandLoadHandler == null ? false : CommandLoadHandler(q.movie, q.autoplay));
+            };
+
+            //Get["/seek"] = p => { float t = p.t; return "true"; };
+            Get["/seek"] = p => JsonConvert.SerializeObject(CommandSeekHandler == null ? false : CommandSeekHandler(Request.Query.t));
+
+            //Get["/stop-and-reset"] = p => "true";
+            Get["/stop-and-reset"] = p => JsonConvert.SerializeObject(CommandStopAndResetHandler == null ? false : CommandStopAndResetHandler());
+
+            //Get["/pause"] = p => "true";
+            Get["/pause"] = p => JsonConvert.SerializeObject(CommandPauseHandler == null ? false : CommandPauseHandler());
+
+            //Get["/unpause"] = p => "true";
+            Get["/unpause"] = p => JsonConvert.SerializeObject(CommandUnpauseHandler == null ? false : CommandUnpauseHandler());
+
+            //       Get["/playing"] = p => JsonConvert.SerializeObject(new PlayingInfo() 
+            //{ is_playing = true, movie="fake", 
+            //  quat_x=0.1f, quat_y=0.4f, quat_z=0.2f, quat_w=(float)Math.Sqrt(0.1*0.1 + 0.4*0.4 + 0.2+0.2), 
+            //  t=13.37f, tmax=66.60f	}
+            Get["/playing"] = p => JsonConvert.SerializeObject(CommandPlayingHandler == null ? new PlayingInfo() { is_playing = false, movie = "", quat_x = 0f, quat_y = 0f, quat_z = 0f, quat_w = 0f, t = 0f, tmax = 0f } : CommandPlayingHandler());
+			
+            
+            /// END TODO
 
 			Get["/events"] = p =>
 			{

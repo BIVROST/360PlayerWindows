@@ -110,7 +110,7 @@ namespace PlayerUI
 		//Remote control settings
 
 #if DEBUG
-		[SettingsAdvancedProperty("Enable http remote control", ConfigItemType.Bool)]
+		[SettingsAdvancedProperty("Enable http remote control (requires restart)", ConfigItemType.Bool)]
 #endif
 		public bool EnableRemoteControl { get; set; } = false;
 

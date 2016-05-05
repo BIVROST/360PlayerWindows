@@ -6,6 +6,8 @@
         xmlns:local="clr-namespace:PlayerUI"
         mc:Ignorable="d"
         Title="LicenseManagementView" Height="110" Width="500" WindowStartupLocation="CenterOwner" ResizeMode="NoResize" ShowInTaskbar="False" Icon="{x:Null}">
+
+	
     <Grid>
 		<Grid.RowDefinitions>
 			<RowDefinition Height="28" />
@@ -18,7 +20,7 @@
 
 		<TextBlock VerticalAlignment="Center" Margin="8">Enter valid license code:</TextBlock>
 		
-		<TextBox x:Name="LicenseCode" Margin="8,0,4,8" Height="24" Grid.Column="0" Grid.Row="1"/>
+		<TextBox x:Name="LicenseCode" Margin="8,0,4,8" Height="24" Grid.Column="0" Grid.Row="1" />
 		<Button x:Name="Validate" Content="Validate" Margin="4,0,8,8" Height="24" Grid.Column="1" Grid.Row="1"/>
 		
 	</Grid>

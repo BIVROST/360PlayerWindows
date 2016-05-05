@@ -74,6 +74,20 @@
 		private bool useOSVR = false;
 		private bool overrideManual = false;
 
+        private Quaternion osvrQuaternion;
+        public Quaternion GetCurrentLook()
+        {
+            if(useOSVR && !overrideManual)
+            {
+                if (osvrQuaternion == null) return Quaternion.Identity;
+                return osvrQuaternion;
+            } else
+            {
+                if (currentRotationQuaternion == null) return Quaternion.Identity;
+                return currentRotationQuaternion;
+            }
+        }
+
         public Scene(Texture2D sharedTexture, MediaDecoder.ProjectionMode projection)
 		{
 			videoTexture = sharedTexture;
@@ -288,12 +302,14 @@
 		{
 			targetFov += fov;
 			targetFov = Math.Min(MAX_FOV, Math.Max(targetFov, MIN_FOV));
-		}
+            ShellViewModel.SendEvent("zoomChanged", targetFov);
+        }
 
 		public void ResetFov()
 		{
 			targetFov = DEFAULT_FOV;
-		}
+            ShellViewModel.SendEvent("zoomChanged", targetFov);
+        }
 
 		public void ResetRotation()
 		{
@@ -323,12 +339,14 @@
 		public void StereographicProjection()
 		{
 			littlePlanet = true;
+            ShellViewModel.SendEvent("projectionChanged", "stereographic");
 		}
 
 		public void RectlinearProjection()
 		{
 			littlePlanet = false;
-		}
+            ShellViewModel.SendEvent("projectionChanged", "gnomic");
+        }
 
         void IScene.Update(TimeSpan sceneTime)
         {
@@ -348,11 +366,22 @@
 
 			if (useOSVR && !overrideManual)
 			{
-				context.update();
-				var viewerPose = displayConfig.GetViewerPose(0);
-				Quaternion oq = new Quaternion(-(float)viewerPose.rotation.x, -(float)viewerPose.rotation.y, -(float)viewerPose.rotation.z, (float)viewerPose.rotation.w);
-				basicEffect.View = Matrix.RotationQuaternion(oq);
-			}
+                try
+                {
+                    context.update();
+                    var viewerPose = displayConfig.GetViewerPose(0);
+                    Quaternion oq = new Quaternion(-(float)viewerPose.rotation.x, -(float)viewerPose.rotation.y, -(float)viewerPose.rotation.z, (float)viewerPose.rotation.w);
+                    osvrQuaternion = oq;
+                    basicEffect.View = Matrix.RotationQuaternion(oq);
+                }
+                catch (Exception exc)
+                {
+                    Console.WriteLine("[EXC] " + exc.Message);
+                    Console.WriteLine("[EXC] " + exc.StackTrace);
+                    ;
+                    overrideManual = true;
+                }
+            }
 			else {
 				basicEffect.View = Matrix.RotationQuaternion(currentRotationQuaternion);
 			}
@@ -463,12 +492,15 @@
 				{
 					if (Keyboard.IsKeyDown(Key.L))
 					{
-						littlePlanet = true;
-						targetFov = DEFAULT_LITTLE_FOV;
+                        //littlePlanet = true;
+                        StereographicProjection();
+                        targetFov = DEFAULT_LITTLE_FOV;
+                        
 					}
 					if (Keyboard.IsKeyDown(Key.N))
 					{
-						littlePlanet = false;
+                        //littlePlanet = false;
+                        RectlinearProjection();
 						targetFov = DEFAULT_FOV;
 					}
 				}

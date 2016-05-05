@@ -2,6 +2,7 @@
 using Fleck;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Reflection;
@@ -59,7 +60,6 @@ namespace PlayerUI
 				Console.WriteLine("Exception supressed. Success.");
             };			
 			settings = new Settings();
-			
 
 			ConfigureSettingsActions();
 
@@ -276,5 +276,12 @@ namespace PlayerUI
 			}				
 		}
 
-	}
+        internal void ValidateSettings()
+        {
+            if (!Directory.Exists(Logic.Instance.settings.RemoteControlMovieDirectory)){
+                Logic.Instance.settings.RemoteControlMovieDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyVideos);
+                Logic.Instance.settings.Save();
+            }
+        }
+    }
 }

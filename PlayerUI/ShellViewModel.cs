@@ -121,9 +121,11 @@ namespace PlayerUI
 			_mediaDecoder = new MediaDecoder();
 			_mediaDecoder.Loop = Loop;
 
+
 			_mediaDecoder.OnReady += (duration) =>
 			{
 				_ready = true;
+                SendEvent("movieLoaded", Path.GetFileName(SelectedFileName));
 				if (autoplay)
 				{
 					autoplay = false;
@@ -134,7 +136,8 @@ namespace PlayerUI
 
 			_mediaDecoder.OnEnded += () =>
 			{
-				Task.Factory.StartNew(() =>	Execute.OnUIThread(() =>
+                SendEvent("movieEnded", Path.GetFileName(SelectedFileName));
+                Task.Factory.StartNew(() =>	Execute.OnUIThread(() =>
 				{
 					Stop();
 					ShowStartupUI();
@@ -144,7 +147,8 @@ namespace PlayerUI
 			_mediaDecoder.OnStop += () =>
 			{
 				Task.Factory.StartNew(() => waitForPlaybackStop.Set());
-			};
+                SendEvent("movieStopped", Path.GetFileName(SelectedFileName));
+            };
 
 			_mediaDecoder.OnTimeUpdate += (time) =>
 			{
@@ -174,7 +178,8 @@ namespace PlayerUI
 					SelectedFileName = null;
 					ShowStartupUI();
 				});
-			};
+                SendEvent("playbackError", error);
+            };
 
             _mediaDecoder.OnBufferingStarted += () =>
             {
@@ -208,7 +213,8 @@ namespace PlayerUI
 			VolumeRocker.OnVolumeChange += (volume) =>
 			{
 				_mediaDecoder.SetVolume(volume);
-			};
+                ShellViewModel.SendEvent("volumeChanged", volume);
+            };
 
 			HeadsetMenu = new HeadsetMenuViewModel();
 			HeadsetMenu.OnAuto += () => Task.Factory.StartNew(() =>
@@ -258,9 +264,9 @@ namespace PlayerUI
 					);
 			});
 
+            Logic.Instance.ValidateSettings();
 
-			
-		}
+        }
 
 
 		private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
@@ -443,117 +449,7 @@ namespace PlayerUI
 
 		}
 
-		private void EnableRemoteControl()
-		{
-			Task.Factory.StartNew(() =>
-			{
-				remoteControl = ApiServer.InitNancy(apiServer =>
-					{
-						Log("got unity init, device_id=" + ApiServer.device_id + " movies=[\n" + string.Join(",\n", ApiServer.movies) + "]", ConsoleColor.DarkGreen);
-						Log("init complete", ConsoleColor.DarkGreen);
-					}
-				);		
-
-				ApiServer.OnBackPressed += () =>
-				{
-					Log("[remote] back pressed", ConsoleColor.DarkGreen);
-				};
-
-				ApiServer.OnStateChange += (state) => {
-					Log("[remote] state changed: " + state, ConsoleColor.DarkGreen);
-
-					switch(state)
-					{
-						//case ApiServer.State.off:
-						//	Execute.OnUIThreadAsync(() =>
-						//	{
-						//		if(IsPlaying)
-						//			Stop();
-						//	});
-						//	break;
-
-						case ApiServer.State.pause:
-							Execute.OnUIThreadAsync(() =>
-							{
-								if (IsPlaying && !IsPaused)
-								{
-									Pause();
-									_mediaDecoder.Seek(remoteTime);
-								}
-							});
-							break;
-
-						case ApiServer.State.play:
-							Execute.OnUIThreadAsync(() =>
-							{
-								if (!_ready)
-									OpenFileFrom(SelectedFileName);
-								else
-									PlayPause();
-							});
-							break;
-
-						case ApiServer.State.stop:
-							Execute.OnUIThreadAsync(() =>
-							{
-								if (IsPlaying)
-									Stop();
-							});
-							break;
-					}
-				};
-
-				ApiServer.OnConfirmPlay += (path) =>
-				{
-					Log("[remote] path = " + path, ConsoleColor.Green);
-					string remoteFile = path.Split('/').Last();
-					if(File.Exists(Logic.Instance.settings.RemoteControlMovieDirectory + Path.DirectorySeparatorChar + remoteFile))
-					{
-						IsFileSelected = true;
-						SelectedFileName = Logic.Instance.settings.RemoteControlMovieDirectory + Path.DirectorySeparatorChar + remoteFile;
-					} else
-					{
-						IsFileSelected = false;
-						SelectedFileName = "";
-
-						Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Requested file \"" + remoteFile + "\" not found in video library.", 
-							() => {
-								System.Diagnostics.Process.Start(Logic.Instance.settings.RemoteControlMovieDirectory);
-							}, "open folder")));
-					}
-				};
-
-				ApiServer.OnPos += (euler, t) =>
-				{
-					//Log("[remote] position = " + euler.Item1 + ", " + euler.Item2 + ", " + euler.Item3, ConsoleColor.DarkGreen);
-					//remoteTime = (float)(t * MaxTime);
-					//if (DXCanvas.Scene != null)
-					//{
-					//	((Scene)DXCanvas.Scene).SetLook(euler);
-					//}
-				};
-
-				ApiServer.OnPosQuaternion += (quat, t) =>
-				{
-					//Log("[remote] position = " + quat.Item1 + ", " + euler.Item2 + ", " + euler.Item3, ConsoleColor.DarkGreen);
-					remoteTime = (float)(t * MaxTime);
-					if (DXCanvas.Scene != null)
-					{
-						((Scene)DXCanvas.Scene).SetLook(quat);
-					}
-				};
-
-
-
-				ApiServer.OnInfo += (msg) => {
-					Log("[remote] msg = " + msg, ConsoleColor.DarkGreen);
-				};
-
-				
-
-			});		
-
-		}
+		
 
 		private void Log(string message, ConsoleColor color)
 		{
@@ -721,13 +617,15 @@ namespace PlayerUI
 
 				_timeValue = value;
 
-				if (!lockSlider)
-					_mediaDecoder.Seek(value);
-				else
-				{
-					CurrentPosition = (new TimeSpan(0, 0, (int)Math.Floor(_timeValue))).ToString();
-					NotifyOfPropertyChange(() => CurrentPosition);
-				}
+                if (!lockSlider)
+                {
+                    _mediaDecoder.Seek(value);
+                }
+                else
+                {
+                    CurrentPosition = (new TimeSpan(0, 0, (int)Math.Floor(_timeValue))).ToString();
+                    NotifyOfPropertyChange(() => CurrentPosition);
+                }
 			}
 		}
 
@@ -819,12 +717,14 @@ namespace PlayerUI
 								OculusPlayback._projection = _mediaDecoder.Projection;
 								OculusPlayback.Configure(SelectedFileNameLabel, (float)_mediaDecoder.Duration);
 								OculusPlayback.Start();
-							}
+                                ShellViewModel.SendEvent("headsetConnected", "oculus");
+                            }
 							else
 							{
 								Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Oculus Rift not detected.")));
 								Console.WriteLine("No Oculus connected");
-							}
+                                ShellViewModel.SendEvent("headsetError", "oculus");
+                            }
 						}
 
 						if(!detected)
@@ -839,11 +739,13 @@ namespace PlayerUI
 								OSVRKit.OSVRPlayback._projection = _mediaDecoder.Projection;
 								OSVRKit.OSVRPlayback.Configure(SelectedFileNameLabel, (float)_mediaDecoder.Duration);
 								OSVRKit.OSVRPlayback.Start();
-							} else
+                                    ShellViewModel.SendEvent("headsetConnected", "osvr");
+                                } else
 							{
 								Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("OSVR not detected.")));
 								Console.WriteLine("No OSVR connected");
-							}
+                                    ShellViewModel.SendEvent("headsetError", "osvr");
+                                }
 						}
 					});
 
@@ -980,7 +882,8 @@ namespace PlayerUI
 			IsPaused = true;
 			Task.Factory.StartNew(() => {
 				_mediaDecoder.Pause();
-			});
+                ShellViewModel.SendEvent("moviePaused", Path.GetFileName(SelectedFileName));
+            });
             Execute.OnUIThreadAsync(() =>
             {
                 shellView.PlayPause.Visibility = Visibility.Visible;
@@ -995,16 +898,19 @@ namespace PlayerUI
 
 		public void UnPause()
 		{
-			IsPaused = false;
-			Task.Factory.StartNew(() => {
-				_mediaDecoder.Unpause();
-			});
-			shellView.PlayPause.Visibility = Visibility.Collapsed;
-			shellView.Pause.Visibility = Visibility.Visible;
-			NotifyOfPropertyChange(() => CanPlay);
-			AnimateIndicator(shellView.PlayIndicator);
-			OculusPlayback.UnPause();
-            OSVRKit.OSVRPlayback.UnPause();
+            Execute.OnUIThreadAsync(() => {
+                IsPaused = false;
+                Task.Factory.StartNew(() => {
+                    _mediaDecoder.Unpause();
+                    ShellViewModel.SendEvent("movieUnpaused", Path.GetFileName(SelectedFileName));
+                });
+                shellView.PlayPause.Visibility = Visibility.Collapsed;
+                shellView.Pause.Visibility = Visibility.Visible;
+                NotifyOfPropertyChange(() => CanPlay);
+                AnimateIndicator(shellView.PlayIndicator);
+                OculusPlayback.UnPause();
+                OSVRKit.OSVRPlayback.UnPause();
+            });			
         }
 
 		public void OpenFile()
@@ -1069,7 +975,7 @@ namespace PlayerUI
 		{
 			lockSlider = false;
 			_mediaDecoder.Seek(_timeValue);
-		}
+        }
 
 		public void FilePreviewDragEnter(DragEventArgs e)
 		{
@@ -1156,7 +1062,7 @@ namespace PlayerUI
 				if (IsPlaying || _mediaDecoder.IsEnded)
 				{
 					_mediaDecoder.Stop();
-
+                    ShellViewModel.SendEvent("movieStopped", Path.GetFileName(SelectedFileName));
 					//STATS
 					Logic.Instance.stats.TrackEvent("Application events", "Stop", "");
 
@@ -1213,8 +1119,14 @@ namespace PlayerUI
 
 		public void Quit()
 		{
-			if (remoteControl != null)
-				remoteControl.Stop();
+            if (remoteControl != null)
+            {
+                remoteControl.Stop();
+            }
+            if (IsRemoteControlEnabled)
+            {
+                ShellViewModel.SendEvent("quit");
+            }
 
 			//STATS
 			TryClose();
@@ -1226,6 +1138,7 @@ namespace PlayerUI
 			Execute.OnUIThread(() => shellView.VideoProgressBar.Focus());
 
 			DialogHelper.ShowDialog<ConfigurationViewModel>();
+            Logic.Instance.ValidateSettings();
 		}
 
 		private Point _mouseDownPoint;
@@ -1335,7 +1248,9 @@ namespace PlayerUI
 				playerWindow.Margin = new Thickness(0,0,0,0);
 				playerWindow.WindowState = WindowState.Maximized;
 			}
-		}
+
+            ShellViewModel.SendEvent("fullscreenChanged", Fullscreen);
+        }
 
 		public void EscapeFullscreen()
 		{
@@ -1404,7 +1319,7 @@ namespace PlayerUI
 			if (IsPlaying)
 			{
 				_mediaDecoder.Seek(_mediaDecoder.CurrentPosition - 5f);
-			}
+            }
 		}
 
 		public void HeadsetSelect()

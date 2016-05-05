@@ -82,7 +82,7 @@ namespace PlayerRemote
 
 			var grid = new Grid() { Margin = new Thickness(4), VerticalAlignment = VerticalAlignment.Stretch };
 			grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(100) });
-			grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(200) });
+			grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
 			grid.RowDefinitions.Add(new RowDefinition());
 			grid.Children.Add(lb);
 			grid.Children.Add(tb);
@@ -143,8 +143,8 @@ namespace PlayerRemote
 			AddSeparator();
 
 			AddTitle("GET /v1/movies");
-			AddButton("run", async () => await api.Movies());
-			AddSeparator();
+            AddButton("run", async () => await api.Movies());
+            AddSeparator();
 
 			AddTitle("GET /v1/load");
 			var movie = AddInput("movie (GET)");

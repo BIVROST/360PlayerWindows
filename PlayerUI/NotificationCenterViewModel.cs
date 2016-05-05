@@ -23,7 +23,8 @@ namespace PlayerUI
 				RemoveNotification(n);
 			};
 			Notifications.Add(notification);
-		}
+            ShellViewModel.SendEvent("notification", notification.Message + " :: " + notification.ActionLabel);
+        }
 
 		public void RemoveNotification(NotificationViewModel notification)
 		{
