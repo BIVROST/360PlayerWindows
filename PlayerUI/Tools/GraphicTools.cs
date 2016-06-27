@@ -76,17 +76,17 @@ namespace PlayerUI.Tools
 			return new SharpDX.Toolkit.Graphics.GeometricPrimitive(graphicsDevice, data, indices);
 		}
 
-		public static GeometricPrimitive CreateGeometry(MediaDecoder.ProjectionMode projection, GraphicsDevice graphicsDevice)
+		public static GeometricPrimitive CreateGeometry(MediaDecoder.ProjectionMode projection, GraphicsDevice graphicsDevice, bool toLeftHanded=true)
 		{
 			switch (projection)
 			{
-				case MediaDecoder.ProjectionMode.Sphere: return GeometricPrimitive.Sphere.New(graphicsDevice, 6, 64, true);
+				case MediaDecoder.ProjectionMode.Sphere: return GeometricPrimitive.Sphere.New(graphicsDevice, 6, 64, toLeftHanded);
 				case MediaDecoder.ProjectionMode.CubeFacebook: return GenerateFacebookCube(graphicsDevice);
 				default: throw new ArgumentException("Unknown projection");
 			}
 		}
 
-		public static Vector2 QuaternionToYawPitch(OVR.Quaternionf ovrQuatf)
+		public static Vector2 QuaternionToYawPitch(OVRTypes.Quaternionf ovrQuatf)
 		{
 			return QuaternionToYawPitch(new Quaternion(-ovrQuatf.X, -ovrQuatf.Y, -ovrQuatf.Z, ovrQuatf.W));
 		}

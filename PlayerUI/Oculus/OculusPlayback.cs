@@ -218,7 +218,7 @@ public static readonly SharpDX.Toolkit.Graphics.EffectData EffectBytecode = Shar
             //	hmd = oculus.Hmd_Create(0);
             //else
             //	hmd = oculus.Hmd_CreateDebug(OculusWrap.OVR.HmdType.DK2);
-            OVR.GraphicsLuid graphicsLuid;
+            OVRTypes.GraphicsLuid graphicsLuid;
             hmd = oculus.Hmd_Create(out graphicsLuid);
 
 			if (hmd == null)
@@ -230,15 +230,16 @@ public static readonly SharpDX.Toolkit.Graphics.EffectData EffectBytecode = Shar
 			if (hmd.ProductName == string.Empty)
 				System.Windows.Forms.MessageBox.Show("The HMD is not enabled.", "There's a tear in the Rift", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
-			// Specify which head tracking capabilities to enable.
-			hmd.SetEnabledCaps(OVR.HmdCaps.DebugDevice);
+			/// ============= nieużywane?
+			//// Specify which head tracking capabilities to enable.
+			//hmd.SetEnabledCaps(OVRTypes.HmdCaps.DebugDevice);
 
-			// Start the sensor which informs of the Rift's pose and motion
-			hmd.ConfigureTracking(OVR.TrackingCaps.Orientation | OVR.TrackingCaps.MagYawCorrection, OVR.TrackingCaps.None);
-
+            //// Start the sensor which informs of the Rift's pose and motion
+            //hmd.ConfigureTracking(OVRTypes.TrackingCaps.Orientation | OVRTypes.TrackingCaps.MagYawCorrection, OVRTypes.TrackingCaps.None);
+			// ============== /
 			// Create a set of layers to submit.
 			EyeTexture[] eyeTextures = new EyeTexture[2];
-			OVR.ovrResult result;
+            OVRTypes.Result result;
 
 			// Create DirectX drawing device.
 			SharpDX.Direct3D11.Device device = new Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.BgraSupport, new SharpDX.Direct3D.FeatureLevel[] { SharpDX.Direct3D.FeatureLevel.Level_10_0 });
@@ -286,7 +287,7 @@ public static readonly SharpDX.Toolkit.Graphics.EffectData EffectBytecode = Shar
 
 			for (int eyeIndex = 0; eyeIndex < 2; eyeIndex++)
 			{
-				OVR.EyeType eye = (OVR.EyeType)eyeIndex;
+                OVRTypes.EyeType eye = (OVRTypes.EyeType)eyeIndex;
 				EyeTexture eyeTexture = new EyeTexture();
 				eyeTextures[eyeIndex] = eyeTexture;
 
@@ -294,8 +295,8 @@ public static readonly SharpDX.Toolkit.Graphics.EffectData EffectBytecode = Shar
 				eyeTexture.FieldOfView = hmd.DefaultEyeFov[eyeIndex];
 				eyeTexture.TextureSize = hmd.GetFovTextureSize(eye, hmd.DefaultEyeFov[eyeIndex], 1.0f);
 				eyeTexture.RenderDescription = hmd.GetRenderDesc(eye, hmd.DefaultEyeFov[eyeIndex]);
-				eyeTexture.HmdToEyeViewOffset = eyeTexture.RenderDescription.HmdToEyeViewOffset;
-				eyeTexture.ViewportSize.Position = new OVR.Vector2i(0, 0);
+				eyeTexture.HmdToEyeViewOffset = eyeTexture.RenderDescription.HmdToEyeOffset; 
+				eyeTexture.ViewportSize.Position = new OVRTypes.Vector2i(0, 0);
 				eyeTexture.ViewportSize.Size = eyeTexture.TextureSize;
 				eyeTexture.Viewport = new Viewport(0, 0, eyeTexture.TextureSize.Width, eyeTexture.TextureSize.Height, 0.0f, 1.0f);
 
@@ -312,24 +313,44 @@ public static readonly SharpDX.Toolkit.Graphics.EffectData EffectBytecode = Shar
 				eyeTexture.Texture2DDescription.BindFlags = BindFlags.ShaderResource | BindFlags.RenderTarget;
 
 				// Convert the SharpDX texture description to the native Direct3D texture description.
-				OVR.D3D11.D3D11_TEXTURE2D_DESC swapTextureDescriptionD3D11 = SharpDXHelpers.CreateTexture2DDescription(eyeTexture.Texture2DDescription);
+				//OVR.D3D11.D3D11_TEXTURE2D_DESC swapTextureDescriptionD3D11 = SharpDXHelpers.CreateTexture2DDescription(eyeTexture.Texture2DDescription);
+				OVRTypes.TextureSwapChainDesc textureSwapChainDesc = SharpDXHelpers.CreateTextureSwapChainDescription(eyeTexture.Texture2DDescription);
+
+
 
 				// Create a SwapTextureSet, which will contain the textures to render to, for the current eye.
-				result = hmd.CreateSwapTextureSetD3D11(device.NativePointer, ref swapTextureDescriptionD3D11, OVR.D3D11.SwapTextureSetD3D11Flags.None, out eyeTexture.SwapTextureSet);
-				WriteErrorDetails(oculus, result, "Failed to create swap texture set.");
+				//result = hmd.CreateSwapTextureSetD3D11(device.NativePointer, ref swapTextureDescriptionD3D11, OVR.D3D11.SwapTextureSetD3D11Flags.None, out eyeTexture.SwapTextureSet);
+				//WriteErrorDetails(oculus, result, "Failed to create swap texture set.");
+
+				result = hmd.CreateTextureSwapChainDX(device.NativePointer, textureSwapChainDesc, out eyeTexture.SwapTextureSet);
+				WriteErrorDetails(oculus, result, "Failed to create swap chain.");
+
+				// Retrieve the number of buffers of the created swap chain.
+				int textureSwapChainBufferCount;
+				result = eyeTexture.SwapTextureSet.GetLength(out textureSwapChainBufferCount);
+				WriteErrorDetails(oculus, result, "Failed to retrieve the number of buffers of the created swap chain.");
+
 
 				// Create room for each DirectX texture in the SwapTextureSet.
-				eyeTexture.Textures = new Texture2D[eyeTexture.SwapTextureSet.TextureCount];
-				eyeTexture.RenderTargetViews = new RenderTargetView[eyeTexture.SwapTextureSet.TextureCount];
+				eyeTexture.Textures = new Texture2D[textureSwapChainBufferCount];
+				eyeTexture.RenderTargetViews = new RenderTargetView[textureSwapChainBufferCount];
 
 				// Create a texture 2D and a render target view, for each unmanaged texture contained in the SwapTextureSet.
-				for (int textureIndex = 0; textureIndex < eyeTexture.SwapTextureSet.TextureCount; textureIndex++)
+				for (int textureIndex = 0; textureIndex < textureSwapChainBufferCount; textureIndex++)
 				{
-					// Retrieve the current textureData object.
-					OVR.D3D11.D3D11TextureData textureData = eyeTexture.SwapTextureSet.Textures[textureIndex];
+					//// Retrieve the current textureData object.
+					//OVR.D3D11.D3D11TextureData textureData = eyeTexture.SwapTextureSet.Textures[textureIndex];
+
+					Guid textureInterfaceId = new Guid("6f15aaf2-d208-4e89-9ab4-489535d34f9c"); // Interface ID of the Direct3D Texture2D interface.
+
+					// Retrieve the Direct3D texture contained in the Oculus TextureSwapChainBuffer.
+					IntPtr swapChainTextureComPtr = IntPtr.Zero;
+					result = eyeTexture.SwapTextureSet.GetBufferDX(textureIndex, textureInterfaceId, out swapChainTextureComPtr);
+					WriteErrorDetails(oculus, result, "Failed to retrieve a texture from the created swap chain.");
+
 
 					// Create a managed Texture2D, based on the unmanaged texture pointer.
-					eyeTexture.Textures[textureIndex] = new Texture2D(textureData.Texture);
+					eyeTexture.Textures[textureIndex] = new Texture2D(swapChainTextureComPtr);
 
 					// Create a render target view for the current Texture2D.
 					eyeTexture.RenderTargetViews[textureIndex] = new RenderTargetView(device, eyeTexture.Textures[textureIndex]);
@@ -353,11 +374,11 @@ public static readonly SharpDX.Toolkit.Graphics.EffectData EffectBytecode = Shar
 				eyeTexture.DepthStencilView = new DepthStencilView(device, eyeTexture.DepthBuffer);
 
 				// Specify the texture to show on the HMD.
-				layerEyeFov.ColorTexture[eyeIndex] = eyeTexture.SwapTextureSet.SwapTextureSetPtr;
-				layerEyeFov.Viewport[eyeIndex].Position = new OVR.Vector2i(0, 0);
+				layerEyeFov.ColorTexture[eyeIndex] = eyeTexture.SwapTextureSet.TextureSwapChainPtr;
+				layerEyeFov.Viewport[eyeIndex].Position = new OVRTypes.Vector2i(0, 0);
 				layerEyeFov.Viewport[eyeIndex].Size = eyeTexture.TextureSize;
 				layerEyeFov.Fov[eyeIndex] = eyeTexture.FieldOfView;
-				layerEyeFov.Header.Flags = OVR.LayerFlags.HighQuality;
+				layerEyeFov.Header.Flags = OVRTypes.LayerFlags.HighQuality;
 			}
 
 			#region Rendering primitives and resources
@@ -400,7 +421,7 @@ public static readonly SharpDX.Toolkit.Graphics.EffectData EffectBytecode = Shar
 			ResizeTexture(MediaDecoder.Instance.TextureL, _stereoVideo ? MediaDecoder.Instance.TextureR : MediaDecoder.Instance.TextureL);
 
 			//var primitive = SharpDX.Toolkit.Graphics.GeometricPrimitive.Sphere.New(gd, radius, 32, true);
-			var primitive = GraphicTools.CreateGeometry(_projection, gd);
+			var primitive = GraphicTools.CreateGeometry(_projection, gd, false);
 
 
 			// UI Rendering
@@ -513,12 +534,12 @@ public static readonly SharpDX.Toolkit.Graphics.EffectData EffectBytecode = Shar
 
 			while (!abort)
 			{
-				OVR.Vector3f[] hmdToEyeViewOffsets = { eyeTextures[0].HmdToEyeViewOffset, eyeTextures[1].HmdToEyeViewOffset };
+                OVRTypes.Vector3f[] hmdToEyeViewOffsets = { eyeTextures[0].HmdToEyeViewOffset, eyeTextures[1].HmdToEyeViewOffset };
                 //OVR.FrameTiming frameTiming = hmd.GetFrameTiming(0);
                 //OVR.TrackingState trackingState = hmd.GetTrackingState(frameTiming.DisplayMidpointSeconds);
                 double displayMidpoint = hmd.GetPredictedDisplayTime(0);
-                OVR.TrackingState trackingState = hmd.GetTrackingState(displayMidpoint);
-                OVR.Posef[] eyePoses = new OVR.Posef[2];
+                OVRTypes.TrackingState trackingState = hmd.GetTrackingState(displayMidpoint, true);
+                OVRTypes.Posef[] eyePoses = new OVRTypes.Posef[2];
 
 				// Calculate the position and orientation of each eye.
 				oculus.CalcEyePoses(trackingState.HeadPose.ThePose, hmdToEyeViewOffsets, ref eyePoses);
@@ -538,13 +559,18 @@ public static readonly SharpDX.Toolkit.Graphics.EffectData EffectBytecode = Shar
 
 				for (int eyeIndex = 0; eyeIndex < 2; eyeIndex++)
 				{
-					OVR.EyeType eye = (OVR.EyeType)eyeIndex;
+                    OVRTypes.EyeType eye = (OVRTypes.EyeType)eyeIndex;
 					EyeTexture eyeTexture = eyeTextures[eyeIndex];
 
 					layerEyeFov.RenderPose[eyeIndex] = eyePoses[eyeIndex];
 
-					// Retrieve the index of the active texture and select the next texture as being active next.
-					int textureIndex = eyeTexture.SwapTextureSet.CurrentIndex++;
+					// Update the render description at each frame, as the HmdToEyeOffset can change at runtime.
+					eyeTexture.RenderDescription = hmd.GetRenderDesc(eye, hmd.DefaultEyeFov[eyeIndex]);
+
+					// Retrieve the index of the active texture
+					int textureIndex;
+					result = eyeTexture.SwapTextureSet.GetCurrentIndex(out textureIndex);
+					WriteErrorDetails(oculus, result, "Failed to retrieve texture swap chain current index.");
 
 					immediateContext.OutputMerger.SetRenderTargets(eyeTexture.DepthStencilView, eyeTexture.RenderTargetViews[textureIndex]);
 					immediateContext.ClearRenderTargetView(eyeTexture.RenderTargetViews[textureIndex], Color.Black);
@@ -552,20 +578,49 @@ public static readonly SharpDX.Toolkit.Graphics.EffectData EffectBytecode = Shar
 					immediateContext.Rasterizer.SetViewport(eyeTexture.Viewport);
 
 
+
+					// Retrieve the eye rotation quaternion and use it to calculate the LookAt direction and the LookUp direction.
 					Quaternion rotationQuaternion = SharpDXHelpers.ToQuaternion(eyePoses[eyeIndex].Orientation);
-					Matrix viewMatrix = Matrix.RotationQuaternion(rotationQuaternion);
-					viewMatrix.Transpose();
+					rotationQuaternion = new Quaternion(1, 0, 0, 0) * rotationQuaternion ;
+					Matrix rotationMatrix = Matrix.RotationQuaternion(rotationQuaternion);
+					Vector3 lookUp = Vector3.Transform(new Vector3(0, -1, 0), rotationMatrix).ToVector3();
+					Vector3 lookAt = Vector3.Transform(new Vector3(0, 0, 1), rotationMatrix).ToVector3();
 
-					float fov = eyeTexture.FieldOfView.LeftTan + eyeTexture.FieldOfView.RightTan;
-					double a = Math.Atan(eyeTexture.FieldOfView.LeftTan) * 180f / Math.PI + Math.Atan(eyeTexture.FieldOfView.RightTan) * 180f / Math.PI; ;
-                    //float fov2 = (float)(a * Math.PI / 180f);
-					float fov2 = (float)(102.57f * Math.PI / 180f);
-					//eyeTexture.
-					//float fov2 = 2 * Math.Atan2(eyeTexture.HmdToEyeViewOffset.Z .vScreenSize * distScale, 2 * HMD.eyeToScreenDistance));
+					Vector3 viewPosition = position - eyePoses[eyeIndex].Position.ToVector3();
 
-					Matrix projectionMatrix = Matrix.PerspectiveFovRH(fov2, (float)eyeTexture.ViewportSize.Size.Width / (float)eyeTexture.ViewportSize.Size.Height, 0.001f, 100.0f);
-					//projectionMatrix.Transpose();
+					Matrix world = Matrix.Scaling(0.1f);// * Matrix.RotationX(timeSinceStart / 10f) * Matrix.RotationY(timeSinceStart * 2 / 10f) * Matrix.RotationZ(timeSinceStart * 3 / 10f);
+					Matrix viewMatrix = Matrix.LookAtLH(viewPosition, viewPosition + lookAt, lookUp);
+					//Matrix viewMatrix = Matrix.RotationQuaternion(rotationQuaternion);
+					//viewMatrix.Transpose();
 
+					Matrix projectionMatrix = oculus.Matrix4f_Projection(eyeTexture.FieldOfView, 0.1f, 100.0f, OVRTypes.ProjectionModifier.LeftHanded).ToMatrix();
+					projectionMatrix.Transpose();
+					//float fov2 = (float)(102.57f * Math.PI / 180f);
+					//Matrix projectionMatrix = Matrix.PerspectiveFovRH(fov2, (float)eyeTexture.ViewportSize.Size.Width / (float)eyeTexture.ViewportSize.Size.Height, 0.001f, 100.0f);
+
+					Matrix worldViewProjection = world * viewMatrix * projectionMatrix;
+					worldViewProjection.Transpose();
+
+
+					/// STARE
+					//Quaternion rotationQuaternion = SharpDXHelpers.ToQuaternion(eyePoses[eyeIndex].Orientation);
+					//Matrix viewMatrix = Matrix.RotationQuaternion(rotationQuaternion);
+					//viewMatrix.Transpose();
+
+					//float fov = eyeTexture.FieldOfView.LeftTan + eyeTexture.FieldOfView.RightTan;
+					//double a = Math.Atan(eyeTexture.FieldOfView.LeftTan) * 180f / Math.PI + Math.Atan(eyeTexture.FieldOfView.RightTan) * 180f / Math.PI; ;
+					////float fov2 = (float)(a * Math.PI / 180f);
+					//float fov2 = (float)(102.57f * Math.PI / 180f);
+					////eyeTexture.
+					////float fov2 = 2 * Math.Atan2(eyeTexture.HmdToEyeViewOffset.Z .vScreenSize * distScale, 2 * HMD.eyeToScreenDistance));
+
+					//Matrix projectionMatrix = Matrix.PerspectiveFovRH(fov2, (float)eyeTexture.ViewportSize.Size.Width / (float)eyeTexture.ViewportSize.Size.Height, 0.001f, 100.0f);
+					////projectionMatrix.Transpose();
+
+					// Update the transformation matrix.
+					//immediateContext.UpdateSubresource(ref worldViewProjection, contantBuffer);
+
+					//basicEffectL.World = world;
 					basicEffectL.World = Matrix.Identity;
 					basicEffectL.View = viewMatrix;
 					basicEffectL.Projection = projectionMatrix;
@@ -599,6 +654,11 @@ public static readonly SharpDX.Toolkit.Graphics.EffectData EffectBytecode = Shar
 					//uiEffect.Alpha = uiEffect.Alpha.LerpInPlace(pause ? 1 : 0, 5f * deltaTime);
 					//if(uiEffect.Alpha > 0)
 					//	uiPrimitive.Draw(uiEffect);
+
+					// dodane:
+					// Commits any pending changes to the TextureSwapChain, and advances its current index
+					result = eyeTexture.SwapTextureSet.Commit();
+					WriteErrorDetails(oculus, result, "Failed to commit the swap chain texture.");
 				}
 
 				hmd.SubmitFrame(0, layers);
@@ -646,13 +706,13 @@ public static readonly SharpDX.Toolkit.Graphics.EffectData EffectBytecode = Shar
 		}
 
 
-		public static void WriteErrorDetails(Wrap oculus, OVR.ovrResult result, string message)
+		public static void WriteErrorDetails(Wrap oculus, OVRTypes.Result result, string message)
 		{
-			if (result >= OVR.ovrResult.Success)
+			if (result >= OVRTypes.Result.Success)
 				return;
 
 			// Retrieve the error message from the last occurring error.
-			OVR.ovrErrorInfo errorInformation = oculus.GetLastError();
+			OVRTypes.ErrorInfo errorInformation = oculus.GetLastError();
 
 			string formattedMessage = string.Format("{0}. Message: {1} (Error code={2})", message, errorInformation.ErrorString, errorInformation.Result);
 			Trace.WriteLine(formattedMessage);

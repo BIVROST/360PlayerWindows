@@ -57,17 +57,17 @@ namespace PlayerUI.Oculus
 		#endregion
 
 		public Texture2DDescription Texture2DDescription;
-		public OculusWrap.D3D11.SwapTextureSet SwapTextureSet;
+		public TextureSwapChain SwapTextureSet;
 		public Texture2D[] Textures;
 		public RenderTargetView[] RenderTargetViews;
 		public Texture2DDescription DepthBufferDescription;
 		public Texture2D DepthBuffer;
 		public Viewport Viewport;
 		public DepthStencilView DepthStencilView;
-		public OVR.FovPort FieldOfView;
-		public OVR.Sizei TextureSize;
-		public OVR.Recti ViewportSize;
-		public OVR.EyeRenderDesc RenderDescription;
-		public OVR.Vector3f HmdToEyeViewOffset;
+		public OVRTypes.FovPort FieldOfView;
+		public OVRTypes.Sizei TextureSize;
+		public OVRTypes.Recti ViewportSize;
+		public OVRTypes.EyeRenderDesc RenderDescription;
+		public OVRTypes.Vector3f HmdToEyeViewOffset;
 	}
 }

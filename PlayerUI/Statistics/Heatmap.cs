@@ -24,7 +24,7 @@ namespace PlayerUI.Statistics
 			data = new List<HeadPosition>();
 		}
 
-		public void TrackData(OculusWrap.OVR.Quaternionf quaternion)
+		public void TrackData(OculusWrap.OVRTypes.Quaternionf quaternion)
 		{
 			TrackData(new SharpDX.Quaternion((float)quaternion.X, (float)quaternion.Y, (float)quaternion.Z, (float)quaternion.W));
 		}
