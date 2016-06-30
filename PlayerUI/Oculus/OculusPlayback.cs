@@ -525,12 +525,13 @@ public static readonly SharpDX.Toolkit.Graphics.EffectData EffectBytecode = Shar
 
 
 			DateTime startTime = DateTime.Now;
-			Vector3 position = new Vector3(0, 0, -1);
+			Vector3 position = new Vector3(0, 0, 0);	// 0,0,-1
 
 			#region Render loop
 
 			DateTime lastTime = DateTime.Now;
 			float deltaTime = 0;
+
 
 			while (!abort)
 			{
@@ -544,13 +545,13 @@ public static readonly SharpDX.Toolkit.Graphics.EffectData EffectBytecode = Shar
 				// Calculate the position and orientation of each eye.
 				oculus.CalcEyePoses(trackingState.HeadPose.ThePose, hmdToEyeViewOffsets, ref eyePoses);
 
-				//// rotation quaternion to heatmap directions
-				//ShellViewModel.Instance.ClearDebugText();
-				//Vector2 v = GraphicTools.QuaternionToYawPitch(trackingState.HeadPose.ThePose.Orientation);
-				//var yawdeg = MathUtil.RadiansToDegrees(v.X);
-				//var pitchdeg = MathUtil.RadiansToDegrees(v.Y);
-				//ShellViewModel.Instance.AppendDebugText($"YAW:{yawdeg} \t\t PITCH:{pitchdeg}");
-				//ShellViewModel.Instance.UpdateDebugText();
+				// rotation quaternion to heatmap directions
+				ShellViewModel.Instance.ClearDebugText();
+				Vector2 v = GraphicTools.QuaternionToYawPitch(trackingState.HeadPose.ThePose.Orientation);
+				var yawdeg = MathUtil.RadiansToDegrees(v.X);
+				var pitchdeg = MathUtil.RadiansToDegrees(v.Y);
+				ShellViewModel.Instance.AppendDebugText($"YAW:{yawdeg} \t\t PITCH:{pitchdeg}");
+				ShellViewModel.Instance.UpdateDebugText();
 				////==========================================
 
 				float timeSinceStart = (float)(DateTime.Now - startTime).TotalSeconds;
@@ -581,51 +582,28 @@ public static readonly SharpDX.Toolkit.Graphics.EffectData EffectBytecode = Shar
 
 					// Retrieve the eye rotation quaternion and use it to calculate the LookAt direction and the LookUp direction.
 					Quaternion rotationQuaternion = SharpDXHelpers.ToQuaternion(eyePoses[eyeIndex].Orientation);
-					rotationQuaternion = new Quaternion(1, 0, 0, 0) * rotationQuaternion ;
+					rotationQuaternion = new Quaternion(1, 0, 0, 0) * rotationQuaternion;
 					Matrix rotationMatrix = Matrix.RotationQuaternion(rotationQuaternion);
 					Vector3 lookUp = Vector3.Transform(new Vector3(0, -1, 0), rotationMatrix).ToVector3();
 					Vector3 lookAt = Vector3.Transform(new Vector3(0, 0, 1), rotationMatrix).ToVector3();
 
-					Vector3 viewPosition = position - eyePoses[eyeIndex].Position.ToVector3();
+					Vector3 eyeDiff = eyePoses[eyeIndex].Position.ToVector3() - eyePoses[1 - eyeIndex].Position.ToVector3();
+					Vector3 viewPosition = position - eyeDiff * 0.5f; // - eyePoses[eyeIndex].Position.ToVector3();
 
-					Matrix world = Matrix.Scaling(0.1f);// * Matrix.RotationX(timeSinceStart / 10f) * Matrix.RotationY(timeSinceStart * 2 / 10f) * Matrix.RotationZ(timeSinceStart * 3 / 10f);
+					Matrix world = Matrix.Identity;
 					Matrix viewMatrix = Matrix.LookAtLH(viewPosition, viewPosition + lookAt, lookUp);
-					//Matrix viewMatrix = Matrix.RotationQuaternion(rotationQuaternion);
-					//viewMatrix.Transpose();
 
 					Matrix projectionMatrix = oculus.Matrix4f_Projection(eyeTexture.FieldOfView, 0.1f, 100.0f, OVRTypes.ProjectionModifier.LeftHanded).ToMatrix();
 					projectionMatrix.Transpose();
-					//float fov2 = (float)(102.57f * Math.PI / 180f);
-					//Matrix projectionMatrix = Matrix.PerspectiveFovRH(fov2, (float)eyeTexture.ViewportSize.Size.Width / (float)eyeTexture.ViewportSize.Size.Height, 0.001f, 100.0f);
 
 					Matrix worldViewProjection = world * viewMatrix * projectionMatrix;
 					worldViewProjection.Transpose();
 
-
-					/// STARE
-					//Quaternion rotationQuaternion = SharpDXHelpers.ToQuaternion(eyePoses[eyeIndex].Orientation);
-					//Matrix viewMatrix = Matrix.RotationQuaternion(rotationQuaternion);
-					//viewMatrix.Transpose();
-
-					//float fov = eyeTexture.FieldOfView.LeftTan + eyeTexture.FieldOfView.RightTan;
-					//double a = Math.Atan(eyeTexture.FieldOfView.LeftTan) * 180f / Math.PI + Math.Atan(eyeTexture.FieldOfView.RightTan) * 180f / Math.PI; ;
-					////float fov2 = (float)(a * Math.PI / 180f);
-					//float fov2 = (float)(102.57f * Math.PI / 180f);
-					////eyeTexture.
-					////float fov2 = 2 * Math.Atan2(eyeTexture.HmdToEyeViewOffset.Z .vScreenSize * distScale, 2 * HMD.eyeToScreenDistance));
-
-					//Matrix projectionMatrix = Matrix.PerspectiveFovRH(fov2, (float)eyeTexture.ViewportSize.Size.Width / (float)eyeTexture.ViewportSize.Size.Height, 0.001f, 100.0f);
-					////projectionMatrix.Transpose();
-
-					// Update the transformation matrix.
-					//immediateContext.UpdateSubresource(ref worldViewProjection, contantBuffer);
-
-					//basicEffectL.World = world;
 					basicEffectL.World = Matrix.Identity;
 					basicEffectL.View = viewMatrix;
 					basicEffectL.Projection = projectionMatrix;
 
-					uiEffect.World = Matrix.Identity * Matrix.Scaling(1f) * Matrix.Translation(0, 0, -1.5f);
+					uiEffect.World = Matrix.Identity * Matrix.Scaling(1f) * Matrix.RotationAxis(Vector3.Up, (float)Math.PI) * Matrix.Translation(0, 0, -1.5f);
 					uiEffect.View = viewMatrix;
 					uiEffect.Projection = projectionMatrix;
 
@@ -637,7 +615,7 @@ public static readonly SharpDX.Toolkit.Graphics.EffectData EffectBytecode = Shar
 					}
 					lock (localCritical)
 					{
-						if (_stereoVideo)
+						if (_stereoVideo || true)
 						{
 							if (eyeIndex == 0)
 								primitive.Draw(basicEffectL);
@@ -655,10 +633,15 @@ public static readonly SharpDX.Toolkit.Graphics.EffectData EffectBytecode = Shar
 					//if(uiEffect.Alpha > 0)
 					//	uiPrimitive.Draw(uiEffect);
 
-					// dodane:
 					// Commits any pending changes to the TextureSwapChain, and advances its current index
 					result = eyeTexture.SwapTextureSet.Commit();
 					WriteErrorDetails(oculus, result, "Failed to commit the swap chain texture.");
+
+
+					//Console.WriteLine("xbox: " + ((hmd.ovr_GetConnectedControllerTypes() & OVRTypes.ControllerType.XBox) != 0));
+					//Console.WriteLine("remote: " + ((hmd.ovr_GetConnectedControllerTypes() & OVRTypes.ControllerType.Remote) != 0));
+					//Console.WriteLine("active: " + hmd.GetInputState(OVRTypes.ControllerType.Active));
+					//Console.WriteLine("buttons: " + hmd.GetInputState(OVRTypes.ControllerType.Remote).Buttons);
 				}
 
 				hmd.SubmitFrame(0, layers);
