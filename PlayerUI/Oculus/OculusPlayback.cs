@@ -615,7 +615,7 @@ public static readonly SharpDX.Toolkit.Graphics.EffectData EffectBytecode = Shar
 					}
 					lock (localCritical)
 					{
-						if (_stereoVideo || true)
+						if (_stereoVideo)
 						{
 							if (eyeIndex == 0)
 								primitive.Draw(basicEffectL);
