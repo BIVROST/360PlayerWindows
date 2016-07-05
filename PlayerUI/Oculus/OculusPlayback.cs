@@ -32,7 +32,6 @@ namespace PlayerUI.Oculus
 		public static bool abort = false;
 		public static bool pause = false;
 
-		private static float uiOpacity = 0;
 		private static string movieTitle = "";
 		private static float duration = 0;
 		private static float currentTime = 0;
@@ -45,45 +44,50 @@ namespace PlayerUI.Oculus
 		private static object localCritical = new object();
 
 
-public static readonly SharpDX.Toolkit.Graphics.EffectData EffectBytecode = SharpDX.Toolkit.Graphics.EffectData.Load(new byte[] {
-84, 75, 70, 88, 251, 7, 0, 0, 1, 1, 0, 0, 83, 72, 68, 82, 184, 7, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 145, 0, 0, 188, 6, 68, 88, 66, 67, 78, 222, 27, 125, 77, 231, 207, 149, 84, 242, 51, 75, 92, 54, 62, 202, 1, 0, 0, 0, 60, 3, 0, 0, 4, 0, 0, 0,
-48, 0, 0, 0, 28, 1, 0, 0, 84, 2, 0, 0, 200, 2, 0, 0, 65, 111, 110, 57, 228, 0, 0, 0, 228, 0, 0, 0, 0, 2, 254, 255, 176, 0, 0, 0, 52, 0, 0, 0, 1, 0, 36, 0, 0, 0, 48, 0, 0, 0, 48, 0, 0, 0, 36, 0, 1, 0, 48, 0, 0, 0, 0, 0,
-4, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 254, 255, 31, 0, 0, 2, 5, 0, 0, 128, 0, 0, 15, 144, 31, 0, 0, 2, 5, 0, 1, 128, 1, 0, 15, 144, 31, 0, 0, 2, 5, 0, 2, 128, 2, 0, 15, 144, 5, 0, 0, 3, 0, 0, 15, 128, 2, 0, 85, 144,
-2, 0, 228, 160, 4, 0, 0, 4, 0, 0, 15, 128, 2, 0, 0, 144, 1, 0, 228, 160, 0, 0, 228, 128, 4, 0, 0, 4, 0, 0, 15, 128, 2, 0, 170, 144, 3, 0, 228, 160, 0, 0, 228, 128, 4, 0, 0, 4, 0, 0, 15, 128, 2, 0, 255, 144, 4, 0, 228, 160, 0, 0, 228, 128,
-4, 0, 0, 4, 0, 0, 3, 192, 0, 0, 255, 128, 0, 0, 228, 160, 0, 0, 228, 128, 1, 0, 0, 2, 0, 0, 12, 192, 0, 0, 228, 128, 1, 0, 0, 2, 0, 0, 15, 224, 0, 0, 228, 144, 1, 0, 0, 2, 1, 0, 3, 224, 1, 0, 228, 144, 255, 255, 0, 0, 83, 72, 68, 82,
-48, 1, 0, 0, 64, 0, 1, 0, 76, 0, 0, 0, 89, 0, 0, 4, 70, 142, 32, 0, 0, 0, 0, 0, 4, 0, 0, 0, 95, 0, 0, 3, 242, 16, 16, 0, 0, 0, 0, 0, 95, 0, 0, 3, 50, 16, 16, 0, 1, 0, 0, 0, 95, 0, 0, 3, 242, 16, 16, 0, 2, 0, 0, 0,
-101, 0, 0, 3, 242, 32, 16, 0, 0, 0, 0, 0, 101, 0, 0, 3, 50, 32, 16, 0, 1, 0, 0, 0, 103, 0, 0, 4, 242, 32, 16, 0, 2, 0, 0, 0, 1, 0, 0, 0, 104, 0, 0, 2, 1, 0, 0, 0, 54, 0, 0, 5, 242, 32, 16, 0, 0, 0, 0, 0, 70, 30, 16, 0,
-0, 0, 0, 0, 54, 0, 0, 5, 50, 32, 16, 0, 1, 0, 0, 0, 70, 16, 16, 0, 1, 0, 0, 0, 56, 0, 0, 8, 242, 0, 16, 0, 0, 0, 0, 0, 86, 21, 16, 0, 2, 0, 0, 0, 70, 142, 32, 0, 0, 0, 0, 0, 1, 0, 0, 0, 50, 0, 0, 10, 242, 0, 16, 0,
-0, 0, 0, 0, 6, 16, 16, 0, 2, 0, 0, 0, 70, 142, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 70, 14, 16, 0, 0, 0, 0, 0, 50, 0, 0, 10, 242, 0, 16, 0, 0, 0, 0, 0, 166, 26, 16, 0, 2, 0, 0, 0, 70, 142, 32, 0, 0, 0, 0, 0, 2, 0, 0, 0,
-70, 14, 16, 0, 0, 0, 0, 0, 50, 0, 0, 10, 242, 32, 16, 0, 2, 0, 0, 0, 246, 31, 16, 0, 2, 0, 0, 0, 70, 142, 32, 0, 0, 0, 0, 0, 3, 0, 0, 0, 70, 14, 16, 0, 0, 0, 0, 0, 62, 0, 0, 1, 73, 83, 71, 78, 108, 0, 0, 0, 3, 0, 0, 0,
-8, 0, 0, 0, 80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 15, 15, 0, 0, 86, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 1, 0, 0, 0, 3, 3, 0, 0, 95, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-3, 0, 0, 0, 2, 0, 0, 0, 15, 15, 0, 0, 67, 79, 76, 79, 82, 0, 84, 69, 88, 67, 79, 79, 82, 68, 0, 83, 86, 95, 80, 79, 83, 73, 84, 73, 79, 78, 0, 171, 79, 83, 71, 78, 108, 0, 0, 0, 3, 0, 0, 0, 8, 0, 0, 0, 80, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 15, 0, 0, 0, 86, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 1, 0, 0, 0, 3, 12, 0, 0, 95, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 0, 2, 0, 0, 0, 15, 0, 0, 0,
-67, 79, 76, 79, 82, 0, 84, 69, 88, 67, 79, 79, 82, 68, 0, 83, 86, 95, 80, 79, 83, 73, 84, 73, 79, 78, 0, 171, 185, 36, 58, 62, 3, 5, 67, 79, 76, 79, 82, 0, 0, 0, 3, 15, 0, 0, 8, 84, 69, 88, 67, 79, 79, 82, 68, 0, 1, 0, 3, 3, 0, 0, 11, 83,
-86, 95, 80, 79, 83, 73, 84, 73, 79, 78, 0, 2, 0, 3, 15, 0, 0, 1, 152, 1, 68, 88, 66, 67, 21, 219, 222, 169, 247, 114, 122, 118, 211, 95, 148, 219, 130, 126, 181, 238, 1, 0, 0, 0, 152, 0, 0, 0, 1, 0, 0, 0, 36, 0, 0, 0, 73, 83, 71, 78, 108, 0, 0, 0,
-3, 0, 0, 0, 8, 0, 0, 0, 80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 15, 15, 0, 0, 86, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 1, 0, 0, 0, 3, 3, 0, 0, 95, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 3, 0, 0, 0, 2, 0, 0, 0, 15, 15, 0, 0, 67, 79, 76, 79, 82, 0, 84, 69, 88, 67, 79, 79, 82, 68, 0, 83, 86, 95, 80, 79, 83, 73, 84, 73, 79, 78, 0, 171, 200, 35, 59, 96, 3, 5, 67, 79, 76, 79, 82, 0, 0, 0, 3, 15, 0, 0, 8, 84,
-69, 88, 67, 79, 79, 82, 68, 0, 1, 0, 3, 3, 0, 0, 11, 83, 86, 95, 80, 79, 83, 73, 84, 73, 79, 78, 0, 2, 1, 3, 15, 0, 0, 0, 0, 0, 0, 0, 1, 16, 80, 114, 111, 106, 101, 99, 116, 105, 111, 110, 77, 97, 116, 114, 105, 120, 64, 1, 15, 77, 97, 116, 114, 105,
-120, 84, 114, 97, 110, 115, 102, 111, 114, 109, 2, 3, 0, 0, 64, 4, 4, 0, 1, 16, 80, 114, 111, 106, 101, 99, 116, 105, 111, 110, 77, 97, 116, 114, 105, 120, 4, 26, 0, 1, 0, 4, 0, 0, 0, 0, 0, 145, 0, 0, 220, 4, 68, 88, 66, 67, 133, 3, 0, 192, 207, 222, 249, 179,
-29, 143, 136, 244, 72, 165, 214, 125, 1, 0, 0, 0, 92, 2, 0, 0, 4, 0, 0, 0, 48, 0, 0, 0, 236, 0, 0, 0, 172, 1, 0, 0, 40, 2, 0, 0, 65, 111, 110, 57, 180, 0, 0, 0, 180, 0, 0, 0, 0, 2, 255, 255, 140, 0, 0, 0, 40, 0, 0, 0, 0, 0, 40, 0,
-0, 0, 40, 0, 0, 0, 40, 0, 1, 0, 36, 0, 0, 0, 40, 0, 0, 0, 0, 0, 0, 2, 255, 255, 81, 0, 0, 5, 0, 0, 15, 160, 0, 0, 128, 191, 0, 0, 128, 191, 0, 0, 128, 191, 0, 0, 128, 63, 81, 0, 0, 5, 1, 0, 15, 160, 0, 0, 128, 63, 0, 0, 128, 63,
-0, 0, 128, 63, 0, 0, 0, 0, 31, 0, 0, 2, 0, 0, 0, 128, 1, 0, 3, 176, 31, 0, 0, 2, 0, 0, 0, 144, 0, 8, 15, 160, 66, 0, 0, 3, 0, 0, 15, 128, 1, 0, 228, 176, 0, 8, 228, 160, 1, 0, 0, 2, 1, 0, 15, 128, 0, 0, 228, 160, 4, 0, 0, 4,
-0, 0, 15, 128, 0, 0, 228, 128, 1, 0, 228, 128, 1, 0, 228, 160, 1, 0, 0, 2, 0, 8, 15, 128, 0, 0, 228, 128, 255, 255, 0, 0, 83, 72, 68, 82, 184, 0, 0, 0, 64, 0, 0, 0, 46, 0, 0, 0, 89, 0, 0, 4, 70, 142, 32, 0, 0, 0, 0, 0, 1, 0, 0, 0,
-90, 0, 0, 3, 0, 96, 16, 0, 0, 0, 0, 0, 88, 24, 0, 4, 0, 112, 16, 0, 0, 0, 0, 0, 85, 85, 0, 0, 98, 16, 0, 3, 50, 16, 16, 0, 2, 0, 0, 0, 101, 0, 0, 3, 242, 32, 16, 0, 0, 0, 0, 0, 104, 0, 0, 2, 1, 0, 0, 0, 69, 0, 0, 9,
-242, 0, 16, 0, 0, 0, 0, 0, 70, 16, 16, 0, 2, 0, 0, 0, 70, 126, 16, 0, 0, 0, 0, 0, 0, 96, 16, 0, 0, 0, 0, 0, 50, 0, 0, 15, 242, 32, 16, 0, 0, 0, 0, 0, 70, 14, 16, 0, 0, 0, 0, 0, 2, 64, 0, 0, 0, 0, 128, 191, 0, 0, 128, 191,
-0, 0, 128, 191, 0, 0, 128, 63, 2, 64, 0, 0, 0, 0, 128, 63, 0, 0, 128, 63, 0, 0, 128, 63, 0, 0, 0, 0, 62, 0, 0, 1, 73, 83, 71, 78, 116, 0, 0, 0, 3, 0, 0, 0, 8, 0, 0, 0, 80, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 0,
-0, 0, 0, 0, 15, 0, 0, 0, 92, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 1, 0, 0, 0, 15, 0, 0, 0, 107, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 2, 0, 0, 0, 3, 3, 0, 0, 83, 86, 95, 80, 79, 83, 73, 84,
-73, 79, 78, 0, 83, 67, 69, 78, 69, 95, 80, 79, 83, 73, 84, 73, 79, 78, 0, 84, 69, 88, 67, 79, 79, 82, 68, 0, 79, 83, 71, 78, 44, 0, 0, 0, 1, 0, 0, 0, 8, 0, 0, 0, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0,
-15, 0, 0, 0, 83, 86, 95, 84, 65, 82, 71, 69, 84, 0, 171, 171, 64, 166, 240, 66, 3, 11, 83, 86, 95, 80, 79, 83, 73, 84, 73, 79, 78, 0, 0, 1, 3, 15, 0, 0, 14, 83, 67, 69, 78, 69, 95, 80, 79, 83, 73, 84, 73, 79, 78, 0, 1, 0, 3, 15, 0, 0, 8, 84,
-69, 88, 67, 79, 79, 82, 68, 0, 2, 0, 3, 3, 0, 0, 0, 0, 0, 0, 0, 1, 9, 83, 86, 95, 84, 65, 82, 71, 69, 84, 0, 0, 64, 3, 15, 0, 0, 0, 0, 0, 0, 0, 1, 16, 80, 114, 111, 106, 101, 99, 116, 105, 111, 110, 77, 97, 116, 114, 105, 120, 64, 1, 15, 77,
-97, 116, 114, 105, 120, 84, 114, 97, 110, 115, 102, 111, 114, 109, 2, 3, 0, 0, 64, 4, 4, 0, 3, 14, 84, 101, 120, 116, 117, 114, 101, 83, 97, 109, 112, 108, 101, 114, 4, 10, 0, 1, 7, 84, 101, 120, 116, 117, 114, 101, 4, 7, 0, 1, 16, 80, 114, 111, 106, 101, 99, 116, 105, 111,
-110, 77, 97, 116, 114, 105, 120, 4, 26, 0, 1, 69, 70, 70, 88, 47, 0, 0, 0, 6, 73, 110, 118, 101, 114, 116, 0, 1, 1, 6, 73, 110, 118, 101, 114, 116, 1, 0, 0, 0, 0, 0, 0, 1, 6, 1, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 1, 1, 0, 255, 255, 255, 255, 0,
-0, 0,
-		});
+		//public static readonly SharpDX.Toolkit.Graphics.EffectData EffectBytecode = SharpDX.Toolkit.Graphics.EffectData.Load(new byte[] {
+		//84, 75, 70, 88, 251, 7, 0, 0, 1, 1, 0, 0, 83, 72, 68, 82, 184, 7, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 145, 0, 0, 188, 6, 68, 88, 66, 67, 78, 222, 27, 125, 77, 231, 207, 149, 84, 242, 51, 75, 92, 54, 62, 202, 1, 0, 0, 0, 60, 3, 0, 0, 4, 0, 0, 0,
+		//48, 0, 0, 0, 28, 1, 0, 0, 84, 2, 0, 0, 200, 2, 0, 0, 65, 111, 110, 57, 228, 0, 0, 0, 228, 0, 0, 0, 0, 2, 254, 255, 176, 0, 0, 0, 52, 0, 0, 0, 1, 0, 36, 0, 0, 0, 48, 0, 0, 0, 48, 0, 0, 0, 36, 0, 1, 0, 48, 0, 0, 0, 0, 0,
+		//4, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 254, 255, 31, 0, 0, 2, 5, 0, 0, 128, 0, 0, 15, 144, 31, 0, 0, 2, 5, 0, 1, 128, 1, 0, 15, 144, 31, 0, 0, 2, 5, 0, 2, 128, 2, 0, 15, 144, 5, 0, 0, 3, 0, 0, 15, 128, 2, 0, 85, 144,
+		//2, 0, 228, 160, 4, 0, 0, 4, 0, 0, 15, 128, 2, 0, 0, 144, 1, 0, 228, 160, 0, 0, 228, 128, 4, 0, 0, 4, 0, 0, 15, 128, 2, 0, 170, 144, 3, 0, 228, 160, 0, 0, 228, 128, 4, 0, 0, 4, 0, 0, 15, 128, 2, 0, 255, 144, 4, 0, 228, 160, 0, 0, 228, 128,
+		//4, 0, 0, 4, 0, 0, 3, 192, 0, 0, 255, 128, 0, 0, 228, 160, 0, 0, 228, 128, 1, 0, 0, 2, 0, 0, 12, 192, 0, 0, 228, 128, 1, 0, 0, 2, 0, 0, 15, 224, 0, 0, 228, 144, 1, 0, 0, 2, 1, 0, 3, 224, 1, 0, 228, 144, 255, 255, 0, 0, 83, 72, 68, 82,
+		//48, 1, 0, 0, 64, 0, 1, 0, 76, 0, 0, 0, 89, 0, 0, 4, 70, 142, 32, 0, 0, 0, 0, 0, 4, 0, 0, 0, 95, 0, 0, 3, 242, 16, 16, 0, 0, 0, 0, 0, 95, 0, 0, 3, 50, 16, 16, 0, 1, 0, 0, 0, 95, 0, 0, 3, 242, 16, 16, 0, 2, 0, 0, 0,
+		//101, 0, 0, 3, 242, 32, 16, 0, 0, 0, 0, 0, 101, 0, 0, 3, 50, 32, 16, 0, 1, 0, 0, 0, 103, 0, 0, 4, 242, 32, 16, 0, 2, 0, 0, 0, 1, 0, 0, 0, 104, 0, 0, 2, 1, 0, 0, 0, 54, 0, 0, 5, 242, 32, 16, 0, 0, 0, 0, 0, 70, 30, 16, 0,
+		//0, 0, 0, 0, 54, 0, 0, 5, 50, 32, 16, 0, 1, 0, 0, 0, 70, 16, 16, 0, 1, 0, 0, 0, 56, 0, 0, 8, 242, 0, 16, 0, 0, 0, 0, 0, 86, 21, 16, 0, 2, 0, 0, 0, 70, 142, 32, 0, 0, 0, 0, 0, 1, 0, 0, 0, 50, 0, 0, 10, 242, 0, 16, 0,
+		//0, 0, 0, 0, 6, 16, 16, 0, 2, 0, 0, 0, 70, 142, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 70, 14, 16, 0, 0, 0, 0, 0, 50, 0, 0, 10, 242, 0, 16, 0, 0, 0, 0, 0, 166, 26, 16, 0, 2, 0, 0, 0, 70, 142, 32, 0, 0, 0, 0, 0, 2, 0, 0, 0,
+		//70, 14, 16, 0, 0, 0, 0, 0, 50, 0, 0, 10, 242, 32, 16, 0, 2, 0, 0, 0, 246, 31, 16, 0, 2, 0, 0, 0, 70, 142, 32, 0, 0, 0, 0, 0, 3, 0, 0, 0, 70, 14, 16, 0, 0, 0, 0, 0, 62, 0, 0, 1, 73, 83, 71, 78, 108, 0, 0, 0, 3, 0, 0, 0,
+		//8, 0, 0, 0, 80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 15, 15, 0, 0, 86, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 1, 0, 0, 0, 3, 3, 0, 0, 95, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		//3, 0, 0, 0, 2, 0, 0, 0, 15, 15, 0, 0, 67, 79, 76, 79, 82, 0, 84, 69, 88, 67, 79, 79, 82, 68, 0, 83, 86, 95, 80, 79, 83, 73, 84, 73, 79, 78, 0, 171, 79, 83, 71, 78, 108, 0, 0, 0, 3, 0, 0, 0, 8, 0, 0, 0, 80, 0, 0, 0, 0, 0, 0, 0,
+		//0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 15, 0, 0, 0, 86, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 1, 0, 0, 0, 3, 12, 0, 0, 95, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 0, 2, 0, 0, 0, 15, 0, 0, 0,
+		//67, 79, 76, 79, 82, 0, 84, 69, 88, 67, 79, 79, 82, 68, 0, 83, 86, 95, 80, 79, 83, 73, 84, 73, 79, 78, 0, 171, 185, 36, 58, 62, 3, 5, 67, 79, 76, 79, 82, 0, 0, 0, 3, 15, 0, 0, 8, 84, 69, 88, 67, 79, 79, 82, 68, 0, 1, 0, 3, 3, 0, 0, 11, 83,
+		//86, 95, 80, 79, 83, 73, 84, 73, 79, 78, 0, 2, 0, 3, 15, 0, 0, 1, 152, 1, 68, 88, 66, 67, 21, 219, 222, 169, 247, 114, 122, 118, 211, 95, 148, 219, 130, 126, 181, 238, 1, 0, 0, 0, 152, 0, 0, 0, 1, 0, 0, 0, 36, 0, 0, 0, 73, 83, 71, 78, 108, 0, 0, 0,
+		//3, 0, 0, 0, 8, 0, 0, 0, 80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 15, 15, 0, 0, 86, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 1, 0, 0, 0, 3, 3, 0, 0, 95, 0, 0, 0, 0, 0, 0, 0,
+		//0, 0, 0, 0, 3, 0, 0, 0, 2, 0, 0, 0, 15, 15, 0, 0, 67, 79, 76, 79, 82, 0, 84, 69, 88, 67, 79, 79, 82, 68, 0, 83, 86, 95, 80, 79, 83, 73, 84, 73, 79, 78, 0, 171, 200, 35, 59, 96, 3, 5, 67, 79, 76, 79, 82, 0, 0, 0, 3, 15, 0, 0, 8, 84,
+		//69, 88, 67, 79, 79, 82, 68, 0, 1, 0, 3, 3, 0, 0, 11, 83, 86, 95, 80, 79, 83, 73, 84, 73, 79, 78, 0, 2, 1, 3, 15, 0, 0, 0, 0, 0, 0, 0, 1, 16, 80, 114, 111, 106, 101, 99, 116, 105, 111, 110, 77, 97, 116, 114, 105, 120, 64, 1, 15, 77, 97, 116, 114, 105,
+		//120, 84, 114, 97, 110, 115, 102, 111, 114, 109, 2, 3, 0, 0, 64, 4, 4, 0, 1, 16, 80, 114, 111, 106, 101, 99, 116, 105, 111, 110, 77, 97, 116, 114, 105, 120, 4, 26, 0, 1, 0, 4, 0, 0, 0, 0, 0, 145, 0, 0, 220, 4, 68, 88, 66, 67, 133, 3, 0, 192, 207, 222, 249, 179,
+		//29, 143, 136, 244, 72, 165, 214, 125, 1, 0, 0, 0, 92, 2, 0, 0, 4, 0, 0, 0, 48, 0, 0, 0, 236, 0, 0, 0, 172, 1, 0, 0, 40, 2, 0, 0, 65, 111, 110, 57, 180, 0, 0, 0, 180, 0, 0, 0, 0, 2, 255, 255, 140, 0, 0, 0, 40, 0, 0, 0, 0, 0, 40, 0,
+		//0, 0, 40, 0, 0, 0, 40, 0, 1, 0, 36, 0, 0, 0, 40, 0, 0, 0, 0, 0, 0, 2, 255, 255, 81, 0, 0, 5, 0, 0, 15, 160, 0, 0, 128, 191, 0, 0, 128, 191, 0, 0, 128, 191, 0, 0, 128, 63, 81, 0, 0, 5, 1, 0, 15, 160, 0, 0, 128, 63, 0, 0, 128, 63,
+		//0, 0, 128, 63, 0, 0, 0, 0, 31, 0, 0, 2, 0, 0, 0, 128, 1, 0, 3, 176, 31, 0, 0, 2, 0, 0, 0, 144, 0, 8, 15, 160, 66, 0, 0, 3, 0, 0, 15, 128, 1, 0, 228, 176, 0, 8, 228, 160, 1, 0, 0, 2, 1, 0, 15, 128, 0, 0, 228, 160, 4, 0, 0, 4,
+		//0, 0, 15, 128, 0, 0, 228, 128, 1, 0, 228, 128, 1, 0, 228, 160, 1, 0, 0, 2, 0, 8, 15, 128, 0, 0, 228, 128, 255, 255, 0, 0, 83, 72, 68, 82, 184, 0, 0, 0, 64, 0, 0, 0, 46, 0, 0, 0, 89, 0, 0, 4, 70, 142, 32, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+		//90, 0, 0, 3, 0, 96, 16, 0, 0, 0, 0, 0, 88, 24, 0, 4, 0, 112, 16, 0, 0, 0, 0, 0, 85, 85, 0, 0, 98, 16, 0, 3, 50, 16, 16, 0, 2, 0, 0, 0, 101, 0, 0, 3, 242, 32, 16, 0, 0, 0, 0, 0, 104, 0, 0, 2, 1, 0, 0, 0, 69, 0, 0, 9,
+		//242, 0, 16, 0, 0, 0, 0, 0, 70, 16, 16, 0, 2, 0, 0, 0, 70, 126, 16, 0, 0, 0, 0, 0, 0, 96, 16, 0, 0, 0, 0, 0, 50, 0, 0, 15, 242, 32, 16, 0, 0, 0, 0, 0, 70, 14, 16, 0, 0, 0, 0, 0, 2, 64, 0, 0, 0, 0, 128, 191, 0, 0, 128, 191,
+		//0, 0, 128, 191, 0, 0, 128, 63, 2, 64, 0, 0, 0, 0, 128, 63, 0, 0, 128, 63, 0, 0, 128, 63, 0, 0, 0, 0, 62, 0, 0, 1, 73, 83, 71, 78, 116, 0, 0, 0, 3, 0, 0, 0, 8, 0, 0, 0, 80, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 0,
+		//0, 0, 0, 0, 15, 0, 0, 0, 92, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 1, 0, 0, 0, 15, 0, 0, 0, 107, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 2, 0, 0, 0, 3, 3, 0, 0, 83, 86, 95, 80, 79, 83, 73, 84,
+		//73, 79, 78, 0, 83, 67, 69, 78, 69, 95, 80, 79, 83, 73, 84, 73, 79, 78, 0, 84, 69, 88, 67, 79, 79, 82, 68, 0, 79, 83, 71, 78, 44, 0, 0, 0, 1, 0, 0, 0, 8, 0, 0, 0, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0,
+		//15, 0, 0, 0, 83, 86, 95, 84, 65, 82, 71, 69, 84, 0, 171, 171, 64, 166, 240, 66, 3, 11, 83, 86, 95, 80, 79, 83, 73, 84, 73, 79, 78, 0, 0, 1, 3, 15, 0, 0, 14, 83, 67, 69, 78, 69, 95, 80, 79, 83, 73, 84, 73, 79, 78, 0, 1, 0, 3, 15, 0, 0, 8, 84,
+		//69, 88, 67, 79, 79, 82, 68, 0, 2, 0, 3, 3, 0, 0, 0, 0, 0, 0, 0, 1, 9, 83, 86, 95, 84, 65, 82, 71, 69, 84, 0, 0, 64, 3, 15, 0, 0, 0, 0, 0, 0, 0, 1, 16, 80, 114, 111, 106, 101, 99, 116, 105, 111, 110, 77, 97, 116, 114, 105, 120, 64, 1, 15, 77,
+		//97, 116, 114, 105, 120, 84, 114, 97, 110, 115, 102, 111, 114, 109, 2, 3, 0, 0, 64, 4, 4, 0, 3, 14, 84, 101, 120, 116, 117, 114, 101, 83, 97, 109, 112, 108, 101, 114, 4, 10, 0, 1, 7, 84, 101, 120, 116, 117, 114, 101, 4, 7, 0, 1, 16, 80, 114, 111, 106, 101, 99, 116, 105, 111,
+		//110, 77, 97, 116, 114, 105, 120, 4, 26, 0, 1, 69, 70, 70, 88, 47, 0, 0, 0, 6, 73, 110, 118, 101, 114, 116, 0, 1, 1, 6, 73, 110, 118, 101, 114, 116, 1, 0, 0, 0, 0, 0, 0, 1, 6, 1, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 1, 1, 0, 255, 255, 255, 255, 0,
+		//0, 0,
+		//});
+
+
+		const float uiDistanceStart = 1.5f;
+		const float uiDistanceFade = 0.5f;
+		const float uiDistanceDisappear = 0.25f;
 
 
 
-			public static void Start()
+		public static void Start()
 		{
 			abort = false;
 			pause = false;
@@ -212,12 +216,6 @@ public static readonly SharpDX.Toolkit.Graphics.EffectData EffectBytecode = Shar
 				return;
 			}
 
-            // Use the head mounted display, if it's available, otherwise use the debug HMD.
-            //int numberOfHeadMountedDisplays = oculus.Hmd_Detect();
-            //if (numberOfHeadMountedDisplays > 0)
-            //	hmd = oculus.Hmd_Create(0);
-            //else
-            //	hmd = oculus.Hmd_CreateDebug(OculusWrap.OVR.HmdType.DK2);
             OVRTypes.GraphicsLuid graphicsLuid;
             hmd = oculus.Hmd_Create(out graphicsLuid);
 
@@ -230,20 +228,12 @@ public static readonly SharpDX.Toolkit.Graphics.EffectData EffectBytecode = Shar
 			if (hmd.ProductName == string.Empty)
 				System.Windows.Forms.MessageBox.Show("The HMD is not enabled.", "There's a tear in the Rift", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
-			/// ============= nieużywane?
-			//// Specify which head tracking capabilities to enable.
-			//hmd.SetEnabledCaps(OVRTypes.HmdCaps.DebugDevice);
-
-            //// Start the sensor which informs of the Rift's pose and motion
-            //hmd.ConfigureTracking(OVRTypes.TrackingCaps.Orientation | OVRTypes.TrackingCaps.MagYawCorrection, OVRTypes.TrackingCaps.None);
-			// ============== /
 			// Create a set of layers to submit.
 			EyeTexture[] eyeTextures = new EyeTexture[2];
             OVRTypes.Result result;
 
 			// Create DirectX drawing device.
 			SharpDX.Direct3D11.Device device = new Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.BgraSupport, new SharpDX.Direct3D.FeatureLevel[] { SharpDX.Direct3D.FeatureLevel.Level_10_0 });
-			//SharpDX.Direct3D11.Device device = new Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.None);
 
 			// Create DirectX Graphics Interface factory, used to create the swap chain.
 			Factory factory = new Factory();
@@ -313,14 +303,7 @@ public static readonly SharpDX.Toolkit.Graphics.EffectData EffectBytecode = Shar
 				eyeTexture.Texture2DDescription.BindFlags = BindFlags.ShaderResource | BindFlags.RenderTarget;
 
 				// Convert the SharpDX texture description to the native Direct3D texture description.
-				//OVR.D3D11.D3D11_TEXTURE2D_DESC swapTextureDescriptionD3D11 = SharpDXHelpers.CreateTexture2DDescription(eyeTexture.Texture2DDescription);
 				OVRTypes.TextureSwapChainDesc textureSwapChainDesc = SharpDXHelpers.CreateTextureSwapChainDescription(eyeTexture.Texture2DDescription);
-
-
-
-				// Create a SwapTextureSet, which will contain the textures to render to, for the current eye.
-				//result = hmd.CreateSwapTextureSetD3D11(device.NativePointer, ref swapTextureDescriptionD3D11, OVR.D3D11.SwapTextureSetD3D11Flags.None, out eyeTexture.SwapTextureSet);
-				//WriteErrorDetails(oculus, result, "Failed to create swap texture set.");
 
 				result = hmd.CreateTextureSwapChainDX(device.NativePointer, textureSwapChainDesc, out eyeTexture.SwapTextureSet);
 				WriteErrorDetails(oculus, result, "Failed to create swap chain.");
@@ -338,10 +321,8 @@ public static readonly SharpDX.Toolkit.Graphics.EffectData EffectBytecode = Shar
 				// Create a texture 2D and a render target view, for each unmanaged texture contained in the SwapTextureSet.
 				for (int textureIndex = 0; textureIndex < textureSwapChainBufferCount; textureIndex++)
 				{
-					//// Retrieve the current textureData object.
-					//OVR.D3D11.D3D11TextureData textureData = eyeTexture.SwapTextureSet.Textures[textureIndex];
-
-					Guid textureInterfaceId = new Guid("6f15aaf2-d208-4e89-9ab4-489535d34f9c"); // Interface ID of the Direct3D Texture2D interface.
+					// Interface ID of the Direct3D Texture2D interface.
+					Guid textureInterfaceId = new Guid("6f15aaf2-d208-4e89-9ab4-489535d34f9c"); 
 
 					// Retrieve the Direct3D texture contained in the Oculus TextureSwapChainBuffer.
 					IntPtr swapChainTextureComPtr = IntPtr.Zero;
@@ -427,110 +408,15 @@ public static readonly SharpDX.Toolkit.Graphics.EffectData EffectBytecode = Shar
 			// UI Rendering
 			InitUI(device, gd);
 			DrawUI();
-
-			//Texture2DDescription uiTextureDescription = new Texture2DDescription()
-			//{
-			//	Width = 1024,
-			//	Height = 512,
-			//	MipLevels = 1,
-			//	ArraySize = 1,
-			//	Format = Format.B8G8R8A8_UNorm,
-			//	Usage = ResourceUsage.Default,
-			//	SampleDescription = new SampleDescription(1, 0),
-			//	BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
-			//	CpuAccessFlags = CpuAccessFlags.None,
-			//	OptionFlags = ResourceOptionFlags.Shared
-			//};
-
-
-			//Texture2D uiTexture = new SharpDX.Direct3D11.Texture2D(device, uiTextureDescription);
-			//SharpDX.DXGI.Surface uiSurface = uiTexture.QueryInterface<Surface>();
-
-			//DX2D.Factory factory2d = new DX2D.Factory(SharpDX.Direct2D1.FactoryType.SingleThreaded, DX2D.DebugLevel.Information);
-			//DX2D.RenderTargetProperties renderTargetProperties = new DX2D.RenderTargetProperties()
-			//{
-			//	DpiX = 96,
-			//	DpiY = 96,
-			//	PixelFormat = new DX2D.PixelFormat(Format.B8G8R8A8_UNorm, SharpDX.Direct2D1.AlphaMode.Premultiplied),
-			//	Type = SharpDX.Direct2D1.RenderTargetType.Hardware,
-			//	MinLevel = DX2D.FeatureLevel.Level_10,
-			//	Usage = SharpDX.Direct2D1.RenderTargetUsage.None
-			//};
-			//DX2D.RenderTarget target2d = new DX2D.RenderTarget(factory2d, uiSurface, renderTargetProperties);
-			//SharpDX.DirectWrite.Factory factoryDW = new SharpDX.DirectWrite.Factory();
-
-
-			//// 2D materials
-
-			//var uiEffect = new SharpDX.Toolkit.Graphics.BasicEffect(gd);
-			//uiEffect.PreferPerPixelLighting = false;
-			//uiEffect.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(gd, uiTexture);
-			//uiEffect.TextureEnabled = true;
-			////uiEffect.Alpha = 0.5f;
-			//uiEffect.LightingEnabled = false;
-
-
-			//var blendStateDescription = new BlendStateDescription();
-
-			//blendStateDescription.AlphaToCoverageEnable = false;
-
-			//blendStateDescription.RenderTarget[0].IsBlendEnabled = true;
-			//blendStateDescription.RenderTarget[0].SourceBlend = BlendOption.SourceAlpha;
-			//blendStateDescription.RenderTarget[0].DestinationBlend = BlendOption.InverseSourceAlpha;
-			//blendStateDescription.RenderTarget[0].BlendOperation = BlendOperation.Add;
-			//blendStateDescription.RenderTarget[0].SourceAlphaBlend = BlendOption.Zero;
-			//blendStateDescription.RenderTarget[0].DestinationAlphaBlend = BlendOption.Zero;
-			//blendStateDescription.RenderTarget[0].AlphaBlendOperation = BlendOperation.Add;
-			//blendStateDescription.RenderTarget[0].RenderTargetWriteMask = ColorWriteMaskFlags.All;
-
-			//var blendState = SharpDX.Toolkit.Graphics.BlendState.New(gd, blendStateDescription);
-			//gd.SetBlendState(blendState);
-
-			//var uiPrimitive = SharpDX.Toolkit.Graphics.GeometricPrimitive.Plane.New(gd, 2, 1);
-
-			//SharpDX.DirectWrite.TextFormat textFormat = new SharpDX.DirectWrite.TextFormat(factoryDW, "Segoe UI Light", 32f)
-			//{
-			//	TextAlignment = SharpDX.DirectWrite.TextAlignment.Center,
-			//	ParagraphAlignment = SharpDX.DirectWrite.ParagraphAlignment.Center
-			//};
-
-			//SharpDX.DirectWrite.TextFormat textFormatSmall = new SharpDX.DirectWrite.TextFormat(factoryDW, "Segoe UI Light", 18f)
-			//{
-			//	TextAlignment = SharpDX.DirectWrite.TextAlignment.Center,
-			//	ParagraphAlignment = SharpDX.DirectWrite.ParagraphAlignment.Center
-			//};
-
-			//DX2D.SolidColorBrush textBrush = new SharpDX.Direct2D1.SolidColorBrush(target2d, new Color(1f,1f,1f,1f));
-			//DX2D.SolidColorBrush blueBrush = new SharpDX.Direct2D1.SolidColorBrush(target2d, new Color(0, 167, 245, 255));
-
-			//target2d.AntialiasMode = SharpDX.Direct2D1.AntialiasMode.Aliased;
-
-			//target2d.BeginDraw();
-			//target2d.Clear(new Color4(0, 0, 0, 0.7f));
-			//target2d.DrawLine(new Vector2(0, 1), new Vector2(1024, 1), blueBrush, 2);
-			//target2d.DrawLine(new Vector2(0, 511), new Vector2(1024, 511), blueBrush, 2);
-
-			//target2d.DrawText("now playing:", textFormatSmall, new RectangleF(0, 0, 1024, 100), textBrush);
-			//target2d.DrawText("moviefilename", textFormat, new RectangleF(0, 50, 1024, 100), textBrush);
-			//target2d.EndDraw();
-
-
-			// DEBU UI WINDOW
-			//OculusUIDebug debugWindow = new OculusUIDebug();
-			//debugWindow.SetSharedTexture(uiTexture);
-			//debugWindow.Start();
-
-
 			#endregion
 
 
-			DateTime startTime = DateTime.Now;
-			Vector3 position = new Vector3(0, 0, 0);	// 0,0,-1
 
 			#region Render loop
-
+			DateTime startTime = DateTime.Now;
 			DateTime lastTime = DateTime.Now;
 			float deltaTime = 0;
+			Plane uiPlane = new Plane(1);
 
 
 			while (!abort)
@@ -557,6 +443,8 @@ public static readonly SharpDX.Toolkit.Graphics.EffectData EffectBytecode = Shar
 				float timeSinceStart = (float)(DateTime.Now - startTime).TotalSeconds;
 				deltaTime = (float)(DateTime.Now - lastTime).TotalSeconds;
 				lastTime = DateTime.Now;
+
+				Vector3 centerEye = (eyePoses[0].Position.ToVector3() + eyePoses[1].Position.ToVector3()) * 0.5f;
 
 				for (int eyeIndex = 0; eyeIndex < 2; eyeIndex++)
 				{
@@ -587,8 +475,12 @@ public static readonly SharpDX.Toolkit.Graphics.EffectData EffectBytecode = Shar
 					Vector3 lookUp = Vector3.Transform(new Vector3(0, -1, 0), rotationMatrix).ToVector3();
 					Vector3 lookAt = Vector3.Transform(new Vector3(0, 0, 1), rotationMatrix).ToVector3();
 
-					Vector3 eyeDiff = eyePoses[eyeIndex].Position.ToVector3() - eyePoses[1 - eyeIndex].Position.ToVector3();
-					Vector3 viewPosition = position - eyeDiff * 0.5f; // - eyePoses[eyeIndex].Position.ToVector3();
+					//Vector3 eyeDiff = eyePoses[eyeIndex].Position.ToVector3() - eyePoses[1 - eyeIndex].Position.ToVector3();
+					Vector3 viewPosition = new Vector3(
+						-eyePoses[eyeIndex].Position.X,
+						eyePoses[eyeIndex].Position.Y,
+						eyePoses[eyeIndex].Position.Z
+					);
 
 					Matrix world = Matrix.Identity;
 					Matrix viewMatrix = Matrix.LookAtLH(viewPosition, viewPosition + lookAt, lookUp);
@@ -599,17 +491,39 @@ public static readonly SharpDX.Toolkit.Graphics.EffectData EffectBytecode = Shar
 					Matrix worldViewProjection = world * viewMatrix * projectionMatrix;
 					worldViewProjection.Transpose();
 
-					basicEffectL.World = Matrix.Identity;
+					basicEffectL.World = Matrix.Translation(viewPosition); //Matrix.Identity;
 					basicEffectL.View = viewMatrix;
 					basicEffectL.Projection = projectionMatrix;
 
-					uiEffect.World = Matrix.Identity * Matrix.Scaling(1f) * Matrix.RotationAxis(Vector3.Up, (float)Math.PI) * Matrix.Translation(0, 0, -1.5f);
+					//uiEffect.World = Matrix.Identity * Matrix.Scaling(1f) * Matrix.RotationAxis(Vector3.Up, (float)Math.PI) * Matrix.Translation(0, 0, -1.5f);
+
+					// reset UI position every frame if it is not visible
+					if (isUIHidden)
+					{
+						float yaw = (float)(Math.PI - Math.Atan2(viewMatrix.Forward.X, viewMatrix.Forward.Z));
+						uiEffect.World = Matrix.Identity * Matrix.Scaling(1f) * Matrix.Translation(0, 0, uiDistanceStart) * Matrix.RotationAxis(Vector3.Up, yaw) * Matrix.Translation(viewPosition);
+						uiPlane = new Plane(-uiEffect.World.TranslationVector, uiEffect.World.Forward);
+					}
 					uiEffect.View = viewMatrix;
 					uiEffect.Projection = projectionMatrix;
 
+					// distance ui plane - eye
+					{
+						// { 0    for d <= uiDistanceDisappear
+						// { 0..1 for uiDistanceDisappear  d < uiDistanceFade
+						// { 1    for d >= uiDistanceFade
+						float dot;
+						Vector3.Dot(ref uiPlane.Normal, ref viewPosition, out dot);
+						float d = dot - uiPlane.D;
+						overrideShowAlpha = (d - uiDistanceDisappear) / uiDistanceFade;
+						if (overrideShowAlpha < 0) overrideShowAlpha = 0;
+						else if (overrideShowAlpha > 1) overrideShowAlpha = 1;
+					}
+
+
 					if (_stereoVideo)
 					{
-						basicEffectR.World = Matrix.Identity;
+						basicEffectR.World = Matrix.Translation(viewPosition);
 						basicEffectR.View = viewMatrix;
 						basicEffectR.Projection = projectionMatrix;
 					}
@@ -626,17 +540,13 @@ public static readonly SharpDX.Toolkit.Graphics.EffectData EffectBytecode = Shar
 							primitive.Draw(basicEffectL);
 					}
 
+
 					DrawUI();
 					RenderUI(deltaTime);
-
-					//uiEffect.Alpha = uiEffect.Alpha.LerpInPlace(pause ? 1 : 0, 5f * deltaTime);
-					//if(uiEffect.Alpha > 0)
-					//	uiPrimitive.Draw(uiEffect);
-
+					
 					// Commits any pending changes to the TextureSwapChain, and advances its current index
 					result = eyeTexture.SwapTextureSet.Commit();
 					WriteErrorDetails(oculus, result, "Failed to commit the swap chain texture.");
-
 
 					//Console.WriteLine("xbox: " + ((hmd.ovr_GetConnectedControllerTypes() & OVRTypes.ControllerType.XBox) != 0));
 					//Console.WriteLine("remote: " + ((hmd.ovr_GetConnectedControllerTypes() & OVRTypes.ControllerType.Remote) != 0));

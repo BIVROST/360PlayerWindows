@@ -168,9 +168,21 @@ namespace PlayerUI.Oculus
 			target2d.EndDraw();
 		}
 
+		private static bool isUIHidden = true;
+		private static float showAlpha = 0f;
+		private static float overrideShowAlpha = 1f;
 		private static void RenderUI(float deltaTime)
 		{
-			uiEffect.Alpha = uiEffect.Alpha.LerpInPlace(pause ? 1 : 0, 5f * deltaTime);
+			showAlpha = showAlpha.LerpInPlace(pause ? 1 : 0, 8f * deltaTime);
+			if (showAlpha < 0.01f)
+				showAlpha = 0f;
+			else if (showAlpha > 0.99f)
+				showAlpha = 1f;
+
+			isUIHidden = showAlpha <= 0;
+
+			uiEffect.Alpha = showAlpha * overrideShowAlpha;
+
 			if (uiEffect.Alpha > 0)
 				uiPrimitive.Draw(uiEffect);
 		}
