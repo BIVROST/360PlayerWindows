@@ -43,50 +43,6 @@ namespace PlayerUI.Oculus
         public static bool Lock { get { return _playbackLock; } }
 		private static object localCritical = new object();
 
-
-		//public static readonly SharpDX.Toolkit.Graphics.EffectData EffectBytecode = SharpDX.Toolkit.Graphics.EffectData.Load(new byte[] {
-		//84, 75, 70, 88, 251, 7, 0, 0, 1, 1, 0, 0, 83, 72, 68, 82, 184, 7, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 145, 0, 0, 188, 6, 68, 88, 66, 67, 78, 222, 27, 125, 77, 231, 207, 149, 84, 242, 51, 75, 92, 54, 62, 202, 1, 0, 0, 0, 60, 3, 0, 0, 4, 0, 0, 0,
-		//48, 0, 0, 0, 28, 1, 0, 0, 84, 2, 0, 0, 200, 2, 0, 0, 65, 111, 110, 57, 228, 0, 0, 0, 228, 0, 0, 0, 0, 2, 254, 255, 176, 0, 0, 0, 52, 0, 0, 0, 1, 0, 36, 0, 0, 0, 48, 0, 0, 0, 48, 0, 0, 0, 36, 0, 1, 0, 48, 0, 0, 0, 0, 0,
-		//4, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 254, 255, 31, 0, 0, 2, 5, 0, 0, 128, 0, 0, 15, 144, 31, 0, 0, 2, 5, 0, 1, 128, 1, 0, 15, 144, 31, 0, 0, 2, 5, 0, 2, 128, 2, 0, 15, 144, 5, 0, 0, 3, 0, 0, 15, 128, 2, 0, 85, 144,
-		//2, 0, 228, 160, 4, 0, 0, 4, 0, 0, 15, 128, 2, 0, 0, 144, 1, 0, 228, 160, 0, 0, 228, 128, 4, 0, 0, 4, 0, 0, 15, 128, 2, 0, 170, 144, 3, 0, 228, 160, 0, 0, 228, 128, 4, 0, 0, 4, 0, 0, 15, 128, 2, 0, 255, 144, 4, 0, 228, 160, 0, 0, 228, 128,
-		//4, 0, 0, 4, 0, 0, 3, 192, 0, 0, 255, 128, 0, 0, 228, 160, 0, 0, 228, 128, 1, 0, 0, 2, 0, 0, 12, 192, 0, 0, 228, 128, 1, 0, 0, 2, 0, 0, 15, 224, 0, 0, 228, 144, 1, 0, 0, 2, 1, 0, 3, 224, 1, 0, 228, 144, 255, 255, 0, 0, 83, 72, 68, 82,
-		//48, 1, 0, 0, 64, 0, 1, 0, 76, 0, 0, 0, 89, 0, 0, 4, 70, 142, 32, 0, 0, 0, 0, 0, 4, 0, 0, 0, 95, 0, 0, 3, 242, 16, 16, 0, 0, 0, 0, 0, 95, 0, 0, 3, 50, 16, 16, 0, 1, 0, 0, 0, 95, 0, 0, 3, 242, 16, 16, 0, 2, 0, 0, 0,
-		//101, 0, 0, 3, 242, 32, 16, 0, 0, 0, 0, 0, 101, 0, 0, 3, 50, 32, 16, 0, 1, 0, 0, 0, 103, 0, 0, 4, 242, 32, 16, 0, 2, 0, 0, 0, 1, 0, 0, 0, 104, 0, 0, 2, 1, 0, 0, 0, 54, 0, 0, 5, 242, 32, 16, 0, 0, 0, 0, 0, 70, 30, 16, 0,
-		//0, 0, 0, 0, 54, 0, 0, 5, 50, 32, 16, 0, 1, 0, 0, 0, 70, 16, 16, 0, 1, 0, 0, 0, 56, 0, 0, 8, 242, 0, 16, 0, 0, 0, 0, 0, 86, 21, 16, 0, 2, 0, 0, 0, 70, 142, 32, 0, 0, 0, 0, 0, 1, 0, 0, 0, 50, 0, 0, 10, 242, 0, 16, 0,
-		//0, 0, 0, 0, 6, 16, 16, 0, 2, 0, 0, 0, 70, 142, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 70, 14, 16, 0, 0, 0, 0, 0, 50, 0, 0, 10, 242, 0, 16, 0, 0, 0, 0, 0, 166, 26, 16, 0, 2, 0, 0, 0, 70, 142, 32, 0, 0, 0, 0, 0, 2, 0, 0, 0,
-		//70, 14, 16, 0, 0, 0, 0, 0, 50, 0, 0, 10, 242, 32, 16, 0, 2, 0, 0, 0, 246, 31, 16, 0, 2, 0, 0, 0, 70, 142, 32, 0, 0, 0, 0, 0, 3, 0, 0, 0, 70, 14, 16, 0, 0, 0, 0, 0, 62, 0, 0, 1, 73, 83, 71, 78, 108, 0, 0, 0, 3, 0, 0, 0,
-		//8, 0, 0, 0, 80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 15, 15, 0, 0, 86, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 1, 0, 0, 0, 3, 3, 0, 0, 95, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		//3, 0, 0, 0, 2, 0, 0, 0, 15, 15, 0, 0, 67, 79, 76, 79, 82, 0, 84, 69, 88, 67, 79, 79, 82, 68, 0, 83, 86, 95, 80, 79, 83, 73, 84, 73, 79, 78, 0, 171, 79, 83, 71, 78, 108, 0, 0, 0, 3, 0, 0, 0, 8, 0, 0, 0, 80, 0, 0, 0, 0, 0, 0, 0,
-		//0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 15, 0, 0, 0, 86, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 1, 0, 0, 0, 3, 12, 0, 0, 95, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 0, 2, 0, 0, 0, 15, 0, 0, 0,
-		//67, 79, 76, 79, 82, 0, 84, 69, 88, 67, 79, 79, 82, 68, 0, 83, 86, 95, 80, 79, 83, 73, 84, 73, 79, 78, 0, 171, 185, 36, 58, 62, 3, 5, 67, 79, 76, 79, 82, 0, 0, 0, 3, 15, 0, 0, 8, 84, 69, 88, 67, 79, 79, 82, 68, 0, 1, 0, 3, 3, 0, 0, 11, 83,
-		//86, 95, 80, 79, 83, 73, 84, 73, 79, 78, 0, 2, 0, 3, 15, 0, 0, 1, 152, 1, 68, 88, 66, 67, 21, 219, 222, 169, 247, 114, 122, 118, 211, 95, 148, 219, 130, 126, 181, 238, 1, 0, 0, 0, 152, 0, 0, 0, 1, 0, 0, 0, 36, 0, 0, 0, 73, 83, 71, 78, 108, 0, 0, 0,
-		//3, 0, 0, 0, 8, 0, 0, 0, 80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 15, 15, 0, 0, 86, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 1, 0, 0, 0, 3, 3, 0, 0, 95, 0, 0, 0, 0, 0, 0, 0,
-		//0, 0, 0, 0, 3, 0, 0, 0, 2, 0, 0, 0, 15, 15, 0, 0, 67, 79, 76, 79, 82, 0, 84, 69, 88, 67, 79, 79, 82, 68, 0, 83, 86, 95, 80, 79, 83, 73, 84, 73, 79, 78, 0, 171, 200, 35, 59, 96, 3, 5, 67, 79, 76, 79, 82, 0, 0, 0, 3, 15, 0, 0, 8, 84,
-		//69, 88, 67, 79, 79, 82, 68, 0, 1, 0, 3, 3, 0, 0, 11, 83, 86, 95, 80, 79, 83, 73, 84, 73, 79, 78, 0, 2, 1, 3, 15, 0, 0, 0, 0, 0, 0, 0, 1, 16, 80, 114, 111, 106, 101, 99, 116, 105, 111, 110, 77, 97, 116, 114, 105, 120, 64, 1, 15, 77, 97, 116, 114, 105,
-		//120, 84, 114, 97, 110, 115, 102, 111, 114, 109, 2, 3, 0, 0, 64, 4, 4, 0, 1, 16, 80, 114, 111, 106, 101, 99, 116, 105, 111, 110, 77, 97, 116, 114, 105, 120, 4, 26, 0, 1, 0, 4, 0, 0, 0, 0, 0, 145, 0, 0, 220, 4, 68, 88, 66, 67, 133, 3, 0, 192, 207, 222, 249, 179,
-		//29, 143, 136, 244, 72, 165, 214, 125, 1, 0, 0, 0, 92, 2, 0, 0, 4, 0, 0, 0, 48, 0, 0, 0, 236, 0, 0, 0, 172, 1, 0, 0, 40, 2, 0, 0, 65, 111, 110, 57, 180, 0, 0, 0, 180, 0, 0, 0, 0, 2, 255, 255, 140, 0, 0, 0, 40, 0, 0, 0, 0, 0, 40, 0,
-		//0, 0, 40, 0, 0, 0, 40, 0, 1, 0, 36, 0, 0, 0, 40, 0, 0, 0, 0, 0, 0, 2, 255, 255, 81, 0, 0, 5, 0, 0, 15, 160, 0, 0, 128, 191, 0, 0, 128, 191, 0, 0, 128, 191, 0, 0, 128, 63, 81, 0, 0, 5, 1, 0, 15, 160, 0, 0, 128, 63, 0, 0, 128, 63,
-		//0, 0, 128, 63, 0, 0, 0, 0, 31, 0, 0, 2, 0, 0, 0, 128, 1, 0, 3, 176, 31, 0, 0, 2, 0, 0, 0, 144, 0, 8, 15, 160, 66, 0, 0, 3, 0, 0, 15, 128, 1, 0, 228, 176, 0, 8, 228, 160, 1, 0, 0, 2, 1, 0, 15, 128, 0, 0, 228, 160, 4, 0, 0, 4,
-		//0, 0, 15, 128, 0, 0, 228, 128, 1, 0, 228, 128, 1, 0, 228, 160, 1, 0, 0, 2, 0, 8, 15, 128, 0, 0, 228, 128, 255, 255, 0, 0, 83, 72, 68, 82, 184, 0, 0, 0, 64, 0, 0, 0, 46, 0, 0, 0, 89, 0, 0, 4, 70, 142, 32, 0, 0, 0, 0, 0, 1, 0, 0, 0,
-		//90, 0, 0, 3, 0, 96, 16, 0, 0, 0, 0, 0, 88, 24, 0, 4, 0, 112, 16, 0, 0, 0, 0, 0, 85, 85, 0, 0, 98, 16, 0, 3, 50, 16, 16, 0, 2, 0, 0, 0, 101, 0, 0, 3, 242, 32, 16, 0, 0, 0, 0, 0, 104, 0, 0, 2, 1, 0, 0, 0, 69, 0, 0, 9,
-		//242, 0, 16, 0, 0, 0, 0, 0, 70, 16, 16, 0, 2, 0, 0, 0, 70, 126, 16, 0, 0, 0, 0, 0, 0, 96, 16, 0, 0, 0, 0, 0, 50, 0, 0, 15, 242, 32, 16, 0, 0, 0, 0, 0, 70, 14, 16, 0, 0, 0, 0, 0, 2, 64, 0, 0, 0, 0, 128, 191, 0, 0, 128, 191,
-		//0, 0, 128, 191, 0, 0, 128, 63, 2, 64, 0, 0, 0, 0, 128, 63, 0, 0, 128, 63, 0, 0, 128, 63, 0, 0, 0, 0, 62, 0, 0, 1, 73, 83, 71, 78, 116, 0, 0, 0, 3, 0, 0, 0, 8, 0, 0, 0, 80, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 0,
-		//0, 0, 0, 0, 15, 0, 0, 0, 92, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 1, 0, 0, 0, 15, 0, 0, 0, 107, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 2, 0, 0, 0, 3, 3, 0, 0, 83, 86, 95, 80, 79, 83, 73, 84,
-		//73, 79, 78, 0, 83, 67, 69, 78, 69, 95, 80, 79, 83, 73, 84, 73, 79, 78, 0, 84, 69, 88, 67, 79, 79, 82, 68, 0, 79, 83, 71, 78, 44, 0, 0, 0, 1, 0, 0, 0, 8, 0, 0, 0, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0,
-		//15, 0, 0, 0, 83, 86, 95, 84, 65, 82, 71, 69, 84, 0, 171, 171, 64, 166, 240, 66, 3, 11, 83, 86, 95, 80, 79, 83, 73, 84, 73, 79, 78, 0, 0, 1, 3, 15, 0, 0, 14, 83, 67, 69, 78, 69, 95, 80, 79, 83, 73, 84, 73, 79, 78, 0, 1, 0, 3, 15, 0, 0, 8, 84,
-		//69, 88, 67, 79, 79, 82, 68, 0, 2, 0, 3, 3, 0, 0, 0, 0, 0, 0, 0, 1, 9, 83, 86, 95, 84, 65, 82, 71, 69, 84, 0, 0, 64, 3, 15, 0, 0, 0, 0, 0, 0, 0, 1, 16, 80, 114, 111, 106, 101, 99, 116, 105, 111, 110, 77, 97, 116, 114, 105, 120, 64, 1, 15, 77,
-		//97, 116, 114, 105, 120, 84, 114, 97, 110, 115, 102, 111, 114, 109, 2, 3, 0, 0, 64, 4, 4, 0, 3, 14, 84, 101, 120, 116, 117, 114, 101, 83, 97, 109, 112, 108, 101, 114, 4, 10, 0, 1, 7, 84, 101, 120, 116, 117, 114, 101, 4, 7, 0, 1, 16, 80, 114, 111, 106, 101, 99, 116, 105, 111,
-		//110, 77, 97, 116, 114, 105, 120, 4, 26, 0, 1, 69, 70, 70, 88, 47, 0, 0, 0, 6, 73, 110, 118, 101, 114, 116, 0, 1, 1, 6, 73, 110, 118, 101, 114, 116, 1, 0, 0, 0, 0, 0, 0, 1, 6, 1, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 1, 1, 0, 255, 255, 255, 255, 0,
-		//0, 0,
-		//});
-
-
-		const float uiDistanceStart = 1.5f;
-		const float uiDistanceFade = 0.5f;
-		const float uiDistanceDisappear = 0.25f;
-
-
-
 		public static void Start()
 		{
 			abort = false;
@@ -107,13 +63,14 @@ namespace PlayerUI.Oculus
 		}
 
 		public static void Pause() {
-			EnqueueUIRedraw();
 			pause = true;
+			vrui?.EnqueueUIRedraw();
 		}
 		public static void UnPause() { pause = false; }
 
 		public static void UpdateTime(float time) {
 			currentTime = time;
+			vrui?.EnqueueUIRedraw();
 		}
 
 		public static void Configure(string title, float movieDuration)
@@ -161,6 +118,7 @@ namespace PlayerUI.Oculus
 
 		private static SharpDX.Toolkit.Graphics.GraphicsDevice _gd;
 		private static Device _device;
+		private static VRUI vrui;
 
 		static void ResizeTexture(Texture2D tL, Texture2D tR)
 		{
@@ -406,8 +364,8 @@ namespace PlayerUI.Oculus
 
 
 			// UI Rendering
-			InitUI(device, gd);
-			DrawUI();
+			vrui = new VRUI(device, gd);
+			vrui.Draw(movieTitle, currentTime, duration);
 			#endregion
 
 
@@ -416,7 +374,6 @@ namespace PlayerUI.Oculus
 			DateTime startTime = DateTime.Now;
 			DateTime lastTime = DateTime.Now;
 			float deltaTime = 0;
-			Plane uiPlane = new Plane(1);
 
 
 			while (!abort)
@@ -485,6 +442,8 @@ namespace PlayerUI.Oculus
 					Matrix world = Matrix.Identity;
 					Matrix viewMatrix = Matrix.LookAtLH(viewPosition, viewPosition + lookAt, lookUp);
 
+					Vector3 vmvp = viewMatrix.TranslationVector;
+
 					Matrix projectionMatrix = oculus.Matrix4f_Projection(eyeTexture.FieldOfView, 0.1f, 100.0f, OVRTypes.ProjectionModifier.LeftHanded).ToMatrix();
 					projectionMatrix.Transpose();
 
@@ -494,32 +453,6 @@ namespace PlayerUI.Oculus
 					basicEffectL.World = Matrix.Translation(viewPosition); //Matrix.Identity;
 					basicEffectL.View = viewMatrix;
 					basicEffectL.Projection = projectionMatrix;
-
-					//uiEffect.World = Matrix.Identity * Matrix.Scaling(1f) * Matrix.RotationAxis(Vector3.Up, (float)Math.PI) * Matrix.Translation(0, 0, -1.5f);
-
-					// reset UI position every frame if it is not visible
-					if (isUIHidden)
-					{
-						float yaw = (float)(Math.PI - Math.Atan2(viewMatrix.Forward.X, viewMatrix.Forward.Z));
-						uiEffect.World = Matrix.Identity * Matrix.Scaling(1f) * Matrix.Translation(0, 0, uiDistanceStart) * Matrix.RotationAxis(Vector3.Up, yaw) * Matrix.Translation(viewPosition);
-						uiPlane = new Plane(-uiEffect.World.TranslationVector, uiEffect.World.Forward);
-					}
-					uiEffect.View = viewMatrix;
-					uiEffect.Projection = projectionMatrix;
-
-					// distance ui plane - eye
-					{
-						// { 0    for d <= uiDistanceDisappear
-						// { 0..1 for uiDistanceDisappear  d < uiDistanceFade
-						// { 1    for d >= uiDistanceFade
-						float dot;
-						Vector3.Dot(ref uiPlane.Normal, ref viewPosition, out dot);
-						float d = dot - uiPlane.D;
-						overrideShowAlpha = (d - uiDistanceDisappear) / uiDistanceFade;
-						if (overrideShowAlpha < 0) overrideShowAlpha = 0;
-						else if (overrideShowAlpha > 1) overrideShowAlpha = 1;
-					}
-
 
 					if (_stereoVideo)
 					{
@@ -540,10 +473,13 @@ namespace PlayerUI.Oculus
 							primitive.Draw(basicEffectL);
 					}
 
+					// reset UI position every frame if it is not visible
+					if (vrui.isUIHidden)
+						vrui.SetWorldPosition(viewMatrix.Forward, viewPosition);
 
-					DrawUI();
-					RenderUI(deltaTime);
-					
+					vrui.Draw(movieTitle, currentTime, duration);
+					vrui.Render(deltaTime, viewMatrix, projectionMatrix, viewPosition, pause);
+
 					// Commits any pending changes to the TextureSwapChain, and advances its current index
 					result = eyeTexture.SwapTextureSet.Commit();
 					WriteErrorDetails(oculus, result, "Failed to commit the swap chain texture.");
@@ -585,7 +521,8 @@ namespace PlayerUI.Oculus
 			//uiSurface.Dispose();
 			//uiTexture.Dispose();			
 			//factory2d.Dispose();
-			DisposeUI();
+			vrui.Dispose();
+			vrui = null;
 
 			// Disposing the device, before the hmd, will cause the hmd to fail when disposing.
 			// Disposing the device, after the hmd, will cause the dispose of the device to fail.

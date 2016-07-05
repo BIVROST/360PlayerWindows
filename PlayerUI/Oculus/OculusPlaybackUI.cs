@@ -1,46 +1,38 @@
-﻿using OculusWrap;
-using SharpDX;
-using SharpDX.D3DCompiler;
+﻿using SharpDX;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-//using System.Windows;
-using System.Windows.Forms;
-using Buffer = SharpDX.Direct3D11.Buffer;
 using Device = SharpDX.Direct3D11.Device;
 using DX2D = SharpDX.Direct2D1;
-using System.Runtime.InteropServices;
 using PlayerUI.Tools;
 
 namespace PlayerUI.Oculus
 {
-	public partial class OculusPlayback
+	public class VRUI : IDisposable
 	{
-		static Texture2DDescription uiTextureDescription;
-		static Texture2D uiTexture;
-		static SharpDX.DXGI.Surface uiSurface;
-		static SharpDX.Toolkit.Graphics.BasicEffect uiEffect;
+		Texture2DDescription uiTextureDescription;
+		Texture2D uiTexture;
+		SharpDX.DXGI.Surface uiSurface;
+		SharpDX.Toolkit.Graphics.BasicEffect uiEffect;
 
-		static BlendStateDescription blendStateDescription;
-		static SharpDX.Toolkit.Graphics.BlendState blendState;
-		static DX2D.RenderTarget target2d;
-		static SharpDX.Toolkit.Graphics.GeometricPrimitive uiPrimitive;
+		BlendStateDescription blendStateDescription;
+		SharpDX.Toolkit.Graphics.BlendState blendState;
+		DX2D.RenderTarget target2d;
+		SharpDX.Toolkit.Graphics.GeometricPrimitive uiPrimitive;
 
-		static SharpDX.DirectWrite.TextFormat textFormat;
-		static SharpDX.DirectWrite.TextFormat textFormatSmall;
-		static DX2D.SolidColorBrush textBrush;
-		static DX2D.SolidColorBrush blueBrush;
+		SharpDX.DirectWrite.TextFormat textFormat;
+		SharpDX.DirectWrite.TextFormat textFormatSmall;
+		DX2D.SolidColorBrush textBrush;
+		DX2D.SolidColorBrush blueBrush;
 
-		static bool uiInitialized = false;
-		static bool redraw = false;
+		bool uiInitialized = false;
+		bool redraw = false;
 
-		private static void InitUI(Device device, SharpDX.Toolkit.Graphics.GraphicsDevice gd)
+		const float uiDistanceStart = 1.5f;
+		const float uiDistanceFade = 0.5f;
+		const float uiDistanceDisappear = 0.25f;
+
+		public VRUI(Device device, SharpDX.Toolkit.Graphics.GraphicsDevice gd)
 		{
 			uiTextureDescription = new Texture2DDescription()
 			{
@@ -121,12 +113,14 @@ namespace PlayerUI.Oculus
 			uiInitialized = true;
 		}
 
-		private static void EnqueueUIRedraw()
+
+		public void EnqueueUIRedraw()
 		{
 			redraw = true;
 		}
 
-		private static void DrawUI()
+
+		public void Draw(string movieTitle, float currentTime, float duration)
 		{
 			if (!uiInitialized) return;
 			if (!redraw) return;
@@ -168,11 +162,16 @@ namespace PlayerUI.Oculus
 			target2d.EndDraw();
 		}
 
-		private static bool isUIHidden = true;
-		private static float showAlpha = 0f;
-		private static float overrideShowAlpha = 1f;
-		private static void RenderUI(float deltaTime)
+
+		public bool isUIHidden = true;
+		private float showAlpha = 0f;
+
+
+		public void Render(float deltaTime, Matrix viewMatrix, Matrix projectionMatrix, Vector3 viewPosition, bool pause)
 		{
+			uiEffect.View = viewMatrix;
+			uiEffect.Projection = projectionMatrix;
+
 			showAlpha = showAlpha.LerpInPlace(pause ? 1 : 0, 8f * deltaTime);
 			if (showAlpha < 0.01f)
 				showAlpha = 0f;
@@ -181,13 +180,25 @@ namespace PlayerUI.Oculus
 
 			isUIHidden = showAlpha <= 0;
 
+			// distance ui plane - eye
+			// { 0    for d <= uiDistanceDisappear
+			// { 0..1 for uiDistanceDisappear  d < uiDistanceFade
+			// { 1    for d >= uiDistanceFade
+			float dot;
+			Vector3.Dot(ref uiPlane.Normal, ref viewPosition, out dot);
+			float d = dot - uiPlane.D;
+			float overrideShowAlpha = (d - uiDistanceDisappear) / uiDistanceFade;
+			if (overrideShowAlpha < 0) overrideShowAlpha = 0;
+			else if (overrideShowAlpha > 1) overrideShowAlpha = 1;
+
 			uiEffect.Alpha = showAlpha * overrideShowAlpha;
 
 			if (uiEffect.Alpha > 0)
 				uiPrimitive.Draw(uiEffect);
 		}
 
-		private static void DisposeUI()
+
+		public void Dispose()
 		{
 			uiInitialized = false;
 
@@ -205,5 +216,14 @@ namespace PlayerUI.Oculus
 			blueBrush?.Dispose();
 		}
 
+
+		Plane uiPlane = new Plane(1);
+
+		internal void SetWorldPosition(Vector3 forward, Vector3 viewPosition)
+		{
+			float yaw = (float)(Math.PI - Math.Atan2(forward.X, forward.Z));
+			uiEffect.World = Matrix.Identity * Matrix.Scaling(1f) * Matrix.Translation(0, 0, uiDistanceStart) * Matrix.RotationAxis(Vector3.Up, yaw) * Matrix.Translation(viewPosition);
+			uiPlane = new Plane(-uiEffect.World.TranslationVector, uiEffect.World.Forward);
+		}
 	}
 }
