@@ -12,35 +12,16 @@ using PlayerUI.Tools;
 
 namespace PlayerUI.Oculus
 {
-	public partial class OculusPlayback
+	public class OculusPlayback : Headset
 	{
-		public static Texture2D textureL;
-		public static Texture2D textureR;
-		public static float radius = 4.9f;
-		public static bool _stereoVideo = false;
-		public static MediaDecoder.ProjectionMode _projection = MediaDecoder.ProjectionMode.Sphere;
 
-		public static ManualResetEvent waitForRendererStop = new ManualResetEvent(false);
-		public static bool abort = false;
-		public static bool pause = false;
 
-		private static string movieTitle = "";
-		private static float duration = 0;
-		private static float currentTime = 0;
-
-		private static SharpDX.Toolkit.Graphics.BasicEffect basicEffectL;
-		private static SharpDX.Toolkit.Graphics.BasicEffect basicEffectR;
-
-		private static bool _playbackLock = false;
-        public static bool Lock { get { return _playbackLock; } }
-		private static object localCritical = new object();
-
-		public static void Start()
+		override public void Start()
 		{
 			abort = false;
 			pause = false;
 			waitForRendererStop.Reset();
-			if (_playbackLock)
+			if (Lock)
 				return;
 			Task.Factory.StartNew(() =>
 			{
@@ -54,36 +35,10 @@ namespace PlayerUI.Oculus
 			});
 		}
 
-		public static void Pause() {
-			pause = true;
-			vrui?.EnqueueUIRedraw();
-		}
-		public static void UnPause() { pause = false; }
 
-		public static void UpdateTime(float time) {
-			currentTime = time;
-			vrui?.EnqueueUIRedraw();
-		}
-
-		public static void Configure(string title, float movieDuration)
+		override public bool IsPresent()
 		{
-			movieTitle = title;
-			duration = movieDuration;
-		}
-		
-		public static void Stop()
-		{
-			abort = true;
-		}
-
-		public static void Reset()
-		{
-			abort = false;
-		}
-
-		public static bool IsOculusPresent()
-		{
-			if (_playbackLock) return true;
+			if (Lock) return true;
 			Wrap oculus = new Wrap();
 			try {
 				bool success = oculus.Initialize();
@@ -108,11 +63,10 @@ namespace PlayerUI.Oculus
 		}
 
 
-		private static SharpDX.Toolkit.Graphics.GraphicsDevice _gd;
-		private static Device _device;
-		private static VRUI vrui;
+		SharpDX.Toolkit.Graphics.GraphicsDevice _gd;
+		Device _device;
 
-		static void ResizeTexture(Texture2D tL, Texture2D tR)
+		void ResizeTexture(Texture2D tL, Texture2D tR)
 		{
 			if (MediaDecoder.Instance.TextureReleased) return;
 
@@ -151,9 +105,9 @@ namespace PlayerUI.Oculus
 
 		}
 
-		private static void Render()
+		private void Render()
 		{
-			_playbackLock = true;
+			Lock = true;
 
 			Wrap oculus = new Wrap();
 			Hmd hmd;
@@ -435,7 +389,7 @@ namespace PlayerUI.Oculus
 
 					//Vector3 vmvp = viewMatrix.TranslationVector;
 
-					Matrix projectionMatrix = oculus.Matrix4f_Projection(eyeTexture.FieldOfView, 0.1f, 100.0f, OVRTypes.ProjectionModifier.LeftHanded).ToMatrix().LeftToRightHanded();
+					Matrix projectionMatrix = oculus.Matrix4f_Projection(eyeTexture.FieldOfView, 0.1f, 100.0f, OVRTypes.ProjectionModifier.LeftHanded).ToMatrix();
 					projectionMatrix.Transpose();
 
 					//float fov = eyeTexture.FieldOfView.LeftTan + eyeTexture.FieldOfView.RightTan;
@@ -528,11 +482,11 @@ namespace PlayerUI.Oculus
 			hmd.Dispose();
 			oculus.Dispose();
 
-			_playbackLock = false;
+			Lock = false;
 		}
 
 
-		public static void WriteErrorDetails(Wrap oculus, OVRTypes.Result result, string message)
+		void WriteErrorDetails(Wrap oculus, OVRTypes.Result result, string message)
 		{
 			if (result >= OVRTypes.Result.Success)
 				return;

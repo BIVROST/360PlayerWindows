@@ -1,7 +1,7 @@
 ﻿using Caliburn.Micro;
 using PlayerUI.ConfigUI;
 using PlayerUI;
-using PlayerUI.Oculus;
+//using PlayerUI.Oculus;
 using PlayerUI.Tools;
 using PlayerUI.WPF;
 using System;
@@ -103,8 +103,15 @@ namespace PlayerUI
 
 		public NotificationCenterViewModel NotificationCenter { get; set; }
 
+		Oculus.OculusPlayback OculusPlayback;
+		OSVRKit.OSVRPlayback OSVRPlayback;
+
+
 		public ShellViewModel()
 		{
+			OculusPlayback = new Oculus.OculusPlayback();
+			OSVRPlayback = new OSVRKit.OSVRPlayback();
+
 			ShellViewModel.Instance = this;
 
 			var currentParser = Parser.CreateTrigger;
@@ -160,7 +167,7 @@ namespace PlayerUI
 					if (!lockSlider)
 					{
 						OculusPlayback.UpdateTime((float)time);
-                        OSVRKit.OSVRPlayback.UpdateTime((float)time);
+                        OSVRPlayback.UpdateTime((float)time);
                         CurrentPosition = (new TimeSpan(0, 0, (int)Math.Floor(time))).ToString();
 						_timeValue = time;
 						NotifyOfPropertyChange(() => TimeValue);
@@ -389,7 +396,7 @@ namespace PlayerUI
                 }
             });
 
-            OSVRKit.OSVRPlayback.OnGotFocus += () => Task.Factory.StartNew(() => {
+            OSVRPlayback.OnGotFocus += () => Task.Factory.StartNew(() => {
                 Execute.OnUIThreadAsync(() =>
                 {
                     shellView.Activate();
@@ -695,19 +702,19 @@ namespace PlayerUI
 
 					Task.Factory.StartNew(() =>
 					{
-                        while(OculusPlayback.Lock || OSVRKit.OSVRPlayback.Lock)
+                        while(OculusPlayback.Lock || OSVRPlayback.Lock)
                         {
                             Thread.Sleep(50);
                         }
 
 						OculusPlayback.Reset();
-						OSVRKit.OSVRPlayback.Reset();
+						OSVRPlayback.Reset();
 
 						bool detected = false;
 
 						if (this.HeadsetUsage == HeadsetMode.Auto || this.HeadsetUsage == HeadsetMode.Oculus)
 						{
-							if (OculusPlayback.IsOculusPresent())
+							if (OculusPlayback.IsPresent())
 							{
 								detected = true;
 								Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Oculus Rift detected. Starting VR playback...")));
@@ -730,15 +737,15 @@ namespace PlayerUI
 						if(!detected)
 						if (this.HeadsetUsage == HeadsetMode.Auto || this.HeadsetUsage == HeadsetMode.OSVR)
 						{
-							if (OSVRKit.OSVRPlayback.IsOculusPresent())
+							if (OSVRPlayback.IsPresent())
 							{
 								Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("OSVR detected. Starting VR playback...")));
-								OSVRKit.OSVRPlayback.textureL = _mediaDecoder.TextureL;
-								OSVRKit.OSVRPlayback.textureR = _mediaDecoder.TextureR;
-								OSVRKit.OSVRPlayback._stereoVideo = _mediaDecoder.IsStereoRendered;
-								OSVRKit.OSVRPlayback._projection = _mediaDecoder.Projection;
-								OSVRKit.OSVRPlayback.Configure(SelectedFileNameLabel, (float)_mediaDecoder.Duration);
-								OSVRKit.OSVRPlayback.Start();
+								OSVRPlayback.textureL = _mediaDecoder.TextureL;
+								OSVRPlayback.textureR = _mediaDecoder.TextureR;
+								OSVRPlayback._stereoVideo = _mediaDecoder.IsStereoRendered;
+								OSVRPlayback._projection = _mediaDecoder.Projection;
+								OSVRPlayback.Configure(SelectedFileNameLabel, (float)_mediaDecoder.Duration);
+								OSVRPlayback.Start();
                                     ShellViewModel.SendEvent("headsetConnected", "osvr");
                                 } else
 							{
@@ -893,7 +900,7 @@ namespace PlayerUI
             });
             			
 			OculusPlayback.Pause();
-            OSVRKit.OSVRPlayback.Pause();
+            OSVRPlayback.Pause();
 		}
 
 		public void UnPause()
@@ -909,7 +916,7 @@ namespace PlayerUI
                 NotifyOfPropertyChange(() => CanPlay);
                 AnimateIndicator(shellView.PlayIndicator);
                 OculusPlayback.UnPause();
-                OSVRKit.OSVRPlayback.UnPause();
+                OSVRPlayback.UnPause();
             });			
         }
 
@@ -1047,7 +1054,7 @@ namespace PlayerUI
 			this.DXCanvas.Scene = null;
 
 			OculusPlayback.Stop();
-			OSVRKit.OSVRPlayback.Stop();
+			OSVRPlayback.Stop();
 
             Execute.OnUIThread(() =>
 			{

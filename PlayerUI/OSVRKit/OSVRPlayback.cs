@@ -11,84 +11,40 @@ using PlayerUI.Tools;
 using SharpDX.Windows;
 using SharpDX.Direct3D;
 
+
+
 namespace PlayerUI.OSVRKit
 {
-	public partial class OSVRPlayback
-    {
-        public static Texture2D textureL;
-        public static Texture2D textureR;
-        public static float radius = 4.9f;
-        public static bool _stereoVideo = false;
-        public static MediaDecoder.ProjectionMode _projection = MediaDecoder.ProjectionMode.Sphere;
+	public class OSVRPlayback : Headset
+	{
 
-        public static ManualResetEvent waitForRendererStop = new ManualResetEvent(false);
-        public static bool abort = false;
-        public static bool pause = false;
 
-        private static float uiOpacity = 0;
-        private static string movieTitle = "";
-        private static float duration = 0;
-        private static float currentTime = 0;
-
-        private static SharpDX.Toolkit.Graphics.BasicEffect basicEffectL;
-        private static SharpDX.Toolkit.Graphics.BasicEffect basicEffectR;
-
-        private static bool _playbackLock = false;
-        public static bool Lock { get { return _playbackLock; } }
-		private static object localCritical = new object();
-
-        public static void Start()
+        
+        override public void Start()
         {
             abort = false;
             pause = false;
             waitForRendererStop.Reset();
-            if (_playbackLock)
+            if (Lock)
                 return;
             Task.Factory.StartNew(() =>
             {
                 try
                 {
                     Render();
-					_playbackLock = false;
+					Lock = false;
 				}
-                catch (Exception) { _playbackLock = false; }
+                catch (Exception) { Lock = false; }
             });
         }
 
 
-        public static void Pause()
-        {
-            vrui?.EnqueueUIRedraw();
-            pause = true;
-        }
-        public static void UnPause() { pause = false; }
 
-        public static void UpdateTime(float time)
-        {
-			vrui?.EnqueueUIRedraw();
-			currentTime = time;
-        }
 
-        public static void Configure(string title, float movieDuration)
-        {
-            movieTitle = title;
-            duration = movieDuration;
-        }
+		bool _preloaded = false;
+		int _selectedOutput = 0;
 
-        public static void Stop()
-        {
-            abort = true;
-        }
-
-		public static void Reset()
-		{
-			abort = false;
-		}
-
-		private static bool _preloaded = false;
-		private static int _selectedOutput = 0;
-
-        public static bool IsOculusPresent()
+        override public bool IsPresent()
         {
 			if (!_preloaded)
 			{
@@ -96,7 +52,7 @@ namespace PlayerUI.OSVRKit
 				_preloaded = true;
 			}
 
-            if (_playbackLock) return true;
+            if (Lock) return true;
 			int mainRetry = 3;
 
 			do
@@ -146,11 +102,10 @@ namespace PlayerUI.OSVRKit
             return false;
         }
 
-		private static SharpDX.Toolkit.Graphics.GraphicsDevice _gd;
-		private static Device _device;
-		private static VRUI vrui;
+		SharpDX.Toolkit.Graphics.GraphicsDevice _gd;
+		Device _device;
 
-		static void ResizeTexture(Texture2D tL, Texture2D tR)
+		void ResizeTexture(Texture2D tL, Texture2D tR)
 		{
 			if (MediaDecoder.Instance.TextureReleased) return;
 			
@@ -189,9 +144,9 @@ namespace PlayerUI.OSVRKit
 			
 		}
 
-		private static void Render()
+		void Render()
         {
-            _playbackLock = true;
+			Lock = true;
 
 			//Wrap oculus = new Wrap();
 			//Hmd hmd;
@@ -212,7 +167,7 @@ namespace PlayerUI.OSVRKit
 				if (abort)
 				{
 					context.Dispose();
-					_playbackLock = false;
+					Lock = false;
 					return;
 				}
 
@@ -237,7 +192,7 @@ namespace PlayerUI.OSVRKit
 						if (abort)
 						{
 							context.Dispose();
-							_playbackLock = false;
+							Lock = false;
 							return;
 						}
 						Thread.Sleep(1);
@@ -248,7 +203,7 @@ namespace PlayerUI.OSVRKit
 			if(displayConfig == null)
 			{
 				context.Dispose();
-				_playbackLock = false;
+				Lock = false;
 				return;
 			}
 
@@ -256,7 +211,7 @@ namespace PlayerUI.OSVRKit
             if (numDisplayInputs != 1)
 			{
 				context.Dispose();
-				_playbackLock = false;
+				Lock = false;
 				return;
 			}
 
@@ -266,7 +221,7 @@ namespace PlayerUI.OSVRKit
             if (numViewers != 1)
 			{
 				context.Dispose();
-				_playbackLock = false;
+				Lock = false;
 				return;
 			}
 
@@ -366,7 +321,7 @@ namespace PlayerUI.OSVRKit
 				else
 				{
 					context.Dispose();
-					_playbackLock = false;
+					Lock = false;
 					return;
 				}
 
@@ -620,10 +575,10 @@ namespace PlayerUI.OSVRKit
 			displayConfig.Dispose();
 			context.Dispose();
 
-			_playbackLock = false;
+			Lock = false;
 		}
 
-        public static event Action OnGotFocus = delegate {};
+        public event Action OnGotFocus = delegate {};
 
     }
 }
