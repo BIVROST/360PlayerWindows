@@ -19,6 +19,7 @@ using System.Runtime.InteropServices;
 using PlayerUI.Tools;
 using SharpDX.Windows;
 using SharpDX.Direct3D;
+using PlayerUI.Oculus;
 
 namespace PlayerUI.OSVRKit
 {
@@ -67,7 +68,7 @@ namespace PlayerUI.OSVRKit
 
         public static void Pause()
         {
-            EnqueueUIRedraw();
+            vrui?.EnqueueUIRedraw();
             pause = true;
         }
         public static void UnPause() { pause = false; }
@@ -156,6 +157,7 @@ namespace PlayerUI.OSVRKit
 
 		private static SharpDX.Toolkit.Graphics.GraphicsDevice _gd;
 		private static Device _device;
+		private static VRUI vrui;
 
 		static void ResizeTexture(Texture2D tL, Texture2D tR)
 		{
@@ -298,43 +300,6 @@ namespace PlayerUI.OSVRKit
             };
 
             SwapChain swapChain;
-
-
-            //// Initialize the Oculus runtime.
-            //bool success = oculus.Initialize();
-            //if (!success)
-            //{
-            //    MessageBox.Show("Failed to initialize the Oculus runtime library.", "Uh oh", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            //    return;
-            //}
-
-            // Use the head mounted display, if it's available, otherwise use the debug HMD.
-            //int numberOfHeadMountedDisplays = oculus.Hmd_Detect();
-            //if (numberOfHeadMountedDisplays > 0)
-            //	hmd = oculus.Hmd_Create(0);
-            //else
-            //	hmd = oculus.Hmd_CreateDebug(OculusWrap.OVR.HmdType.DK2);
-            //OVR.GraphicsLuid graphicsLuid;
-            //hmd = oculus.Hmd_Create(out graphicsLuid);
-
-            //if (hmd == null)
-            //{
-            //    MessageBox.Show("Oculus Rift not detected.", "Uh oh", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            //    return;
-            //}
-
-            //if (hmd.ProductName == string.Empty)
-            //    MessageBox.Show("The HMD is not enabled.", "There's a tear in the Rift", MessageBoxButtons.OK, MessageBoxIcon.Error);
-
-            //// Specify which head tracking capabilities to enable.
-            //hmd.SetEnabledCaps(OVR.HmdCaps.DebugDevice);
-
-            //// Start the sensor which informs of the Rift's pose and motion
-            //hmd.ConfigureTracking(OVR.TrackingCaps.Orientation | OVR.TrackingCaps.MagYawCorrection, OVR.TrackingCaps.None);
-
-            // Create a set of layers to submit.
-            //EyeTexture[] eyeTextures = new EyeTexture[2];
-            //OVR.ovrResult result;
 
             // Create DirectX drawing device.
             //SharpDX.Direct3D11.Device device = new Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.BgraSupport, new SharpDX.Direct3D.FeatureLevel[] { SharpDX.Direct3D.FeatureLevel.Level_10_0 });
@@ -497,9 +462,9 @@ namespace PlayerUI.OSVRKit
 			var primitive = GraphicTools.CreateGeometry(_projection, gd);
 
 
-            // UI Rendering
-            InitUI(device, gd);
-            DrawUI();
+			// UI Rendering
+			vrui = new Oculus.VRUI(device, gd);
+			vrui.Draw(movieTitle, currentTime, duration);
 
 
             //Oculus.OculusUIDebug debugWindow = new Oculus.OculusUIDebug();
@@ -563,59 +528,34 @@ namespace PlayerUI.OSVRKit
 
                     for (byte eye = 0; eye < numEyes; eye++)
                     {
-                        var numSurfaces = displayConfig.GetNumSurfacesForViewerEye(viewer, eye);
-                        var viewerEyePose = displayConfig.GetViewerEyePose(viewer, eye);
-                        var viewerEyeMatrixd = displayConfig.GetViewerEyeViewMatrixd(viewer, eye, MatrixConventionsFlags.Default);
-                        var viewerEyeMatrixf = displayConfig.GetViewerEyeViewMatrixf(viewer, eye, MatrixConventionsFlags.Default);
+                        uint numSurfaces = displayConfig.GetNumSurfacesForViewerEye(viewer, eye);
+                        Pose3 viewerEyePose = displayConfig.GetViewerEyePose(viewer, eye);
+                        Matrix44f viewerEyeMatrixf = displayConfig.GetViewerEyeViewMatrixf(viewer, eye, MatrixConventionsFlags.Default);
                         uint surface = 0;
-                        var viewport = displayConfig.GetRelativeViewportForViewerEyeSurface(viewer, eye, surface);
-                        var projectiond = displayConfig.GetProjectionMatrixForViewerEyeSurfaced(viewer, eye, surface, 0.001, 1000.0, MatrixConventionsFlags.Default);
-                        var projectionf = displayConfig.GetProjectionMatrixForViewerEyeSurfacef(viewer, eye, surface, 0.001f, 1000.0f, MatrixConventionsFlags.Default);
-                        var projectionClippingPlanes = displayConfig.GetViewerEyeSurfaceProjectionClippingPlanes(viewer, eye, surface);
+                        OSVR.ClientKit.Viewport viewport = displayConfig.GetRelativeViewportForViewerEyeSurface(viewer, eye, surface);
+                        Matrix44f projectionf = displayConfig.GetProjectionMatrixForViewerEyeSurfacef(viewer, eye, surface, 0.001f, 1000.0f, MatrixConventionsFlags.Default);
+                        ProjectionClippingPlanes projectionClippingPlanes = displayConfig.GetViewerEyeSurfaceProjectionClippingPlanes(viewer, eye, surface);
 
                         ViewportF vp = new ViewportF(viewport.Left, viewport.Bottom, viewport.Width, viewport.Height);
                         immediateContext.Rasterizer.SetViewport(vp);
 
-                        SharpDX.Quaternion rotationQuaternion = SharpDXHelpers.ToQuaternion(viewerEyePose.rotation);
-                        Matrix viewMatrix = Matrix.RotationQuaternion(rotationQuaternion);
-                        viewMatrix.Transpose();
+						Vector3 viewPosition = viewerEyePose.translation.ToVector3();
 
+						Matrix rotationMatrix = Matrix.RotationQuaternion(viewerEyePose.rotation.ToQuaternion());
+						Vector3 lookUp = Vector3.Transform(new Vector3(0, 1, 0), rotationMatrix).ToVector3();
+						Vector3 lookAt = Vector3.Transform(new Vector3(0, 0, -1), rotationMatrix).ToVector3();
+						Matrix viewMatrix = Matrix.LookAtRH(viewPosition, viewPosition + lookAt, lookUp);
 
-                        float fov2 = (float)(90f * Math.PI / 180f);
+						Matrix projectionMatrix = projectionf.ToMatrix();
 
-                        Matrix projectionMatrix = Matrix.PerspectiveFovRH(fov2, viewport.Width / (float)viewport.Height, 0.001f, 100.0f);
-                        //Matrix projectionMatrix = new Matrix()
-                        //{
-                        //    M11 = projectionf.M0,
-                        //    M12 = projectionf.M1,
-                        //    M13 = projectionf.M2,
-                        //    M14 = projectionf.M3,
-                        //    M21 = projectionf.M4,
-                        //    M22 = projectionf.M5,
-                        //    M23 = projectionf.M6,
-                        //    M24 = projectionf.M7,
-                        //    M31 = projectionf.M8,
-                        //    M32 = projectionf.M9,
-                        //    M33 = projectionf.M10,
-                        //    M34 = projectionf.M11,
-                        //    M41 = projectionf.M12,
-                        //    M42 = projectionf.M13,
-                        //    M43 = projectionf.M14,
-                        //    M44 = projectionf.M15,
-                        //};
-
-                        basicEffectL.World = Matrix.Identity;
-                        basicEffectL.View = viewMatrix;
+						basicEffectL.World = Matrix.Translation(viewPosition);
+						basicEffectL.View = viewMatrix;
                         basicEffectL.Projection = projectionMatrix;
-
-                        uiEffect.World = Matrix.Identity * Matrix.Scaling(1f) * Matrix.Translation(0, 0, -1.5f);
-                        uiEffect.View = viewMatrix;
-                        uiEffect.Projection = projectionMatrix;
 
                         if (_stereoVideo)
                         {
-                            basicEffectR.World = Matrix.Identity;
-                            basicEffectR.View = viewMatrix;
+                            basicEffectR.World = Matrix.Translation(viewPosition);
+							basicEffectR.View = viewMatrix;
                             basicEffectR.Projection = projectionMatrix;
                         }
 
@@ -632,13 +572,16 @@ namespace PlayerUI.OSVRKit
 								primitive.Draw(basicEffectL);
 						}
 
-						DrawUI();
-                        RenderUI(deltaTime);
+						// reset UI position every frame if it is not visible
+						if (vrui.isUIHidden)
+							vrui.SetWorldPosition(viewMatrix.Forward, viewPosition, true);
 
-                    }
+						vrui.Draw(movieTitle, currentTime, duration);
+						vrui.Render(deltaTime, viewMatrix, projectionMatrix, viewPosition, pause);
+					}
 
 
-                }
+				}
 
                 swapChain.Present(0, PresentFlags.None);
             });
@@ -674,7 +617,8 @@ namespace PlayerUI.OSVRKit
 				basicEffectR.Dispose();
 
 
-			DisposeUI();
+			vrui.Dispose();
+			vrui = null;
 
 			// Disposing the device, before the hmd, will cause the hmd to fail when disposing.
 			// Disposing the device, after the hmd, will cause the dispose of the device to fail.
@@ -694,18 +638,5 @@ namespace PlayerUI.OSVRKit
 
         public static event Action OnGotFocus = delegate {};
 
-        //public static void WriteErrorDetails(Wrap oculus, OVR.ovrResult result, string message)
-        //{
-        //    if (result >= OVR.ovrResult.Success)
-        //        return;
-
-        //    // Retrieve the error message from the last occurring error.
-        //    OVR.ovrErrorInfo errorInformation = oculus.GetLastError();
-
-        //    string formattedMessage = string.Format("{0}. Message: {1} (Error code={2})", message, errorInformation.ErrorString, errorInformation.Result);
-        //    Trace.WriteLine(formattedMessage);
-
-        //    throw new Exception(formattedMessage);
-        //}
     }
 }

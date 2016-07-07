@@ -13,7 +13,7 @@ namespace PlayerUI.Oculus
 		Texture2DDescription uiTextureDescription;
 		Texture2D uiTexture;
 		SharpDX.DXGI.Surface uiSurface;
-		SharpDX.Toolkit.Graphics.BasicEffect uiEffect;
+		public SharpDX.Toolkit.Graphics.BasicEffect uiEffect;
 
 		BlendStateDescription blendStateDescription;
 		SharpDX.Toolkit.Graphics.BlendState blendState;
@@ -186,7 +186,7 @@ namespace PlayerUI.Oculus
 			// { 1    for d >= uiDistanceFade
 			float dot;
 			Vector3.Dot(ref uiPlane.Normal, ref viewPosition, out dot);
-			float d = dot - uiPlane.D;
+			float d = Math.Abs(dot - uiPlane.D);
 			float overrideShowAlpha = (d - uiDistanceDisappear) / uiDistanceFade;
 			if (overrideShowAlpha < 0) overrideShowAlpha = 0;
 			else if (overrideShowAlpha > 1) overrideShowAlpha = 1;
@@ -195,7 +195,7 @@ namespace PlayerUI.Oculus
 
 			if (uiEffect.Alpha > 0)
 				uiPrimitive.Draw(uiEffect);
-		}
+		}	
 
 
 		public void Dispose()
@@ -219,10 +219,14 @@ namespace PlayerUI.Oculus
 
 		Plane uiPlane = new Plane(1);
 
-		internal void SetWorldPosition(Vector3 forward, Vector3 viewPosition)
+		internal void SetWorldPosition(Vector3 forward, Vector3 viewPosition, bool reverseDistance)
 		{
 			float yaw = (float)(Math.PI - Math.Atan2(forward.X, forward.Z));
-			uiEffect.World = Matrix.Identity * Matrix.Scaling(1f) * Matrix.Translation(0, 0, uiDistanceStart) * Matrix.RotationAxis(Vector3.Up, yaw) * Matrix.Translation(viewPosition);
+			uiEffect.World = Matrix.Identity * Matrix.Scaling(1f) * Matrix.Translation(0, 0, reverseDistance ? -uiDistanceStart : uiDistanceStart) * Matrix.RotationAxis(Vector3.Up, yaw) * Matrix.Translation(viewPosition);
+
+			//uiEffect.World = Matrix.Identity * Matrix.Scaling(1f) * Matrix.Translation(0, 0, -1.5f);
+
+
 			uiPlane = new Plane(-uiEffect.World.TranslationVector, uiEffect.World.Forward);
 		}
 	}

@@ -32,6 +32,16 @@ namespace PlayerUI
 		}
 
 		/// <summary>
+		/// Convert an Vec3 to SharpDX Vector3.
+		/// </summary>
+		/// <param name="ovrVector3f">ovrVector3f to convert to a SharpDX Vector3.</param>
+		/// <returns>SharpDX Vector3, based on the ovrVector3f.</returns>
+		public static Vector3 ToVector3(this OSVR.ClientKit.Vec3 ovrVector3f)
+		{
+			return new Vector3((float)ovrVector3f.x, (float)ovrVector3f.y, (float)ovrVector3f.z);
+		}
+
+		/// <summary>
 		/// Convert an ovrMatrix4f to a SharpDX Matrix.
 		/// </summary>
 		/// <param name="ovrMatrix4f">ovrMatrix4f to convert to a SharpDX Matrix.</param>
@@ -41,16 +51,71 @@ namespace PlayerUI
 			return new Matrix(ovrMatrix4f.M11, ovrMatrix4f.M12, ovrMatrix4f.M13, ovrMatrix4f.M14, ovrMatrix4f.M21, ovrMatrix4f.M22, ovrMatrix4f.M23, ovrMatrix4f.M24, ovrMatrix4f.M31, ovrMatrix4f.M32, ovrMatrix4f.M33, ovrMatrix4f.M34, ovrMatrix4f.M41, ovrMatrix4f.M42, ovrMatrix4f.M43, ovrMatrix4f.M44);
 		}
 
+
+		/// <summary>
+		/// Convert an OSVR Matrix44f to a SharpDX Matrix.
+		/// </summary>
+		/// <param name="ovrMatrix4f">ovrMatrix4f to convert to a SharpDX Matrix.</param>
+		/// <returns>SharpDX Matrix, based on the ovrMatrix4f.</returns>
+		public static Matrix ToMatrix(this OSVR.ClientKit.Matrix44f projectionf)
+		{
+			return new Matrix()
+			{
+				M11 = projectionf.M0,
+				M12 = projectionf.M1,
+				M13 = projectionf.M2,
+				M14 = projectionf.M3,
+				M21 = projectionf.M4,
+				M22 = projectionf.M5,
+				M23 = projectionf.M6,
+				M24 = projectionf.M7,
+				M31 = projectionf.M8,
+				M32 = projectionf.M9,
+				M33 = projectionf.M10,
+				M34 = projectionf.M11,
+				M41 = projectionf.M12,
+				M42 = projectionf.M13,
+				M43 = projectionf.M14,
+				M44 = projectionf.M15
+			};
+		}
+
+
+		/// <summary>
+		/// TODO: untested
+		/// </summary>
+		/// <param name="m"></param>
+		/// <returns></returns>
+		public static Matrix LeftToRightHanded(this Matrix m)
+		{
+			//			{ rx, ry, rz, 0 }
+			//			{ ux, uy, uz, 0 }
+			//			{ lx, ly, lz, 0 }
+			//			{ px, py, pz, 1 }
+			//			To change it from left to right or right to left, flip it like this:
+			//			{ rx, rz, ry, 0 }
+			//			{ lx, lz, ly, 0 }
+			//			{ ux, uz, uy, 0 }
+			//			{ px, pz, py, 1 }
+
+			return new Matrix(
+				m.M11, m.M13, m.M12, m.M14,
+				m.M32, m.M33, m.M32, m.M34,
+				m.M21, m.M23, m.M22, m.M24,
+				m.M41, m.M43, m.M42, m.M44
+			);
+		}
+
 		/// <summary>
 		/// Converts an ovrQuatf to a SharpDX Quaternion.
 		/// </summary>
-		public static Quaternion ToQuaternion(OVRTypes.Quaternionf ovrQuatf)
+		public static Quaternion ToQuaternion(this OVRTypes.Quaternionf ovrQuatf)
 		{
 			return new Quaternion(ovrQuatf.X, ovrQuatf.Y, ovrQuatf.Z, ovrQuatf.W);
 		}
 
 
-		public static SharpDX.Quaternion ToQuaternion(OSVR.ClientKit.Quaternion osvrQuatf)
+		public static SharpDX.Quaternion ToQuaternion(this OSVR.ClientKit.Quaternion osvrQuatf)
 		{
 			return new SharpDX.Quaternion((float)osvrQuatf.x, (float)osvrQuatf.y, (float)osvrQuatf.z, (float)osvrQuatf.w);
 		}

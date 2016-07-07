@@ -439,16 +439,20 @@ namespace PlayerUI.Oculus
 						eyePoses[eyeIndex].Position.Z
 					);
 
-					Matrix world = Matrix.Identity;
 					Matrix viewMatrix = Matrix.LookAtLH(viewPosition, viewPosition + lookAt, lookUp);
 
-					Vector3 vmvp = viewMatrix.TranslationVector;
+					//Vector3 vmvp = viewMatrix.TranslationVector;
 
-					Matrix projectionMatrix = oculus.Matrix4f_Projection(eyeTexture.FieldOfView, 0.1f, 100.0f, OVRTypes.ProjectionModifier.LeftHanded).ToMatrix();
+					Matrix projectionMatrix = oculus.Matrix4f_Projection(eyeTexture.FieldOfView, 0.1f, 100.0f, OVRTypes.ProjectionModifier.LeftHanded).ToMatrix().LeftToRightHanded();
 					projectionMatrix.Transpose();
 
-					Matrix worldViewProjection = world * viewMatrix * projectionMatrix;
-					worldViewProjection.Transpose();
+					//float fov = eyeTexture.FieldOfView.LeftTan + eyeTexture.FieldOfView.RightTan;
+					//double a = Math.Atan(eyeTexture.FieldOfView.LeftTan) * 180f / Math.PI + Math.Atan(eyeTexture.FieldOfView.RightTan) * 180f / Math.PI; ;
+					////float fov2 = (float)(a * Math.PI / 180f);
+					//float fov2 = (float)(102.57f * Math.PI / 180f);
+
+					//Matrix worldViewProjection = world * viewMatrix * projectionMatrix;
+					//worldViewProjection.Transpose();
 
 					basicEffectL.World = Matrix.Translation(viewPosition); //Matrix.Identity;
 					basicEffectL.View = viewMatrix;
@@ -475,7 +479,7 @@ namespace PlayerUI.Oculus
 
 					// reset UI position every frame if it is not visible
 					if (vrui.isUIHidden)
-						vrui.SetWorldPosition(viewMatrix.Forward, viewPosition);
+						vrui.SetWorldPosition(viewMatrix.Forward, viewPosition, false);
 
 					vrui.Draw(movieTitle, currentTime, duration);
 					vrui.Render(deltaTime, viewMatrix, projectionMatrix, viewPosition, pause);
