@@ -6,7 +6,7 @@ using Device = SharpDX.Direct3D11.Device;
 using DX2D = SharpDX.Direct2D1;
 using PlayerUI.Tools;
 
-namespace PlayerUI.Oculus
+namespace PlayerUI
 {
 	public class VRUI : IDisposable
 	{

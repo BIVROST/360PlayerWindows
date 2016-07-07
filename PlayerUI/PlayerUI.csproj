@@ -333,11 +333,10 @@
     <Compile Include="NotificationViewModel.cs" />
     <Compile Include="Oculus\EyeTexture.cs" />
     <Compile Include="Oculus\OculusPlayback.cs" />
-    <Compile Include="Oculus\OculusPlaybackUI.cs" />
+    <Compile Include="VRUI.cs" />
     <Compile Include="Oculus\OculusUIDebug.cs" />
-    <Compile Include="Oculus\SharpDXHelpers.cs" />
+    <Compile Include="SharpDXHelpers.cs" />
     <Compile Include="OSVRKit\OSVRPlayback.cs" />
-    <Compile Include="OSVRKit\OSVRPlaybackUI.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="SettingsWindowView.xaml.cs">
       <DependentUpon>SettingsWindowView.xaml</DependentUpon>

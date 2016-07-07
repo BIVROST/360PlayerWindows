@@ -1,29 +1,19 @@
 ﻿using OSVR.ClientKit;
 using SharpDX;
-using SharpDX.D3DCompiler;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-//using System.Windows;
 using System.Windows.Forms;
-using Buffer = SharpDX.Direct3D11.Buffer;
 using Device = SharpDX.Direct3D11.Device;
-using DX2D = SharpDX.Direct2D1;
-using System.Runtime.InteropServices;
 using PlayerUI.Tools;
 using SharpDX.Windows;
 using SharpDX.Direct3D;
-using PlayerUI.Oculus;
 
 namespace PlayerUI.OSVRKit
 {
-    public partial class OSVRPlayback
+	public partial class OSVRPlayback
     {
         public static Texture2D textureL;
         public static Texture2D textureR;
@@ -75,7 +65,8 @@ namespace PlayerUI.OSVRKit
 
         public static void UpdateTime(float time)
         {
-            currentTime = time;
+			vrui?.EnqueueUIRedraw();
+			currentTime = time;
         }
 
         public static void Configure(string title, float movieDuration)
@@ -463,13 +454,9 @@ namespace PlayerUI.OSVRKit
 
 
 			// UI Rendering
-			vrui = new Oculus.VRUI(device, gd);
+			vrui = new VRUI(device, gd);
 			vrui.Draw(movieTitle, currentTime, duration);
 
-
-            //Oculus.OculusUIDebug debugWindow = new Oculus.OculusUIDebug();
-            //debugWindow.SetSharedTexture(uiTexture);
-            //debugWindow.Start();
 
             #endregion
 

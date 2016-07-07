@@ -1,21 +1,13 @@
 ﻿using OculusWrap;
 using SharpDX;
-using SharpDX.D3DCompiler;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-//using System.Windows;
 using System.Windows.Forms;
-using Buffer = SharpDX.Direct3D11.Buffer;
 using Device = SharpDX.Direct3D11.Device;
-using DX2D = SharpDX.Direct2D1;
-using System.Runtime.InteropServices;
 using PlayerUI.Tools;
 
 namespace PlayerUI.Oculus
