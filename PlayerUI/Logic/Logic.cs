@@ -17,6 +17,7 @@ namespace PlayerUI
 		Auto,
 		OSVR,
 		Oculus,
+		OpenVR,
 		Disable
 	}
 

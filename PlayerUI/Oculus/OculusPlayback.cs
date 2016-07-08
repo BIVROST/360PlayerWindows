@@ -16,26 +16,6 @@ namespace PlayerUI.Oculus
 	{
 
 
-		override public void Start()
-		{
-			abort = false;
-			pause = false;
-			waitForRendererStop.Reset();
-			if (Lock)
-				return;
-			Task.Factory.StartNew(() =>
-			{
-				try
-				{
-					Render();
-				}
-				catch (Exception exc) {
-					Console.WriteLine("[EXC] " + exc.Message);
-				}
-			});
-		}
-
-
 		override public bool IsPresent()
 		{
 			if (Lock) return true;
@@ -63,49 +43,9 @@ namespace PlayerUI.Oculus
 		}
 
 
-		SharpDX.Toolkit.Graphics.GraphicsDevice _gd;
-		Device _device;
+		
 
-		void ResizeTexture(Texture2D tL, Texture2D tR)
-		{
-			if (MediaDecoder.Instance.TextureReleased) return;
-
-			var tempL = textureL;
-			var tempR = textureR;
-
-			lock (localCritical)
-			{
-				basicEffectL.Texture?.Dispose();
-				textureL = tL;
-
-				if (_stereoVideo)
-				{
-					basicEffectR.Texture?.Dispose();
-					textureR = tR;
-				}
-
-
-
-				var resourceL = textureL.QueryInterface<SharpDX.DXGI.Resource>();
-				var sharedTexL = _device.OpenSharedResource<Texture2D>(resourceL.SharedHandle);
-				basicEffectL.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexL);
-				resourceL?.Dispose();
-				sharedTexL?.Dispose();
-
-				if (_stereoVideo)
-				{
-					var resourceR = textureR.QueryInterface<SharpDX.DXGI.Resource>();
-					var sharedTexR = _device.OpenSharedResource<Texture2D>(resourceR.SharedHandle);
-					basicEffectR.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexR);
-					resourceR?.Dispose();
-					sharedTexR?.Dispose();
-				}
-				//_device.ImmediateContext.Flush();
-			}
-
-		}
-
-		private void Render()
+		override protected void Render()
 		{
 			Lock = true;
 
@@ -149,7 +89,7 @@ namespace PlayerUI.Oculus
 			depthBufferDescription.Format = Format.D32_Float;
 			depthBufferDescription.ArraySize = 1;
 			depthBufferDescription.MipLevels = 1;
-			depthBufferDescription.Width = 1920;
+			depthBufferDescription.Width = 1920;	// TODO: FIXME?
 			depthBufferDescription.Height = 1080;
 			depthBufferDescription.SampleDescription = new SampleDescription(1, 0);
 			depthBufferDescription.Usage = ResourceUsage.Default;

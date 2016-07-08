@@ -333,6 +333,8 @@
     <Compile Include="NotificationViewModel.cs" />
     <Compile Include="Oculus\EyeTexture.cs" />
     <Compile Include="Oculus\OculusPlayback.cs" />
+    <Compile Include="OpenVR\OpenVRPlayback.cs" />
+    <Compile Include="OpenVR\openvr_api.cs" />
     <Compile Include="VR\Headset.cs" />
     <Compile Include="VR\VRUI.cs" />
     <Compile Include="Oculus\OculusUIDebug.cs" />
@@ -541,10 +543,16 @@
     <Content Include="Shaders\GammaShader.fx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="x64\openvr_api.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="x86\msvcp120.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="x86\msvcr120.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="x86\openvr_api.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="x86\osvr-ver.txt">

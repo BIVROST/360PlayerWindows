@@ -42,10 +42,11 @@ namespace PlayerUI
 		public string CurrentPosition { get; set; }
 		public string VideoTime { get; set; }
 		public HeadsetMode HeadsetUsage { get; set; }
-        
-		public bool IsPlaying { get { return _mediaDecoder.IsPlaying; }	}
+
+		public bool IsPlaying { get { return _mediaDecoder.IsPlaying; } }
 		public bool IsPaused { get; set; }
-		public bool Loop {
+		public bool Loop
+		{
 			get
 			{
 				return _mediaDecoder.Loop;
@@ -59,10 +60,12 @@ namespace PlayerUI
 		}
 
 		private string _selectedFileName = "";
-		public string SelectedFileNameLabel {
-			get {
+		public string SelectedFileNameLabel
+		{
+			get
+			{
 				if (!string.IsNullOrWhiteSpace(SelectedFileTitle)) return SelectedFileTitle;
-				if(!string.IsNullOrWhiteSpace(SelectedFileName))
+				if (!string.IsNullOrWhiteSpace(SelectedFileName))
 					if (SelectedFileName.ToLower().StartsWith("http")) return "web stream";
 				return Path.GetFileNameWithoutExtension(SelectedFileName);
 			}
@@ -98,19 +101,27 @@ namespace PlayerUI
 		public static string FileFromArgs = "";
 		public static string FileFromProtocol = "";
 
-        private Controller xpad;
-        private static TimeoutBool urlLoadLock = false;
+		private Controller xpad;
+		private static TimeoutBool urlLoadLock = false;
 
 		public NotificationCenterViewModel NotificationCenter { get; set; }
 
-		Oculus.OculusPlayback OculusPlayback;
-		OSVRKit.OSVRPlayback OSVRPlayback;
-
+		Oculus.OculusPlayback oculusPlayback;
+		OSVRKit.OSVRPlayback osvrPlayback;
+		OpenVR.OpenVRPlayback openVRPlayback;
+		List<Headset> headsets;
 
 		public ShellViewModel()
 		{
-			OculusPlayback = new Oculus.OculusPlayback();
-			OSVRPlayback = new OSVRKit.OSVRPlayback();
+			oculusPlayback = new Oculus.OculusPlayback();
+			osvrPlayback = new OSVRKit.OSVRPlayback();
+			openVRPlayback = new OpenVR.OpenVRPlayback();
+			headsets = new List<Headset>()
+			{
+				oculusPlayback,
+				osvrPlayback,
+				openVRPlayback
+			};
 
 			ShellViewModel.Instance = this;
 
@@ -132,19 +143,19 @@ namespace PlayerUI
 			_mediaDecoder.OnReady += (duration) =>
 			{
 				_ready = true;
-                SendEvent("movieLoaded", Path.GetFileName(SelectedFileName));
+				SendEvent("movieLoaded", Path.GetFileName(SelectedFileName));
 				if (autoplay)
 				{
 					autoplay = false;
-                    urlLoadLock = false;
-					Play();					
+					urlLoadLock = false;
+					Play();
 				}
 			};
 
 			_mediaDecoder.OnEnded += () =>
 			{
-                SendEvent("movieEnded", Path.GetFileName(SelectedFileName));
-                Task.Factory.StartNew(() =>	Execute.OnUIThread(() =>
+				SendEvent("movieEnded", Path.GetFileName(SelectedFileName));
+				Task.Factory.StartNew(() => Execute.OnUIThread(() =>
 				{
 					Stop();
 					ShowStartupUI();
@@ -154,8 +165,8 @@ namespace PlayerUI
 			_mediaDecoder.OnStop += () =>
 			{
 				Task.Factory.StartNew(() => waitForPlaybackStop.Set());
-                SendEvent("movieStopped", Path.GetFileName(SelectedFileName));
-            };
+				SendEvent("movieStopped", Path.GetFileName(SelectedFileName));
+			};
 
 			_mediaDecoder.OnTimeUpdate += (time) =>
 			{
@@ -166,9 +177,8 @@ namespace PlayerUI
 				{
 					if (!lockSlider)
 					{
-						OculusPlayback.UpdateTime((float)time);
-                        OSVRPlayback.UpdateTime((float)time);
-                        CurrentPosition = (new TimeSpan(0, 0, (int)Math.Floor(time))).ToString();
+						headsets.ForEach(h => h.UpdateTime((float)time));
+						CurrentPosition = (new TimeSpan(0, 0, (int)Math.Floor(time))).ToString();
 						_timeValue = time;
 						NotifyOfPropertyChange(() => TimeValue);
 					}
@@ -178,50 +188,50 @@ namespace PlayerUI
 
 			_mediaDecoder.OnError += (error) =>
 			{
-                urlLoadLock = false;
-                Execute.OnUIThreadAsync(() =>
+				urlLoadLock = false;
+				Execute.OnUIThreadAsync(() =>
 				{
 					NotificationCenter.PushNotification(MediaDecoderHelper.GetNotification(error));
 					SelectedFileName = null;
 					ShowStartupUI();
 				});
-                SendEvent("playbackError", error);
-            };
+				SendEvent("playbackError", error);
+			};
 
-            _mediaDecoder.OnBufferingStarted += () =>
-            {
-                Execute.OnUIThreadAsync(() =>
-                {
-                    shellView.BufferingStatus.Visibility = Visibility.Visible;
-                });
-            };
+			_mediaDecoder.OnBufferingStarted += () =>
+			{
+				Execute.OnUIThreadAsync(() =>
+				{
+					shellView.BufferingStatus.Visibility = Visibility.Visible;
+				});
+			};
 
-            _mediaDecoder.OnBufferingEnded += () =>
-            {
-                Execute.OnUIThreadAsync(() =>
-                {
-                    shellView.BufferingStatus.Visibility = Visibility.Collapsed;
-                });                
-            };
+			_mediaDecoder.OnBufferingEnded += () =>
+			{
+				Execute.OnUIThreadAsync(() =>
+				{
+					shellView.BufferingStatus.Visibility = Visibility.Collapsed;
+				});
+			};
 
-            _mediaDecoder.OnProgress += (progress) =>
-            {
-                Execute.OnUIThreadAsync(() =>
-                {
-                    shellView.BufferingStatus.Text = $"Buffering... {progress}";
-                });
-            };
+			_mediaDecoder.OnProgress += (progress) =>
+			{
+				Execute.OnUIThreadAsync(() =>
+				{
+					shellView.BufferingStatus.Text = $"Buffering... {progress}";
+				});
+			};
 
 
-            UpdateTimeLabel();
+			UpdateTimeLabel();
 
 			VolumeRocker = new VolumeControlViewModel();
 			VolumeRocker.Volume = 0.5;
 			VolumeRocker.OnVolumeChange += (volume) =>
 			{
 				_mediaDecoder.SetVolume(volume);
-                ShellViewModel.SendEvent("volumeChanged", volume);
-            };
+				ShellViewModel.SendEvent("volumeChanged", volume);
+			};
 
 			HeadsetMenu = new HeadsetMenuViewModel();
 			HeadsetMenu.OnAuto += () => Task.Factory.StartNew(() =>
@@ -239,6 +249,11 @@ namespace PlayerUI
 				Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("OSVR playback selected.")));
 				this.HeadsetUsage = HeadsetMode.OSVR;
 			});
+			HeadsetMenu.OnVive += () => Task.Factory.StartNew(() =>
+			{
+				Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("OpenVR playback selected.")));
+				this.HeadsetUsage = HeadsetMode.OpenVR;
+			});
 			HeadsetMenu.OnDisable += () => Task.Factory.StartNew(() =>
 			{
 				Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Headset playback disabled.")));
@@ -248,32 +263,34 @@ namespace PlayerUI
 
 
 			this.HeadsetUsage = Logic.Instance.settings.HeadsetUsage;
-			
+
 
 			Logic.Instance.OnUpdateAvailable += () => Execute.OnUIThreadAsync(() =>
 			{
 				NotificationCenter.PushNotification(
 					new NotificationViewModel(
 						"A new version of Bivrost 360Player is available.",
-						() => {
-							Updater.OnUpdateFail += 
+						() =>
+						{
+							Updater.OnUpdateFail +=
 								() => Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Something went wrong :(")));
 							Updater.OnUpdateSuccess +=
-								() => Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Update completed successfully.", () => {
+								() => Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Update completed successfully.", () =>
+								{
 									System.Windows.Forms.Application.Restart();
 									System.Windows.Application.Current.Shutdown();
-								}, "restart", 60f )));
+								}, "restart", 60f)));
 							Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Installing update...")));
-							Task.Factory.StartNew(() => Updater.InstallUpdate());													
-                        },
+							Task.Factory.StartNew(() => Updater.InstallUpdate());
+						},
 						"install now"
 						)
 					);
 			});
 
-            Logic.Instance.ValidateSettings();
+			Logic.Instance.ValidateSettings();
 
-        }
+		}
 
 
 		private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
@@ -284,10 +301,10 @@ namespace PlayerUI
 				BringToFront();
 				handled = true;
 			}
-			if(msg == NativeMethods.WM_COPYDATA)
-			{				
+			if (msg == NativeMethods.WM_COPYDATA)
+			{
 				NativeMethods.COPYDATASTRUCT cps = (NativeMethods.COPYDATASTRUCT)System.Runtime.InteropServices.Marshal.PtrToStructure(lParam, typeof(NativeMethods.COPYDATASTRUCT));
-				string data = cps.lpData;				
+				string data = cps.lpData;
 
 				BringToFront(data);
 				handled = true;
@@ -318,92 +335,97 @@ namespace PlayerUI
 						case Protocol.Stereoscopy.top_and_bottom_reversed: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.TopBottomReversed; break;
 					}
 					Loop = protocol.loop.HasValue ? protocol.loop.Value : false;
-					string videoUrl = protocol.urls.FirstOrDefault((u) => {
-                        var b1 = Regex.IsMatch(u, @"(\b|_).mp4(\b|_)");
-                        var b2 = Regex.IsMatch(u, @"(\b|_).avi(\b|_)");
-                        return b1 || b2;
-                    });
+					string videoUrl = protocol.urls.FirstOrDefault((u) =>
+					{
+						var b1 = Regex.IsMatch(u, @"(\b|_).mp4(\b|_)");
+						var b2 = Regex.IsMatch(u, @"(\b|_).avi(\b|_)");
+						return b1 || b2;
+					});
 					if (string.IsNullOrWhiteSpace(videoUrl))
 						videoUrl = protocol.urls[0];
 					OpenUrlFrom(videoUrl);
 				}
 				catch (Exception) { }
-				
-			} else
+
+			}
+			else
 			{
 				OpenFileFrom(clipboardText);
 			}
 		}
 
-        protected override void OnViewLoaded(object view)
-        {
-            base.OnViewLoaded(view);
+		protected override void OnViewLoaded(object view)
+		{
+			base.OnViewLoaded(view);
 
-            HwndSource source = HwndSource.FromHwnd(new WindowInteropHelper(playerWindow).Handle);
-            source.AddHook(new HwndSourceHook(WndProc));
+			HwndSource source = HwndSource.FromHwnd(new WindowInteropHelper(playerWindow).Handle);
+			source.AddHook(new HwndSourceHook(WndProc));
 
 			this.DXCanvas.StopRendering();
 
-            shellView.BufferingStatus.Visibility = Visibility.Collapsed;
+			shellView.BufferingStatus.Visibility = Visibility.Collapsed;
 
-            UpdateRecents();
-            ShowStartupUI();
+			UpdateRecents();
+			ShowStartupUI();
 
-            xpad = new Controller(SharpDX.XInput.UserIndex.One);
+			xpad = new Controller(SharpDX.XInput.UserIndex.One);
 
-            if (File.Exists(FileFromArgs))
-            {
-                OpenFileFrom(FileFromArgs);
-                //IsFileSelected = true;
-                //SelectedFileName = FileFromArgs;
-                //Play();
-                //Task.Factory.StartNew(() => Execute.OnUIThread(() => {
-                //	Recents.AddRecent(SelectedFileName);
-                //	UpdateRecents();
-                //	ShowPlaybackUI();
-                //}));
-            }
+			if (File.Exists(FileFromArgs))
+			{
+				OpenFileFrom(FileFromArgs);
+				//IsFileSelected = true;
+				//SelectedFileName = FileFromArgs;
+				//Play();
+				//Task.Factory.StartNew(() => Execute.OnUIThread(() => {
+				//	Recents.AddRecent(SelectedFileName);
+				//	UpdateRecents();
+				//	ShowPlaybackUI();
+				//}));
+			}
 
 			//FileFromProtocol = @"bivrost:https://www.youtube.com/watch?v=edcJ_JNeyhg";
 
-			Task.Factory.StartNew(() => {
-                if (!string.IsNullOrWhiteSpace(FileFromProtocol))
-                {
-                    try
-                    {
-                        var protocol = Protocol.Parse(FileFromProtocol);
+			Task.Factory.StartNew(() =>
+			{
+				if (!string.IsNullOrWhiteSpace(FileFromProtocol))
+				{
+					try
+					{
+						var protocol = Protocol.Parse(FileFromProtocol);
 
 						switch (protocol.stereoscopy)
-                        {
-                            case Protocol.Stereoscopy.autodetect: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.Autodetect; break;
-                            case Protocol.Stereoscopy.mono: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.Mono; break;
-                            case Protocol.Stereoscopy.side_by_side: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.SideBySide; break;
-                            case Protocol.Stereoscopy.top_and_bottom: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.TopBottom; break;
-                            case Protocol.Stereoscopy.top_and_bottom_reversed: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.TopBottomReversed; break;
-                        }
-                        Loop = protocol.loop.HasValue ? protocol.loop.Value : false;
-                        string videoUrl = protocol.urls.FirstOrDefault((u) => {
-                            var b1 = Regex.IsMatch(u, @"(\b|_).mp4(\b|_)");
-                            var b2 = Regex.IsMatch(u, @"(\b|_).avi(\b|_)");
-                            return b1 || b2;
-                        });
-                        if (string.IsNullOrWhiteSpace(videoUrl))
-                            videoUrl = protocol.urls[0];
+						{
+							case Protocol.Stereoscopy.autodetect: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.Autodetect; break;
+							case Protocol.Stereoscopy.mono: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.Mono; break;
+							case Protocol.Stereoscopy.side_by_side: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.SideBySide; break;
+							case Protocol.Stereoscopy.top_and_bottom: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.TopBottom; break;
+							case Protocol.Stereoscopy.top_and_bottom_reversed: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.TopBottomReversed; break;
+						}
+						Loop = protocol.loop.HasValue ? protocol.loop.Value : false;
+						string videoUrl = protocol.urls.FirstOrDefault((u) =>
+						{
+							var b1 = Regex.IsMatch(u, @"(\b|_).mp4(\b|_)");
+							var b2 = Regex.IsMatch(u, @"(\b|_).avi(\b|_)");
+							return b1 || b2;
+						});
+						if (string.IsNullOrWhiteSpace(videoUrl))
+							videoUrl = protocol.urls[0];
 
 						OpenUrlFrom(videoUrl);
-                    }
-                    catch (Exception) { }
-                }
-            });
+					}
+					catch (Exception) { }
+				}
+			});
 
-            OSVRPlayback.OnGotFocus += () => Task.Factory.StartNew(() => {
-                Execute.OnUIThreadAsync(() =>
-                {
-                    shellView.Activate();
-                });
-            }); 
+			osvrPlayback.OnGotFocus += () => Task.Factory.StartNew(() =>
+			{
+				Execute.OnUIThreadAsync(() =>
+				{
+					shellView.Activate();
+				});
+			});
 
-			
+
 
 			//Task.Factory.StartNew(() =>
 			//{
@@ -415,8 +437,8 @@ namespace PlayerUI
 			//});
 
 			Logic.Instance.CheckForUpdate();
-            Logic.Instance.CheckForBrowsers();
-            Logic.Instance.stats.TrackScreen("Start screen");
+			Logic.Instance.CheckForBrowsers();
+			Logic.Instance.stats.TrackScreen("Start screen");
 			Logic.Instance.stats.TrackEvent("Application events", "Init", "Player launched");
 
 			//LegacyTest();
@@ -456,7 +478,7 @@ namespace PlayerUI
 
 		}
 
-		
+
 
 		private void Log(string message, ConsoleColor color)
 		{
@@ -501,9 +523,9 @@ namespace PlayerUI
 			if (Logic.Instance.settings.StartInFullScreen)
 				ToggleFullscreen(true);
 			if (Logic.Instance.settings.AutoLoad)
-				if(!string.IsNullOrWhiteSpace(Logic.Instance.settings.AutoPlayFile))
+				if (!string.IsNullOrWhiteSpace(Logic.Instance.settings.AutoPlayFile))
 				{
-					if(File.Exists(Logic.Instance.settings.AutoPlayFile))
+					if (File.Exists(Logic.Instance.settings.AutoPlayFile))
 					{
 						SelectedFileName = Logic.Instance.settings.AutoPlayFile.Trim();
 						LoadMedia();
@@ -517,9 +539,9 @@ namespace PlayerUI
 			uiVisibilityBackgrundChecker.WorkerSupportsCancellation = true;
 			uiVisibilityBackgrundChecker.DoWork += (sender, parameters) =>
 			{
-                bool xpadRestart = false;
+				bool xpadRestart = false;
 
-				while(!ended || uiVisibilityBackgrundChecker.CancellationPending)
+				while (!ended || uiVisibilityBackgrundChecker.CancellationPending)
 				{
 
 					if ((DateTime.Now - lastUIMove).TotalSeconds > 2)
@@ -530,7 +552,7 @@ namespace PlayerUI
 							{
 								uiVisible = false;
 								HideBars();
-							}	
+							}
 						}
 					}
 
@@ -540,26 +562,26 @@ namespace PlayerUI
 							Execute.OnUIThread(() => Mouse.OverrideCursor = Cursors.None);
 					}
 
-                    if(xpad!=null)
-                        if(xpad.IsConnected)
-                        {
-                            if (this.DXCanvas.Scene == null)
-                            {
-                                if (IsFileSelected)
-                                {
-                                    if (xpad.GetState().Gamepad.Buttons == GamepadButtonFlags.Y && !xpadRestart)
-                                    {
-                                        xpadRestart = true;
-                                        if (!_mediaDecoder.IsPlaying)
-                                            PlayPause();
-                                        else
-                                            Rewind();
-                                    }
-                                    else xpadRestart = false;
-                                }
-                                else xpadRestart = false;
-                            }
-                        }
+					if (xpad != null)
+						if (xpad.IsConnected)
+						{
+							if (this.DXCanvas.Scene == null)
+							{
+								if (IsFileSelected)
+								{
+									if (xpad.GetState().Gamepad.Buttons == GamepadButtonFlags.Y && !xpadRestart)
+									{
+										xpadRestart = true;
+										if (!_mediaDecoder.IsPlaying)
+											PlayPause();
+										else
+											Rewind();
+									}
+									else xpadRestart = false;
+								}
+								else xpadRestart = false;
+							}
+						}
 
 					Thread.Sleep(100);
 				}
@@ -577,7 +599,7 @@ namespace PlayerUI
 		{
 			Execute.OnUIThread(() => Mouse.OverrideCursor = null);
 			lastCursorMove = DateTime.Now;
-            if (!IsPlaying || (IsPlaying && IsPaused))
+			if (!IsPlaying || (IsPlaying && IsPaused))
 			{
 				lastUIMove = DateTime.Now;
 				if (!uiVisible)
@@ -585,11 +607,13 @@ namespace PlayerUI
 					uiVisible = true;
 					ShowBars();
 				}
-			} else
-			if(IsPlaying && !IsPaused) {
+			}
+			else
+			if (IsPlaying && !IsPaused)
+			{
 				double height = shellView.ActualHeight;
 				double Y = e.GetPosition(null).Y;
-				if(!Fullscreen || (height - Y) < 120)
+				if (!Fullscreen || (height - Y) < 120)
 				{
 					lastUIMove = DateTime.Now;
 					if (!uiVisible)
@@ -598,7 +622,7 @@ namespace PlayerUI
 						ShowBars();
 					}
 				}
-			}			
+			}
 		}
 
 
@@ -624,15 +648,15 @@ namespace PlayerUI
 
 				_timeValue = value;
 
-                if (!lockSlider)
-                {
-                    _mediaDecoder.Seek(value);
-                }
-                else
-                {
-                    CurrentPosition = (new TimeSpan(0, 0, (int)Math.Floor(_timeValue))).ToString();
-                    NotifyOfPropertyChange(() => CurrentPosition);
-                }
+				if (!lockSlider)
+				{
+					_mediaDecoder.Seek(value);
+				}
+				else
+				{
+					CurrentPosition = (new TimeSpan(0, 0, (int)Math.Floor(_timeValue))).ToString();
+					NotifyOfPropertyChange(() => CurrentPosition);
+				}
 			}
 		}
 
@@ -673,158 +697,180 @@ namespace PlayerUI
 
 			if (!_ready) return;
 
-				Execute.OnUIThreadAsync(() =>
-				{
-					ShowPlaybackUI();
-					TimeValue = 0;
-					MaxTime = _mediaDecoder.Duration;
-					VideoLength = (new TimeSpan(0, 0, (int)Math.Floor(_mediaDecoder.Duration))).ToString();
-					UpdateTimeLabel();
+			Execute.OnUIThreadAsync(() =>
+			{
+				ShowPlaybackUI();
+				TimeValue = 0;
+				MaxTime = _mediaDecoder.Duration;
+				VideoLength = (new TimeSpan(0, 0, (int)Math.Floor(_mediaDecoder.Duration))).ToString();
+				UpdateTimeLabel();
 					//DisplayName = DisplayString + " - " + SelectedFileNameLabel;
 					DisplayName = string.Format(DisplayString, " - now playing: " + SelectedFileNameLabel);
 
-					_mediaDecoder.SetVolume(VolumeRocker.Volume);
+				_mediaDecoder.SetVolume(VolumeRocker.Volume);
 					//_mediaDecoder.Play();
 
 					//STATS
 					Logic.Instance.stats.TrackEvent("Application events", "Play", "");
 
-					Execute.OnUIThread(() =>
-					{
-						shellView.TopBar.Visibility = Visibility.Visible;
-						this.DXCanvas.Visibility = Visibility.Visible;
-					});
-
-                    this.DXCanvas.Scene = new Scene(_mediaDecoder.TextureL, _mediaDecoder.Projection) { xpad = this.xpad };
-					this.DXCanvas.StartRendering();
-
-					
-
-					Task.Factory.StartNew(() =>
-					{
-                        while(OculusPlayback.Lock || OSVRPlayback.Lock)
-                        {
-                            Thread.Sleep(50);
-                        }
-
-						OculusPlayback.Reset();
-						OSVRPlayback.Reset();
-
-						bool detected = false;
-
-						if (this.HeadsetUsage == HeadsetMode.Auto || this.HeadsetUsage == HeadsetMode.Oculus)
-						{
-							if (OculusPlayback.IsPresent())
-							{
-								detected = true;
-								Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Oculus Rift detected. Starting VR playback...")));
-								OculusPlayback.textureL = _mediaDecoder.TextureL;
-								OculusPlayback.textureR = _mediaDecoder.TextureR;
-								OculusPlayback._stereoVideo = _mediaDecoder.IsStereoRendered;
-								OculusPlayback._projection = _mediaDecoder.Projection;
-								OculusPlayback.Configure(SelectedFileNameLabel, (float)_mediaDecoder.Duration);
-								OculusPlayback.Start();
-                                ShellViewModel.SendEvent("headsetConnected", "oculus");
-                            }
-							else
-							{
-								Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Oculus Rift not detected.")));
-								Console.WriteLine("No Oculus connected");
-                                ShellViewModel.SendEvent("headsetError", "oculus");
-                            }
-						}
-
-						if(!detected)
-						if (this.HeadsetUsage == HeadsetMode.Auto || this.HeadsetUsage == HeadsetMode.OSVR)
-						{
-							if (OSVRPlayback.IsPresent())
-							{
-								Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("OSVR detected. Starting VR playback...")));
-								OSVRPlayback.textureL = _mediaDecoder.TextureL;
-								OSVRPlayback.textureR = _mediaDecoder.TextureR;
-								OSVRPlayback._stereoVideo = _mediaDecoder.IsStereoRendered;
-								OSVRPlayback._projection = _mediaDecoder.Projection;
-								OSVRPlayback.Configure(SelectedFileNameLabel, (float)_mediaDecoder.Duration);
-								OSVRPlayback.Start();
-                                    ShellViewModel.SendEvent("headsetConnected", "osvr");
-                                } else
-							{
-								Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("OSVR not detected.")));
-								Console.WriteLine("No OSVR connected");
-                                    ShellViewModel.SendEvent("headsetError", "osvr");
-                                }
-						}
-					});
-
-					_mediaDecoder.Play();
-
-					shellView.PlayPause.Visibility = Visibility.Collapsed;
-					shellView.Pause.Visibility = Visibility.Visible;
-					NotifyOfPropertyChange(null);
-					
-					playerWindow.Focus();
-					AnimateIndicator(shellView.PlayIndicator);
+				Execute.OnUIThread(() =>
+				{
+					shellView.TopBar.Visibility = Visibility.Visible;
+					this.DXCanvas.Visibility = Visibility.Visible;
 				});
-				
+
+				this.DXCanvas.Scene = new Scene(_mediaDecoder.TextureL, _mediaDecoder.Projection) { xpad = this.xpad };
+				this.DXCanvas.StartRendering();
+
+
+
+				Task.Factory.StartNew(() =>
+				{
+					while (headsets.Any(h => h.Lock))
+					{
+						Thread.Sleep(50);
+					}
+
+					headsets.ForEach(h => h.Reset());
+
+					if (this.HeadsetUsage == HeadsetMode.Auto || this.HeadsetUsage == HeadsetMode.OpenVR)
+					{
+						if (openVRPlayback.IsPresent())
+						{
+							Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("OpenVR detected. Starting VR playback...")));
+							openVRPlayback.textureL = _mediaDecoder.TextureL;
+							openVRPlayback.textureR = _mediaDecoder.TextureR;
+							openVRPlayback._stereoVideo = _mediaDecoder.IsStereoRendered;
+							openVRPlayback._projection = _mediaDecoder.Projection;
+							openVRPlayback.Configure(SelectedFileNameLabel, (float)_mediaDecoder.Duration);
+							openVRPlayback.Start();
+							ShellViewModel.SendEvent("headsetConnected", "openvr");
+							return;
+						}
+						else
+						{
+							Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("OpenVR not detected.")));
+							Console.WriteLine("No Oculus connected");
+							ShellViewModel.SendEvent("headsetError", "openvr");
+						}
+					}
+
+					if (this.HeadsetUsage == HeadsetMode.Auto || this.HeadsetUsage == HeadsetMode.Oculus)
+					{
+						if (oculusPlayback.IsPresent())
+						{
+							Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Oculus Rift detected. Starting VR playback...")));
+							oculusPlayback.textureL = _mediaDecoder.TextureL;
+							oculusPlayback.textureR = _mediaDecoder.TextureR;
+							oculusPlayback._stereoVideo = _mediaDecoder.IsStereoRendered;
+							oculusPlayback._projection = _mediaDecoder.Projection;
+							oculusPlayback.Configure(SelectedFileNameLabel, (float)_mediaDecoder.Duration);
+							oculusPlayback.Start();
+							ShellViewModel.SendEvent("headsetConnected", "oculus");
+							return;
+						}
+						else
+						{
+							Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Oculus Rift not detected.")));
+							Console.WriteLine("No Oculus connected");
+							ShellViewModel.SendEvent("headsetError", "oculus");
+						}
+					}
+
+					if (this.HeadsetUsage == HeadsetMode.Auto || this.HeadsetUsage == HeadsetMode.OSVR)
+					{
+						if (osvrPlayback.IsPresent())
+						{
+							Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("OSVR detected. Starting VR playback...")));
+							osvrPlayback.textureL = _mediaDecoder.TextureL;
+							osvrPlayback.textureR = _mediaDecoder.TextureR;
+							osvrPlayback._stereoVideo = _mediaDecoder.IsStereoRendered;
+							osvrPlayback._projection = _mediaDecoder.Projection;
+							osvrPlayback.Configure(SelectedFileNameLabel, (float)_mediaDecoder.Duration);
+							osvrPlayback.Start();
+							ShellViewModel.SendEvent("headsetConnected", "osvr");
+							return;
+						}
+						else
+						{
+							Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("OSVR not detected.")));
+							Console.WriteLine("No OSVR connected");
+							ShellViewModel.SendEvent("headsetError", "osvr");
+						}
+					}
+				});
+
+				_mediaDecoder.Play();
+
+				shellView.PlayPause.Visibility = Visibility.Collapsed;
+				shellView.Pause.Visibility = Visibility.Visible;
+				NotifyOfPropertyChange(null);
+
+				playerWindow.Focus();
+				AnimateIndicator(shellView.PlayIndicator);
+			});
+
 			//});			
-        }
+		}
 
 		private void OpenUrlFrom(string url)
 		{
-            if (urlLoadLock)
-            {
-                return;
-            }                
+			if (urlLoadLock)
+			{
+				return;
+			}
 
-            urlLoadLock = true;
+			urlLoadLock = true;
 
 
-            Execute.OnUIThreadAsync(() =>
-            {
+			Execute.OnUIThreadAsync(() =>
+			{
 				SelectedFileTitle = "";
 
 				NotificationCenter.PushNotification(new NotificationViewModel("Checking url..."));
-                OpenUrlViewModel ouvm = new OpenUrlViewModel();
-                ouvm.Url = url;
-                Task.Factory.StartNew(() => {
-                    ouvm.Open();
+				OpenUrlViewModel ouvm = new OpenUrlViewModel();
+				ouvm.Url = url;
+				Task.Factory.StartNew(() =>
+				{
+					ouvm.Open();
 
-                    Execute.OnUIThreadAsync(() =>
-                    {
-                        if (ouvm.Valid)
-                        {
-                            NotificationCenter.PushNotification(new NotificationViewModel("Loading..."));
-                            if (!string.IsNullOrWhiteSpace(ouvm.VideoUrl))
-                            {
-                                SelectedFileName = ouvm.VideoUrl;
-                                IsFileSelected = true;
+					Execute.OnUIThreadAsync(() =>
+					{
+						if (ouvm.Valid)
+						{
+							NotificationCenter.PushNotification(new NotificationViewModel("Loading..."));
+							if (!string.IsNullOrWhiteSpace(ouvm.VideoUrl))
+							{
+								SelectedFileName = ouvm.VideoUrl;
+								IsFileSelected = true;
 								if (ouvm.ServiceResult != null)
 								{
 									_mediaDecoder.Projection = ouvm.ServiceResult.projection;
 									_mediaDecoder.StereoMode = ouvm.ServiceResult.stereoscopy;
 									SelectedFileTitle = ouvm.ServiceResult.title;
 								}
-								else {
+								else
+								{
 									_mediaDecoder.Projection = StreamingServices.GetServiceProjection(ouvm.Uri);
 								}
-								
+
 								Execute.OnUIThreadAsync(() =>
-                                {
-                                    LoadMedia();
-                                });
-                            }
-                        }
-                        else
-                        {
-                            NotificationCenter.PushNotification(new NotificationViewModel("Url is not valid video or streaming service address."));
-                            urlLoadLock = false;
-                        }
-                    });
-                });
-                
-            });
+								{
+									LoadMedia();
+								});
+							}
+						}
+						else
+						{
+							NotificationCenter.PushNotification(new NotificationViewModel("Url is not valid video or streaming service address."));
+							urlLoadLock = false;
+						}
+					});
+				});
+
+			});
 		}
-		
+
 
 		public void OpenUrl()
 		{
@@ -834,7 +880,7 @@ namespace PlayerUI
 			if (ouvm.Valid)
 			{
 				NotificationCenter.PushNotification(new NotificationViewModel("Loading..."));
-				if(!string.IsNullOrWhiteSpace(ouvm.VideoUrl))
+				if (!string.IsNullOrWhiteSpace(ouvm.VideoUrl))
 				{
 					SelectedFileName = ouvm.VideoUrl;
 					IsFileSelected = true;
@@ -845,16 +891,18 @@ namespace PlayerUI
 						_mediaDecoder.StereoMode = ouvm.ServiceResult.stereoscopy;
 						SelectedFileTitle = ouvm.ServiceResult.title;
 					}
-					else {
+					else
+					{
 						_mediaDecoder.Projection = StreamingServices.GetServiceProjection(ouvm.Uri);
 					}
 
 					Execute.OnUIThreadAsync(() =>
 					{
 						LoadMedia();
-					});					
+					});
 				}
-			} else
+			}
+			else
 			{
 				NotificationCenter.PushNotification(new NotificationViewModel("Url is not valid video or streaming service address."));
 			}
@@ -872,13 +920,14 @@ namespace PlayerUI
 			{
 				if (CanPlay)
 					LoadMedia();
-					//Play();
-			} else
+				//Play();
+			}
+			else
 			{
 				if (IsPaused) UnPause();
 				else Pause();
 			}
-			
+
 		}
 
 		public void Pause()
@@ -887,38 +936,40 @@ namespace PlayerUI
 			Execute.OnUIThread(() => shellView.VideoProgressBar.Focus());
 
 			IsPaused = true;
-			Task.Factory.StartNew(() => {
+			Task.Factory.StartNew(() =>
+			{
 				_mediaDecoder.Pause();
-                ShellViewModel.SendEvent("moviePaused", Path.GetFileName(SelectedFileName));
-            });
-            Execute.OnUIThreadAsync(() =>
-            {
-                shellView.PlayPause.Visibility = Visibility.Visible;
-                shellView.Pause.Visibility = Visibility.Collapsed;
-                NotifyOfPropertyChange(() => CanPlay);
-                AnimateIndicator(shellView.PauseIndicator);
-            });
-            			
-			OculusPlayback.Pause();
-            OSVRPlayback.Pause();
+				ShellViewModel.SendEvent("moviePaused", Path.GetFileName(SelectedFileName));
+			});
+			Execute.OnUIThreadAsync(() =>
+			{
+				shellView.PlayPause.Visibility = Visibility.Visible;
+				shellView.Pause.Visibility = Visibility.Collapsed;
+				NotifyOfPropertyChange(() => CanPlay);
+				AnimateIndicator(shellView.PauseIndicator);
+			});
+
+			headsets.ForEach(h => h.Pause());
 		}
 
 		public void UnPause()
 		{
-            Execute.OnUIThreadAsync(() => {
-                IsPaused = false;
-                Task.Factory.StartNew(() => {
-                    _mediaDecoder.Unpause();
-                    ShellViewModel.SendEvent("movieUnpaused", Path.GetFileName(SelectedFileName));
-                });
-                shellView.PlayPause.Visibility = Visibility.Collapsed;
-                shellView.Pause.Visibility = Visibility.Visible;
-                NotifyOfPropertyChange(() => CanPlay);
-                AnimateIndicator(shellView.PlayIndicator);
-                OculusPlayback.UnPause();
-                OSVRPlayback.UnPause();
-            });			
-        }
+			Execute.OnUIThreadAsync(() =>
+			{
+				IsPaused = false;
+				Task.Factory.StartNew(() =>
+				{
+					_mediaDecoder.Unpause();
+					ShellViewModel.SendEvent("movieUnpaused", Path.GetFileName(SelectedFileName));
+				});
+				shellView.PlayPause.Visibility = Visibility.Collapsed;
+				shellView.Pause.Visibility = Visibility.Visible;
+				NotifyOfPropertyChange(() => CanPlay);
+				AnimateIndicator(shellView.PlayIndicator);
+
+				headsets.ForEach(h => h.UnPause());
+			});
+		}
 
 		public void OpenFile()
 		{
@@ -926,7 +977,7 @@ namespace PlayerUI
 			//ofd.Filter = "Video MP4|*.mp4|Video M4V|*.m4v|All|*.*";
 			ofd.Filter = MediaDecoder.ExtensionsFilter();
 			bool? result = ofd.ShowDialog();
-			if(result.HasValue)
+			if (result.HasValue)
 				if (result.Value == true)
 				{
 					OpenFileFrom(ofd.FileName);
@@ -960,10 +1011,11 @@ namespace PlayerUI
 				string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
 				string ext = Path.GetExtension(files[0]);
 				//if (Path.GetExtension(files[0]) == ".mp4")
-				if(MediaDecoder.CheckExtension(Path.GetExtension(files[0])))
+				if (MediaDecoder.CheckExtension(Path.GetExtension(files[0])))
 				{
 					OpenFileFrom(files[0]);
-				} else
+				}
+				else
 				{
 					NotificationCenter.PushNotification(new NotificationViewModel("File format not supported."));
 				}
@@ -982,31 +1034,31 @@ namespace PlayerUI
 		{
 			lockSlider = false;
 			_mediaDecoder.Seek(_timeValue);
-        }
+		}
 
 		public void FilePreviewDragEnter(DragEventArgs e)
 		{
 			ShowDropFilesPanel(true);
 			ShowStartupPanel(false);
 			PlaybackControlUIHitTestVisible(false);
-            e.Handled = true;
+			e.Handled = true;
 		}
 
 		public void FilePreviewDragLeave(DragEventArgs e)
 		{
 			ShowDropFilesPanel(false);
-			if(IsFileSelected == false) ShowStartupPanel(true);
+			if (IsFileSelected == false) ShowStartupPanel(true);
 			PlaybackControlUIHitTestVisible(true);
 			e.Handled = true;
-        }
+		}
 
-		public bool CanPlay { get { return (!IsPlaying || IsPaused) && IsFileSelected;  } }
+		public bool CanPlay { get { return (!IsPlaying || IsPaused) && IsFileSelected; } }
 		public bool CanStop { get { return IsPlaying; } }
 
 		//public bool CanOpenFile { get { return !IsPlaying; } }
 
 		private void OpenFileFrom(string file)
-		{			
+		{
 			if (File.Exists(file))
 			{
 				Task.Factory.StartNew(() =>
@@ -1015,11 +1067,12 @@ namespace PlayerUI
 					{
 						waitForPlaybackStop.Reset();
 						Stop();
-						waitForPlaybackStop.WaitOne();						
-					} else
+						waitForPlaybackStop.WaitOne();
+					}
+					else
 					{
 						int it = 5;
-						while(_mediaDecoder.Initialized && it > 0)
+						while (_mediaDecoder.Initialized && it > 0)
 						{
 							Thread.Sleep(100);
 							it--;
@@ -1030,46 +1083,46 @@ namespace PlayerUI
 					SelectedFileTitle = "";
 					SelectedFileName = file;
 					Execute.OnUIThread(() => LoadMedia());
-					Task.Factory.StartNew(() => Execute.OnUIThread(() => {
+					Task.Factory.StartNew(() => Execute.OnUIThread(() =>
+					{
 						Recents.AddRecent(SelectedFileName);
 						UpdateRecents();
 						ShowPlaybackUI();
 					}));
 				});
-				
+
 			}
-        }
+		}
 
 		public void Stop()
 		{
 			Console.WriteLine("FILE ENDED");
-			if (Fullscreen) if(!Logic.Instance.settings.DoNotExitFullscreenOnStop) ToggleFullscreen(true);
+			if (Fullscreen) if (!Logic.Instance.settings.DoNotExitFullscreenOnStop) ToggleFullscreen(true);
 			//space press hack
 			Execute.OnUIThread(() => shellView.VideoProgressBar.Focus());
 			ShowBars();
-            ShowStartupUI();
+			ShowStartupUI();
 
 			Console.WriteLine("STOP STOP STOP");
 
 			this.DXCanvas.Scene = null;
 
-			OculusPlayback.Stop();
-			OSVRPlayback.Stop();
+			headsets.ForEach(h => h.Stop());
 
-            Execute.OnUIThread(() =>
+			Execute.OnUIThread(() =>
 			{
 				shellView.TopBar.Visibility = Visibility.Hidden;
 				this.DXCanvas.Visibility = Visibility.Hidden;
 
 				DisplayName = string.Format(DisplayString, "");
-			});			
-						
+			});
+
 			Task.Factory.StartNew(() =>
 			{
 				if (IsPlaying || _mediaDecoder.IsEnded)
 				{
 					_mediaDecoder.Stop();
-                    ShellViewModel.SendEvent("movieStopped", Path.GetFileName(SelectedFileName));
+					ShellViewModel.SendEvent("movieStopped", Path.GetFileName(SelectedFileName));
 					//STATS
 					Logic.Instance.stats.TrackEvent("Application events", "Stop", "");
 
@@ -1092,7 +1145,7 @@ namespace PlayerUI
 					catch (Exception) { }
 				}
 			});
-			
+
 			waitForPlaybackStop.Set();
 		}
 
@@ -1106,8 +1159,8 @@ namespace PlayerUI
 			});
 
 			base.TryClose(dialogResult);
-			
-			if(_mediaDecoder != null)
+
+			if (_mediaDecoder != null)
 				_mediaDecoder.Shutdown();
 			//nancy.Stop();
 
@@ -1115,25 +1168,25 @@ namespace PlayerUI
 
 		public void Rewind()
 		{
-            if(_mediaDecoder != null)
-            {
-                _mediaDecoder.Seek(0);
-                if (_mediaDecoder.IsEnded || _mediaDecoder.IsPaused)
-                        PlayPause();
-            }
+			if (_mediaDecoder != null)
+			{
+				_mediaDecoder.Seek(0);
+				if (_mediaDecoder.IsEnded || _mediaDecoder.IsPaused)
+					PlayPause();
+			}
 			//BivrostPlayerPrototype.PlayerPrototype.Rewind();
 		}
 
 		public void Quit()
 		{
-            if (remoteControl != null)
-            {
-                remoteControl.Stop();
-            }
-            if (IsRemoteControlEnabled)
-            {
-                ShellViewModel.SendEvent("quit");
-            }
+			if (remoteControl != null)
+			{
+				remoteControl.Stop();
+			}
+			if (IsRemoteControlEnabled)
+			{
+				ShellViewModel.SendEvent("quit");
+			}
 
 			//STATS
 			TryClose();
@@ -1145,7 +1198,7 @@ namespace PlayerUI
 			Execute.OnUIThread(() => shellView.VideoProgressBar.Focus());
 
 			DialogHelper.ShowDialog<ConfigurationViewModel>();
-            Logic.Instance.ValidateSettings();
+			Logic.Instance.ValidateSettings();
 		}
 
 		private Point _mouseDownPoint;
@@ -1163,16 +1216,17 @@ namespace PlayerUI
 			var current = e.GetPosition(null);
 			var delta = current - _dragLastPosition;
 			_dragLastPosition = current;
-			if(this.DXCanvas.Scene != null) {
-				((Scene)this.DXCanvas.Scene).MoveDelta((float)delta.X, (float)delta.Y, (float) (72f/this.DXCanvas.ActualWidth) * 1.5f, 20f);
+			if (this.DXCanvas.Scene != null)
+			{
+				((Scene)this.DXCanvas.Scene).MoveDelta((float)delta.X, (float)delta.Y, (float)(72f / this.DXCanvas.ActualWidth) * 1.5f, 20f);
 			}
 		}
 
 		public void MouseDown(object sender, MouseButtonEventArgs e)
-		{	
+		{
 			if (_doubleClickDetected) _doubleClickDetected = false;
 			else
-			if ((DateTime.Now - _doubleClickFirst).TotalMilliseconds < 250 )
+			if ((DateTime.Now - _doubleClickFirst).TotalMilliseconds < 250)
 			{
 				ToggleFullscreen(true);
 				_doubleClickDetected = true;
@@ -1189,7 +1243,7 @@ namespace PlayerUI
 
 		public void MouseUp(MouseButtonEventArgs e)
 		{
-			if(!_waitingForDoubleClickTimeout)
+			if (!_waitingForDoubleClickTimeout)
 			{
 				_waitingPoint = e.GetPosition(null);
 				_waitingForDoubleClickTimeout = true;
@@ -1207,14 +1261,15 @@ namespace PlayerUI
 						   else
 						   {
 
-						   }	
+						   }
 					   }
 					   _waitingForDoubleClickTimeout = false;
 				   });
 				});
 			}
 
-			if(_element != null) { 
+			if (_element != null)
+			{
 				_element.ReleaseMouseCapture();
 				_element.MouseMove -= MouseMove;
 			}
@@ -1234,17 +1289,19 @@ namespace PlayerUI
 			//space press hack
 			Execute.OnUIThread(() => shellView.VideoProgressBar.Focus());
 
-			if(realToggle)
+			if (realToggle)
 				Fullscreen = !Fullscreen;
 
-			if(!Fullscreen) {
+			if (!Fullscreen)
+			{
 				Mouse.OverrideCursor = null;
 				ShowUI();
 				playerWindow.WindowState = WindowState.Normal;
 				playerWindow.WindowStyle = WindowStyle.SingleBorderWindow;
 				//playerWindow.Topmost = false;
 				playerWindow.ResizeMode = ResizeMode.CanResize;
-			} else
+			}
+			else
 			{
 				Mouse.OverrideCursor = null;
 				HideUI();
@@ -1252,12 +1309,12 @@ namespace PlayerUI
 				playerWindow.WindowStyle = WindowStyle.None;
 				//playerWindow.Topmost = true;
 				playerWindow.ResizeMode = ResizeMode.NoResize;
-				playerWindow.Margin = new Thickness(0,0,0,0);
+				playerWindow.Margin = new Thickness(0, 0, 0, 0);
 				playerWindow.WindowState = WindowState.Maximized;
 			}
 
-            ShellViewModel.SendEvent("fullscreenChanged", Fullscreen);
-        }
+			ShellViewModel.SendEvent("fullscreenChanged", Fullscreen);
+		}
 
 		public void EscapeFullscreen()
 		{
@@ -1266,20 +1323,20 @@ namespace PlayerUI
 
 		public void OnLostFocus()
 		{
-            if (IsPlaying)
-            {
-                if(this.DXCanvas.Scene != null)
-                    ((Scene)this.DXCanvas.Scene).HasFocus = false;
-            }
+			if (IsPlaying)
+			{
+				if (this.DXCanvas.Scene != null)
+					((Scene)this.DXCanvas.Scene).HasFocus = false;
+			}
 		}
 
 		public void OnGotFocus()
 		{
-            if (IsPlaying)
-            {
-                if (this.DXCanvas.Scene != null)
-                    ((Scene)this.DXCanvas.Scene).HasFocus = true;
-            }
+			if (IsPlaying)
+			{
+				if (this.DXCanvas.Scene != null)
+					((Scene)this.DXCanvas.Scene).HasFocus = true;
+			}
 		}
 
 		public void ShowVolumeControl()
@@ -1326,43 +1383,43 @@ namespace PlayerUI
 			if (IsPlaying)
 			{
 				_mediaDecoder.Seek(_mediaDecoder.CurrentPosition - 5f);
-            }
+			}
 		}
 
 		public void HeadsetSelect()
 		{
 			HeadsetMenu.ToggleVisibility();
 		}
-		
-
-        public void LegacyTest()
-        {
-            SharpDX.Direct3D.FeatureLevel[] _levels = new SharpDX.Direct3D.FeatureLevel[] { SharpDX.Direct3D.FeatureLevel.Level_10_0 };
-            Device _device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.BgraSupport | DeviceCreationFlags.VideoSupport, _levels);
-            
-            SharpDX.Direct3D11.Texture2DDescription frameTextureDescription = new SharpDX.Direct3D11.Texture2DDescription()
-            {
-                Width = 1920,
-                Height = 1080,
-                MipLevels = 1,
-                ArraySize = 1,
-                Format = SharpDX.DXGI.Format.B8G8R8A8_UNorm,
-                Usage = SharpDX.Direct3D11.ResourceUsage.Default,
-                SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
-                BindFlags = BindFlags.RenderTarget | SharpDX.Direct3D11.BindFlags.ShaderResource,
-                CpuAccessFlags = CpuAccessFlags.None,
-                OptionFlags = ResourceOptionFlags.Shared
-            };
 
 
-            Texture2D textureL = new SharpDX.Direct3D11.Texture2D(_device, frameTextureDescription);
-            SharpDX.DXGI.Surface surface = textureL.QueryInterface<SharpDX.DXGI.Surface>();
+		public void LegacyTest()
+		{
+			SharpDX.Direct3D.FeatureLevel[] _levels = new SharpDX.Direct3D.FeatureLevel[] { SharpDX.Direct3D.FeatureLevel.Level_10_0 };
+			Device _device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.BgraSupport | DeviceCreationFlags.VideoSupport, _levels);
 
-            LegacyPlayer.MediaDecoderLegacy md = new LegacyPlayer.MediaDecoderLegacy(surface.NativePointer);
-            md.OpenUrl(@"D:\TestVideos\maroon.mp4");
+			SharpDX.Direct3D11.Texture2DDescription frameTextureDescription = new SharpDX.Direct3D11.Texture2DDescription()
+			{
+				Width = 1920,
+				Height = 1080,
+				MipLevels = 1,
+				ArraySize = 1,
+				Format = SharpDX.DXGI.Format.B8G8R8A8_UNorm,
+				Usage = SharpDX.Direct3D11.ResourceUsage.Default,
+				SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
+				BindFlags = BindFlags.RenderTarget | SharpDX.Direct3D11.BindFlags.ShaderResource,
+				CpuAccessFlags = CpuAccessFlags.None,
+				OptionFlags = ResourceOptionFlags.Shared
+			};
 
-            this.DXCanvas.Scene = new Scene(textureL, MediaDecoder.ProjectionMode.Sphere);
-            this.DXCanvas.StartRendering();
-        }
+
+			Texture2D textureL = new SharpDX.Direct3D11.Texture2D(_device, frameTextureDescription);
+			SharpDX.DXGI.Surface surface = textureL.QueryInterface<SharpDX.DXGI.Surface>();
+
+			LegacyPlayer.MediaDecoderLegacy md = new LegacyPlayer.MediaDecoderLegacy(surface.NativePointer);
+			md.OpenUrl(@"D:\TestVideos\maroon.mp4");
+
+			this.DXCanvas.Scene = new Scene(textureL, MediaDecoder.ProjectionMode.Sphere);
+			this.DXCanvas.StartRendering();
+		}
 	}
 }

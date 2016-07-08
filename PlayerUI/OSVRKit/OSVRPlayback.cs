@@ -18,29 +18,6 @@ namespace PlayerUI.OSVRKit
 	public class OSVRPlayback : Headset
 	{
 
-
-        
-        override public void Start()
-        {
-            abort = false;
-            pause = false;
-            waitForRendererStop.Reset();
-            if (Lock)
-                return;
-            Task.Factory.StartNew(() =>
-            {
-                try
-                {
-                    Render();
-					Lock = false;
-				}
-                catch (Exception) { Lock = false; }
-            });
-        }
-
-
-
-
 		bool _preloaded = false;
 		int _selectedOutput = 0;
 
@@ -102,50 +79,10 @@ namespace PlayerUI.OSVRKit
             return false;
         }
 
-		SharpDX.Toolkit.Graphics.GraphicsDevice _gd;
-		Device _device;
 
-		void ResizeTexture(Texture2D tL, Texture2D tR)
+
+		override protected void Render()
 		{
-			if (MediaDecoder.Instance.TextureReleased) return;
-			
-			var tempL = textureL;
-			var tempR = textureR;
-
-			lock (localCritical)
-			{
-				basicEffectL.Texture?.Dispose();
-				textureL = tL;
-
-				if (_stereoVideo)
-				{
-					basicEffectR.Texture?.Dispose();
-					textureR = tR;
-				}
-				
-				
-
-				var resourceL = textureL.QueryInterface<SharpDX.DXGI.Resource>();
-				var sharedTexL = _device.OpenSharedResource<Texture2D>(resourceL.SharedHandle);
-				basicEffectL.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexL);
-				resourceL?.Dispose();
-				sharedTexL?.Dispose();
-
-				if (_stereoVideo)
-				{
-					var resourceR = textureR.QueryInterface<SharpDX.DXGI.Resource>();
-					var sharedTexR = _device.OpenSharedResource<Texture2D>(resourceR.SharedHandle);
-					basicEffectR.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexR);
-					resourceR?.Dispose();
-					sharedTexR?.Dispose();
-				}
-				//_device.ImmediateContext.Flush();
-			}
-			
-		}
-
-		void Render()
-        {
 			Lock = true;
 
 			//Wrap oculus = new Wrap();

@@ -1,5 +1,7 @@
 ﻿using SharpDX.Direct3D11;
+using System;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace PlayerUI
 {
@@ -10,7 +12,38 @@ namespace PlayerUI
 		public bool _stereoVideo = false;
 		public MediaDecoder.ProjectionMode _projection = MediaDecoder.ProjectionMode.Sphere;
 
-		abstract public void Start();
+
+
+		public void Start()
+		{
+			abort = false;
+			pause = false;
+			waitForRendererStop.Reset();
+			if (Lock)
+				return;
+			Task.Factory.StartNew(() =>
+			{
+				try
+				{
+					Render();
+				}
+#if !DEBUG
+				catch(Exception exc)
+				{
+					Console.WriteLine("[EXC] " + exc.Message);
+				}
+#endif
+				finally
+				{
+					Lock = false;
+				}
+			});
+		}
+
+
+		protected abstract void Render();
+
+
 
 		bool _playbackLock = false;
 		public bool Lock { get { return _playbackLock; } protected set { this._playbackLock = value; } }
@@ -60,6 +93,49 @@ namespace PlayerUI
 		public void Reset()
 		{
 			abort = false;
+		}
+
+
+		protected SharpDX.Toolkit.Graphics.GraphicsDevice _gd;
+		protected Device _device;
+
+		protected void ResizeTexture(Texture2D tL, Texture2D tR)
+		{
+			if (MediaDecoder.Instance.TextureReleased) return;
+
+			var tempL = textureL;
+			var tempR = textureR;
+
+			lock (localCritical)
+			{
+				basicEffectL.Texture?.Dispose();
+				textureL = tL;
+
+				if (_stereoVideo)
+				{
+					basicEffectR.Texture?.Dispose();
+					textureR = tR;
+				}
+
+
+
+				var resourceL = textureL.QueryInterface<SharpDX.DXGI.Resource>();
+				var sharedTexL = _device.OpenSharedResource<Texture2D>(resourceL.SharedHandle);
+				basicEffectL.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexL);
+				resourceL?.Dispose();
+				sharedTexL?.Dispose();
+
+				if (_stereoVideo)
+				{
+					var resourceR = textureR.QueryInterface<SharpDX.DXGI.Resource>();
+					var sharedTexR = _device.OpenSharedResource<Texture2D>(resourceR.SharedHandle);
+					basicEffectR.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexR);
+					resourceR?.Dispose();
+					sharedTexR?.Dispose();
+				}
+				//_device.ImmediateContext.Flush();
+			}
+
 		}
 
 		abstract public bool IsPresent();
