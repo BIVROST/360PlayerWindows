@@ -17,32 +17,44 @@ namespace PlayerUI.OpenVR
 {
 	class OpenVRPlayback : Headset
 	{
-		public override bool IsPresent()
-		{
-			return true;	// TODO
-		}
-
 
 		[DllImport("kernel32", SetLastError = true, CharSet = CharSet.Ansi)]
 		private static extern IntPtr LoadLibrary([MarshalAs(UnmanagedType.LPStr)]string lpFileName);
 
 
-		protected override void Render()
+		bool dllsLoaded = false;
+		protected void EnsureDllsLoaded()
 		{
+			if (dllsLoaded)
+				return;
+
 			// Preload native binaries
 			var assembly = System.Uri.UnescapeDataString((new System.Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase)).AbsolutePath);
 			var assemblyPath = Path.GetDirectoryName(assembly);
 
 			IntPtr success;
-			if (IntPtr.Size == 8)	// 64 bit
+			if (IntPtr.Size == 8)   // 64 bit
 				success = LoadLibrary(assemblyPath + Path.DirectorySeparatorChar + "x86_64" + Path.DirectorySeparatorChar + "openvr_api.dll");
 			else   // 32 bit
 				success = LoadLibrary(assemblyPath + Path.DirectorySeparatorChar + "x86" + Path.DirectorySeparatorChar + "openvr_api.dll");
 			if (success == IntPtr.Zero)
 				throw new Exception("LoadLibrary error: " + Marshal.GetLastWin32Error());
 
+			dllsLoaded = true;
+		}
 
-			
+
+		public override bool IsPresent()
+		{
+			return true;
+			//EnsureDllsLoaded();
+			//return Valve.VR.OpenVR.IsHmdPresent();
+		}
+
+
+		protected override void Render()
+		{
+			EnsureDllsLoaded();
 
 			Device device = new Device(DriverType.Hardware, DeviceCreationFlags.BgraSupport, new FeatureLevel[] { FeatureLevel.Level_10_0 });
 			var context = device.ImmediateContext;
@@ -117,8 +129,8 @@ float4 PS(PS_IN input) : SV_Target
 			Texture_t leftEyeTex;
 			Texture_t rightEyeTex;
 
-			TrackedDevicePose_t[] deviceArray1 = new TrackedDevicePose_t[16];
-			TrackedDevicePose_t[] deviceArray2 = new TrackedDevicePose_t[16];
+			TrackedDevicePose_t[] renderPoseArray = new TrackedDevicePose_t[16];
+			TrackedDevicePose_t[] gamePoseArray = new TrackedDevicePose_t[16];
 
 
 
@@ -126,7 +138,8 @@ float4 PS(PS_IN input) : SV_Target
 			// HTC VIVE INIT
 			EVRInitError initError = EVRInitError.None;
 			Valve.VR.OpenVR.Init(ref initError);
-
+			if (initError != EVRInitError.None)
+				throw new Exception("OpenVR init error " + initError + ": " + Valve.VR.OpenVR.GetStringForHmdError(initError));
 			CVRSystem hmd = Valve.VR.OpenVR.System;
 			CVRCompositor compositor = Valve.VR.OpenVR.Compositor;
 
@@ -157,7 +170,7 @@ float4 PS(PS_IN input) : SV_Target
 			Vector2 tanHalfFov = new Vector2(
 				Math.Max(Math.Max(-l_left, l_right), Math.Max(-r_left, r_right)),
 				Math.Max(Math.Max(-l_top, l_bottom), Math.Max(-r_top, r_bottom))
-				);
+			);
 
 			VRTextureBounds_t[] textureBounds = new VRTextureBounds_t[2];
 
@@ -223,88 +236,111 @@ float4 PS(PS_IN input) : SV_Target
 				while (!abort)
 				{
 
-					compositor.WaitGetPoses(deviceArray1, deviceArray2);
+					compositor.WaitGetPoses(renderPoseArray, gamePoseArray);
 
 					TrackedDevicePose_t pose = new TrackedDevicePose_t();
-					TrackedDevicePose_t gamePose = new TrackedDevicePose_t();
-					compositor.GetLastPoseForTrackedDeviceIndex(Valve.VR.OpenVR.k_unTrackedDeviceIndex_Hmd, ref pose, ref gamePose);
+					//TrackedDevicePose_t gamePose = new TrackedDevicePose_t();
+					//compositor.GetLastPoseForTrackedDeviceIndex(Valve.VR.OpenVR.k_unTrackedDeviceIndex_Hmd, ref pose, ref gamePose);
 
 
-
-					if (deviceArray1[Valve.VR.OpenVR.k_unTrackedDeviceIndex_Hmd].bPoseIsValid)
+					//Vector3 posBefore = pose.mDeviceToAbsoluteTracking.ToMatrix().TranslationVector;
+					//Vector3 posAfter = Vector3.Zero;
+					if (renderPoseArray[Valve.VR.OpenVR.k_unTrackedDeviceIndex_Hmd].bPoseIsValid)
 					{
-						pose = deviceArray1[Valve.VR.OpenVR.k_unTrackedDeviceIndex_Hmd];
-
+						pose = gamePoseArray[Valve.VR.OpenVR.k_unTrackedDeviceIndex_Hmd];
+						//var mm = gamePoseArray[Valve.VR.OpenVR.k_unTrackedDeviceIndex_Hmd].mDeviceToAbsoluteTracking.ToMatrix();
+						//mm.Invert();
+						//System.Console.WriteLine(mm.TranslationVector);
 					}
-
-
-
+					//System.Console.WriteLine(" --- " + posAfter + " / " + posBefore + " / " + gamePose.mDeviceToAbsoluteTracking.ToMatrix().TranslationVector);
 
 					const float halfIPD = 0.65f / 2;        // TODO: config
 
-					// LEFT EYE
+
+
+//					// Process SteamVR events
+//					vr::VREvent_t event;
+//	while( m_pHMD->PollNextEvent( &event, sizeof( event ) ) )
+//	{
+//			ProcessVREvent( event );
+//		}
+
+//	// Process SteamVR controller state
+//	for( vr::TrackedDeviceIndex_t unDevice = 0; unDevice<vr::k_unMaxTrackedDeviceCount; unDevice++ )
+//	{
+//		vr::VRControllerState_t state;
+//		if( m_pHMD->GetControllerState(unDevice, &state ) )
+//		{
+//			m_rbShowTrackedDevice[unDevice] = state.ulButtonPressed == 0;
+//		}
+//}
+
+					for(int eye = 0; eye < 2; eye++)
 					{
+						bool isLeftEye = eye == 0;
+
+						DepthStencilView currentEyeDepthView = isLeftEye ? leftEyeDepthView : rightEyeDepthView;
+						RenderTargetView currentEyeView = isLeftEye ? leftEyeView : rightEyeView;
+						float ipdTranslation = isLeftEye ? -halfIPD : halfIPD;
+
 						// Setup targets and viewport for rendering
 						context.Rasterizer.SetViewport(new Viewport(0, 0, targetWidth, targetHeight, 0.0f, 1.0f));
-						context.OutputMerger.SetTargets(leftEyeDepthView, leftEyeView);
+						context.OutputMerger.SetTargets(currentEyeDepthView, currentEyeView);
 
 						// Setup new projection matrix with correct aspect ratio
 						Matrix worldMatrix = Matrix.Identity * Matrix.Scaling(1f) * Matrix.Translation(0, 0, -1.5f);
 
 						Quaternion rotationQuaternion = pose.mDeviceToAbsoluteTracking.ToMatrix().QuaternionFromMatrix();
 
-						Matrix viewMatrix = Matrix.RotationQuaternion(rotationQuaternion);
+						//Matrix viewMatrix = Matrix.RotationQuaternion(rotationQuaternion);
+						//viewMatrix.Transpose();
+
+						//viewMatrix.Invert();
+
+
+
 						//viewMatrix = Matrix.Translation(-IPD, 0, 0) * viewMatrix;
-						viewMatrix.Transpose();
 
+						//viewMatrix = pose.mDeviceToAbsoluteTracking.ToMatrix();
+						//viewMatrix = viewMatrix.LeftToRightHanded();
+
+
+						//Matrix matStandingFromHead = pose.mDeviceToAbsoluteTracking.ToMatrix(); // from WaitGetPoses
+
+						//Matrix matHeadFromLeftEye = hmd.GetEyeToHeadTransform(isLeftEye ? EVREye.Eye_Left : EVREye.Eye_Right).ToMatrix();
+						//Matrix matCameraLeftEye = matStandingFromHead * matHeadFromLeftEye;
+						//viewPosition = matCameraLeftEye.TranslationVector;
+
+						Matrix rotationMatrix = Matrix.RotationQuaternion(rotationQuaternion);
+						Vector3 lookUp = Vector3.Transform(new Vector3(0, 1, 0), rotationMatrix).ToVector3();
+						Vector3 lookAt = Vector3.Transform(new Vector3(0, 0, -1), rotationMatrix).ToVector3();
+						// FIXME: no translation from HMD
+						Vector3 viewPosition = Vector3.Transform(new Vector3(ipdTranslation, 0, 0), rotationMatrix).ToVector3(); //pose.mDeviceToAbsoluteTracking.ToMatrix().TranslationVector;
+
+						Matrix viewMatrix = Matrix.LookAtRH(viewPosition, viewPosition + lookAt, lookUp);
+
+
+						//viewMatrix = matCameraLeftEye;
+
+
+
+						/// FIXME: projection fov?
 						float fov2 = (float)(110f * Math.PI / 180f);
-						Matrix projectionMatrix = Matrix.PerspectiveFovLH(fov2, 1, 0.001f, 100.0f);
-
-						Matrix worldViewProj = worldMatrix * viewMatrix * Matrix.Translation(halfIPD, 0, 0) * projectionMatrix;
+						//Matrix projectionMatrix = Matrix.PerspectiveFovLH(fov2, 1, 0.001f, 100.0f);
+						Matrix projectionMatrix = Matrix.PerspectiveFovLH(fov2, (float)targetWidth / (float)targetHeight, 0.001f, 100.0f);
+						//projectionMatrix = hmd.GetProjectionMatrix(EVREye.Eye_Left, -1000f, 1000f, EGraphicsAPIConvention.API_OpenGL).ToMatrix().LeftToRightHanded();
+						Matrix worldViewProj = worldMatrix * viewMatrix * projectionMatrix;
 						worldViewProj.Transpose();
 						context.UpdateSubresource(ref worldViewProj, contantBuffer);
 
-						context.ClearDepthStencilView(leftEyeDepthView, DepthStencilClearFlags.Depth, 1.0f, 0);
-						context.ClearRenderTargetView(leftEyeView, Color.CornflowerBlue);
+						context.ClearDepthStencilView(currentEyeDepthView, DepthStencilClearFlags.Depth, 1.0f, 0);
+						context.ClearRenderTargetView(currentEyeView, Color.CornflowerBlue);
 
 						context.Draw(36 * 1000, 0);
 
 						//context.CopySubresourceRegion(leftEye, 0, new ResourceRegion(0, 0, 0, targetWidth, targetHeight, 100), backBuffer, 0, 0, 0, 0);
 					}
 
-
-					// RIGHT EYE
-					{
-						// Setup targets and viewport for rendering
-						context.Rasterizer.SetViewport(new Viewport(0, 0, targetWidth, targetHeight, 0.0f, 1.0f));
-						context.OutputMerger.SetTargets(rightEyeDepthView, rightEyeView);
-
-						// Setup new projection matrix with correct aspect ratio
-						//proj = Matrix.PerspectiveFovLH((float)Math.PI / 4.0f, targetWidth / (float)targetHeight, 0.1f, 100.0f);
-
-
-						Matrix worldMatrix = Matrix.Identity * Matrix.Scaling(1f) * Matrix.Translation(0, 0, -1.5f);
-
-						Quaternion rotationQuaternion = pose.mDeviceToAbsoluteTracking.ToMatrix().QuaternionFromMatrix();
-
-						Matrix viewMatrix = Matrix.RotationQuaternion(rotationQuaternion);
-						//viewMatrix = Matrix.Translation(IPD, 0, 0) * viewMatrix;
-						viewMatrix.Transpose();
-
-						float fov2 = (float)(110f * Math.PI / 180f);
-						Matrix projectionMatrix = Matrix.PerspectiveFovLH(fov2, (float)targetWidth / (float)targetHeight, 0.001f, 100.0f);
-
-						Matrix worldViewProj = worldMatrix * viewMatrix * Matrix.Translation(-halfIPD, 0, 0) * projectionMatrix;
-						worldViewProj.Transpose();
-						context.UpdateSubresource(ref worldViewProj, contantBuffer);
-
-						context.ClearDepthStencilView(rightEyeDepthView, DepthStencilClearFlags.Depth, 1.0f, 0);
-						context.ClearRenderTargetView(rightEyeView, Color.CornflowerBlue);
-
-						context.Draw(36 * 1000, 0);
-
-						//context.CopySubresourceRegion(rightEye, 0, new ResourceRegion(0, 0, 0, targetWidth, targetHeight, 100), backBuffer, 0, 0, 0, 0);
-					}
 
 
 
@@ -333,8 +369,8 @@ float4 PS(PS_IN input) : SV_Target
 
 					if (errorLeft != EVRCompositorError.None)
 						;
-					//if (errorRight != EVRCompositorError.None)
-					//	;
+					if (errorRight != EVRCompositorError.None)
+						;
 				};
 
 			Valve.VR.OpenVR.Shutdown();
@@ -399,8 +435,8 @@ float4 PS(PS_IN input) : SV_Target
 				new Vector4( 1.0f, -1.0f,  1.0f, 1.0f), new Vector4(0.0f, 1.0f, 1.0f, 1.0f),
 				new Vector4( 1.0f, -1.0f, -1.0f, 1.0f), new Vector4(0.0f, 1.0f, 1.0f, 1.0f),
 				new Vector4( 1.0f,  1.0f, -1.0f, 1.0f), new Vector4(0.0f, 1.0f, 1.0f, 1.0f),
-				new Vector4( 1.0f,  1.0f,  1.0f, 1.0f), new Vector4(0.0f, 1.0f, 1.0f, 1.0f),
-	};
+				new Vector4( 1.0f,  1.0f,  1.0f, 1.0f), new Vector4(0.0f, 1.0f, 1.0f, 1.0f)
+			};
 
 			for (int it = 0; it < cube.Length; it += 2)
 			{
