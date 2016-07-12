@@ -12,6 +12,7 @@ using Valve.VR;
 using System.Runtime.InteropServices;
 using System.IO;
 using System.Collections.Generic;
+using PlayerUI.Tools;
 
 namespace PlayerUI.OpenVR
 {
@@ -55,6 +56,8 @@ namespace PlayerUI.OpenVR
 		protected override void Render()
 		{
 			EnsureDllsLoaded();
+
+			Lock = true;
 
 			Device device = new Device(DriverType.Hardware, DeviceCreationFlags.BgraSupport, new FeatureLevel[] { FeatureLevel.Level_10_0 });
 			var context = device.ImmediateContext;
@@ -115,14 +118,14 @@ float4 PS(PS_IN input) : SV_Target
 
 
 			// Prepare All the stages
-			context.InputAssembler.InputLayout = layout;
-			context.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
+			//context.InputAssembler.InputLayout = layout;
+			//context.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
 
-			using (var vertices = Buffer.Create(device, BindFlags.VertexBuffer, CubeField()))
-				context.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(vertices, Utilities.SizeOf<Vector4>() * 2, 0));
-			context.VertexShader.SetConstantBuffer(0, contantBuffer);
-			context.VertexShader.Set(vertexShader);
-			context.PixelShader.Set(pixelShader);
+			//using (var vertices = Buffer.Create(device, BindFlags.VertexBuffer, CubeField()))
+			//	context.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(vertices, Utilities.SizeOf<Vector4>() * 2, 0));
+			//context.VertexShader.SetConstantBuffer(0, contantBuffer);
+			//context.VertexShader.Set(vertexShader);
+			//context.PixelShader.Set(pixelShader);
 
 			//VIVE render target textures
 
@@ -184,14 +187,41 @@ float4 PS(PS_IN input) : SV_Target
 			textureBounds[1].vMin = 0.5f - 0.5f * r_bottom / tanHalfFov.Y;
 			textureBounds[1].vMax = 0.5f - 0.5f * r_top / tanHalfFov.Y;
 
-			Matrix m = Matrix.Identity;
 
 
+			/// FROM OSVR
+			_gd = SharpDX.Toolkit.Graphics.GraphicsDevice.New(device);
+			_device = device;
 
-			bool abort = false;
+			MediaDecoder.Instance.OnFormatChanged += ResizeTexture;
 
-			var form = new RenderForm("SharpDX - MiniCube Direct3D11 Sample");
-			form.FormClosing += (s, e) => abort = true;
+
+			basicEffectL = new SharpDX.Toolkit.Graphics.BasicEffect(_gd);
+			basicEffectL.PreferPerPixelLighting = false;
+			basicEffectL.TextureEnabled = true;
+			basicEffectL.LightingEnabled = false;
+			basicEffectL.Sampler = _gd.SamplerStates.AnisotropicClamp;
+
+			if (_stereoVideo)
+			{
+				basicEffectR = new SharpDX.Toolkit.Graphics.BasicEffect(_gd);
+				basicEffectR.PreferPerPixelLighting = false;
+				basicEffectR.TextureEnabled = true;
+				basicEffectR.LightingEnabled = false;
+				basicEffectR.Sampler = _gd.SamplerStates.AnisotropicClamp;
+			}
+
+			ResizeTexture(MediaDecoder.Instance.TextureL, _stereoVideo ? MediaDecoder.Instance.TextureR : MediaDecoder.Instance.TextureL);
+
+			//var primitive = SharpDX.Toolkit.Graphics.GeometricPrimitive.Sphere.New(_gd, 1f, 32, true);
+			var primitive = GraphicTools.CreateGeometry(_projection, _gd, false);
+
+
+			// UI Rendering
+			vrui = new VRUI(device, _gd);
+			vrui.Draw(movieTitle, currentTime, duration);
+			/// END FROM OSVR
+
 
 
 			Texture2DDescription eyeTextureDescription = new Texture2DDescription()
@@ -235,6 +265,7 @@ float4 PS(PS_IN input) : SV_Target
 			using (DepthStencilView rightEyeDepthView = new DepthStencilView(device, rightEyeDepth))
 				while (!abort)
 				{
+					float deltaTime = 1 / 30f;
 
 					compositor.WaitGetPoses(renderPoseArray, gamePoseArray);
 
@@ -254,28 +285,30 @@ float4 PS(PS_IN input) : SV_Target
 					}
 					//System.Console.WriteLine(" --- " + posAfter + " / " + posBefore + " / " + gamePose.mDeviceToAbsoluteTracking.ToMatrix().TranslationVector);
 
-					const float halfIPD = 0.65f / 2;        // TODO: config
+					const float halfIPD = 0.065f / 2;        // TODO: config
 
 
 
-//					// Process SteamVR events
-//					vr::VREvent_t event;
-//	while( m_pHMD->PollNextEvent( &event, sizeof( event ) ) )
-//	{
-//			ProcessVREvent( event );
-//		}
+					//					// Process SteamVR events
+					//					vr::VREvent_t event;
+					//	while( m_pHMD->PollNextEvent( &event, sizeof( event ) ) )
+					//	{
+					//			ProcessVREvent( event );
+					//		}
 
-//	// Process SteamVR controller state
-//	for( vr::TrackedDeviceIndex_t unDevice = 0; unDevice<vr::k_unMaxTrackedDeviceCount; unDevice++ )
-//	{
-//		vr::VRControllerState_t state;
-//		if( m_pHMD->GetControllerState(unDevice, &state ) )
-//		{
-//			m_rbShowTrackedDevice[unDevice] = state.ulButtonPressed == 0;
-//		}
-//}
+					//	// Process SteamVR controller state
+					//	for( vr::TrackedDeviceIndex_t unDevice = 0; unDevice<vr::k_unMaxTrackedDeviceCount; unDevice++ )
+					//	{
+					//		vr::VRControllerState_t state;
+					//		if( m_pHMD->GetControllerState(unDevice, &state ) )
+					//		{
+					//			m_rbShowTrackedDevice[unDevice] = state.ulButtonPressed == 0;
+					//		}
+					//}
 
-					for(int eye = 0; eye < 2; eye++)
+
+
+					for (int eye = 0; eye < 2; eye++)
 					{
 						bool isLeftEye = eye == 0;
 
@@ -283,12 +316,15 @@ float4 PS(PS_IN input) : SV_Target
 						RenderTargetView currentEyeView = isLeftEye ? leftEyeView : rightEyeView;
 						float ipdTranslation = isLeftEye ? -halfIPD : halfIPD;
 
+
 						// Setup targets and viewport for rendering
-						context.Rasterizer.SetViewport(new Viewport(0, 0, targetWidth, targetHeight, 0.0f, 1.0f));
 						context.OutputMerger.SetTargets(currentEyeDepthView, currentEyeView);
+						context.ClearDepthStencilView(currentEyeDepthView, DepthStencilClearFlags.Depth, 1.0f, 0);
+						context.ClearRenderTargetView(currentEyeView, Color.CornflowerBlue);
+						context.Rasterizer.SetViewport(new Viewport(0, 0, targetWidth, targetHeight, 0.0f, 1.0f));
 
 						// Setup new projection matrix with correct aspect ratio
-						Matrix worldMatrix = Matrix.Identity * Matrix.Scaling(1f) * Matrix.Translation(0, 0, -1.5f);
+						Matrix worldMatrix = Matrix.Identity;// * Matrix.Scaling(1f) * Matrix.Translation(0, 0, -1.5f);
 
 						Quaternion rotationQuaternion = pose.mDeviceToAbsoluteTracking.ToMatrix().QuaternionFromMatrix();
 
@@ -331,12 +367,49 @@ float4 PS(PS_IN input) : SV_Target
 						//projectionMatrix = hmd.GetProjectionMatrix(EVREye.Eye_Left, -1000f, 1000f, EGraphicsAPIConvention.API_OpenGL).ToMatrix().LeftToRightHanded();
 						Matrix worldViewProj = worldMatrix * viewMatrix * projectionMatrix;
 						worldViewProj.Transpose();
+
+
+
+
 						context.UpdateSubresource(ref worldViewProj, contantBuffer);
 
-						context.ClearDepthStencilView(currentEyeDepthView, DepthStencilClearFlags.Depth, 1.0f, 0);
-						context.ClearRenderTargetView(currentEyeView, Color.CornflowerBlue);
+						//context.ClearDepthStencilView(currentEyeDepthView, DepthStencilClearFlags.Depth, 1.0f, 0);
+						//context.ClearRenderTargetView(currentEyeView, Color.CornflowerBlue);
 
 						context.Draw(36 * 1000, 0);
+
+
+						basicEffectL.World = Matrix.Translation(viewPosition);
+						basicEffectL.View = viewMatrix;
+						basicEffectL.Projection = projectionMatrix;
+
+						if (_stereoVideo)
+						{
+							basicEffectR.World = Matrix.Translation(viewPosition);
+							basicEffectR.View = viewMatrix;
+							basicEffectR.Projection = projectionMatrix;
+						}
+
+						lock (localCritical)
+						{
+							if (_stereoVideo)
+							{
+								if (eye == 0)
+									primitive.Draw(basicEffectL);
+								if (eye == 1)
+									primitive.Draw(basicEffectR);
+							}
+							else
+								primitive.Draw(basicEffectL);
+						}
+
+						// reset UI position every frame if it is not visible
+						if (vrui.isUIHidden)
+							vrui.SetWorldPosition(viewMatrix.Forward, viewPosition, false);
+
+						vrui.Draw(movieTitle, currentTime, duration);
+						vrui.Render(deltaTime, viewMatrix, projectionMatrix, viewPosition, pause);
+
 
 						//context.CopySubresourceRegion(leftEye, 0, new ResourceRegion(0, 0, 0, targetWidth, targetHeight, 100), backBuffer, 0, 0, 0, 0);
 					}
