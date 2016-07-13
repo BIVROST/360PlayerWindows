@@ -735,31 +735,34 @@ namespace PlayerUI
 
 					if (this.HeadsetUsage == HeadsetMode.Auto || this.HeadsetUsage == HeadsetMode.OpenVR)
 					{
-						if (openVRPlayback.IsPresent())
+						try
 						{
-							Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("OpenVR detected. Starting VR playback...")));
-							openVRPlayback.textureL = _mediaDecoder.TextureL;
-							openVRPlayback.textureR = _mediaDecoder.TextureR;
-							openVRPlayback._stereoVideo = _mediaDecoder.IsStereoRendered;
-							openVRPlayback._projection = _mediaDecoder.Projection;
-							openVRPlayback.Configure(SelectedFileNameLabel, (float)_mediaDecoder.Duration);
-							openVRPlayback.Start();
-							ShellViewModel.SendEvent("headsetConnected", "openvr");
-							return;
+							if (openVRPlayback.IsPresent())
+							{
+								Notify("OpenVR detected. Starting VR playback...");
+								openVRPlayback.textureL = _mediaDecoder.TextureL;
+								openVRPlayback.textureR = _mediaDecoder.TextureR;
+								openVRPlayback._stereoVideo = _mediaDecoder.IsStereoRendered;
+								openVRPlayback._projection = _mediaDecoder.Projection;
+								openVRPlayback.Configure(SelectedFileNameLabel, (float)_mediaDecoder.Duration);
+								openVRPlayback.Start();
+								ShellViewModel.SendEvent("headsetConnected", "openvr");
+								return;
+							}
 						}
-						else
+						catch(Exception e)
 						{
-							Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("OpenVR not detected.")));
-							Console.WriteLine("No Oculus connected");
-							ShellViewModel.SendEvent("headsetError", "openvr");
+							Console.WriteLine("Headset detection exception (OpenVR): " + e);
 						}
+						Notify("OpenVR not detected.");
+						ShellViewModel.SendEvent("headsetError", "openvr");
 					}
 
 					if (this.HeadsetUsage == HeadsetMode.Auto || this.HeadsetUsage == HeadsetMode.Oculus)
 					{
 						if (oculusPlayback.IsPresent())
 						{
-							Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Oculus Rift detected. Starting VR playback...")));
+							Notify("Oculus Rift detected. Starting VR playback...");
 							oculusPlayback.textureL = _mediaDecoder.TextureL;
 							oculusPlayback.textureR = _mediaDecoder.TextureR;
 							oculusPlayback._stereoVideo = _mediaDecoder.IsStereoRendered;
@@ -769,12 +772,8 @@ namespace PlayerUI
 							ShellViewModel.SendEvent("headsetConnected", "oculus");
 							return;
 						}
-						else
-						{
-							Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Oculus Rift not detected.")));
-							Console.WriteLine("No Oculus connected");
-							ShellViewModel.SendEvent("headsetError", "oculus");
-						}
+						Notify("Oculus Rift not detected.");
+						ShellViewModel.SendEvent("headsetError", "oculus");
 					}
 
 					if (this.HeadsetUsage == HeadsetMode.Auto || this.HeadsetUsage == HeadsetMode.OSVR)
@@ -791,12 +790,8 @@ namespace PlayerUI
 							ShellViewModel.SendEvent("headsetConnected", "osvr");
 							return;
 						}
-						else
-						{
-							Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("OSVR not detected.")));
-							Console.WriteLine("No OSVR connected");
-							ShellViewModel.SendEvent("headsetError", "osvr");
-						}
+						Notify("OSVR not detected.");
+						ShellViewModel.SendEvent("headsetError", "osvr");
 					}
 				});
 
@@ -811,6 +806,12 @@ namespace PlayerUI
 			});
 
 			//});			
+		}
+
+		void Notify(string v)
+		{
+			Console.WriteLine("NOTIFICATION: " + v);
+			Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel(v)));
 		}
 
 		private void OpenUrlFrom(string url)
