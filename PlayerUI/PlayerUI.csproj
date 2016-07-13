@@ -541,6 +541,12 @@
     <Content Include="Graphics\search.svg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Graphics\steamvr.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Graphics\steamvr_blue.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Shaders\GammaShader.fx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
