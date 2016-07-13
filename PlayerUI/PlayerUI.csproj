@@ -333,6 +333,7 @@
     <Compile Include="NotificationViewModel.cs" />
     <Compile Include="Oculus\EyeTexture.cs" />
     <Compile Include="Oculus\OculusPlayback.cs" />
+    <Compile Include="OpenVR\OpenVRExtensions.cs" />
     <Compile Include="OpenVR\OpenVRPlayback.cs" />
     <Compile Include="OpenVR\openvr_api.cs" />
     <Compile Include="VR\Headset.cs" />
