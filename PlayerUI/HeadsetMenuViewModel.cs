@@ -20,13 +20,13 @@ namespace PlayerUI
 			OnRift();
 		}
 
-        public void SelectOSVR()
-        {
+		public void SelectOSVR()
+		{
 			this.Hide(0.25f);
 			OnOSVR();
 		}
 
-        public void SelectAuto()
+		public void SelectAuto()
         {
 			this.Hide(0.25f);
 			OnAuto();
