@@ -66,9 +66,6 @@ namespace PlayerUI.OpenVR
 				throw new Exception("OpenVR init error " + initError + ": " + Valve.VR.OpenVR.GetStringForHmdError(initError));
 			CVRSystem hmd = Valve.VR.OpenVR.System;
 			CVRCompositor compositor = Valve.VR.OpenVR.Compositor;
-
-
-			compositor = Valve.VR.OpenVR.Compositor;
 	
 
 			uint targetWidth = 0, targetHeight = 0;
@@ -111,24 +108,42 @@ namespace PlayerUI.OpenVR
 				MediaDecoder.Instance.OnFormatChanged += ResizeTexture;
 
 
-				basicEffectL = new SharpDX.Toolkit.Graphics.BasicEffect(_gd);
-				basicEffectL.PreferPerPixelLighting = false;
-				basicEffectL.TextureEnabled = true;
-				basicEffectL.LightingEnabled = false;
-				basicEffectL.Sampler = _gd.SamplerStates.AnisotropicClamp;
+				basicEffectL = new SharpDX.Toolkit.Graphics.BasicEffect(_gd)
+				{
+					PreferPerPixelLighting = false,
+					TextureEnabled = true,
+					LightingEnabled = false,
+					Sampler = _gd.SamplerStates.AnisotropicClamp
+				};
 
 				if (_stereoVideo)
-				{
-					basicEffectR = new SharpDX.Toolkit.Graphics.BasicEffect(_gd);
-					basicEffectR.PreferPerPixelLighting = false;
-					basicEffectR.TextureEnabled = true;
-					basicEffectR.LightingEnabled = false;
-					basicEffectR.Sampler = _gd.SamplerStates.AnisotropicClamp;
-				}
+					basicEffectR = new SharpDX.Toolkit.Graphics.BasicEffect(_gd)
+					{
+						PreferPerPixelLighting = false,
+						TextureEnabled = true,
+						LightingEnabled = false,
+						Sampler = _gd.SamplerStates.AnisotropicClamp
+					};
 
 				ResizeTexture(MediaDecoder.Instance.TextureL, _stereoVideo ? MediaDecoder.Instance.TextureR : MediaDecoder.Instance.TextureL);
 
 				var primitive = GraphicTools.CreateGeometry(_projection, _gd, false);
+
+
+				/// CUBE
+				var cubeEffect = new SharpDX.Toolkit.Graphics.BasicEffect(_gd)
+				{
+					//PreferPerPixelLighting = false,
+					//TextureEnabled = false,
+					LightingEnabled = true,
+					//DiffuseColor = new Vector4(0.5f,0.5f,0.5f,1f),
+					Sampler = _gd.SamplerStates.AnisotropicClamp
+				};
+				cubeEffect.EnableDefaultLighting();
+				var cube = SharpDX.Toolkit.Graphics.GeometricPrimitive.Teapot.New(_gd, 1, 8, false);
+
+
+				/// END
 
 
 
@@ -194,13 +209,11 @@ namespace PlayerUI.OpenVR
 
 						const float halfIPD = 0.065f / 2;        // TODO: config
 
-						for (int eye = 0; eye < 2; eye++)
+						foreach(EVREye eye in new EVREye[] { EVREye.Eye_Left, EVREye.Eye_Right })
 						{
-							bool isLeftEye = eye == 0;
-
-							DepthStencilView currentEyeDepthView = isLeftEye ? leftEyeDepthView : rightEyeDepthView;
-							RenderTargetView currentEyeView = isLeftEye ? leftEyeView : rightEyeView;
-							float ipdTranslation = isLeftEye ? -halfIPD : halfIPD;
+							DepthStencilView currentEyeDepthView = (eye == EVREye.Eye_Left) ? leftEyeDepthView : rightEyeDepthView;
+							RenderTargetView currentEyeView = (eye == EVREye.Eye_Left) ? leftEyeView : rightEyeView;
+							float ipdTranslation = (eye == EVREye.Eye_Left) ? -halfIPD : halfIPD;
 
 
 							// Setup targets and viewport for rendering
@@ -218,11 +231,14 @@ namespace PlayerUI.OpenVR
 							//Quaternion rotationQuaternion = pose.mDeviceToAbsoluteTracking.ToMatrix().  QuaternionFromMatrix();
 
 
-							Quaternion rotationQuaternion = pose.mDeviceToAbsoluteTracking.GetRotation();
-							Vector3 viewPosition = pose.mDeviceToAbsoluteTracking.GetPosition();
+							Quaternion rotationQuaternion; // = pose.mDeviceToAbsoluteTracking.GetRotation();
+							Vector3 viewPosition; // = pose.mDeviceToAbsoluteTracking.GetPosition();
+							Vector3 scale;
+							Matrix eyePose = hmd.GetEyeToHeadTransform(eye).RebuildTRSMatrix() * pose.mDeviceToAbsoluteTracking.RebuildTRSMatrix();
+							eyePose.Decompose(out scale, out rotationQuaternion, out viewPosition);
 
 							Matrix rotationMatrix = Matrix.RotationQuaternion(rotationQuaternion);
-							Vector3 lookUp = Vector3.Transform(new Vector3(0, -1, 0), rotationMatrix).ToVector3();
+							Vector3 lookUp = Vector3.Transform(new Vector3(0, 1, 0), rotationMatrix).ToVector3();
 							Vector3 lookAt = Vector3.Transform(new Vector3(0, 0, -1), rotationMatrix).ToVector3();
 							// FIXME: no translation from HMD
 							//Vector3 viewPosition = Vector3.Transform(new Vector3(ipdTranslation, 0, 0), rotationMatrix).ToVector3(); //pose.mDeviceToAbsoluteTracking.ToMatrix().TranslationVector;
@@ -234,25 +250,12 @@ namespace PlayerUI.OpenVR
 
 
 
-							/// FIXME: projection fov?
-							//Matrix projectionMatrix = Matrix.PerspectiveFovLH(fov2, 1, 0.001f, 100.0f);
 							Matrix pm1 = Matrix.PerspectiveFovLH(fieldOfView*((float)Math.PI/180f), aspect, 0.001f, 100.0f);
-							//projectionMatrix = hmd.GetProjectionMatrix(EVREye.Eye_Left, -1000f, 1000f, EGraphicsAPIConvention.API_OpenGL).ToMatrix(); //.LeftToRightHanded();
-							Matrix pm2 = hmd.GetProjectionMatrix(EVREye.Eye_Left, 0.001f, 100f, EGraphicsAPIConvention.API_DirectX).ToProjMatrix();
+							Matrix pm2 = hmd.GetProjectionMatrix(eye, 0.001f, 100f, EGraphicsAPIConvention.API_DirectX).ToProjMatrix();
 
 							Matrix projectionMatrix = pm2;
 
-							//projectionMatrix.Transpose();
-							//projectionMatrix.Invert();
-							//projectionMatrix.Transpose();
-							//Matrix worldViewProj = worldMatrix * viewMatrix * projectionMatrix;
-							//worldViewProj.Transpose();
-
-
-
-
-							//context.UpdateSubresource(ref worldViewProj, contantBuffer);
-
+					
 							basicEffectL.World = Matrix.Translation(viewPosition);
 							basicEffectL.View = viewMatrix;
 							basicEffectL.Projection = projectionMatrix;
@@ -268,9 +271,9 @@ namespace PlayerUI.OpenVR
 							{
 								if (_stereoVideo)
 								{
-									if (eye == 0)
+									if (eye == EVREye.Eye_Left)
 										primitive.Draw(basicEffectL);
-									if (eye == 1)
+									if (eye == EVREye.Eye_Right)
 										primitive.Draw(basicEffectR);
 								}
 								else
@@ -283,14 +286,34 @@ namespace PlayerUI.OpenVR
 
 							vrui.Draw(movieTitle, currentTime, duration);
 							vrui.Render(deltaTime, viewMatrix, projectionMatrix, viewPosition, pause);
+
+
+
+							//// controllers:
+							//cubeEffect.View = viewMatrix;
+							//cubeEffect.Projection = projectionMatrix;
+
+							//for (uint controller = 1 /*skip hmd*/; controller < Valve.VR.OpenVR.k_unMaxTrackedDeviceCount; controller++)
+							//{
+							//	VRControllerState_t controllerState = default(VRControllerState_t);
+							//	//var controllerPose = renderPoseArray[controller];
+							//	//if (hmd.GetControllerState(controller, ref controllerState)) {
+							//	Vector3 pos = renderPoseArray[controller].mDeviceToAbsoluteTracking.GetPosition();
+							//	Quaternion rot = renderPoseArray[controller].mDeviceToAbsoluteTracking.GetRotation();
+							//	rot = rot * new Quaternion(0, 1, 0, 0);
+							//	float s = controllerState.ulButtonPressed > 0 ? 0.5f : 0.1f;
+							//	cubeEffect.World = Matrix.Scaling(s) * Matrix.RotationQuaternion(rot) * Matrix.Translation(pos);
+							//	cube.Draw(cubeEffect);
+
+							//	//}
+							//}
+
 						}
 
 
 
 
 						// RENDER TO HMD
-
-						//compositor.WaitGetPoses(deviceArray1, deviceArray2);
 
 						EVRCompositorError errorLeft = compositor.Submit(
 							EVREye.Eye_Left,
