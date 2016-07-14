@@ -105,7 +105,7 @@ namespace PlayerUI
 				ownMutex = true;
 
 				if(args != null)
-					if(args.Length>0)
+					if(args.Length > 0)
 					{
 						if(args[0].StartsWith("bivrost:"))
 						{
@@ -113,7 +113,8 @@ namespace PlayerUI
 						}
 						else
 						{
-							ShellViewModel.FileFromArgs = args[args.Length - 1];
+							if(!args[args.Length - 1].EndsWith(".vshost.exe"))
+								ShellViewModel.FileFromArgs = args[args.Length - 1];
 						}
 					}
 				
