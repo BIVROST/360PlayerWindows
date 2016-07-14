@@ -14,6 +14,7 @@ using System.IO;
 using System.Collections.Generic;
 using PlayerUI.Tools;
 using System.Diagnostics;
+using System.ComponentModel;
 
 namespace PlayerUI.OpenVR
 {
@@ -33,15 +34,18 @@ namespace PlayerUI.OpenVR
 			// Preload native binaries
 			var assembly = System.Uri.UnescapeDataString((new System.Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase)).AbsolutePath);
 			var assemblyPath = Path.GetDirectoryName(assembly);
+			string libPath = assemblyPath + Path.DirectorySeparatorChar + (Environment.Is64BitProcess ? "x64" : "x86") + Path.DirectorySeparatorChar + "openvr_api.dll";
 
 			IntPtr success;
-			if (IntPtr.Size == 8)   // 64 bit
-				success = LoadLibrary(assemblyPath + Path.DirectorySeparatorChar + "x86_64" + Path.DirectorySeparatorChar + "openvr_api.dll");
-			else   // 32 bit
-				success = LoadLibrary(assemblyPath + Path.DirectorySeparatorChar + "x86" + Path.DirectorySeparatorChar + "openvr_api.dll");
+			success = LoadLibrary(libPath);
 			if (success == IntPtr.Zero)
-				throw new Exception("LoadLibrary error: " + Marshal.GetLastWin32Error());
+			{
+				var lasterror = Marshal.GetLastWin32Error();
+				var innerEx = new Win32Exception(lasterror);
+				innerEx.Data.Add("LastWin32Error", lasterror);
 
+				throw new Exception("OpenVR LoadLibrary error: " + libPath, innerEx);
+			}
 			dllsLoaded = true;
 		}
 
