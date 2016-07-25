@@ -27,14 +27,6 @@ struct PixelInputType
     float2 TexCoord : TEXCOORD0;
 };
 
-
-Texture tex1 : register(s1);
-texture tex2 : register(s2);
-uniform extern Texture tex3 : register(s3);
-Texture2D<float> tex4 : register(s4);
-Texture2D tex5 : register(s5);
-texture2D tex6 : register(s6);
-
 Texture2D<float4> UserTex : register(t0);
 SamplerState UserTexSampler : register(s0);
 
@@ -69,8 +61,7 @@ PixelInputType ColorVertexShader(VertexInputType input)
 ////////////////////////////////////////////////////////////////////////////////
 float4 ColorPixelShader(PixelInputType input) : SV_Target
 {
-    return tex2D(UserTexSampler, input.TexCoord).rgba;
-    //return UserTex.Sample(UserTexSampler, input.TexCoord);
+	return pow(UserTex.Sample(UserTexSampler, input.TexCoord), 1/2.2f);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
