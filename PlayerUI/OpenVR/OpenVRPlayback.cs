@@ -257,7 +257,7 @@ namespace PlayerUI.OpenVR
 							Matrix pm1 = Matrix.PerspectiveFovLH(fieldOfView*((float)Math.PI/180f), aspect, 0.001f, 100.0f);
 							Matrix pm2 = hmd.GetProjectionMatrix(eye, 0.001f, 100f, EGraphicsAPIConvention.API_DirectX).ToProjMatrix();
 
-							Matrix projectionMatrix = pm2;
+							Matrix projectionMatrix = pm1;
 
 					
 							basicEffectL.World = Matrix.Translation(viewPosition);

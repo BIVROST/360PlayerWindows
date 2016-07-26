@@ -52,17 +52,19 @@ namespace PlayerUI
 			uiTexture = new SharpDX.Direct3D11.Texture2D(device, uiTextureDescription);
 			uiSurface = uiTexture.QueryInterface<Surface>();
 
-			DX2D.Factory factory2d = new DX2D.Factory(SharpDX.Direct2D1.FactoryType.SingleThreaded, DX2D.DebugLevel.Information);
-			DX2D.RenderTargetProperties renderTargetProperties = new DX2D.RenderTargetProperties()
+			using (DX2D.Factory factory2d = new DX2D.Factory(SharpDX.Direct2D1.FactoryType.SingleThreaded, DX2D.DebugLevel.Information))
 			{
-				DpiX = 96,
-				DpiY = 96,
-				PixelFormat = new DX2D.PixelFormat(Format.B8G8R8A8_UNorm, SharpDX.Direct2D1.AlphaMode.Premultiplied),
-				Type = SharpDX.Direct2D1.RenderTargetType.Hardware,
-				MinLevel = DX2D.FeatureLevel.Level_10,
-				Usage = SharpDX.Direct2D1.RenderTargetUsage.None
-			};
-			target2d = new DX2D.RenderTarget(factory2d, uiSurface, renderTargetProperties);
+				DX2D.RenderTargetProperties renderTargetProperties = new DX2D.RenderTargetProperties()
+				{
+					DpiX = 96,
+					DpiY = 96,
+					PixelFormat = new DX2D.PixelFormat(Format.B8G8R8A8_UNorm, SharpDX.Direct2D1.AlphaMode.Premultiplied),
+					Type = SharpDX.Direct2D1.RenderTargetType.Hardware,
+					MinLevel = DX2D.FeatureLevel.Level_10,
+					Usage = SharpDX.Direct2D1.RenderTargetUsage.None
+				};
+				target2d = new DX2D.RenderTarget(factory2d, uiSurface, renderTargetProperties);
+			}
 			SharpDX.DirectWrite.Factory factoryDW = new SharpDX.DirectWrite.Factory();
 
 
