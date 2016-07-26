@@ -99,7 +99,7 @@ namespace PlayerUI
 		protected SharpDX.Toolkit.Graphics.GraphicsDevice _gd;
 		protected Device _device;
 
-		protected void ResizeTexture(Texture2D tL, Texture2D tR)
+		protected virtual void ResizeTexture(Texture2D tL, Texture2D tR)
 		{
 			if (MediaDecoder.Instance.TextureReleased) return;
 

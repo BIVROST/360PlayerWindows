@@ -514,7 +514,6 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <AppDesigner Include="Properties\" />
-    <None Include="Shaders\shader1.dgsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -547,9 +546,7 @@
     <Content Include="Graphics\steamvr_blue.svg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Shaders\GammaShader.fx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <None Include="Shaders\GammaShader.fx" />
     <Content Include="x64\openvr_api.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

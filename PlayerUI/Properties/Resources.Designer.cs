@@ -61,9 +61,14 @@ namespace PlayerUI.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to End User License Agreement
+        ///   Looks up a localized string similar to Licence for Non-Commercial
+        ///Use of Bivrost Desktop
+        ///rev. as of 2015-11-25
         ///
-        ///The present agreement constitutes a legally binding agreement between the Licensee and KOLOR, a sole-proprietor limited liability company with a capital of 8.000,00 €, the head office of which is situated at 73800 FRANCIN (FRANCE), 112 Voie Albert Einstein, registered in the CHAMBERY trade register under reference 479 247 751, represented by Mr. Alexandre JENNY, Executive Manager, in accordance with the law and current company articles, domiciled in this function at the aforeme [rest of string was truncated]&quot;;.
+        ///Section 1
+        ///For the purposes of this licence, the following terms are defined as follows:
+        ///1) Bivrost Desktop – computer software created by the Bivrost Developer, used for displaying panoramic videos; Bivrost Desktop offers features and specifications listed in its Documentation; to be operational, Bivrost Desktop requires third-party software listed in the Documentation, specifically: an operating system, drivers and libraries;
+        ///2 [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string EULA {
             get {
@@ -87,6 +92,40 @@ namespace PlayerUI.Properties {
         internal static string EulaLibs {
             get {
                 return ResourceManager.GetString("EulaLibs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to //reuse//code//ApplyAnEffectFxFile//
+        ///uniform extern float4x4 WorldViewProj : WORLDVIEWPROJECTION;
+        ///extern float gammaFactor;
+        ///
+        ////////////////
+        ///// GLOBALS //
+        ////////////////
+        /////matrix worldMatrix;
+        /////matrix viewMatrix;
+        /////matrix projectionMatrix;
+        ///
+        /////float4 AmbientColor = float4(1, 1, 1, 1);
+        ///
+        /////////////////
+        ///// TYPEDEFS //
+        /////////////////
+        ///struct VertexInputType
+        ///{
+        ///    float4 Position : SV_Position;
+        ///    float3 Normal : NORMAL;
+        ///    float2 TexCoord : TEXCOORD0;
+        ///};
+        ///
+        ///struct PixelInputType
+        ///{
+        ///    float4 [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string GammaShader {
+            get {
+                return ResourceManager.GetString("GammaShader", resourceCulture);
             }
         }
     }

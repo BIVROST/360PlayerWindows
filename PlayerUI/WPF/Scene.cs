@@ -35,7 +35,7 @@
 
 		SharpDX.Toolkit.Graphics.GraphicsDevice graphicsDevice;
 		SharpDX.Toolkit.Graphics.BasicEffect basicEffect;
-		SharpDX.Toolkit.Graphics.Effect customEffect;
+		//SharpDX.Toolkit.Graphics.Effect customEffect;
 
 		SharpDX.Toolkit.Graphics.GeometricPrimitive primitive;
 		SharpDX.Toolkit.Graphics.GeometricPrimitive primitive2;
@@ -139,7 +139,6 @@
 				sharedTex = _device.OpenSharedResource<Texture2D>(resource.SharedHandle);
 
 				basicEffect.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(graphicsDevice, sharedTex);
-                
 				//SamplerStateDescription samplerDescription = new SamplerStateDescription()
 				//{
 				//	AddressU = TextureAddressMode.Wrap,
@@ -159,13 +158,13 @@
 
 				ShaderResourceView shaderResourceView = new ShaderResourceView(_device, sharedTex);
 
-                //_device.ImmediateContext.PixelShader.SetShaderResource(0, shaderResourceView);
+				//_device.ImmediateContext.PixelShader.SetShaderResource(0, shaderResourceView);
 
-                customEffect.Parameters["UserTex"].SetResource(basicEffect.Texture);
-                customEffect.CurrentTechnique = customEffect.Techniques["ColorTechnique"];
-                customEffect.CurrentTechnique.Passes[0].Apply();
+				//customEffect.Parameters["UserTexSampler"].SetResource(textureSampler);
+				//customEffect.CurrentTechnique = customEffect.Techniques["ColorTechnique"];
+				//customEffect.CurrentTechnique.Passes[0].Apply();
 
-                resource.Dispose();
+				resource.Dispose();
 				sharedTex.Dispose();
 				//textureReleased = false;
 
@@ -193,29 +192,32 @@
 			basicEffect = new SharpDX.Toolkit.Graphics.BasicEffect(graphicsDevice);
 
 
-            //==============
-            SharpDX.Toolkit.Graphics.EffectCompiler compiler = new SharpDX.Toolkit.Graphics.EffectCompiler();
-            var shaderCode = compiler.CompileFromFile("Shaders/GammaShader.fx", SharpDX.Toolkit.Graphics.EffectCompilerFlags.Debug | SharpDX.Toolkit.Graphics.EffectCompilerFlags.EnableBackwardsCompatibility | SharpDX.Toolkit.Graphics.EffectCompilerFlags.SkipOptimization);
+			//==============
+			//SharpDX.Toolkit.Graphics.EffectCompiler compiler = new SharpDX.Toolkit.Graphics.EffectCompiler();
+			//var shaderCode = compiler.CompileFromFile("Shaders/GammaShader.fx", SharpDX.Toolkit.Graphics.EffectCompilerFlags.Debug | SharpDX.Toolkit.Graphics.EffectCompilerFlags.EnableBackwardsCompatibility | SharpDX.Toolkit.Graphics.EffectCompilerFlags.SkipOptimization);
+			
+			//if (shaderCode.HasErrors)
+			//{
+			//	shaderCode.Logger.Messages.ForEach(m => System.Diagnostics.Debug.WriteLine("[shader error] " + m));
+			//}
+			//customEffect = new SharpDX.Toolkit.Graphics.Effect(graphicsDevice, shaderCode.EffectData);
+			//customEffect.CurrentTechnique = customEffect.Techniques["ColorTechnique"];
+			//customEffect.CurrentTechnique.Passes[0].Apply();
 
-            if (shaderCode.HasErrors)
-            {
-                shaderCode.Logger.Messages.ForEach(m => System.Diagnostics.Debug.WriteLine("[shader error] " + m));
-            }
-            customEffect = new SharpDX.Toolkit.Graphics.Effect(graphicsDevice, shaderCode.EffectData);
-            customEffect.CurrentTechnique = customEffect.Techniques["ColorTechnique"];
-            customEffect.CurrentTechnique.Passes[0].Apply();
-
-            SharpDX.D3DCompiler.ShaderReflection sr;
-            sr = new SharpDX.D3DCompiler.ShaderReflection(shaderCode.EffectData.Shaders[0].Bytecode);
-            int ResourceCount = sr.Description.BoundResources;
-            SharpDX.D3DCompiler.InputBindingDescription desc = sr.GetResourceBindingDescription(0);
-            //==============
-
-
+			//SharpDX.D3DCompiler.ShaderReflection sr;
+			//sr = new SharpDX.D3DCompiler.ShaderReflection(shaderCode.EffectData.Shaders[0].Bytecode);
+			//int ResourceCount = sr.Description.BoundResources;
+			//SharpDX.D3DCompiler.InputBindingDescription desc = sr.GetResourceBindingDescription(0);
+			//;
 
 
+			//==============
 
-            MediaDecoder.Instance.OnFormatChanged += ResizeTexture;
+
+
+
+
+			MediaDecoder.Instance.OnFormatChanged += ResizeTexture;
 			//MediaDecoder.Instance.OnReleaseTexture += ReleaseTexture;
 
 			basicEffect.Projection = Matrix.PerspectiveFovRH((float)(72f * Math.PI / 180f), (float)16f/9f, 0.0001f, 50.0f);
@@ -390,7 +392,7 @@
 
 			//basicEffect.View = Matrix.Lerp(basicEffect.View, Matrix.RotationQuaternion(targetRotationQuaternion), 3f * deltaTime);
 
-			customEffect.Parameters["WorldViewProj"].SetValue(basicEffect.World * basicEffect.View * basicEffect.Projection);
+			//customEffect.Parameters["WorldViewProj"].SetValue(basicEffect.World * basicEffect.View * basicEffect.Projection);
 
 		}
 
@@ -508,8 +510,8 @@
 
 			lock (localCritical)
 			{
-			    //primitive?.Draw(basicEffect);
-				primitive?.Draw(customEffect);
+				primitive?.Draw(basicEffect);
+				//primitive?.Draw(customEffect);
 				//primitive?.Draw();
 			}
 

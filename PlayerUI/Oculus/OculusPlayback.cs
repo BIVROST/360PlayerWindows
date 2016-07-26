@@ -14,36 +14,83 @@ namespace PlayerUI.Oculus
 {
 	public class OculusPlayback : Headset
 	{
-
+		private SharpDX.Toolkit.Graphics.Effect customEffectL;
+		private SharpDX.Toolkit.Graphics.Effect customEffectR;
 
 		override public bool IsPresent()
 		{
-			if (Lock) return true;
-			Wrap oculus = new Wrap();
-			try {
+			if (Lock)
+				return true;
+
+			using (Wrap oculus = new Wrap()) {
 				bool success = oculus.Initialize();
-			
+
 				if (!success)
-				{
-					oculus.Dispose();
 					return false;
-				} else
+
+				else
 				{
-					var result = oculus.Detect(1000);                
-					oculus.Dispose();
+					var result = oculus.Detect(1000);
 					bool detected = result.IsOculusHMDConnected == 1 && result.IsOculusServiceRunning == 1;
 					return detected;
 				}
 			}
-			catch (Exception exc)
-			{
-				oculus.Dispose();
-				return false;
-			}
 		}
 
 
-		
+
+		override protected void ResizeTexture(Texture2D tL, Texture2D tR)
+		{
+			if (MediaDecoder.Instance.TextureReleased) return;
+
+			var tempL = textureL;
+			var tempR = textureR;
+
+			lock (localCritical)
+			{
+				//basicEffectL.Texture?.Dispose();
+				(customEffectL.Parameters["UserTex"]?.GetResource<Texture2D>())?.Dispose();
+				textureL = tL;
+
+				if (_stereoVideo)
+				{
+					(customEffectR.Parameters["UserTex"]?.GetResource<Texture2D>())?.Dispose();
+					//basicEffectR.Texture?.Dispose();
+					textureR = tR;
+				}
+
+				var resourceL = textureL.QueryInterface<SharpDX.DXGI.Resource>();
+				var sharedTexL = _device.OpenSharedResource<Texture2D>(resourceL.SharedHandle);
+
+
+				//basicEffectL.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexL);
+				customEffectL.Parameters["UserTex"].SetResource(SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexL));
+				customEffectL.Parameters["gammaFactor"].SetValue(1/2.2f);
+				customEffectL.CurrentTechnique = customEffectL.Techniques["ColorTechnique"];
+				customEffectL.CurrentTechnique.Passes[0].Apply();
+
+				resourceL?.Dispose();
+				sharedTexL?.Dispose();
+
+				if (_stereoVideo)
+				{
+					var resourceR = textureR.QueryInterface<SharpDX.DXGI.Resource>();
+					var sharedTexR = _device.OpenSharedResource<Texture2D>(resourceR.SharedHandle);
+
+					//basicEffectR.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexR);
+					customEffectR.Parameters["UserTex"].SetResource(SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexR));
+					customEffectR.Parameters["gammaFactor"].SetValue(1/2.2f);
+					customEffectR.CurrentTechnique = customEffectR.Techniques["ColorTechnique"];
+					customEffectR.CurrentTechnique.Passes[0].Apply();
+
+					resourceR?.Dispose();
+					sharedTexR?.Dispose();
+				}
+				//_device.ImmediateContext.Flush();
+			}
+
+		}
+
 
 		override protected void Render()
 		{
@@ -60,8 +107,8 @@ namespace PlayerUI.Oculus
 				return;
 			}
 
-            OVRTypes.GraphicsLuid graphicsLuid;
-            hmd = oculus.Hmd_Create(out graphicsLuid);
+			OVRTypes.GraphicsLuid graphicsLuid;
+			hmd = oculus.Hmd_Create(out graphicsLuid);
 
 			if (hmd == null)
 			{
@@ -74,7 +121,7 @@ namespace PlayerUI.Oculus
 
 			// Create a set of layers to submit.
 			EyeTexture[] eyeTextures = new EyeTexture[2];
-            OVRTypes.Result result;
+			OVRTypes.Result result;
 
 			// Create DirectX drawing device.
 			SharpDX.Direct3D11.Device device = new Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.BgraSupport, new SharpDX.Direct3D.FeatureLevel[] { SharpDX.Direct3D.FeatureLevel.Level_10_0 });
@@ -85,23 +132,27 @@ namespace PlayerUI.Oculus
 			DeviceContext immediateContext = device.ImmediateContext;
 
 			// Create a depth buffer, using the same width and height as the back buffer.
-			Texture2DDescription depthBufferDescription = new Texture2DDescription();
-			depthBufferDescription.Format = Format.D32_Float;
-			depthBufferDescription.ArraySize = 1;
-			depthBufferDescription.MipLevels = 1;
-			depthBufferDescription.Width = 1920;	// TODO: FIXME?
-			depthBufferDescription.Height = 1080;
-			depthBufferDescription.SampleDescription = new SampleDescription(1, 0);
-			depthBufferDescription.Usage = ResourceUsage.Default;
-			depthBufferDescription.BindFlags = BindFlags.DepthStencil;
-			depthBufferDescription.CpuAccessFlags = CpuAccessFlags.None;
-			depthBufferDescription.OptionFlags = ResourceOptionFlags.None;
+			Texture2DDescription depthBufferDescription = new Texture2DDescription()
+			{
+				Format = Format.D32_Float,
+				ArraySize = 1,
+				MipLevels = 1,
+				Width = 1920,    // TODO: FIXME?
+				Height = 1080,
+				SampleDescription = new SampleDescription(1, 0),
+				Usage = ResourceUsage.Default,
+				BindFlags = BindFlags.DepthStencil,
+				CpuAccessFlags = CpuAccessFlags.None,
+				OptionFlags = ResourceOptionFlags.None
+			};
 
 			// Define how the depth buffer will be used to filter out objects, based on their distance from the viewer.
-			DepthStencilStateDescription depthStencilStateDescription = new DepthStencilStateDescription();
-			depthStencilStateDescription.IsDepthEnabled = true;
-			depthStencilStateDescription.DepthComparison = Comparison.Less;
-			depthStencilStateDescription.DepthWriteMask = DepthWriteMask.Zero;
+			DepthStencilStateDescription depthStencilStateDescription = new DepthStencilStateDescription()
+			{
+				IsDepthEnabled = true,
+				DepthComparison = Comparison.Less,
+				DepthWriteMask = DepthWriteMask.Zero
+			};
 
 			// Create the depth buffer.
 			Texture2D depthBuffer = new Texture2D(device, depthBufferDescription);
@@ -121,7 +172,7 @@ namespace PlayerUI.Oculus
 
 			for (int eyeIndex = 0; eyeIndex < 2; eyeIndex++)
 			{
-                OVRTypes.EyeType eye = (OVRTypes.EyeType)eyeIndex;
+				OVRTypes.EyeType eye = (OVRTypes.EyeType)eyeIndex;
 				EyeTexture eyeTexture = new EyeTexture();
 				eyeTextures[eyeIndex] = eyeTexture;
 
@@ -129,7 +180,7 @@ namespace PlayerUI.Oculus
 				eyeTexture.FieldOfView = hmd.DefaultEyeFov[eyeIndex];
 				eyeTexture.TextureSize = hmd.GetFovTextureSize(eye, hmd.DefaultEyeFov[eyeIndex], 1.0f);
 				eyeTexture.RenderDescription = hmd.GetRenderDesc(eye, hmd.DefaultEyeFov[eyeIndex]);
-				eyeTexture.HmdToEyeViewOffset = eyeTexture.RenderDescription.HmdToEyeOffset; 
+				eyeTexture.HmdToEyeViewOffset = eyeTexture.RenderDescription.HmdToEyeOffset;
 				eyeTexture.ViewportSize.Position = new OVRTypes.Vector2i(0, 0);
 				eyeTexture.ViewportSize.Size = eyeTexture.TextureSize;
 				eyeTexture.Viewport = new Viewport(0, 0, eyeTexture.TextureSize.Width, eyeTexture.TextureSize.Height, 0.0f, 1.0f);
@@ -140,7 +191,7 @@ namespace PlayerUI.Oculus
 				eyeTexture.Texture2DDescription.Height = eyeTexture.TextureSize.Height;
 				eyeTexture.Texture2DDescription.ArraySize = 1;
 				eyeTexture.Texture2DDescription.MipLevels = 1;
-				eyeTexture.Texture2DDescription.Format = Format.R8G8B8A8_UNorm;
+				eyeTexture.Texture2DDescription.Format = Format.R8G8B8A8_UNorm_SRgb;
 				eyeTexture.Texture2DDescription.SampleDescription = new SampleDescription(1, 0);
 				eyeTexture.Texture2DDescription.Usage = ResourceUsage.Default;
 				eyeTexture.Texture2DDescription.CpuAccessFlags = CpuAccessFlags.None;
@@ -166,7 +217,7 @@ namespace PlayerUI.Oculus
 				for (int textureIndex = 0; textureIndex < textureSwapChainBufferCount; textureIndex++)
 				{
 					// Interface ID of the Direct3D Texture2D interface.
-					Guid textureInterfaceId = new Guid("6f15aaf2-d208-4e89-9ab4-489535d34f9c"); 
+					Guid textureInterfaceId = new Guid("6f15aaf2-d208-4e89-9ab4-489535d34f9c");
 
 					// Retrieve the Direct3D texture contained in the Oculus TextureSwapChainBuffer.
 					IntPtr swapChainTextureComPtr = IntPtr.Zero;
@@ -218,29 +269,49 @@ namespace PlayerUI.Oculus
 			//var resourceL = textureL.QueryInterface<SharpDX.DXGI.Resource>();
 			//var sharedTexL = device.OpenSharedResource<Texture2D>(resourceL.SharedHandle);
 
-			basicEffectL = new SharpDX.Toolkit.Graphics.BasicEffect(gd);
-			basicEffectL.PreferPerPixelLighting = false;
-			//basicEffectL.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(gd, sharedTexL);
+			//basicEffectL = new SharpDX.Toolkit.Graphics.BasicEffect(gd);
+			//basicEffectL.PreferPerPixelLighting = false;
+			////basicEffectL.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(gd, sharedTexL);
 
-			basicEffectL.TextureEnabled = true;
-			basicEffectL.LightingEnabled = false;
-			basicEffectL.Sampler = gd.SamplerStates.AnisotropicClamp;
-			//basicEffectL.DiffuseColor = new Vector4(1f, 0f, 0f, 0f);
-			
+			//basicEffectL.TextureEnabled = true;
+			//basicEffectL.LightingEnabled = false;
+			//basicEffectL.Sampler = gd.SamplerStates.AnisotropicClamp;
+			////basicEffectL.DiffuseColor = new Vector4(1f, 0f, 0f, 0f);
+
+			//==============;
+
+			var gammaShader = GetGammaShader();
+
+			customEffectL = new SharpDX.Toolkit.Graphics.Effect(gd, gammaShader.EffectData);
+			customEffectL.CurrentTechnique = customEffectL.Techniques["ColorTechnique"];
+			customEffectL.CurrentTechnique.Passes[0].Apply();
+
+			//SharpDX.D3DCompiler.ShaderReflection sr;
+			//sr = new SharpDX.D3DCompiler.ShaderReflection(shaderCode.EffectData.Shaders[0].Bytecode);
+			//int ResourceCount = sr.Description.BoundResources;
+			//SharpDX.D3DCompiler.InputBindingDescription desc = sr.GetResourceBindingDescription(0);
+			//==============
+
+
+
 
 			if (_stereoVideo)
 			{
 				//var resourceR = textureR.QueryInterface<SharpDX.DXGI.Resource>();
 				//var sharedTexR = device.OpenSharedResource<Texture2D>(resourceR.SharedHandle);
 
-				basicEffectR = new SharpDX.Toolkit.Graphics.BasicEffect(gd);
+				//basicEffectR = new SharpDX.Toolkit.Graphics.BasicEffect(gd);
 
-				basicEffectR.PreferPerPixelLighting = false;
-				//basicEffectR.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(gd, sharedTexR);
+				//basicEffectR.PreferPerPixelLighting = false;
+				////basicEffectR.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(gd, sharedTexR);
 
-				basicEffectR.TextureEnabled = true;
-				basicEffectR.LightingEnabled = false;
-				basicEffectR.Sampler = gd.SamplerStates.AnisotropicClamp;
+				//basicEffectR.TextureEnabled = true;
+				//basicEffectR.LightingEnabled = false;
+				//basicEffectR.Sampler = gd.SamplerStates.AnisotropicClamp;
+
+				customEffectR = new SharpDX.Toolkit.Graphics.Effect(gd, gammaShader.EffectData);
+				customEffectR.CurrentTechnique = customEffectR.Techniques["ColorTechnique"];
+				customEffectR.CurrentTechnique.Passes[0].Apply();
 			}
 
 			ResizeTexture(MediaDecoder.Instance.TextureL, _stereoVideo ? MediaDecoder.Instance.TextureR : MediaDecoder.Instance.TextureL);
@@ -264,12 +335,12 @@ namespace PlayerUI.Oculus
 
 			while (!abort)
 			{
-                OVRTypes.Vector3f[] hmdToEyeViewOffsets = { eyeTextures[0].HmdToEyeViewOffset, eyeTextures[1].HmdToEyeViewOffset };
-                //OVR.FrameTiming frameTiming = hmd.GetFrameTiming(0);
-                //OVR.TrackingState trackingState = hmd.GetTrackingState(frameTiming.DisplayMidpointSeconds);
-                double displayMidpoint = hmd.GetPredictedDisplayTime(0);
-                OVRTypes.TrackingState trackingState = hmd.GetTrackingState(displayMidpoint, true);
-                OVRTypes.Posef[] eyePoses = new OVRTypes.Posef[2];
+				OVRTypes.Vector3f[] hmdToEyeViewOffsets = { eyeTextures[0].HmdToEyeViewOffset, eyeTextures[1].HmdToEyeViewOffset };
+				//OVR.FrameTiming frameTiming = hmd.GetFrameTiming(0);
+				//OVR.TrackingState trackingState = hmd.GetTrackingState(frameTiming.DisplayMidpointSeconds);
+				double displayMidpoint = hmd.GetPredictedDisplayTime(0);
+				OVRTypes.TrackingState trackingState = hmd.GetTrackingState(displayMidpoint, true);
+				OVRTypes.Posef[] eyePoses = new OVRTypes.Posef[2];
 
 				// Calculate the position and orientation of each eye.
 				oculus.CalcEyePoses(trackingState.HeadPose.ThePose, hmdToEyeViewOffsets, ref eyePoses);
@@ -291,7 +362,7 @@ namespace PlayerUI.Oculus
 
 				for (int eyeIndex = 0; eyeIndex < 2; eyeIndex++)
 				{
-                    OVRTypes.EyeType eye = (OVRTypes.EyeType)eyeIndex;
+					OVRTypes.EyeType eye = (OVRTypes.EyeType)eyeIndex;
 					EyeTexture eyeTexture = eyeTextures[eyeIndex];
 
 					layerEyeFov.RenderPose[eyeIndex] = eyePoses[eyeIndex];
@@ -340,27 +411,30 @@ namespace PlayerUI.Oculus
 					//Matrix worldViewProjection = world * viewMatrix * projectionMatrix;
 					//worldViewProjection.Transpose();
 
-					basicEffectL.World = Matrix.Translation(viewPosition); //Matrix.Identity;
-					basicEffectL.View = viewMatrix;
-					basicEffectL.Projection = projectionMatrix;
+					//basicEffectL.World = Matrix.Translation(viewPosition); //Matrix.Identity;
+					//basicEffectL.View = viewMatrix;
+					//basicEffectL.Projection = projectionMatrix;
+
+					customEffectL.Parameters["WorldViewProj"].SetValue(Matrix.Translation(viewPosition) * viewMatrix * projectionMatrix);
 
 					if (_stereoVideo)
 					{
-						basicEffectR.World = Matrix.Translation(viewPosition);
-						basicEffectR.View = viewMatrix;
-						basicEffectR.Projection = projectionMatrix;
+						//basicEffectR.World = Matrix.Translation(viewPosition);
+						//basicEffectR.View = viewMatrix;
+						//basicEffectR.Projection = projectionMatrix;
+						customEffectR.Parameters["WorldViewProj"].SetValue(Matrix.Translation(viewPosition) * viewMatrix * projectionMatrix);
 					}
 					lock (localCritical)
 					{
 						if (_stereoVideo)
 						{
 							if (eyeIndex == 0)
-								primitive.Draw(basicEffectL);
+								primitive.Draw(customEffectL);
 							if (eyeIndex == 1)
-								primitive.Draw(basicEffectR);
+								primitive.Draw(customEffectR);
 						}
 						else
-							primitive.Draw(basicEffectL);
+							primitive.Draw(customEffectL);
 					}
 
 					// reset UI position every frame if it is not visible
@@ -403,9 +477,9 @@ namespace PlayerUI.Oculus
 			factory.Dispose();
 
 			// Release all 2D resources
-			basicEffectL.Dispose();
+			customEffectL.Dispose();
 			if (_stereoVideo)
-				basicEffectR.Dispose();
+				customEffectR.Dispose();
 
 			//target2d.Dispose();
 			//uiSurface.Dispose();
@@ -425,6 +499,17 @@ namespace PlayerUI.Oculus
 			Lock = false;
 		}
 
+		private static SharpDX.Toolkit.Graphics.EffectCompilerResult GetGammaShader()
+		{
+			string shaderSource = Properties.Resources.GammaShader;
+			SharpDX.Toolkit.Graphics.EffectCompiler compiler = new SharpDX.Toolkit.Graphics.EffectCompiler();
+			var shaderCode = compiler.Compile(shaderSource, "gamma shader", SharpDX.Toolkit.Graphics.EffectCompilerFlags.Debug | SharpDX.Toolkit.Graphics.EffectCompilerFlags.EnableBackwardsCompatibility | SharpDX.Toolkit.Graphics.EffectCompilerFlags.SkipOptimization);
+
+			if (shaderCode.HasErrors)
+				throw new Exception("Shader compile error:\n" + string.Join("\n", shaderCode.Logger.Messages));
+
+			return shaderCode;
+		}
 
 		void WriteErrorDetails(Wrap oculus, OVRTypes.Result result, string message)
 		{

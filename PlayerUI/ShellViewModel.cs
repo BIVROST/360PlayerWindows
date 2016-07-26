@@ -733,6 +733,24 @@ namespace PlayerUI
 
 					headsets.ForEach(h => h.Reset());
 
+					if (this.HeadsetUsage == HeadsetMode.Auto || this.HeadsetUsage == HeadsetMode.Oculus)
+					{
+						if (oculusPlayback.IsPresent())
+						{
+							Notify("Oculus Rift detected. Starting VR playback...");
+							oculusPlayback.textureL = _mediaDecoder.TextureL;
+							oculusPlayback.textureR = _mediaDecoder.TextureR;
+							oculusPlayback._stereoVideo = _mediaDecoder.IsStereoRendered;
+							oculusPlayback._projection = _mediaDecoder.Projection;
+							oculusPlayback.Configure(SelectedFileNameLabel, (float)_mediaDecoder.Duration);
+							oculusPlayback.Start();
+							ShellViewModel.SendEvent("headsetConnected", "oculus");
+							return;
+						}
+						Notify("Oculus Rift not detected.");
+						ShellViewModel.SendEvent("headsetError", "oculus");
+					}
+
 					if (this.HeadsetUsage == HeadsetMode.Auto || this.HeadsetUsage == HeadsetMode.OpenVR)
 					{
 						try
@@ -750,30 +768,12 @@ namespace PlayerUI
 								return;
 							}
 						}
-						catch(Exception e)
+						catch (Exception e)
 						{
 							Console.WriteLine("Headset detection exception (OpenVR): " + e);
 						}
 						Notify("OpenVR not detected.");
 						ShellViewModel.SendEvent("headsetError", "openvr");
-					}
-
-					if (this.HeadsetUsage == HeadsetMode.Auto || this.HeadsetUsage == HeadsetMode.Oculus)
-					{
-						if (oculusPlayback.IsPresent())
-						{
-							Notify("Oculus Rift detected. Starting VR playback...");
-							oculusPlayback.textureL = _mediaDecoder.TextureL;
-							oculusPlayback.textureR = _mediaDecoder.TextureR;
-							oculusPlayback._stereoVideo = _mediaDecoder.IsStereoRendered;
-							oculusPlayback._projection = _mediaDecoder.Projection;
-							oculusPlayback.Configure(SelectedFileNameLabel, (float)_mediaDecoder.Duration);
-							oculusPlayback.Start();
-							ShellViewModel.SendEvent("headsetConnected", "oculus");
-							return;
-						}
-						Notify("Oculus Rift not detected.");
-						ShellViewModel.SendEvent("headsetError", "oculus");
 					}
 
 					if (this.HeadsetUsage == HeadsetMode.Auto || this.HeadsetUsage == HeadsetMode.OSVR)

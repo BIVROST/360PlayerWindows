@@ -1,5 +1,6 @@
 ﻿//reuse//code//ApplyAnEffectFxFile//
 uniform extern float4x4 WorldViewProj : WORLDVIEWPROJECTION;
+extern float gammaFactor;
 
 /////////////
 // GLOBALS //
@@ -61,7 +62,7 @@ PixelInputType ColorVertexShader(VertexInputType input)
 ////////////////////////////////////////////////////////////////////////////////
 float4 ColorPixelShader(PixelInputType input) : SV_Target
 {
-	return pow(UserTex.Sample(UserTexSampler, input.TexCoord), 1/2.2f);
+	return pow(UserTex.Sample(UserTexSampler, input.TexCoord), 1/gammaFactor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
