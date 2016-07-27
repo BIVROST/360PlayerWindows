@@ -32,59 +32,96 @@ namespace PlayerUI.Tools
 				);
 		}
 
-		public static GeometricPrimitive GenerateFacebookCube(GraphicsDevice graphicsDevice)
+		public static GeometricPrimitive GenerateFacebookCube(GraphicsDevice graphicsDevice, bool toLeftHanded)
 		{
-			GeometricPrimitive primitive = SharpDX.Toolkit.Graphics.GeometricPrimitive.Cube.New(graphicsDevice, 6, true);
-			short[] indices = primitive.IndexBuffer.GetData<short>();
-			var data = primitive.VertexBuffer.GetData();
-
-			float offset = 0.99f;
-
-			for (int it = 0; it < data.Length; it++)
+			using (GeometricPrimitive primitive = SharpDX.Toolkit.Graphics.GeometricPrimitive.Cube.New(graphicsDevice, 6, toLeftHanded))
 			{
-				//0,0
-				//0,1
-				//1,1
-				//1,0
-				int index = (int)Math.Floor(it / 4f);
-				data[it].TextureCoordinate = MapCubeFacebook(index, data[it].TextureCoordinate);
-				switch (index)
+				short[] indices = primitive.IndexBuffer.GetData<short>();
+				var data = primitive.VertexBuffer.GetData();
+
+				float offset = 0.99f;
+
+				for (int it = 0; it < data.Length; it++)
 				{
-					case 0:
-						data[it].Position.Z *= offset;
-						break;
-					case 1:
-						data[it].Position.Z *= offset;
-						break;
-					case 2:
-						data[it].Position.X *= offset;
-						break;
-					case 3:
-						data[it].Position.X *= offset;
-						break;
-					case 4:
-						data[it].Position.Y *= offset;
-						break;
-					case 5:
-						data[it].Position.Y *= offset;
-						break;
+					//0,0
+					//0,1
+					//1,1
+					//1,0
+					int index = (int)Math.Floor(it / 4f);
+					data[it].TextureCoordinate = MapCubeFacebook(index, data[it].TextureCoordinate);
+					switch (index)
+					{
+						case 0:
+							data[it].Position.Z *= offset;
+							break;
+						case 1:
+							data[it].Position.Z *= offset;
+							break;
+						case 2:
+							data[it].Position.X *= offset;
+							break;
+						case 3:
+							data[it].Position.X *= offset;
+							break;
+						case 4:
+							data[it].Position.Y *= offset;
+							break;
+						case 5:
+							data[it].Position.Y *= offset;
+							break;
+					}
 				}
+
+				return new GeometricPrimitive(graphicsDevice, data, indices);
+			}
+		}
+
+
+		private static GeometricPrimitive GenerateDome(GraphicsDevice graphicsDevice, bool toLeftHanded)
+		{
+			using (GeometricPrimitive primitive = GeometricPrimitive.Sphere.New(graphicsDevice, 6, 64, toLeftHanded)) { 
+		
+				short[] indices = primitive.IndexBuffer.GetData<short>();
+				var data = primitive.VertexBuffer.GetData();
+
+				for (int it = 0; it < data.Length; it++)
+				{
+					var x = (2 + data[it].TextureCoordinate.X * 2 - 0.5f) % 2;
+					if (x > 1)
+						x = x - 1;
+					// if (x > 1 || x < 0) x = 1 - x;
+					//else if (x < 0) x = 0;
+					data[it].TextureCoordinate.X = x;
+				}
+
+				//indices = indices.ToList().FindAll(i => data[i].TextureCoordinate.X > 0.05f && data[i].TextureCoordinate.X < 0.95f).ToArray();
+				//indices = indices.ToList().FindAll(i => data[i].TextureCoordinate.X <= 1).ToArray();
+
+				return new GeometricPrimitive(graphicsDevice, data, indices);
 			}
 
-			primitive.Dispose();
 
-			return new SharpDX.Toolkit.Graphics.GeometricPrimitive(graphicsDevice, data, indices);
+			//var sphere = GeometricPrimitive.Sphere.New(graphicsDevice, 6, 64, toLeftHanded);
+			//VertexPositionNormalTexture[] vertices = sphere.VertexBuffer.GetData();
+			////for (int i = vertices.Length - 1; i >= 0; i--)
+			////	vertices[i].TextureCoordinate.X = 0; // (vertices[i].TextureCoordinate.X * 2) % 1;
+
+			////return sphere;
+			//return new GeometricPrimitive(graphicsDevice, vertices, sphere.IndexBuffer.GetData<short>(), toLeftHanded);
 		}
+
 
 		public static GeometricPrimitive CreateGeometry(MediaDecoder.ProjectionMode projection, GraphicsDevice graphicsDevice, bool toLeftHanded=true)
 		{
 			switch (projection)
 			{
 				case MediaDecoder.ProjectionMode.Sphere: return GeometricPrimitive.Sphere.New(graphicsDevice, 6, 64, toLeftHanded);
-				case MediaDecoder.ProjectionMode.CubeFacebook: return GenerateFacebookCube(graphicsDevice);
-				default: throw new ArgumentException("Unknown projection");
+				case MediaDecoder.ProjectionMode.CubeFacebook: return GenerateFacebookCube(graphicsDevice, toLeftHanded);
+				case MediaDecoder.ProjectionMode.Dome: return GenerateDome(graphicsDevice, toLeftHanded);
+				default: throw new ArgumentException("Unknown projection: " + projection);
 			}
 		}
+
 
 		public static Vector2 QuaternionToYawPitch(OVRTypes.Quaternionf ovrQuatf)
 		{

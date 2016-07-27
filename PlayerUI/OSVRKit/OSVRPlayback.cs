@@ -4,7 +4,6 @@ using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using System;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using Device = SharpDX.Direct3D11.Device;
 using PlayerUI.Tools;
