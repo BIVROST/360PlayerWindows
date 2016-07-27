@@ -10,13 +10,9 @@ namespace PlayerUI
 {
 	public class VRUI : IDisposable
 	{
-		Texture2DDescription uiTextureDescription;
 		Texture2D uiTexture;
-		SharpDX.DXGI.Surface uiSurface;
 		public SharpDX.Toolkit.Graphics.BasicEffect uiEffect;
 
-		BlendStateDescription blendStateDescription;
-		SharpDX.Toolkit.Graphics.BlendState blendState;
 		DX2D.RenderTarget target2d;
 		SharpDX.Toolkit.Graphics.GeometricPrimitive uiPrimitive;
 
@@ -34,7 +30,7 @@ namespace PlayerUI
 
 		public VRUI(Device device, SharpDX.Toolkit.Graphics.GraphicsDevice gd)
 		{
-			uiTextureDescription = new Texture2DDescription()
+			Texture2DDescription uiTextureDescription = new Texture2DDescription()
 			{
 				Width = 1024,
 				Height = 512,
@@ -48,9 +44,7 @@ namespace PlayerUI
 				OptionFlags = ResourceOptionFlags.Shared
 			};
 
-
 			uiTexture = new SharpDX.Direct3D11.Texture2D(device, uiTextureDescription);
-			uiSurface = uiTexture.QueryInterface<Surface>();
 
 			using (DX2D.Factory factory2d = new DX2D.Factory(SharpDX.Direct2D1.FactoryType.SingleThreaded, DX2D.DebugLevel.Information))
 			{
@@ -58,29 +52,33 @@ namespace PlayerUI
 				{
 					DpiX = 96,
 					DpiY = 96,
-					PixelFormat = new DX2D.PixelFormat(Format.B8G8R8A8_UNorm, SharpDX.Direct2D1.AlphaMode.Premultiplied),
-					Type = SharpDX.Direct2D1.RenderTargetType.Hardware,
+					PixelFormat = new DX2D.PixelFormat(Format.B8G8R8A8_UNorm, DX2D.AlphaMode.Premultiplied),
+					Type = DX2D.RenderTargetType.Hardware,
 					MinLevel = DX2D.FeatureLevel.Level_10,
-					Usage = SharpDX.Direct2D1.RenderTargetUsage.None
+					Usage = DX2D.RenderTargetUsage.None
 				};
-				target2d = new DX2D.RenderTarget(factory2d, uiSurface, renderTargetProperties);
+				using (var uiSurface = uiTexture.QueryInterface<Surface>())
+					target2d = new DX2D.RenderTarget(factory2d, uiSurface, renderTargetProperties)
+					{
+						AntialiasMode = DX2D.AntialiasMode.PerPrimitive
+					};
 			}
-			SharpDX.DirectWrite.Factory factoryDW = new SharpDX.DirectWrite.Factory();
 
 
 			// 2D materials
+			uiEffect = new SharpDX.Toolkit.Graphics.BasicEffect(gd)
+			{
+				PreferPerPixelLighting = false,
+				Texture = SharpDX.Toolkit.Graphics.Texture2D.New(gd, uiTexture),
+				TextureEnabled = true,
+				LightingEnabled = false
+			};
 
-			uiEffect = new SharpDX.Toolkit.Graphics.BasicEffect(gd);
-			uiEffect.PreferPerPixelLighting = false;
-			uiEffect.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(gd, uiTexture);
-			uiEffect.TextureEnabled = true;
-			uiEffect.LightingEnabled = false;
 
-
-			blendStateDescription = new BlendStateDescription();
-
-			blendStateDescription.AlphaToCoverageEnable = false;
-
+			BlendStateDescription blendStateDescription = new BlendStateDescription()
+			{
+				AlphaToCoverageEnable = false
+			};
 			blendStateDescription.RenderTarget[0].IsBlendEnabled = true;
 			blendStateDescription.RenderTarget[0].SourceBlend = BlendOption.SourceAlpha;
 			blendStateDescription.RenderTarget[0].DestinationBlend = BlendOption.InverseSourceAlpha;
@@ -90,27 +88,28 @@ namespace PlayerUI
 			blendStateDescription.RenderTarget[0].AlphaBlendOperation = BlendOperation.Add;
 			blendStateDescription.RenderTarget[0].RenderTargetWriteMask = ColorWriteMaskFlags.All;
 
-			blendState = SharpDX.Toolkit.Graphics.BlendState.New(gd, blendStateDescription);
-			gd.SetBlendState(blendState);
+			using (var blendState = SharpDX.Toolkit.Graphics.BlendState.New(gd, blendStateDescription))
+				gd.SetBlendState(blendState);
 
 			uiPrimitive = SharpDX.Toolkit.Graphics.GeometricPrimitive.Plane.New(gd, 2, 1);
 
-			textFormat = new SharpDX.DirectWrite.TextFormat(factoryDW, "Segoe UI Light", 34f)
+			using (SharpDX.DirectWrite.Factory factoryDW = new SharpDX.DirectWrite.Factory())
 			{
-				TextAlignment = SharpDX.DirectWrite.TextAlignment.Center,
-				ParagraphAlignment = SharpDX.DirectWrite.ParagraphAlignment.Center
-			};
+				textFormat = new SharpDX.DirectWrite.TextFormat(factoryDW, "Segoe UI Light", 34f)
+				{
+					TextAlignment = SharpDX.DirectWrite.TextAlignment.Center,
+					ParagraphAlignment = SharpDX.DirectWrite.ParagraphAlignment.Center
+				};
 
-			textFormatSmall = new SharpDX.DirectWrite.TextFormat(factoryDW, "Segoe UI Light", 20f)
-			{
-				TextAlignment = SharpDX.DirectWrite.TextAlignment.Center,
-				ParagraphAlignment = SharpDX.DirectWrite.ParagraphAlignment.Center
-			};
+				textFormatSmall = new SharpDX.DirectWrite.TextFormat(factoryDW, "Segoe UI Light", 20f)
+				{
+					TextAlignment = SharpDX.DirectWrite.TextAlignment.Center,
+					ParagraphAlignment = SharpDX.DirectWrite.ParagraphAlignment.Center
+				};
+			}
 
 			textBrush = new SharpDX.Direct2D1.SolidColorBrush(target2d, new Color(1f, 1f, 1f, 1f));
 			blueBrush = new SharpDX.Direct2D1.SolidColorBrush(target2d, new Color(0, 167, 245, 255));
-
-			target2d.AntialiasMode = SharpDX.Direct2D1.AntialiasMode.PerPrimitive;
 
 			uiInitialized = true;
 		}
@@ -146,7 +145,7 @@ namespace PlayerUI
 			var ellipse = new DX2D.Ellipse(new Vector2(128 + currentLength + 3.5f, 384), 7, 7);
 			target2d.FillEllipse(ellipse, blueBrush);
 
-			target2d.DrawEllipse(new SharpDX.Direct2D1.Ellipse(new Vector2(512, 256), 48, 48), textBrush, 2);
+			target2d.DrawEllipse(new DX2D.Ellipse(new Vector2(512, 256), 48, 48), textBrush, 2);
 			var dist = 8;
 			var len = 10;
 			target2d.DrawLine(new Vector2(512 - dist, 256 - len), new Vector2(512 - dist, 256 + len), textBrush, 2);
@@ -200,15 +199,23 @@ namespace PlayerUI
 		}	
 
 
+		Plane uiPlane = new Plane(1);
+
+		internal void SetWorldPosition(Vector3 forward, Vector3 viewPosition, bool reverseDistance)
+		{
+			float yaw = (float)(Math.PI - Math.Atan2(forward.X, forward.Z));
+			uiEffect.World = Matrix.Identity * Matrix.Scaling(1f) * Matrix.Translation(0, 0, reverseDistance ? -uiDistanceStart : uiDistanceStart) * Matrix.RotationAxis(Vector3.Up, yaw) * Matrix.Translation(viewPosition);
+			uiPlane = new Plane(-uiEffect.World.TranslationVector, uiEffect.World.Forward);
+		}
+
+
 		public void Dispose()
 		{
 			uiInitialized = false;
 
 			uiTexture?.Dispose();
-			uiSurface?.Dispose();
 			uiEffect?.Dispose();
 
-			blendState?.Dispose();
 			target2d?.Dispose();
 			uiPrimitive?.Dispose();
 
@@ -218,18 +225,5 @@ namespace PlayerUI
 			blueBrush?.Dispose();
 		}
 
-
-		Plane uiPlane = new Plane(1);
-
-		internal void SetWorldPosition(Vector3 forward, Vector3 viewPosition, bool reverseDistance)
-		{
-			float yaw = (float)(Math.PI - Math.Atan2(forward.X, forward.Z));
-			uiEffect.World = Matrix.Identity * Matrix.Scaling(1f) * Matrix.Translation(0, 0, reverseDistance ? -uiDistanceStart : uiDistanceStart) * Matrix.RotationAxis(Vector3.Up, yaw) * Matrix.Translation(viewPosition);
-
-			//uiEffect.World = Matrix.Identity * Matrix.Scaling(1f) * Matrix.Translation(0, 0, -1.5f);
-
-
-			uiPlane = new Plane(-uiEffect.World.TranslationVector, uiEffect.World.Forward);
-		}
 	}
 }
