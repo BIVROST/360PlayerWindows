@@ -225,22 +225,35 @@ namespace PlayerUI
 		public void OpenHomePage()
 		{
 			if (Fullscreen) ToggleFullscreen(true);
-			System.Diagnostics.Process.Start("http://www.bivrost360.com");
-		}
+#if DEBUG
+            System.Diagnostics.Process.Start("http://download.bivrost360.com/player-desktop/canary");
+#else
+            System.Diagnostics.Process.Start("http://download.bivrost360.com/player-desktop");
+#endif
+        }
 
-		public void OpenSupportPage()
+        public void OpenSupportPage()
 		{
 			if (Fullscreen) ToggleFullscreen(true);
-			System.Diagnostics.Process.Start("http://www.bivrost360.com");
-		}
+#if DEBUG
+            System.Diagnostics.Process.Start("http://download.bivrost360.com/player-desktop/canary");
+#else
+            System.Diagnostics.Process.Start("http://download.bivrost360.com/player-desktop");
+#endif
+        }
 
-		public void OpenBuyPage()
+        public void OpenBuyPage()
 		{
 			if (Fullscreen) ToggleFullscreen(true);
-			System.Diagnostics.Process.Start("mailto:contact@bivrost360.com?subject=Licence%20purchase");
-		}
+            //System.Diagnostics.Process.Start("mailto:contact@bivrost360.com?subject=Licence%20purchase");
+#if DEBUG
+            System.Diagnostics.Process.Start("http://download.bivrost360.com/player-desktop/canary");
+#else
+            System.Diagnostics.Process.Start("http://download.bivrost360.com/player-desktop");
+#endif
+        }
 
-		public void DisableTabPress(object sender, object e)
+        public void DisableTabPress(object sender, object e)
 		{ 			
 			Console.WriteLine("tabstop");
 		}
