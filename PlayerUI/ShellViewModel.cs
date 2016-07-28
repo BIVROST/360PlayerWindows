@@ -1080,6 +1080,7 @@ namespace PlayerUI
 						}
 					}
 					_mediaDecoder.Projection = MediaDecoder.ProjectionMode.Sphere;
+					_mediaDecoder.StereoMode = MediaDecoder.VideoMode.Autodetect;
 					IsFileSelected = true;
 					SelectedFileTitle = "";
 					SelectedFileName = file;
