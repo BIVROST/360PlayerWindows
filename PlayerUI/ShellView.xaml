@@ -553,7 +553,7 @@
                 <Button x:Name="HeadsetSelect"  Width="36" Height="36" Margin="4 0">
                     <Button.Template>
                         <ControlTemplate TargetType="{x:Type Button}">
-                            <Grid IsHitTestVisible="True" Background="Transparent" ToolTip="Oculus Playback">
+                            <Grid IsHitTestVisible="True" Background="Transparent" ToolTip="VR Headset">
                                 <svgc:SvgViewbox Name="Normal" Source="Graphics/oculus.svg" IsHitTestVisible="False"/>
                                 <svgc:SvgViewbox Name="Hover" Source="Graphics/oculus_blue.svg" Visibility="Hidden" IsHitTestVisible="False"/>
                             </Grid>
