@@ -83,6 +83,9 @@ namespace PlayerUI
 		[SettingsProperty("OSVR screen number", ConfigItemType.Enum)]
 		public ScreenSelection OSVRScreen { get; set; } = ScreenSelection.Two;
 
+		[SettingsProperty("Face screen in OpenVR", ConfigItemType.Bool)]
+		public bool OpenVRReverse { get; set; } = true;
+
 		[JsonIgnore]
 		[SettingsAdvancedProperty("Reset Analytics ID", ConfigItemType.Action, Caption = "Reset ID")]
 		public System.Action ResetInstallId { get; set; } = () => { };

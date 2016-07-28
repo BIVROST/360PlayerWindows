@@ -106,9 +106,9 @@ namespace PlayerUI.OpenVR
 
 			using (_device = new Device(DriverType.Hardware, DeviceCreationFlags.BgraSupport, new FeatureLevel[] { FeatureLevel.Level_10_0 }))
 			using (var context = _device.ImmediateContext)
-			using (_gd = SharpDX.Toolkit.Graphics.GraphicsDevice.New(_device)) {
-
-
+			using (_gd = SharpDX.Toolkit.Graphics.GraphicsDevice.New(_device))
+			using (var primitive = GraphicTools.CreateGeometry(_projection, _gd, false))
+			{
 				MediaDecoder.Instance.OnFormatChanged += ResizeTexture;
 
 
@@ -131,23 +131,20 @@ namespace PlayerUI.OpenVR
 
 				ResizeTexture(MediaDecoder.Instance.TextureL, _stereoVideo ? MediaDecoder.Instance.TextureR : MediaDecoder.Instance.TextureL);
 
-				var primitive = GraphicTools.CreateGeometry(_projection, _gd, false);
+				///// CUBE
+				//var cubeEffect = new SharpDX.Toolkit.Graphics.BasicEffect(_gd)
+				//{
+				//	//PreferPerPixelLighting = false,
+				//	//TextureEnabled = false,
+				//	LightingEnabled = true,
+				//	//DiffuseColor = new Vector4(0.5f,0.5f,0.5f,1f),
+				//	Sampler = _gd.SamplerStates.AnisotropicClamp
+				//};
+				//cubeEffect.EnableDefaultLighting();
+				//var cube = SharpDX.Toolkit.Graphics.GeometricPrimitive.Teapot.New(_gd, 1, 8, false);
 
 
-				/// CUBE
-				var cubeEffect = new SharpDX.Toolkit.Graphics.BasicEffect(_gd)
-				{
-					//PreferPerPixelLighting = false,
-					//TextureEnabled = false,
-					LightingEnabled = true,
-					//DiffuseColor = new Vector4(0.5f,0.5f,0.5f,1f),
-					Sampler = _gd.SamplerStates.AnisotropicClamp
-				};
-				cubeEffect.EnableDefaultLighting();
-				var cube = SharpDX.Toolkit.Graphics.GeometricPrimitive.Teapot.New(_gd, 1, 8, false);
-
-
-				/// END
+				///// END
 
 
 
@@ -211,13 +208,13 @@ namespace PlayerUI.OpenVR
 							pose = gamePoseArray[Valve.VR.OpenVR.k_unTrackedDeviceIndex_Hmd];
 						}
 
-						const float halfIPD = 0.065f / 2;        // TODO: config
+						//const float halfIPD = 0.065f / 2;        // TODO: config
 
-						foreach(EVREye eye in new EVREye[] { EVREye.Eye_Left, EVREye.Eye_Right })
+						foreach (EVREye eye in new EVREye[] { EVREye.Eye_Left, EVREye.Eye_Right })
 						{
 							DepthStencilView currentEyeDepthView = (eye == EVREye.Eye_Left) ? leftEyeDepthView : rightEyeDepthView;
 							RenderTargetView currentEyeView = (eye == EVREye.Eye_Left) ? leftEyeView : rightEyeView;
-							float ipdTranslation = (eye == EVREye.Eye_Left) ? -halfIPD : halfIPD;
+							//float ipdTranslation = (eye == EVREye.Eye_Left) ? -halfIPD : halfIPD;
 
 
 							// Setup targets and viewport for rendering
@@ -254,19 +251,23 @@ namespace PlayerUI.OpenVR
 
 
 
-							Matrix pm1 = Matrix.PerspectiveFovLH(fieldOfView*((float)Math.PI/180f), aspect, 0.001f, 100.0f);
+							Matrix pm1 = Matrix.PerspectiveFovLH(fieldOfView * ((float)Math.PI / 180f), aspect, 0.001f, 100.0f);
 							Matrix pm2 = hmd.GetProjectionMatrix(eye, 0.001f, 100f, EGraphicsAPIConvention.API_DirectX).ToProjMatrix();
 
 							Matrix projectionMatrix = pm1;
 
-					
-							basicEffectL.World = Matrix.Translation(viewPosition);
+
+							Matrix world = Matrix.Translation(viewPosition);
+							if (Logic.Instance.settings.OpenVRReverse)
+								world = Matrix.RotationY(180) * world;
+
+							basicEffectL.World = world;
 							basicEffectL.View = viewMatrix;
 							basicEffectL.Projection = projectionMatrix;
 
 							if (_stereoVideo)
 							{
-								basicEffectR.World = Matrix.Translation(viewPosition);
+								basicEffectR.World = world;
 								basicEffectR.View = viewMatrix;
 								basicEffectR.Projection = projectionMatrix;
 							}

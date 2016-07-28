@@ -87,15 +87,15 @@ namespace PlayerUI.Tools
 				for (int it = 0; it < data.Length; it++)
 				{
 					var x = (2 + data[it].TextureCoordinate.X * 2 - 0.5f) % 2;
-					if (x > 1)
-						x = x - 1;
+					//if (x > 1)
+					//	x = x - 1;
 					// if (x > 1 || x < 0) x = 1 - x;
 					//else if (x < 0) x = 0;
 					data[it].TextureCoordinate.X = x;
 				}
 
 				//indices = indices.ToList().FindAll(i => data[i].TextureCoordinate.X > 0.05f && data[i].TextureCoordinate.X < 0.95f).ToArray();
-				//indices = indices.ToList().FindAll(i => data[i].TextureCoordinate.X <= 1).ToArray();
+				indices = indices.ToList().FindAll(i => data[i].TextureCoordinate.X <= 1).ToArray();
 
 				return new GeometricPrimitive(graphicsDevice, data, indices);
 			}
