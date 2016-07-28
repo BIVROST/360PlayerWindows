@@ -2,6 +2,7 @@
 using Fleck;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
@@ -17,6 +18,7 @@ namespace PlayerUI
 		Auto,
 		OSVR,
 		Oculus,
+		[Description("SteamVR (OpenVR, HTC Vive)")]
 		OpenVR,
 		Disable
 	}
