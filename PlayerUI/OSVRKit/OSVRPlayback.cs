@@ -185,8 +185,7 @@ namespace PlayerUI.OSVRKit
 
             // Create DirectX drawing device.
             //SharpDX.Direct3D11.Device device = new Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.BgraSupport, new SharpDX.Direct3D.FeatureLevel[] { SharpDX.Direct3D.FeatureLevel.Level_10_0 });
-            Device device;
-            Device.CreateWithSwapChain(DriverType.Hardware, DeviceCreationFlags.BgraSupport, desc, out device, out swapChain);			
+            Device.CreateWithSwapChain(DriverType.Hardware, DeviceCreationFlags.BgraSupport, desc, out _device, out swapChain);			
 
             // Create DirectX Graphics Interface factory, used to create the swap chain.
             Factory factory;// = new Factory();
@@ -196,10 +195,10 @@ namespace PlayerUI.OSVRKit
 			form.FormBorderStyle = FormBorderStyle.None;
 			form.TopMost = true;
 
-            DeviceContext immediateContext = device.ImmediateContext;
+            DeviceContext immediateContext = _device.ImmediateContext;
 
             {
-                SharpDX.DXGI.Device2 dxgiDevice = device.QueryInterface<SharpDX.DXGI.Device2>();
+                SharpDX.DXGI.Device2 dxgiDevice = _device.QueryInterface<SharpDX.DXGI.Device2>();
 
 				//var bounds = dxgiDevice.Adapter.Outputs[1].Description.DesktopBounds;
 				//form.DesktopBounds = new System.Drawing.Rectangle(bounds.X, bounds.Y, bounds.Width, bounds.Height);
@@ -287,14 +286,14 @@ namespace PlayerUI.OSVRKit
             depthStencilStateDescription.DepthWriteMask = DepthWriteMask.Zero;
 
             // Create the depth buffer.
-            Texture2D depthBuffer = new Texture2D(device, depthBufferDescription);
+            Texture2D depthBuffer = new Texture2D(_device, depthBufferDescription);
             //DepthStencilView depthStencilView = new DepthStencilView(device, depthBuffer);
             //DepthStencilState depthStencilState = new DepthStencilState(device, depthStencilStateDescription);
             //SharpDX.Viewport viewport = new SharpDX.Viewport(0, 0, displayDimensions.Width, displayDimensions.Height, 0.0f, 1.0f);
 
 
             // Retrieve the DXGI device, in order to set the maximum frame latency.
-            using (SharpDX.DXGI.Device1 dxgiDevice = device.QueryInterface<SharpDX.DXGI.Device1>())
+            using (SharpDX.DXGI.Device1 dxgiDevice = _device.QueryInterface<SharpDX.DXGI.Device1>())
             {
                 dxgiDevice.MaximumFrameLatency = 1;
             }
@@ -303,10 +302,7 @@ namespace PlayerUI.OSVRKit
 
             #region Rendering primitives and resources
 
-            SharpDX.Toolkit.Graphics.GraphicsDevice gd = SharpDX.Toolkit.Graphics.GraphicsDevice.New(device);
-
-			_device = device;
-			_gd = gd;
+            _gd = SharpDX.Toolkit.Graphics.GraphicsDevice.New(_device);
 
 			MediaDecoder.Instance.OnFormatChanged += ResizeTexture;
 
@@ -314,38 +310,38 @@ namespace PlayerUI.OSVRKit
             //var resourceL = textureL.QueryInterface<SharpDX.DXGI.Resource>();
             //var sharedTexL = device.OpenSharedResource<Texture2D>(resourceL.SharedHandle);
 
-            basicEffectL = new SharpDX.Toolkit.Graphics.BasicEffect(gd);
+            basicEffectL = new SharpDX.Toolkit.Graphics.BasicEffect(_gd);
 
             basicEffectL.PreferPerPixelLighting = false;
             //basicEffectL.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(gd, sharedTexL);
 
             basicEffectL.TextureEnabled = true;
             basicEffectL.LightingEnabled = false;
-            basicEffectL.Sampler = gd.SamplerStates.AnisotropicClamp;
+            basicEffectL.Sampler = _gd.SamplerStates.AnisotropicClamp;
 
             if (_stereoVideo)
             {
                 //var resourceR = textureR.QueryInterface<SharpDX.DXGI.Resource>();
                 //var sharedTexR = device.OpenSharedResource<Texture2D>(resourceR.SharedHandle);
 
-                basicEffectR = new SharpDX.Toolkit.Graphics.BasicEffect(gd);
+                basicEffectR = new SharpDX.Toolkit.Graphics.BasicEffect(_gd);
 
                 basicEffectR.PreferPerPixelLighting = false;
                 //basicEffectR.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(gd, sharedTexR);
 
                 basicEffectR.TextureEnabled = true;
                 basicEffectR.LightingEnabled = false;
-                basicEffectR.Sampler = gd.SamplerStates.AnisotropicClamp;
+                basicEffectR.Sampler = _gd.SamplerStates.AnisotropicClamp;
             }
 
 			ResizeTexture(MediaDecoder.Instance.TextureL, _stereoVideo ? MediaDecoder.Instance.TextureR : MediaDecoder.Instance.TextureL);
 
 			//var primitive = SharpDX.Toolkit.Graphics.GeometricPrimitive.Sphere.New(gd, radius, 32, true);
-			var primitive = GraphicTools.CreateGeometry(_projection, gd);
+			var primitive = GraphicTools.CreateGeometry(_projection, _gd);
 
 
 			// UI Rendering
-			vrui = new VRUI(device, gd);
+			vrui = new VRUI(_device, _gd);
 			vrui.Draw(movieTitle, currentTime, duration);
 
 
@@ -360,9 +356,9 @@ namespace PlayerUI.OSVRKit
             DateTime lastTime = DateTime.Now;
             float deltaTime = 0;
 
-            var depthView = new DepthStencilView(device, depthBuffer);
+            var depthView = new DepthStencilView(_device, depthBuffer);
             var backBuffer = Texture2D.FromSwapChain<Texture2D>(swapChain, 0);
-            var renderView = new RenderTargetView(device, backBuffer);
+            var renderView = new RenderTargetView(_device, backBuffer);
             immediateContext.OutputMerger.SetTargets(depthView, renderView);
 
 
@@ -502,8 +498,8 @@ namespace PlayerUI.OSVRKit
 			// Disposing the device, after the hmd, will cause the dispose of the device to fail.
 			// It looks as if the hmd steals ownership of the device and destroys it, when it's shutting down.
 			// device.Dispose();
-			_gd.Dispose();
-			_device.Dispose();
+			base._gd.Dispose();
+			base._device.Dispose();
 
 			//hmd.Dispose();
 			//oculus.Dispose();

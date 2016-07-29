@@ -57,6 +57,60 @@ namespace PlayerUI.OpenVR
 			return Valve.VR.OpenVR.IsHmdPresent();
 		}
 
+		//private SharpDX.Toolkit.Graphics.Effect customEffectL;
+		//private SharpDX.Toolkit.Graphics.Effect customEffectR;
+
+		//override protected void ResizeTexture(Texture2D tL, Texture2D tR)
+		//{
+		//	if (MediaDecoder.Instance.TextureReleased) return;
+
+		//	var tempL = textureL;
+		//	var tempR = textureR;
+
+		//	lock (localCritical)
+		//	{
+		//		//basicEffectL.Texture?.Dispose();
+		//		(customEffectL.Parameters["UserTex"]?.GetResource<Texture2D>())?.Dispose();
+		//		textureL = tL;
+
+		//		if (_stereoVideo)
+		//		{
+		//			(customEffectR.Parameters["UserTex"]?.GetResource<Texture2D>())?.Dispose();
+		//			//basicEffectR.Texture?.Dispose();
+		//			textureR = tR;
+		//		}
+
+		//		var resourceL = textureL.QueryInterface<SharpDX.DXGI.Resource>();
+		//		var sharedTexL = _device.OpenSharedResource<Texture2D>(resourceL.SharedHandle);
+
+
+		//		//basicEffectL.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexL);
+		//		customEffectL.Parameters["UserTex"].SetResource(SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexL));
+		//		customEffectL.Parameters["gammaFactor"].SetValue(1 / 2.2f);
+		//		customEffectL.CurrentTechnique = customEffectL.Techniques["ColorTechnique"];
+		//		customEffectL.CurrentTechnique.Passes[0].Apply();
+
+		//		resourceL?.Dispose();
+		//		sharedTexL?.Dispose();
+
+		//		if (_stereoVideo)
+		//		{
+		//			var resourceR = textureR.QueryInterface<SharpDX.DXGI.Resource>();
+		//			var sharedTexR = _device.OpenSharedResource<Texture2D>(resourceR.SharedHandle);
+
+		//			//basicEffectR.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexR);
+		//			customEffectR.Parameters["UserTex"].SetResource(SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexR));
+		//			customEffectR.Parameters["gammaFactor"].SetValue(1 / 2.2f);
+		//			customEffectR.CurrentTechnique = customEffectR.Techniques["ColorTechnique"];
+		//			customEffectR.CurrentTechnique.Passes[0].Apply();
+
+		//			resourceR?.Dispose();
+		//			sharedTexR?.Dispose();
+		//		}
+		//		//_device.ImmediateContext.Flush();
+		//	}
+
+		//}
 
 		protected override void Render()
 		{
@@ -105,9 +159,9 @@ namespace PlayerUI.OpenVR
 
 
 			using (_device = new Device(DriverType.Hardware, DeviceCreationFlags.BgraSupport, new FeatureLevel[] { FeatureLevel.Level_10_0 }))
-			using (var context = _device.ImmediateContext)
+			using (DeviceContext context = _device.ImmediateContext)
 			using (_gd = SharpDX.Toolkit.Graphics.GraphicsDevice.New(_device))
-			using (var primitive = GraphicTools.CreateGeometry(_projection, _gd, false))
+			using (SharpDX.Toolkit.Graphics.GeometricPrimitive primitive = GraphicTools.CreateGeometry(_projection, _gd, false))
 			{
 				MediaDecoder.Instance.OnFormatChanged += ResizeTexture;
 
@@ -208,14 +262,10 @@ namespace PlayerUI.OpenVR
 							pose = gamePoseArray[Valve.VR.OpenVR.k_unTrackedDeviceIndex_Hmd];
 						}
 
-						//const float halfIPD = 0.065f / 2;        // TODO: config
-
 						foreach (EVREye eye in new EVREye[] { EVREye.Eye_Left, EVREye.Eye_Right })
 						{
 							DepthStencilView currentEyeDepthView = (eye == EVREye.Eye_Left) ? leftEyeDepthView : rightEyeDepthView;
 							RenderTargetView currentEyeView = (eye == EVREye.Eye_Left) ? leftEyeView : rightEyeView;
-							//float ipdTranslation = (eye == EVREye.Eye_Left) ? -halfIPD : halfIPD;
-
 
 							// Setup targets and viewport for rendering
 							context.OutputMerger.SetTargets(currentEyeDepthView, currentEyeView);
@@ -227,11 +277,6 @@ namespace PlayerUI.OpenVR
 							Matrix worldMatrix = Matrix.Identity;// * Matrix.Scaling(1f) * Matrix.Translation(0, 0, -1.5f);
 
 
-
-
-							//Quaternion rotationQuaternion = pose.mDeviceToAbsoluteTracking.ToMatrix().  QuaternionFromMatrix();
-
-
 							Quaternion rotationQuaternion; // = pose.mDeviceToAbsoluteTracking.GetRotation();
 							Vector3 viewPosition; // = pose.mDeviceToAbsoluteTracking.GetPosition();
 							Vector3 scale;
@@ -241,14 +286,8 @@ namespace PlayerUI.OpenVR
 							Matrix rotationMatrix = Matrix.RotationQuaternion(rotationQuaternion);
 							Vector3 lookUp = Vector3.Transform(new Vector3(0, 1, 0), rotationMatrix).ToVector3();
 							Vector3 lookAt = Vector3.Transform(new Vector3(0, 0, -1), rotationMatrix).ToVector3();
-							// FIXME: no translation from HMD
-							//Vector3 viewPosition = Vector3.Transform(new Vector3(ipdTranslation, 0, 0), rotationMatrix).ToVector3(); //pose.mDeviceToAbsoluteTracking.ToMatrix().TranslationVector;
 
 							Matrix viewMatrix = Matrix.LookAtRH(viewPosition, viewPosition + lookAt, lookUp);
-
-
-							//viewMatrix = matCameraLeftEye;
-
 
 
 							Matrix pm1 = Matrix.PerspectiveFovLH(fieldOfView * ((float)Math.PI / 180f), aspect, 0.001f, 100.0f);
@@ -335,9 +374,9 @@ namespace PlayerUI.OpenVR
 						);
 
 						if (errorLeft != EVRCompositorError.None)
-							;
+							Console.WriteLine("VR Compositor failure (left): " + errorLeft);
 						if (errorRight != EVRCompositorError.None)
-							;
+							Console.WriteLine("VR Compositor failure (right): " + errorRight);
 					};
 				}
 

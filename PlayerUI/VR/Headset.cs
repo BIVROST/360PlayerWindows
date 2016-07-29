@@ -5,6 +5,14 @@ using System.Threading.Tasks;
 
 namespace PlayerUI
 {
+
+	public class HeadsetError : Exception
+	{
+		public HeadsetError(string msg) : base(msg) { }
+		public HeadsetError(Exception inner, string msg) : base(msg, inner) { }
+	}
+
+
 	public abstract class Headset
 	{
 		public Texture2D textureL;
