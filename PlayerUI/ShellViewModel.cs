@@ -660,12 +660,12 @@ namespace PlayerUI
 			}
 		}
 
-		private double _sphereSize = 6f;
-		public double SphereSize
-		{
-			get { return _sphereSize; }
-			set { this._sphereSize = value; /*BivrostPlayerPrototype.PlayerPrototype.SetSphereSize(value);*/ }
-		}
+		//private double _sphereSize = 6f;
+		//public double SphereSize
+		//{
+		//	get { return _sphereSize; }
+		//	set { this._sphereSize = value; /*BivrostPlayerPrototype.PlayerPrototype.SetSphereSize(value);*/ }
+		//}
 
 
 		private double _maxTime = double.MaxValue;
@@ -814,6 +814,31 @@ namespace PlayerUI
 			Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel(v)));
 		}
 
+
+		void ResetPlayback()
+		{
+			if (IsPlaying)
+			{
+				waitForPlaybackStop.Reset();
+				Stop();
+				waitForPlaybackStop.WaitOne();
+			}
+			else
+			{
+				int it = 5;
+				while (_mediaDecoder.Initialized && it > 0)
+				{
+					Thread.Sleep(100);
+					it--;
+				}
+			}
+
+			_mediaDecoder.Projection = MediaDecoder.ProjectionMode.Sphere;
+			_mediaDecoder.StereoMode = MediaDecoder.VideoMode.Autodetect;
+			SelectedFileTitle = "";
+		}
+
+
 		private void OpenUrlFrom(string url)
 		{
 			if (urlLoadLock)
@@ -842,6 +867,8 @@ namespace PlayerUI
 							NotificationCenter.PushNotification(new NotificationViewModel("Loading..."));
 							if (!string.IsNullOrWhiteSpace(ouvm.VideoUrl))
 							{
+								ResetPlayback();
+
 								SelectedFileName = ouvm.VideoUrl;
 								IsFileSelected = true;
 								if (ouvm.ServiceResult != null)
@@ -854,6 +881,9 @@ namespace PlayerUI
 								{
 									_mediaDecoder.Projection = StreamingServices.GetServiceProjection(ouvm.Uri);
 								}
+
+								Recents.AddRecent(url);
+								UpdateRecents();
 
 								Execute.OnUIThreadAsync(() =>
 								{
@@ -891,10 +921,16 @@ namespace PlayerUI
 						_mediaDecoder.Projection = ouvm.ServiceResult.projection;
 						_mediaDecoder.StereoMode = ouvm.ServiceResult.stereoscopy;
 						SelectedFileTitle = ouvm.ServiceResult.title;
+
+						Recents.AddRecent(ouvm.ServiceResult.originalURL);
+						UpdateRecents();
 					}
 					else
 					{
 						_mediaDecoder.Projection = StreamingServices.GetServiceProjection(ouvm.Uri);
+
+						Recents.AddRecent(ouvm.Uri.AbsoluteUri);
+						UpdateRecents();
 					}
 
 					Execute.OnUIThreadAsync(() =>
@@ -989,7 +1025,11 @@ namespace PlayerUI
 		{
 			Recents.UpdateMenu(shellView.FileMenuItem, (file) =>
 			{
-				if (!File.Exists(file))
+				if (file.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) || file.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
+				{
+					OpenUrlFrom(file);
+				}
+				else if (!File.Exists(file))
 				{
 					Recents.Remove(file);
 					UpdateRecents();
@@ -1064,25 +1104,8 @@ namespace PlayerUI
 			{
 				Task.Factory.StartNew(() =>
 				{
-					if (IsPlaying)
-					{
-						waitForPlaybackStop.Reset();
-						Stop();
-						waitForPlaybackStop.WaitOne();
-					}
-					else
-					{
-						int it = 5;
-						while (_mediaDecoder.Initialized && it > 0)
-						{
-							Thread.Sleep(100);
-							it--;
-						}
-					}
-					_mediaDecoder.Projection = MediaDecoder.ProjectionMode.Sphere;
-					_mediaDecoder.StereoMode = MediaDecoder.VideoMode.Autodetect;
+					ResetPlayback();
 					IsFileSelected = true;
-					SelectedFileTitle = "";
 					SelectedFileName = file;
 					Execute.OnUIThread(() => LoadMedia());
 					Task.Factory.StartNew(() => Execute.OnUIThread(() =>
