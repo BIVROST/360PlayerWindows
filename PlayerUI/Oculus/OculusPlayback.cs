@@ -130,6 +130,9 @@ namespace PlayerUI.Oculus
 					DepthWriteMask = DepthWriteMask.Zero
 				};
 
+#if DEBUG
+				SharpDX.Configuration.EnableObjectTracking = true;
+#endif
 				using (Hmd hmd = oculus.Hmd_Create(out graphicsLuid))
 				// Create DirectX drawing device.
 				using (_device = new Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.BgraSupport, new SharpDX.Direct3D.FeatureLevel[] { SharpDX.Direct3D.FeatureLevel.Level_10_0 }))
@@ -145,6 +148,21 @@ namespace PlayerUI.Oculus
 				using (vrui = new VRUI(_device, _gd))
 				using (SharpDX.Toolkit.Graphics.GeometricPrimitive primitive = GraphicTools.CreateGeometry(_projection, _gd, false))
 				{
+					//SharpDX.Toolkit.Graphics.GeometricPrimitive plane;
+					//using (var planeSrc = SharpDX.Toolkit.Graphics.GeometricPrimitive.Plane.New(_gd, 2, 1, 30, true))
+					//{
+					//	short[] indices = planeSrc.IndexBuffer.GetData<short>();
+					//	var data = planeSrc.VertexBuffer.GetData();
+
+					//	for (int it = 0; it < data.Length; it++)
+					//	{
+					//		var x = (data[it].TextureCoordinate.X * 2 - 0.5f);
+					//		data[it].TextureCoordinate.X = x;
+					//	}
+					//	//plane = SharpDX.Toolkit.Graphics.GeometricPrimitive.Plane.New(_gd, 2, 1, 10, true);
+					//	plane = new SharpDX.Toolkit.Graphics.GeometricPrimitive(_gd, data, indices);
+					//}
+
 					if (hmd == null)
 						throw new HeadsetError("Oculus Rift not detected.");
 					if (hmd.ProductName == string.Empty)
@@ -215,7 +233,7 @@ namespace PlayerUI.Oculus
 
 							// Retrieve the Direct3D texture contained in the Oculus TextureSwapChainBuffer.
 							IntPtr swapChainTextureComPtr = IntPtr.Zero;
-							AssertSuccess(eyeTexture.SwapTextureSet.GetBufferDX(textureIndex, textureInterfaceId, out swapChainTextureComPtr), 
+							AssertSuccess(eyeTexture.SwapTextureSet.GetBufferDX(textureIndex, textureInterfaceId, out swapChainTextureComPtr),
 								oculus, "Failed to retrieve a texture from the created swap chain.");
 
 							// Create a managed Texture2D, based on the unmanaged texture pointer.
@@ -270,6 +288,8 @@ namespace PlayerUI.Oculus
 						customEffectR.CurrentTechnique.Passes[0].Apply();
 					}
 
+
+
 					ResizeTexture(MediaDecoder.Instance.TextureL, _stereoVideo ? MediaDecoder.Instance.TextureR : MediaDecoder.Instance.TextureL);
 
 					#endregion
@@ -321,7 +341,7 @@ namespace PlayerUI.Oculus
 
 							// Retrieve the index of the active texture
 							int textureIndex;
-							AssertSuccess(eyeTexture.SwapTextureSet.GetCurrentIndex(out textureIndex), 
+							AssertSuccess(eyeTexture.SwapTextureSet.GetCurrentIndex(out textureIndex),
 								oculus, "Failed to retrieve texture swap chain current index.");
 
 							immediateContext.OutputMerger.SetRenderTargets(eyeTexture.DepthStencilView, eyeTexture.RenderTargetViews[textureIndex]);
@@ -351,6 +371,29 @@ namespace PlayerUI.Oculus
 
 							Matrix projectionMatrix = oculus.Matrix4f_Projection(eyeTexture.FieldOfView, 0.1f, 100.0f, OVRTypes.ProjectionModifier.LeftHanded).ToMatrix();
 							projectionMatrix.Transpose();
+
+							////// DEBUG PLANE
+							//customEffectL.Parameters["WorldViewProj"].SetValue(Matrix.Translation(0, 0, -2) * worldMatrix * viewMatrix * projectionMatrix);
+							//customEffectR.Parameters["WorldViewProj"].SetValue(Matrix.Translation(0, 0, -2) * worldMatrix * viewMatrix * projectionMatrix);
+							////customEffectL.Parameters["WorldViewProj"].SetValue(Matrix.RotationX((float)-Math.PI / 2) * Matrix.Translation(0, -.5f, -.25f) * worldMatrix * viewMatrix * projectionMatrix);
+							////customEffectR.Parameters["WorldViewProj"].SetValue(Matrix.RotationX((float)-Math.PI / 2) * Matrix.Translation(0, -.5f, -.25f) * worldMatrix * viewMatrix * projectionMatrix);
+							//lock (localCritical)
+							//{
+							//	if (_stereoVideo)
+							//	{
+							//		if (eyeIndex == 0)
+							//			plane.Draw(customEffectL);
+							//		if (eyeIndex == 1)
+							//			plane.Draw(customEffectR);
+							//	}
+							//	else
+							//		plane.Draw(customEffectL);
+							//}
+							////// END
+
+
+
+
 
 							customEffectL.Parameters["WorldViewProj"].SetValue(worldMatrix * viewMatrix * projectionMatrix);
 							if (_stereoVideo)
