@@ -95,10 +95,9 @@ namespace PlayerUI
 
 			deleteItems.ForEach(di => menuItem.Items.Remove(di));
 
-			int index = 1;
 			recentFiles.Reverse<string>().Take(10).ToList().ForEach(recent =>
 			  {
-				  string header = Path.GetFileName(recent);
+				  string header = recent.StartsWith("http", StringComparison.InvariantCultureIgnoreCase) ? recent : Path.GetFileName(recent);
 				  string fileName = recent;
 				  MenuItem newItem = new MenuItem() { Header = header };
 				  newItem.Tag = "recent";
