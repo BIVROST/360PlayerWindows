@@ -79,35 +79,99 @@ namespace PlayerUI.Tools
 
 		private static GeometricPrimitive GenerateDome(GraphicsDevice graphicsDevice, bool toLeftHanded)
 		{
-			using (GeometricPrimitive primitive = GeometricPrimitive.Sphere.New(graphicsDevice, 6, 64, toLeftHanded)) { 
-		
+			//const int vslices = 2;
+			//const int hslices = vslices * 2;
+			//const float radius = 6f;
+			//Vector3 forward = toLeftHanded ? Vector3.ForwardLH : Vector3.ForwardRH;
+
+			//VertexPositionNormalTexture[] data = new VertexPositionNormalTexture[(hslices + 1) * (vslices + 1)];
+			//for (int horiz = 0; horiz <= hslices; horiz++)      // +1 (<=) h slice for the same points with X = 0 and X = 1
+			//	for (int vert = 0; vert <= vslices; vert++)		// +1 (<=) slice for bottom cap points
+			//	{
+			//		int idx = vert * hslices + horiz;
+			//		float yaw = (float)((Math.PI * 2 * horiz) / hslices);
+			//		float pitch = (float)((Math.PI * vert) / vslices - Math.PI / 2);
+			//		data[idx] = new VertexPositionNormalTexture();
+			//		Vector3 n = Vector3.Transform(forward, Quaternion.RotationYawPitchRoll(yaw, pitch, 0f));
+
+			//		data[idx].Normal = n;
+			//		data[idx].Position = n * radius;
+			//		data[idx].TextureCoordinate.X = horiz / (float)hslices;
+			//		data[idx].TextureCoordinate.Y = 1 - vert / (float)vslices;
+			//	}
+
+			//short[] indices = new short[6 * hslices * vslices];
+			//for (int v = 0; v < vslices; v++)
+			//	for (int h = 0; h < hslices; h++)
+			//	{
+			//		int idx = 6 * (v * hslices + h) - 3;
+
+			//		// A---B   triangles:
+			//		// | / |   ABC, BDC
+			//		// C---D   ACB, BCD
+
+			//		// no need for modulo - indices are [hslices+1, vslices+1]
+			//		short idxA = (short)(v * hslices + h);
+			//		short idxB = (short)(v * hslices + (h + 1));
+			//		short idxC = (short)((v + 1) * hslices + h);
+			//		short idxD = (short)((v + 1) * hslices + (h + 1));
+
+			//		// not first v slice (top cap)
+			//		if (v > 0)
+			//		{
+			//			indices[idx] = idxA;
+			//			indices[idx + 1] = idxC;
+			//			indices[idx + 2] = idxB;
+			//		}
+
+			//		// not last v slice (bottom cap)
+			//		if (v < vslices - 1)
+			//		{
+			//			indices[idx + 3] = idxB;
+			//			indices[idx + 4] = idxC;
+			//			indices[idx + 5] = idxD;
+			//		}
+			//	}
+
+			//return new GeometricPrimitive(graphicsDevice, data, indices);
+
+			using (GeometricPrimitive primitive = GeometricPrimitive.Sphere.New(graphicsDevice, 50, 64, toLeftHanded))
+			{
+
 				short[] indices = primitive.IndexBuffer.GetData<short>();
 				var data = primitive.VertexBuffer.GetData();
 
 				for (int it = 0; it < data.Length; it++)
 				{
-					var x = (2 + data[it].TextureCoordinate.X * 2 - 0.5f) % 2;
+					var u = data[it].TextureCoordinate.X * 2 - 0.5f;
+
+					// reverse
 					//if (x > 1)
 					//	x = x - 1;
-					// if (x > 1 || x < 0) x = 1 - x;
-					//else if (x < 0) x = 0;
-					data[it].TextureCoordinate.X = x;
+
+					// mirror
+					//if (x > 1)
+					//	x = 2 - x;
+
+					data[it].TextureCoordinate.X = u;
+
+					//var z = data[it].Position.Z;
+					//data[it].Position.Z = -data[it].Position.X;
+					//data[it].Position.X = z;
+
+					//z = data[it].Normal.Z;
+					//data[it].Normal.Z = -data[it].Normal.X;
+					//data[it].Normal.X = z;
 				}
 
+				// remove edges (requires mirror or reverse)
 				//indices = indices.ToList().FindAll(i => data[i].TextureCoordinate.X > 0.05f && data[i].TextureCoordinate.X < 0.95f).ToArray();
-				indices = indices.ToList().FindAll(i => data[i].TextureCoordinate.X <= 1).ToArray();
+
+				// remove back (do not use with mirror or reverse)
+				//indices = indices.ToList().FindAll(i => data[i].TextureCoordinate.X <= 1).ToArray();
 
 				return new GeometricPrimitive(graphicsDevice, data, indices);
 			}
-
-
-			//var sphere = GeometricPrimitive.Sphere.New(graphicsDevice, 6, 64, toLeftHanded);
-			//VertexPositionNormalTexture[] vertices = sphere.VertexBuffer.GetData();
-			////for (int i = vertices.Length - 1; i >= 0; i--)
-			////	vertices[i].TextureCoordinate.X = 0; // (vertices[i].TextureCoordinate.X * 2) % 1;
-
-			////return sphere;
-			//return new GeometricPrimitive(graphicsDevice, vertices, sphere.IndexBuffer.GetData<short>(), toLeftHanded);
 		}
 
 

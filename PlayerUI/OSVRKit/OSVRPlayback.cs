@@ -79,6 +79,8 @@ namespace PlayerUI.OSVRKit
         }
 
 
+		protected override float Gamma { get { return 1f; } }
+
 
 		override protected void Render()
 		{
@@ -136,25 +138,25 @@ namespace PlayerUI.OSVRKit
 					if (displayConfig.CheckDisplayStartup()) break;
 				}
 			}
-			if(displayConfig == null)
+			if (displayConfig == null)
 			{
 				context.Dispose();
 				Lock = false;
 				return;
 			}
 
-            var numDisplayInputs = displayConfig.GetNumDisplayInputs();
-            if (numDisplayInputs != 1)
+			var numDisplayInputs = displayConfig.GetNumDisplayInputs();
+			if (numDisplayInputs != 1)
 			{
 				context.Dispose();
 				Lock = false;
 				return;
 			}
 
-            var displayDimensions = displayConfig.GetDisplayDimensions(0);
-            var numViewers = displayConfig.GetNumViewers();
+			var displayDimensions = displayConfig.GetDisplayDimensions(0);
+			var numViewers = displayConfig.GetNumViewers();
 
-            if (numViewers != 1)
+			if (numViewers != 1)
 			{
 				context.Dispose();
 				Lock = false;
@@ -163,42 +165,40 @@ namespace PlayerUI.OSVRKit
 
 
 			var form = new RenderForm("BIVROST - OSVR");
-            form.Width = displayDimensions.Width;
-            form.Height = displayDimensions.Height;
-            form.ShowInTaskbar = false;
+			form.Width = displayDimensions.Width;
+			form.Height = displayDimensions.Height;
+			form.ShowInTaskbar = false;
 
 
-            var desc = new SwapChainDescription()
-            {
-                BufferCount = 1,
-                ModeDescription =
-                    new ModeDescription(displayDimensions.Width, displayDimensions.Height,
-                                        new Rational(60, 1), Format.R8G8B8A8_UNorm),
-                IsWindowed = true,
-                OutputHandle = form.Handle,
-                SampleDescription = new SampleDescription(1, 0),
-                SwapEffect = SwapEffect.Discard,
-                Usage = Usage.RenderTargetOutput
-            };
+			var desc = new SwapChainDescription()
+			{
+				BufferCount = 1,
+				ModeDescription =
+					new ModeDescription(displayDimensions.Width, displayDimensions.Height,
+										new Rational(60, 1), Format.R8G8B8A8_UNorm),
+				IsWindowed = true,
+				OutputHandle = form.Handle,
+				SampleDescription = new SampleDescription(1, 0),
+				SwapEffect = SwapEffect.Discard,
+				Usage = Usage.RenderTargetOutput
+			};
 
-            SwapChain swapChain;
+			SwapChain swapChain;
 
-            // Create DirectX drawing device.
-            //SharpDX.Direct3D11.Device device = new Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.BgraSupport, new SharpDX.Direct3D.FeatureLevel[] { SharpDX.Direct3D.FeatureLevel.Level_10_0 });
-            Device.CreateWithSwapChain(DriverType.Hardware, DeviceCreationFlags.BgraSupport, desc, out _device, out swapChain);			
+			// Create DirectX drawing device.
+			//SharpDX.Direct3D11.Device device = new Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.BgraSupport, new SharpDX.Direct3D.FeatureLevel[] { SharpDX.Direct3D.FeatureLevel.Level_10_0 });
+			Device.CreateWithSwapChain(DriverType.Hardware, DeviceCreationFlags.BgraSupport, desc, out _device, out swapChain);
 
-            // Create DirectX Graphics Interface factory, used to create the swap chain.
-            Factory factory;// = new Factory();
-
-            factory = swapChain.GetParent<Factory>();
-            factory.MakeWindowAssociation(form.Handle, WindowAssociationFlags.IgnoreAll);
+			// Create DirectX Graphics Interface factory, used to create the swap chain.
+			Factory factory = swapChain.GetParent<Factory>();
+			factory.MakeWindowAssociation(form.Handle, WindowAssociationFlags.IgnoreAll);
 			form.FormBorderStyle = FormBorderStyle.None;
 			form.TopMost = true;
 
-            DeviceContext immediateContext = _device.ImmediateContext;
+			DeviceContext immediateContext = _device.ImmediateContext;
 
-            {
-                SharpDX.DXGI.Device2 dxgiDevice = _device.QueryInterface<SharpDX.DXGI.Device2>();
+			{
+				SharpDX.DXGI.Device2 dxgiDevice = _device.QueryInterface<SharpDX.DXGI.Device2>();
 
 				//var bounds = dxgiDevice.Adapter.Outputs[1].Description.DesktopBounds;
 				//form.DesktopBounds = new System.Drawing.Rectangle(bounds.X, bounds.Y, bounds.Width, bounds.Height);
@@ -266,246 +266,185 @@ namespace PlayerUI.OSVRKit
 
 
 
-            // Create a depth buffer, using the same width and height as the back buffer.
-            Texture2DDescription depthBufferDescription = new Texture2DDescription();
-            depthBufferDescription.Format = Format.D32_Float;
-            depthBufferDescription.ArraySize = 1;
-            depthBufferDescription.MipLevels = 1;
-            depthBufferDescription.Width = displayDimensions.Width;
-            depthBufferDescription.Height = displayDimensions.Height;
-            depthBufferDescription.SampleDescription = new SampleDescription(1, 0);
-            depthBufferDescription.Usage = ResourceUsage.Default;
-            depthBufferDescription.BindFlags = BindFlags.DepthStencil;
-            depthBufferDescription.CpuAccessFlags = CpuAccessFlags.None;
-            depthBufferDescription.OptionFlags = ResourceOptionFlags.None;
+			// Create a depth buffer, using the same width and height as the back buffer.
+			Texture2DDescription depthBufferDescription = new Texture2DDescription()
+			{
+				Format = Format.D32_Float,
+				ArraySize = 1,
+				MipLevels = 1,
+				Width = displayDimensions.Width,
+				Height = displayDimensions.Height,
+				SampleDescription = new SampleDescription(1, 0),
+				Usage = ResourceUsage.Default,
+				BindFlags = BindFlags.DepthStencil,
+				CpuAccessFlags = CpuAccessFlags.None,
+				OptionFlags = ResourceOptionFlags.None
+			};
 
-            // Define how the depth buffer will be used to filter out objects, based on their distance from the viewer.
-            DepthStencilStateDescription depthStencilStateDescription = new DepthStencilStateDescription();
-            depthStencilStateDescription.IsDepthEnabled = true;
-            depthStencilStateDescription.DepthComparison = Comparison.Less;
-            depthStencilStateDescription.DepthWriteMask = DepthWriteMask.Zero;
+		
 
-            // Create the depth buffer.
-            Texture2D depthBuffer = new Texture2D(_device, depthBufferDescription);
-            //DepthStencilView depthStencilView = new DepthStencilView(device, depthBuffer);
-            //DepthStencilState depthStencilState = new DepthStencilState(device, depthStencilStateDescription);
-            //SharpDX.Viewport viewport = new SharpDX.Viewport(0, 0, displayDimensions.Width, displayDimensions.Height, 0.0f, 1.0f);
+			//// Define how the depth buffer will be used to filter out objects, based on their distance from the viewer.
+			//DepthStencilStateDescription depthStencilStateDescription = new DepthStencilStateDescription()
+			//{
+			//	IsDepthEnabled = true,
+			//	DepthComparison = Comparison.Less,
+			//	DepthWriteMask = DepthWriteMask.Zero
+			//};
 
 
-            // Retrieve the DXGI device, in order to set the maximum frame latency.
-            using (SharpDX.DXGI.Device1 dxgiDevice = _device.QueryInterface<SharpDX.DXGI.Device1>())
-            {
+			// Retrieve the DXGI device, in order to set the maximum frame latency.
+			using (SharpDX.DXGI.Device1 dxgiDevice = _device.QueryInterface<SharpDX.DXGI.Device1>())
                 dxgiDevice.MaximumFrameLatency = 1;
-            }
+
+			using (_gd = SharpDX.Toolkit.Graphics.GraphicsDevice.New(_device))
+			using (customEffectL = GetCustomEffect(_gd))
+			using (customEffectR = GetCustomEffect(_gd))
+			using (var primitive = GraphicTools.CreateGeometry(_projection, _gd))
+			using (vrui = new VRUI(_device, _gd))
+			using (Texture2D depthBuffer = new Texture2D(_device, depthBufferDescription))
+			using (DepthStencilView depthView = new DepthStencilView(_device, depthBuffer))
+			using (Texture2D backBuffer = Texture2D.FromSwapChain<Texture2D>(swapChain, 0))
+			using (RenderTargetView renderView = new RenderTargetView(_device, backBuffer))
+			{
+				ResizeTexture(MediaDecoder.Instance.TextureL, _stereoVideo ? MediaDecoder.Instance.TextureR : MediaDecoder.Instance.TextureL);
+				MediaDecoder.Instance.OnFormatChanged += ResizeTexture;
 
 
+				DateTime startTime = DateTime.Now;
+				Vector3 position = new Vector3(0, 0, -1);
 
-            #region Rendering primitives and resources
+				#region Render loop
 
-            _gd = SharpDX.Toolkit.Graphics.GraphicsDevice.New(_device);
-
-			MediaDecoder.Instance.OnFormatChanged += ResizeTexture;
-
-
-            //var resourceL = textureL.QueryInterface<SharpDX.DXGI.Resource>();
-            //var sharedTexL = device.OpenSharedResource<Texture2D>(resourceL.SharedHandle);
-
-            basicEffectL = new SharpDX.Toolkit.Graphics.BasicEffect(_gd);
-
-            basicEffectL.PreferPerPixelLighting = false;
-            //basicEffectL.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(gd, sharedTexL);
-
-            basicEffectL.TextureEnabled = true;
-            basicEffectL.LightingEnabled = false;
-            basicEffectL.Sampler = _gd.SamplerStates.AnisotropicClamp;
-
-            if (_stereoVideo)
-            {
-                //var resourceR = textureR.QueryInterface<SharpDX.DXGI.Resource>();
-                //var sharedTexR = device.OpenSharedResource<Texture2D>(resourceR.SharedHandle);
-
-                basicEffectR = new SharpDX.Toolkit.Graphics.BasicEffect(_gd);
-
-                basicEffectR.PreferPerPixelLighting = false;
-                //basicEffectR.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(gd, sharedTexR);
-
-                basicEffectR.TextureEnabled = true;
-                basicEffectR.LightingEnabled = false;
-                basicEffectR.Sampler = _gd.SamplerStates.AnisotropicClamp;
-            }
-
-			ResizeTexture(MediaDecoder.Instance.TextureL, _stereoVideo ? MediaDecoder.Instance.TextureR : MediaDecoder.Instance.TextureL);
-
-			//var primitive = SharpDX.Toolkit.Graphics.GeometricPrimitive.Sphere.New(gd, radius, 32, true);
-			var primitive = GraphicTools.CreateGeometry(_projection, _gd);
+				DateTime lastTime = DateTime.Now;
+				float deltaTime = 0;
 
 
-			// UI Rendering
-			vrui = new VRUI(_device, _gd);
-			vrui.Draw(movieTitle, currentTime, duration);
+				immediateContext.OutputMerger.SetTargets(depthView, renderView);
 
 
-            #endregion
+				form.GotFocus += (s, e) =>	OnGotFocus();
+				bool first = true;
 
-
-            DateTime startTime = DateTime.Now;
-            Vector3 position = new Vector3(0, 0, -1);
-
-            #region Render loop
-
-            DateTime lastTime = DateTime.Now;
-            float deltaTime = 0;
-
-            var depthView = new DepthStencilView(_device, depthBuffer);
-            var backBuffer = Texture2D.FromSwapChain<Texture2D>(swapChain, 0);
-            var renderView = new RenderTargetView(_device, backBuffer);
-            immediateContext.OutputMerger.SetTargets(depthView, renderView);
-
-
-            form.GotFocus += (s, e) =>
-            {
-                OnGotFocus();
-            };
-            bool first = true;
-
-            RenderLoop.Run(form, () =>
-            {
-				if (abort)
+				RenderLoop.Run(form, () =>
 				{
-					form.Close();
-					return;
-				}				
-
-                if(first)
-                {
-                    OnGotFocus();
-                    first = false;
-                }
-
-                context.update();
-
-                float timeSinceStart = (float)(DateTime.Now - startTime).TotalSeconds;
-                deltaTime = (float)(DateTime.Now - lastTime).TotalSeconds;
-                lastTime = DateTime.Now;
-
-                immediateContext.ClearDepthStencilView(depthView, DepthStencilClearFlags.Depth, 1.0f, 0);
-                immediateContext.ClearRenderTargetView(renderView, Color.Black);
-
-                uint viewer = 0;
-
-                for (int eyeIndex = 0; eyeIndex < 2; eyeIndex++)
-                {
-                    var numEyes = displayConfig.GetNumEyesForViewer(viewer);
-                    var viewerPose = displayConfig.GetViewerPose(viewer);
-
-
-
-                    for (byte eye = 0; eye < numEyes; eye++)
-                    {
-                        uint numSurfaces = displayConfig.GetNumSurfacesForViewerEye(viewer, eye);
-                        Pose3 viewerEyePose = displayConfig.GetViewerEyePose(viewer, eye);
-                        Matrix44f viewerEyeMatrixf = displayConfig.GetViewerEyeViewMatrixf(viewer, eye, MatrixConventionsFlags.Default);
-                        uint surface = 0;
-                        OSVR.ClientKit.Viewport viewport = displayConfig.GetRelativeViewportForViewerEyeSurface(viewer, eye, surface);
-                        Matrix44f projectionf = displayConfig.GetProjectionMatrixForViewerEyeSurfacef(viewer, eye, surface, 0.001f, 1000.0f, MatrixConventionsFlags.Default);
-                        ProjectionClippingPlanes projectionClippingPlanes = displayConfig.GetViewerEyeSurfaceProjectionClippingPlanes(viewer, eye, surface);
-
-                        ViewportF vp = new ViewportF(viewport.Left, viewport.Bottom, viewport.Width, viewport.Height);
-                        immediateContext.Rasterizer.SetViewport(vp);
-
-						Vector3 viewPosition = viewerEyePose.translation.ToVector3();
-
-						Matrix rotationMatrix = Matrix.RotationQuaternion(viewerEyePose.rotation.ToQuaternion());
-						Vector3 lookUp = Vector3.Transform(new Vector3(0, 1, 0), rotationMatrix).ToVector3();
-						Vector3 lookAt = Vector3.Transform(new Vector3(0, 0, -1), rotationMatrix).ToVector3();
-						Matrix viewMatrix = Matrix.LookAtRH(viewPosition, viewPosition + lookAt, lookUp);
-
-						Matrix projectionMatrix = projectionf.ToMatrix();
-
-						basicEffectL.World = Matrix.Translation(viewPosition);
-						basicEffectL.View = viewMatrix;
-                        basicEffectL.Projection = projectionMatrix;
-
-                        if (_stereoVideo)
-                        {
-                            basicEffectR.World = Matrix.Translation(viewPosition);
-							basicEffectR.View = viewMatrix;
-                            basicEffectR.Projection = projectionMatrix;
-                        }
-
-						lock (localCritical)
-						{
-							if (_stereoVideo)
-							{
-								if (eye == 0)
-									primitive.Draw(basicEffectL);
-								if (eye == 1)
-									primitive.Draw(basicEffectR);
-							}
-							else
-								primitive.Draw(basicEffectL);
-						}
-
-						// reset UI position every frame if it is not visible
-						if (vrui.isUIHidden)
-							vrui.SetWorldPosition(viewMatrix.Forward, viewPosition, true);
-
-						vrui.Draw(movieTitle, currentTime, duration);
-						vrui.Render(deltaTime, viewMatrix, projectionMatrix, viewPosition, pause);
+					if (abort)
+					{
+						form.Close();
+						return;
 					}
 
+					if (first)
+					{
+						OnGotFocus();
+						first = false;
+					}
 
-				}
+					context.update();
 
-                swapChain.Present(0, PresentFlags.None);
-            });
+					float timeSinceStart = (float)(DateTime.Now - startTime).TotalSeconds;
+					deltaTime = (float)(DateTime.Now - lastTime).TotalSeconds;
+					lastTime = DateTime.Now;
 
-			#endregion
-			//debugWindow.Stop();
+					immediateContext.ClearDepthStencilView(depthView, DepthStencilClearFlags.Depth, 1.0f, 0);
+					immediateContext.ClearRenderTargetView(renderView, Color.Black);
 
-			MediaDecoder.Instance.OnFormatChanged -= ResizeTexture;
+					uint viewer = 0;
 
-			waitForRendererStop.Set();
-
-			//swapChain.SetFullscreenState(false, null);
-
-
-
-			immediateContext.ClearState();
-			immediateContext.Flush();
-			immediateContext.Dispose();
-
-			swapChain.Dispose();
-
-			backBuffer.Dispose();
-			renderView.Dispose();
-			depthView.Dispose();
-			depthBuffer.Dispose();
-			factory.Dispose();
-
-			//swapChain.Dispose();
-
-			// Release all 2D resources
-			basicEffectL.Dispose();
-			if (_stereoVideo)
-				basicEffectR.Dispose();
+					for (int eyeIndex = 0; eyeIndex < 2; eyeIndex++)
+					{
+						var numEyes = displayConfig.GetNumEyesForViewer(viewer);
+						var viewerPose = displayConfig.GetViewerPose(viewer);
 
 
-			vrui.Dispose();
-			vrui = null;
 
-			// Disposing the device, before the hmd, will cause the hmd to fail when disposing.
-			// Disposing the device, after the hmd, will cause the dispose of the device to fail.
-			// It looks as if the hmd steals ownership of the device and destroys it, when it's shutting down.
-			// device.Dispose();
-			base._gd.Dispose();
-			base._device.Dispose();
+						for (byte eye = 0; eye < numEyes; eye++)
+						{
+							uint numSurfaces = displayConfig.GetNumSurfacesForViewerEye(viewer, eye);
+							Pose3 viewerEyePose = displayConfig.GetViewerEyePose(viewer, eye);
+							Matrix44f viewerEyeMatrixf = displayConfig.GetViewerEyeViewMatrixf(viewer, eye, MatrixConventionsFlags.Default);
+							uint surface = 0;
+							OSVR.ClientKit.Viewport viewport = displayConfig.GetRelativeViewportForViewerEyeSurface(viewer, eye, surface);
+							Matrix44f projectionf = displayConfig.GetProjectionMatrixForViewerEyeSurfacef(viewer, eye, surface, 0.001f, 1000.0f, MatrixConventionsFlags.Default);
+							ProjectionClippingPlanes projectionClippingPlanes = displayConfig.GetViewerEyeSurfaceProjectionClippingPlanes(viewer, eye, surface);
 
-			//hmd.Dispose();
-			//oculus.Dispose();
+							ViewportF vp = new ViewportF(viewport.Left, viewport.Bottom, viewport.Width, viewport.Height);
+							immediateContext.Rasterizer.SetViewport(vp);
 
-			displayConfig.Dispose();
-			context.Dispose();
+							Vector3 viewPosition = viewerEyePose.translation.ToVector3();
+
+							Matrix rotationMatrix = Matrix.RotationQuaternion(viewerEyePose.rotation.ToQuaternion());
+							Vector3 lookUp = Vector3.Transform(new Vector3(0, 1, 0), rotationMatrix).ToVector3();
+							Vector3 lookAt = Vector3.Transform(new Vector3(0, 0, -1), rotationMatrix).ToVector3();
+							Matrix viewMatrix = Matrix.LookAtRH(viewPosition, viewPosition + lookAt, lookUp);
+
+							Matrix projectionMatrix = projectionf.ToMatrix();
+
+							Matrix worldMatrix = Matrix.Translation(viewPosition);
+
+							Matrix MVP = worldMatrix * viewMatrix * projectionMatrix;
+							customEffectL.Parameters["WorldViewProj"].SetValue(MVP);
+							customEffectR.Parameters["WorldViewProj"].SetValue(MVP);
+
+							lock (localCritical)
+							{
+								if (_stereoVideo)
+								{
+									if (eye == 0)
+										primitive.Draw(customEffectL);
+									if (eye == 1)
+										primitive.Draw(customEffectR);
+								}
+								else
+									primitive.Draw(customEffectL);
+							}
+
+							// reset UI position every frame if it is not visible
+							if (vrui.isUIHidden)
+								vrui.SetWorldPosition(viewMatrix.Forward, viewPosition, true);
+
+							vrui.Draw(movieTitle, currentTime, duration);
+							vrui.Render(deltaTime, viewMatrix, projectionMatrix, viewPosition, pause);
+						}
+
+
+					}
+
+					swapChain.Present(0, PresentFlags.None);
+				});
+
+				#endregion
+				//debugWindow.Stop();
+
+				MediaDecoder.Instance.OnFormatChanged -= ResizeTexture;
+
+				waitForRendererStop.Set();
+
+				//swapChain.SetFullscreenState(false, null);
+
+
+
+				immediateContext.ClearState();
+				immediateContext.Flush();
+				immediateContext.Dispose();
+
+				swapChain.Dispose();
+
+				factory.Dispose();
+
+				//swapChain.Dispose();
+
+				// Disposing the device, before the hmd, will cause the hmd to fail when disposing.
+				// Disposing the device, after the hmd, will cause the dispose of the device to fail.
+				// It looks as if the hmd steals ownership of the device and destroys it, when it's shutting down.
+				// device.Dispose();
+				base._device.Dispose();
+
+				//hmd.Dispose();
+				//oculus.Dispose();
+
+				displayConfig.Dispose();
+				context.Dispose();
+			}
 
 			Lock = false;
 		}

@@ -14,8 +14,6 @@ namespace PlayerUI.Oculus
 {
 	public class OculusPlayback : Headset
 	{
-		private SharpDX.Toolkit.Graphics.Effect customEffectL;
-		private SharpDX.Toolkit.Graphics.Effect customEffectR;
 
 		override public bool IsPresent()
 		{
@@ -38,58 +36,7 @@ namespace PlayerUI.Oculus
 		}
 
 
-
-		override protected void ResizeTexture(Texture2D tL, Texture2D tR)
-		{
-			if (MediaDecoder.Instance.TextureReleased) return;
-
-			var tempL = textureL;
-			var tempR = textureR;
-
-			lock (localCritical)
-			{
-				//basicEffectL.Texture?.Dispose();
-				(customEffectL.Parameters["UserTex"]?.GetResource<Texture2D>())?.Dispose();
-				textureL = tL;
-
-				if (_stereoVideo)
-				{
-					(customEffectR.Parameters["UserTex"]?.GetResource<Texture2D>())?.Dispose();
-					//basicEffectR.Texture?.Dispose();
-					textureR = tR;
-				}
-
-				var resourceL = textureL.QueryInterface<SharpDX.DXGI.Resource>();
-				var sharedTexL = _device.OpenSharedResource<Texture2D>(resourceL.SharedHandle);
-
-
-				//basicEffectL.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexL);
-				customEffectL.Parameters["UserTex"].SetResource(SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexL));
-				customEffectL.Parameters["gammaFactor"].SetValue(1/2.2f);
-				customEffectL.CurrentTechnique = customEffectL.Techniques["ColorTechnique"];
-				customEffectL.CurrentTechnique.Passes[0].Apply();
-
-				resourceL?.Dispose();
-				sharedTexL?.Dispose();
-
-				if (_stereoVideo)
-				{
-					var resourceR = textureR.QueryInterface<SharpDX.DXGI.Resource>();
-					var sharedTexR = _device.OpenSharedResource<Texture2D>(resourceR.SharedHandle);
-
-					//basicEffectR.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexR);
-					customEffectR.Parameters["UserTex"].SetResource(SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexR));
-					customEffectR.Parameters["gammaFactor"].SetValue(1/2.2f);
-					customEffectR.CurrentTechnique = customEffectR.Techniques["ColorTechnique"];
-					customEffectR.CurrentTechnique.Passes[0].Apply();
-
-					resourceR?.Dispose();
-					sharedTexR?.Dispose();
-				}
-				//_device.ImmediateContext.Flush();
-			}
-
-		}
+		protected override float Gamma { get { return 2.2f; } }
 
 
 		override protected void Render()
@@ -146,23 +93,10 @@ namespace PlayerUI.Oculus
 				using (Layers layers = new Layers())
 				using (_gd = SharpDX.Toolkit.Graphics.GraphicsDevice.New(_device))
 				using (vrui = new VRUI(_device, _gd))
+				using (customEffectL = GetCustomEffect(_gd))
+				using (customEffectR = GetCustomEffect(_gd))
 				using (SharpDX.Toolkit.Graphics.GeometricPrimitive primitive = GraphicTools.CreateGeometry(_projection, _gd, false))
 				{
-					//SharpDX.Toolkit.Graphics.GeometricPrimitive plane;
-					//using (var planeSrc = SharpDX.Toolkit.Graphics.GeometricPrimitive.Plane.New(_gd, 2, 1, 30, true))
-					//{
-					//	short[] indices = planeSrc.IndexBuffer.GetData<short>();
-					//	var data = planeSrc.VertexBuffer.GetData();
-
-					//	for (int it = 0; it < data.Length; it++)
-					//	{
-					//		var x = (data[it].TextureCoordinate.X * 2 - 0.5f);
-					//		data[it].TextureCoordinate.X = x;
-					//	}
-					//	//plane = SharpDX.Toolkit.Graphics.GeometricPrimitive.Plane.New(_gd, 2, 1, 10, true);
-					//	plane = new SharpDX.Toolkit.Graphics.GeometricPrimitive(_gd, data, indices);
-					//}
-
 					if (hmd == null)
 						throw new HeadsetError("Oculus Rift not detected.");
 					if (hmd.ProductName == string.Empty)
@@ -274,22 +208,6 @@ namespace PlayerUI.Oculus
 
 					MediaDecoder.Instance.OnFormatChanged += ResizeTexture;
 
-
-					var gammaShader = GetGammaShader();
-
-					customEffectL = new SharpDX.Toolkit.Graphics.Effect(_gd, gammaShader.EffectData);
-					customEffectL.CurrentTechnique = customEffectL.Techniques["ColorTechnique"];
-					customEffectL.CurrentTechnique.Passes[0].Apply();
-
-					if (_stereoVideo)
-					{
-						customEffectR = new SharpDX.Toolkit.Graphics.Effect(_gd, gammaShader.EffectData);
-						customEffectR.CurrentTechnique = customEffectR.Techniques["ColorTechnique"];
-						customEffectR.CurrentTechnique.Passes[0].Apply();
-					}
-
-
-
 					ResizeTexture(MediaDecoder.Instance.TextureL, _stereoVideo ? MediaDecoder.Instance.TextureR : MediaDecoder.Instance.TextureL);
 
 					#endregion
@@ -372,32 +290,9 @@ namespace PlayerUI.Oculus
 							Matrix projectionMatrix = oculus.Matrix4f_Projection(eyeTexture.FieldOfView, 0.1f, 100.0f, OVRTypes.ProjectionModifier.LeftHanded).ToMatrix();
 							projectionMatrix.Transpose();
 
-							////// DEBUG PLANE
-							//customEffectL.Parameters["WorldViewProj"].SetValue(Matrix.Translation(0, 0, -2) * worldMatrix * viewMatrix * projectionMatrix);
-							//customEffectR.Parameters["WorldViewProj"].SetValue(Matrix.Translation(0, 0, -2) * worldMatrix * viewMatrix * projectionMatrix);
-							////customEffectL.Parameters["WorldViewProj"].SetValue(Matrix.RotationX((float)-Math.PI / 2) * Matrix.Translation(0, -.5f, -.25f) * worldMatrix * viewMatrix * projectionMatrix);
-							////customEffectR.Parameters["WorldViewProj"].SetValue(Matrix.RotationX((float)-Math.PI / 2) * Matrix.Translation(0, -.5f, -.25f) * worldMatrix * viewMatrix * projectionMatrix);
-							//lock (localCritical)
-							//{
-							//	if (_stereoVideo)
-							//	{
-							//		if (eyeIndex == 0)
-							//			plane.Draw(customEffectL);
-							//		if (eyeIndex == 1)
-							//			plane.Draw(customEffectR);
-							//	}
-							//	else
-							//		plane.Draw(customEffectL);
-							//}
-							////// END
-
-
-
-
-
-							customEffectL.Parameters["WorldViewProj"].SetValue(worldMatrix * viewMatrix * projectionMatrix);
-							if (_stereoVideo)
-								customEffectR.Parameters["WorldViewProj"].SetValue(worldMatrix * viewMatrix * projectionMatrix);
+							Matrix MVP = worldMatrix * viewMatrix * projectionMatrix;
+							customEffectL.Parameters["WorldViewProj"].SetValue(MVP);
+							customEffectR.Parameters["WorldViewProj"].SetValue(MVP);
 
 							lock (localCritical)
 							{
@@ -444,11 +339,6 @@ namespace PlayerUI.Oculus
 					immediateContext.ClearState();
 					immediateContext.Flush();
 
-					// Release all 2D resources
-					customEffectL.Dispose();
-					if (_stereoVideo)
-						customEffectR.Dispose();
-
 					// == nieaktualne? ==
 					// Disposing the device, before the hmd, will cause the hmd to fail when disposing.
 					// Disposing the device, after the hmd, will cause the dispose of the device to fail.
@@ -460,17 +350,6 @@ namespace PlayerUI.Oculus
 			Lock = false;
 		}	
 
-		private static SharpDX.Toolkit.Graphics.EffectCompilerResult GetGammaShader()
-		{
-			string shaderSource = Properties.Resources.GammaShader;
-			SharpDX.Toolkit.Graphics.EffectCompiler compiler = new SharpDX.Toolkit.Graphics.EffectCompiler();
-			var shaderCode = compiler.Compile(shaderSource, "gamma shader", SharpDX.Toolkit.Graphics.EffectCompilerFlags.Debug | SharpDX.Toolkit.Graphics.EffectCompilerFlags.EnableBackwardsCompatibility | SharpDX.Toolkit.Graphics.EffectCompilerFlags.SkipOptimization);
-
-			if (shaderCode.HasErrors)
-				throw new HeadsetError("Shader compile error:\n" + string.Join("\n", shaderCode.Logger.Messages));
-
-			return shaderCode;
-		}
 
 
 		void AssertSuccess(OVRTypes.Result result, Wrap oculus, string message)

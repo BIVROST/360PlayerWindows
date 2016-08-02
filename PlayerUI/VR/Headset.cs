@@ -67,8 +67,38 @@ namespace PlayerUI
 		protected float duration = 0;
 		protected float currentTime = 0;
 
-		protected SharpDX.Toolkit.Graphics.BasicEffect basicEffectL;
-		protected SharpDX.Toolkit.Graphics.BasicEffect basicEffectR;
+		protected SharpDX.Toolkit.Graphics.Effect customEffectL;
+		protected SharpDX.Toolkit.Graphics.Effect customEffectR;
+
+
+		private static SharpDX.Toolkit.Graphics.EffectCompilerResult gammaShader = null;
+		private static SharpDX.Toolkit.Graphics.EffectCompilerResult GammaShader
+		{
+			get
+			{
+				if (gammaShader == null)
+				{
+
+					string shaderSource = Properties.Resources.GammaShader;
+					SharpDX.Toolkit.Graphics.EffectCompiler compiler = new SharpDX.Toolkit.Graphics.EffectCompiler();
+					var shaderCode = compiler.Compile(shaderSource, "gamma shader", SharpDX.Toolkit.Graphics.EffectCompilerFlags.Debug | SharpDX.Toolkit.Graphics.EffectCompilerFlags.EnableBackwardsCompatibility | SharpDX.Toolkit.Graphics.EffectCompilerFlags.SkipOptimization);
+
+					if (shaderCode.HasErrors)
+						throw new HeadsetError("Shader compile error:\n" + string.Join("\n", shaderCode.Logger.Messages));
+					gammaShader = shaderCode;
+				}
+				return gammaShader;
+			}
+		}
+
+
+		protected SharpDX.Toolkit.Graphics.Effect GetCustomEffect(SharpDX.Toolkit.Graphics.GraphicsDevice gd)
+		{
+			var ce = new SharpDX.Toolkit.Graphics.Effect(gd, GammaShader.EffectData);
+			ce.CurrentTechnique = ce.Techniques["ColorTechnique"];
+			ce.CurrentTechnique.Passes[0].Apply();
+			return ce;
+		}
 
 
 		protected VRUI vrui;
@@ -107,7 +137,9 @@ namespace PlayerUI
 		protected SharpDX.Toolkit.Graphics.GraphicsDevice _gd;
 		protected Device _device;
 
-		protected virtual void ResizeTexture(Texture2D tL, Texture2D tR)
+		abstract protected float Gamma { get; }
+
+		protected void ResizeTexture(Texture2D tL, Texture2D tR)
 		{
 			if (MediaDecoder.Instance.TextureReleased) return;
 
@@ -116,20 +148,22 @@ namespace PlayerUI
 
 			lock (localCritical)
 			{
-				basicEffectL.Texture?.Dispose();
+				(customEffectL.Parameters["UserTex"]?.GetResource<Texture2D>())?.Dispose();
 				textureL = tL;
 
-				if (_stereoVideo)
-				{
-					basicEffectR.Texture?.Dispose();
-					textureR = tR;
-				}
-
-
+				(customEffectR.Parameters["UserTex"]?.GetResource<Texture2D>())?.Dispose();
+				textureR = tR;
 
 				var resourceL = textureL.QueryInterface<SharpDX.DXGI.Resource>();
 				var sharedTexL = _device.OpenSharedResource<Texture2D>(resourceL.SharedHandle);
-				basicEffectL.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexL);
+
+
+				//basicEffectL.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexL);
+				customEffectL.Parameters["UserTex"].SetResource(SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexL));
+				customEffectL.Parameters["gammaFactor"].SetValue(Gamma);
+				customEffectL.CurrentTechnique = customEffectL.Techniques["ColorTechnique"];
+				customEffectL.CurrentTechnique.Passes[0].Apply();
+
 				resourceL?.Dispose();
 				sharedTexL?.Dispose();
 
@@ -137,7 +171,13 @@ namespace PlayerUI
 				{
 					var resourceR = textureR.QueryInterface<SharpDX.DXGI.Resource>();
 					var sharedTexR = _device.OpenSharedResource<Texture2D>(resourceR.SharedHandle);
-					basicEffectR.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexR);
+
+					//basicEffectR.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexR);
+					customEffectR.Parameters["UserTex"].SetResource(SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexR));
+					customEffectR.Parameters["gammaFactor"].SetValue(Gamma);
+					customEffectR.CurrentTechnique = customEffectR.Techniques["ColorTechnique"];
+					customEffectR.CurrentTechnique.Passes[0].Apply();
+
 					resourceR?.Dispose();
 					sharedTexR?.Dispose();
 				}
@@ -145,6 +185,7 @@ namespace PlayerUI
 			}
 
 		}
+
 
 		abstract public bool IsPresent();
 

@@ -155,11 +155,11 @@ float4 ColorPixelShader(PixelInputType input) : SV_Target
             color = lerp(color, UserTex.Sample(UserTexSampler, float2(0.5, input.TexCoord.y < 0.5 ? 0.02 : 0.98)), t);
         }
 
-        return pow(pow(0.5-d, 0.7) * color, 1 / gammaFactor);
+        return pow(pow(0.5-d, 0.7) * color, gammaFactor);
     }
 
 
-    return pow(UserTex.Sample(UserTexSampler, input.TexCoord), 1 / gammaFactor);
+    return pow(UserTex.Sample(UserTexSampler, input.TexCoord), gammaFactor);
 }
 
 

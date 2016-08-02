@@ -57,60 +57,9 @@ namespace PlayerUI.OpenVR
 			return Valve.VR.OpenVR.IsHmdPresent();
 		}
 
-		//private SharpDX.Toolkit.Graphics.Effect customEffectL;
-		//private SharpDX.Toolkit.Graphics.Effect customEffectR;
 
-		//override protected void ResizeTexture(Texture2D tL, Texture2D tR)
-		//{
-		//	if (MediaDecoder.Instance.TextureReleased) return;
+		protected override float Gamma { get { return 2.2f; } }
 
-		//	var tempL = textureL;
-		//	var tempR = textureR;
-
-		//	lock (localCritical)
-		//	{
-		//		//basicEffectL.Texture?.Dispose();
-		//		(customEffectL.Parameters["UserTex"]?.GetResource<Texture2D>())?.Dispose();
-		//		textureL = tL;
-
-		//		if (_stereoVideo)
-		//		{
-		//			(customEffectR.Parameters["UserTex"]?.GetResource<Texture2D>())?.Dispose();
-		//			//basicEffectR.Texture?.Dispose();
-		//			textureR = tR;
-		//		}
-
-		//		var resourceL = textureL.QueryInterface<SharpDX.DXGI.Resource>();
-		//		var sharedTexL = _device.OpenSharedResource<Texture2D>(resourceL.SharedHandle);
-
-
-		//		//basicEffectL.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexL);
-		//		customEffectL.Parameters["UserTex"].SetResource(SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexL));
-		//		customEffectL.Parameters["gammaFactor"].SetValue(1 / 2.2f);
-		//		customEffectL.CurrentTechnique = customEffectL.Techniques["ColorTechnique"];
-		//		customEffectL.CurrentTechnique.Passes[0].Apply();
-
-		//		resourceL?.Dispose();
-		//		sharedTexL?.Dispose();
-
-		//		if (_stereoVideo)
-		//		{
-		//			var resourceR = textureR.QueryInterface<SharpDX.DXGI.Resource>();
-		//			var sharedTexR = _device.OpenSharedResource<Texture2D>(resourceR.SharedHandle);
-
-		//			//basicEffectR.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexR);
-		//			customEffectR.Parameters["UserTex"].SetResource(SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexR));
-		//			customEffectR.Parameters["gammaFactor"].SetValue(1 / 2.2f);
-		//			customEffectR.CurrentTechnique = customEffectR.Techniques["ColorTechnique"];
-		//			customEffectR.CurrentTechnique.Passes[0].Apply();
-
-		//			resourceR?.Dispose();
-		//			sharedTexR?.Dispose();
-		//		}
-		//		//_device.ImmediateContext.Flush();
-		//	}
-
-		//}
 
 		protected override void Render()
 		{
@@ -158,227 +107,197 @@ namespace PlayerUI.OpenVR
 			float fieldOfView = (float)(2.0f * Math.Atan(tanHalfFov.Y) * 180 / Math.PI);
 
 
+			Texture2DDescription eyeTextureDescription = new Texture2DDescription()
+			{
+				Format = Format.R8G8B8A8_UNorm_SRgb,
+				ArraySize = 1,
+				MipLevels = 1,
+				Width = (int)targetWidth,
+				Height = (int)targetHeight,
+				SampleDescription = new SampleDescription(1, 0),
+				Usage = ResourceUsage.Default,
+				BindFlags = BindFlags.RenderTarget,
+				CpuAccessFlags = CpuAccessFlags.None,
+				OptionFlags = ResourceOptionFlags.None
+			};
+
+
+			Texture2DDescription eyeDepthTextureDescription = new Texture2DDescription()
+			{
+				Format = Format.D32_Float_S8X24_UInt,
+				ArraySize = 1,
+				MipLevels = 1,
+				Width = (int)targetWidth,
+				Height = (int)targetHeight,
+				SampleDescription = new SampleDescription(1, 0),
+				Usage = ResourceUsage.Default,
+				BindFlags = BindFlags.DepthStencil,
+				CpuAccessFlags = CpuAccessFlags.None,
+				OptionFlags = ResourceOptionFlags.None
+			};
+
+
+
+			///// CUBE
+			//var cubeEffect = new SharpDX.Toolkit.Graphics.BasicEffect(_gd)
+			//{
+			//	//PreferPerPixelLighting = false,
+			//	//TextureEnabled = false,
+			//	LightingEnabled = true,
+			//	//DiffuseColor = new Vector4(0.5f,0.5f,0.5f,1f),
+			//	Sampler = _gd.SamplerStates.AnisotropicClamp
+			//};
+			//cubeEffect.EnableDefaultLighting();
+			//var cube = SharpDX.Toolkit.Graphics.GeometricPrimitive.Teapot.New(_gd, 1, 8, false);
+
+
+			///// END
+
 			using (_device = new Device(DriverType.Hardware, DeviceCreationFlags.BgraSupport, new FeatureLevel[] { FeatureLevel.Level_10_0 }))
 			using (DeviceContext context = _device.ImmediateContext)
 			using (_gd = SharpDX.Toolkit.Graphics.GraphicsDevice.New(_device))
 			using (SharpDX.Toolkit.Graphics.GeometricPrimitive primitive = GraphicTools.CreateGeometry(_projection, _gd, false))
+			using (customEffectL = GetCustomEffect(_gd))
+			using (customEffectR = GetCustomEffect(_gd))
+			using (Texture2D leftEye = new Texture2D(_device, eyeTextureDescription))
+			using (RenderTargetView leftEyeView = new RenderTargetView(_device, leftEye))
+			using (Texture2D leftEyeDepth = new Texture2D(_device, eyeDepthTextureDescription))
+			using (DepthStencilView leftEyeDepthView = new DepthStencilView(_device, leftEyeDepth))
+			using (Texture2D rightEye = new Texture2D(_device, eyeTextureDescription))
+			using (RenderTargetView rightEyeView = new RenderTargetView(_device, rightEye))
+			using (Texture2D rightEyeDepth = new Texture2D(_device, eyeDepthTextureDescription))
+			using (DepthStencilView rightEyeDepthView = new DepthStencilView(_device, rightEyeDepth))
+			using (vrui = new VRUI(_device, _gd))
 			{
 				MediaDecoder.Instance.OnFormatChanged += ResizeTexture;
 
-
-				basicEffectL = new SharpDX.Toolkit.Graphics.BasicEffect(_gd)
-				{
-					PreferPerPixelLighting = false,
-					TextureEnabled = true,
-					LightingEnabled = false,
-					Sampler = _gd.SamplerStates.AnisotropicClamp
-				};
-
-				if (_stereoVideo)
-					basicEffectR = new SharpDX.Toolkit.Graphics.BasicEffect(_gd)
-					{
-						PreferPerPixelLighting = false,
-						TextureEnabled = true,
-						LightingEnabled = false,
-						Sampler = _gd.SamplerStates.AnisotropicClamp
-					};
-
 				ResizeTexture(MediaDecoder.Instance.TextureL, _stereoVideo ? MediaDecoder.Instance.TextureR : MediaDecoder.Instance.TextureL);
 
-				///// CUBE
-				//var cubeEffect = new SharpDX.Toolkit.Graphics.BasicEffect(_gd)
-				//{
-				//	//PreferPerPixelLighting = false,
-				//	//TextureEnabled = false,
-				//	LightingEnabled = true,
-				//	//DiffuseColor = new Vector4(0.5f,0.5f,0.5f,1f),
-				//	Sampler = _gd.SamplerStates.AnisotropicClamp
-				//};
-				//cubeEffect.EnableDefaultLighting();
-				//var cube = SharpDX.Toolkit.Graphics.GeometricPrimitive.Teapot.New(_gd, 1, 8, false);
 
+				Stopwatch stopwatch = new Stopwatch();
+				Texture_t leftEyeTex = new Texture_t() { eColorSpace = EColorSpace.Gamma, eType = EGraphicsAPIConvention.API_DirectX, handle = leftEye.NativePointer };
+				Texture_t rightEyeTex = new Texture_t() { eColorSpace = EColorSpace.Gamma, eType = EGraphicsAPIConvention.API_DirectX, handle = rightEye.NativePointer };
 
-				///// END
+				TrackedDevicePose_t[] renderPoseArray = new TrackedDevicePose_t[16];
+				TrackedDevicePose_t[] gamePoseArray = new TrackedDevicePose_t[16];
+				TrackedDevicePose_t pose = new TrackedDevicePose_t();
 
-
-
-				Texture2DDescription eyeTextureDescription = new Texture2DDescription()
+				while (!abort)
 				{
-					Format = Format.R8G8B8A8_UNorm,
-					ArraySize = 1,
-					MipLevels = 1,
-					Width = (int)targetWidth,
-					Height = (int)targetHeight,
-					SampleDescription = new SampleDescription(1, 0),
-					Usage = ResourceUsage.Default,
-					BindFlags = BindFlags.RenderTarget,
-					CpuAccessFlags = CpuAccessFlags.None,
-					OptionFlags = ResourceOptionFlags.None
-				};
+					float deltaTime = (float)stopwatch.Elapsed.TotalSeconds;
+					stopwatch.Restart();
 
-
-				Texture2DDescription eyeDepthTextureDescription = new Texture2DDescription()
-				{
-					Format = Format.D32_Float_S8X24_UInt,
-					ArraySize = 1,
-					MipLevels = 1,
-					Width = (int)targetWidth,
-					Height = (int)targetHeight,
-					SampleDescription = new SampleDescription(1, 0),
-					Usage = ResourceUsage.Default,
-					BindFlags = BindFlags.DepthStencil,
-					CpuAccessFlags = CpuAccessFlags.None,
-					OptionFlags = ResourceOptionFlags.None
-				};
-
-
-				// Main loop
-				using (Texture2D leftEye = new Texture2D(_device, eyeTextureDescription))
-				using (RenderTargetView leftEyeView = new RenderTargetView(_device, leftEye))
-				using (Texture2D leftEyeDepth = new Texture2D(_device, eyeDepthTextureDescription))
-				using (DepthStencilView leftEyeDepthView = new DepthStencilView(_device, leftEyeDepth))
-				using (Texture2D rightEye = new Texture2D(_device, eyeTextureDescription))
-				using (RenderTargetView rightEyeView = new RenderTargetView(_device, rightEye))
-				using (Texture2D rightEyeDepth = new Texture2D(_device, eyeDepthTextureDescription))
-				using (DepthStencilView rightEyeDepthView = new DepthStencilView(_device, rightEyeDepth))
-				using (vrui = new VRUI(_device, _gd))
-				{
-					Stopwatch stopwatch = new Stopwatch();
-					Texture_t leftEyeTex = new Texture_t() { eColorSpace = EColorSpace.Gamma, eType = EGraphicsAPIConvention.API_DirectX, handle = leftEye.NativePointer };
-					Texture_t rightEyeTex = new Texture_t() { eColorSpace = EColorSpace.Gamma, eType = EGraphicsAPIConvention.API_DirectX, handle = rightEye.NativePointer };
-
-					TrackedDevicePose_t[] renderPoseArray = new TrackedDevicePose_t[16];
-					TrackedDevicePose_t[] gamePoseArray = new TrackedDevicePose_t[16];
-					TrackedDevicePose_t pose = new TrackedDevicePose_t();
-
-					while (!abort)
+					compositor.WaitGetPoses(renderPoseArray, gamePoseArray);
+					if (renderPoseArray[Valve.VR.OpenVR.k_unTrackedDeviceIndex_Hmd].bPoseIsValid)
 					{
-						float deltaTime = (float)stopwatch.Elapsed.TotalSeconds;
-						stopwatch.Restart();
+						pose = gamePoseArray[Valve.VR.OpenVR.k_unTrackedDeviceIndex_Hmd];
+					}
 
-						compositor.WaitGetPoses(renderPoseArray, gamePoseArray);
-						if (renderPoseArray[Valve.VR.OpenVR.k_unTrackedDeviceIndex_Hmd].bPoseIsValid)
+					foreach (EVREye eye in new EVREye[] { EVREye.Eye_Left, EVREye.Eye_Right })
+					{
+						DepthStencilView currentEyeDepthView = (eye == EVREye.Eye_Left) ? leftEyeDepthView : rightEyeDepthView;
+						RenderTargetView currentEyeView = (eye == EVREye.Eye_Left) ? leftEyeView : rightEyeView;
+
+						// Setup targets and viewport for rendering
+						context.OutputMerger.SetTargets(currentEyeDepthView, currentEyeView);
+						context.ClearDepthStencilView(currentEyeDepthView, DepthStencilClearFlags.Depth, 1.0f, 0);
+						context.ClearRenderTargetView(currentEyeView, Color.Black);
+						context.Rasterizer.SetViewport(new Viewport(0, 0, (int)targetWidth, (int)targetHeight, 0.0f, 1.0f));
+
+						Quaternion rotationQuaternion; // = pose.mDeviceToAbsoluteTracking.GetRotation();
+						Vector3 viewPosition; // = pose.mDeviceToAbsoluteTracking.GetPosition();
+						Vector3 scale;
+						Matrix eyePose = hmd.GetEyeToHeadTransform(eye).RebuildTRSMatrix() * pose.mDeviceToAbsoluteTracking.RebuildTRSMatrix();
+						eyePose.Decompose(out scale, out rotationQuaternion, out viewPosition);
+
+						Matrix rotationMatrix = Matrix.RotationQuaternion(rotationQuaternion);
+						Vector3 lookUp = Vector3.Transform(new Vector3(0, 1, 0), rotationMatrix).ToVector3();
+						Vector3 lookAt = Vector3.Transform(new Vector3(0, 0, -1), rotationMatrix).ToVector3();
+
+						Matrix viewMatrix = Matrix.LookAtRH(viewPosition, viewPosition + lookAt, lookUp);
+
+
+						Matrix pm1 = Matrix.PerspectiveFovLH(fieldOfView * ((float)Math.PI / 180f), aspect, 0.001f, 100.0f);
+						Matrix pm2 = hmd.GetProjectionMatrix(eye, 0.001f, 100f, EGraphicsAPIConvention.API_DirectX).ToProjMatrix();
+
+						Matrix projectionMatrix = pm1;
+
+
+						Matrix worldMatrix = Matrix.Translation(viewPosition);
+						if (Logic.Instance.settings.OpenVRReverse)
+							worldMatrix = Matrix.RotationY(180) * worldMatrix;
+
+						Matrix MVP = worldMatrix * viewMatrix * projectionMatrix;
+						customEffectL.Parameters["WorldViewProj"].SetValue(MVP);
+						customEffectR.Parameters["WorldViewProj"].SetValue(MVP);
+
+						lock (localCritical)
 						{
-							pose = gamePoseArray[Valve.VR.OpenVR.k_unTrackedDeviceIndex_Hmd];
-						}
-
-						foreach (EVREye eye in new EVREye[] { EVREye.Eye_Left, EVREye.Eye_Right })
-						{
-							DepthStencilView currentEyeDepthView = (eye == EVREye.Eye_Left) ? leftEyeDepthView : rightEyeDepthView;
-							RenderTargetView currentEyeView = (eye == EVREye.Eye_Left) ? leftEyeView : rightEyeView;
-
-							// Setup targets and viewport for rendering
-							context.OutputMerger.SetTargets(currentEyeDepthView, currentEyeView);
-							context.ClearDepthStencilView(currentEyeDepthView, DepthStencilClearFlags.Depth, 1.0f, 0);
-							context.ClearRenderTargetView(currentEyeView, Color.CornflowerBlue);
-							context.Rasterizer.SetViewport(new Viewport(0, 0, (int)targetWidth, (int)targetHeight, 0.0f, 1.0f));
-
-							// Setup new projection matrix with correct aspect ratio
-							Matrix worldMatrix = Matrix.Identity;// * Matrix.Scaling(1f) * Matrix.Translation(0, 0, -1.5f);
-
-
-							Quaternion rotationQuaternion; // = pose.mDeviceToAbsoluteTracking.GetRotation();
-							Vector3 viewPosition; // = pose.mDeviceToAbsoluteTracking.GetPosition();
-							Vector3 scale;
-							Matrix eyePose = hmd.GetEyeToHeadTransform(eye).RebuildTRSMatrix() * pose.mDeviceToAbsoluteTracking.RebuildTRSMatrix();
-							eyePose.Decompose(out scale, out rotationQuaternion, out viewPosition);
-
-							Matrix rotationMatrix = Matrix.RotationQuaternion(rotationQuaternion);
-							Vector3 lookUp = Vector3.Transform(new Vector3(0, 1, 0), rotationMatrix).ToVector3();
-							Vector3 lookAt = Vector3.Transform(new Vector3(0, 0, -1), rotationMatrix).ToVector3();
-
-							Matrix viewMatrix = Matrix.LookAtRH(viewPosition, viewPosition + lookAt, lookUp);
-
-
-							Matrix pm1 = Matrix.PerspectiveFovLH(fieldOfView * ((float)Math.PI / 180f), aspect, 0.001f, 100.0f);
-							Matrix pm2 = hmd.GetProjectionMatrix(eye, 0.001f, 100f, EGraphicsAPIConvention.API_DirectX).ToProjMatrix();
-
-							Matrix projectionMatrix = pm1;
-
-
-							Matrix world = Matrix.Translation(viewPosition);
-							if (Logic.Instance.settings.OpenVRReverse)
-								world = Matrix.RotationY(180) * world;
-
-							basicEffectL.World = world;
-							basicEffectL.View = viewMatrix;
-							basicEffectL.Projection = projectionMatrix;
-
 							if (_stereoVideo)
 							{
-								basicEffectR.World = world;
-								basicEffectR.View = viewMatrix;
-								basicEffectR.Projection = projectionMatrix;
+								if (eye == EVREye.Eye_Left)
+									primitive.Draw(customEffectL);
+								if (eye == EVREye.Eye_Right)
+									primitive.Draw(customEffectR);
 							}
-
-							lock (localCritical)
-							{
-								if (_stereoVideo)
-								{
-									if (eye == EVREye.Eye_Left)
-										primitive.Draw(basicEffectL);
-									if (eye == EVREye.Eye_Right)
-										primitive.Draw(basicEffectR);
-								}
-								else
-									primitive.Draw(basicEffectL);
-							}
-
-							// reset UI position every frame if it is not visible
-							if (vrui.isUIHidden)
-								vrui.SetWorldPosition(viewMatrix.Forward, viewPosition, false);
-
-							vrui.Draw(movieTitle, currentTime, duration);
-							vrui.Render(deltaTime, viewMatrix, projectionMatrix, viewPosition, pause);
-
-
-
-							//// controllers:
-							//cubeEffect.View = viewMatrix;
-							//cubeEffect.Projection = projectionMatrix;
-
-							//for (uint controller = 1 /*skip hmd*/; controller < Valve.VR.OpenVR.k_unMaxTrackedDeviceCount; controller++)
-							//{
-							//	VRControllerState_t controllerState = default(VRControllerState_t);
-							//	//var controllerPose = renderPoseArray[controller];
-							//	//if (hmd.GetControllerState(controller, ref controllerState)) {
-							//	Vector3 pos = renderPoseArray[controller].mDeviceToAbsoluteTracking.GetPosition();
-							//	Quaternion rot = renderPoseArray[controller].mDeviceToAbsoluteTracking.GetRotation();
-							//	rot = rot * new Quaternion(0, 1, 0, 0);
-							//	float s = controllerState.ulButtonPressed > 0 ? 0.5f : 0.1f;
-							//	cubeEffect.World = Matrix.Scaling(s) * Matrix.RotationQuaternion(rot) * Matrix.Translation(pos);
-							//	cube.Draw(cubeEffect);
-
-							//	//}
-							//}
-
+							else
+								primitive.Draw(customEffectL);
 						}
 
+						// reset UI position every frame if it is not visible
+						if (vrui.isUIHidden)
+							vrui.SetWorldPosition(viewMatrix.Forward, viewPosition, false);
+
+						vrui.Draw(movieTitle, currentTime, duration);
+						vrui.Render(deltaTime, viewMatrix, projectionMatrix, viewPosition, pause);
 
 
 
-						// RENDER TO HMD
+						//// controllers:
+						//cubeEffect.View = viewMatrix;
+						//cubeEffect.Projection = projectionMatrix;
 
-						EVRCompositorError errorLeft = compositor.Submit(
-							EVREye.Eye_Left,
-							ref leftEyeTex,
-							ref textureBounds[0],
-							EVRSubmitFlags.Submit_Default
-						);
+						//for (uint controller = 1 /*skip hmd*/; controller < Valve.VR.OpenVR.k_unMaxTrackedDeviceCount; controller++)
+						//{
+						//	VRControllerState_t controllerState = default(VRControllerState_t);
+						//	//var controllerPose = renderPoseArray[controller];
+						//	//if (hmd.GetControllerState(controller, ref controllerState)) {
+						//	Vector3 pos = renderPoseArray[controller].mDeviceToAbsoluteTracking.GetPosition();
+						//	Quaternion rot = renderPoseArray[controller].mDeviceToAbsoluteTracking.GetRotation();
+						//	rot = rot * new Quaternion(0, 1, 0, 0);
+						//	float s = controllerState.ulButtonPressed > 0 ? 0.5f : 0.1f;
+						//	cubeEffect.World = Matrix.Scaling(s) * Matrix.RotationQuaternion(rot) * Matrix.Translation(pos);
+						//	cube.Draw(cubeEffect);
 
-						EVRCompositorError errorRight = compositor.Submit(
-							EVREye.Eye_Right,
-							ref rightEyeTex,
-							ref textureBounds[1],
-							EVRSubmitFlags.Submit_Default
-						);
+						//	//}
+						//}
 
-						if (errorLeft != EVRCompositorError.None)
-							Console.WriteLine("VR Compositor failure (left): " + errorLeft);
-						if (errorRight != EVRCompositorError.None)
-							Console.WriteLine("VR Compositor failure (right): " + errorRight);
-					};
-				}
+					}
+
+
+
+
+					// RENDER TO HMD
+
+					EVRCompositorError errorLeft = compositor.Submit(
+						EVREye.Eye_Left,
+						ref leftEyeTex,
+						ref textureBounds[0],
+						EVRSubmitFlags.Submit_Default
+					);
+
+					EVRCompositorError errorRight = compositor.Submit(
+						EVREye.Eye_Right,
+						ref rightEyeTex,
+						ref textureBounds[1],
+						EVRSubmitFlags.Submit_Default
+					);
+
+					if (errorLeft != EVRCompositorError.None)
+						Console.WriteLine("VR Compositor failure (left): " + errorLeft);
+					if (errorRight != EVRCompositorError.None)
+						Console.WriteLine("VR Compositor failure (right): " + errorRight);
+				};
 
 				Valve.VR.OpenVR.Shutdown();
 				MediaDecoder.Instance.OnFormatChanged -= ResizeTexture;
