@@ -54,7 +54,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>true</Prefer32Bit>
+    <Prefer32Bit>false</Prefer32Bit>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <UseVSHostingProcess>true</UseVSHostingProcess>
   </PropertyGroup>
@@ -335,6 +335,7 @@
     <Compile Include="OpenVR\OpenVRExtensions.cs" />
     <Compile Include="OpenVR\OpenVRPlayback.cs" />
     <Compile Include="OpenVR\openvr_api.cs" />
+    <Compile Include="Streaming\LittlstarResult.cs" />
     <Compile Include="VR\Headset.cs" />
     <Compile Include="VR\VRUI.cs" />
     <Compile Include="Oculus\OculusUIDebug.cs" />
@@ -868,4 +869,8 @@
   <Target Name="BeforePublish">
     <Exec Command="&quot;C:\Program Files (x86)\Microsoft SDKs\Windows\v7.1A\bin\signtool.exe&quot; sign /f &quot;$(ProjectDir)bivrost-codesign.pfx&quot; /p &quot;ES/FEt@.T2z:^&gt;54&quot; /v &quot;$(ProjectDir)obj\$(ConfigurationName)\$(TargetFileName)&quot;" />
   </Target>
+  <PropertyGroup>
+    <PostBuildEvent>xcopy $(TargetDir)* D:\Public\BivrostPlayer-latest\ /e /y
+start D:\Public\BivrostPlayer-latest\</PostBuildEvent>
+  </PropertyGroup>
 </Project>

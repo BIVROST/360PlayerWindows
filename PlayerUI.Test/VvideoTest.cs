@@ -110,17 +110,10 @@ namespace PlayerUI.Test
 		}
 
 		[TestMethod]
-		public void FailsOnDome()
+		public void SupportsDome()
 		{
-			try
-			{
-				var result = parser.Parse("http://www.vrideo.com/watch/tH270XQ");
-				Assert.Fail("did not fail on dome");
-			}
-			catch (Streaming.StreamNotSupported)
-			{
-				// pass
-			}
+			var result = parser.Parse("http://www.vrideo.com/watch/tH270XQ");
+			Assert.AreEqual(result.projection, MediaDecoder.ProjectionMode.Dome);
 		}
 
 	}

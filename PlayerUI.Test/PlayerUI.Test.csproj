@@ -51,6 +51,8 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="HTTPTest.cs" />
+    <Compile Include="LittlstarTest.cs" />
     <Compile Include="StreamingTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PornhubTest.cs" />

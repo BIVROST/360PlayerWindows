@@ -72,7 +72,6 @@ namespace PlayerUI.Tools
 			{
 				case Service.Facebook: TryParse = ParseFacebook; break;
 				case Service.Youtube: TryParse = ParseYoutube; break;
-				case Service.LittlStar: TryParse = ParseLittlStar; break;
 				default: TryParse = ParseUrl; break;
 			}
 
@@ -326,35 +325,35 @@ namespace PlayerUI.Tools
 			return uri.ToString();
 		}
 
-		public static string ParseLittlStar(Uri uri, out Streaming.ServiceResult serviceResult)
-		{
-			// HACK
-			serviceResult = null;
+		//public static string ParseLittlStar(Uri uri, out Streaming.ServiceResult serviceResult)
+		//{
+		//	// HACK
+		//	serviceResult = null;
 
-			try
-			{
-				HtmlDocument document = DownloadDocument(uri);
+		//	try
+		//	{
+		//		HtmlDocument document = DownloadDocument(uri);
 
-				var node = document.DocumentNode.Descendants().Where(n => n.Name == "a" && n.GetAttributeValue("class", "").Contains("download")).First().GetAttributeValue("href", "");
+		//		var node = document.DocumentNode.Descendants().Where(n => n.Name == "a" && n.GetAttributeValue("class", "").Contains("download")).First().GetAttributeValue("href", "");
 
-				return node;
-			}
-			catch (Exception) { }
+		//		return node;
+		//	}
+		//	catch (Exception) { }
 
-			try
-			{
-				HtmlDocument document = DownloadDocument(uri);
+		//	try
+		//	{
+		//		HtmlDocument document = DownloadDocument(uri);
 
-				var node = document.DocumentNode.Descendants()
-					.Where(n => n.Name == "meta" && n.GetAttributeValue("property", "").Contains("og:video") && n.GetAttributeValue("content","").EndsWith(".mp4"))
-					.First().GetAttributeValue("content", "");
+		//		var node = document.DocumentNode.Descendants()
+		//			.Where(n => n.Name == "meta" && n.GetAttributeValue("property", "").Contains("og:video") && n.GetAttributeValue("content","").EndsWith(".mp4"))
+		//			.First().GetAttributeValue("content", "");
 
-				return node;
-			}
-			catch (Exception) { }
+		//		return node;
+		//	}
+		//	catch (Exception) { }
 
-			return "";
-		}
+		//	return "";
+		//}
 
 		public static MediaDecoder.ProjectionMode GetServiceProjection(Uri uri)
 		{

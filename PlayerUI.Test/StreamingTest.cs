@@ -1,83 +1,53 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Threading.Tasks;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using PlayerUI.Streaming;
+using System;
 
 namespace PlayerUI.Test
 {
 
-
 	[TestClass]
-	public class HTTPTest {
+	public abstract class StreamingTest<T> where T: ServiceParser, new()
+	{
+		protected T parser = new T();
+
+
+		abstract protected string[] CorrectUris { get; }
+		abstract protected string[] IncorrectUris { get; }
+
 
 		[TestMethod]
-		public async Task CanAsync()
+		public void ShouldParseURIs()
 		{
-			await Task.Delay(2000);
+			foreach (var uri in CorrectUris)
+				Assert.IsTrue(parser.CanParse(uri), "should parse " + uri);
 		}
+
 
 		[TestMethod]
-		public async Task CanHttpAsync()
+		public void ShouldntParseURIs()
 		{
-			var result = await Streaming.ServiceParser.HTTPGetStringAsync("http://example.com/");
+			foreach (var uri in IncorrectUris)
+				Assert.IsTrue(!parser.CanParse(uri), "shouldn't parse " + uri);
 		}
+
 
 		[TestMethod]
-		public async Task CanDetectHttpFailAsync()
+		public void CanParseURIs()
 		{
-			try
-			{
-				await Streaming.ServiceParser.HTTPGetStringAsync("http://example.com/404");
-				Assert.Fail("404 detection failed");
-			}
-			catch (Streaming.StreamNetworkFailue) {; }
+			foreach (var uri in CorrectUris)
+				//try
+				//{
+					parser.Parse(uri);
+				//}
+				//catch(Exception e)
+				//{
+				//	Assert.Fail("Could not parse URI: " + uri);
+				//	throw;
+				//}
 
-			try
-			{
-				await Streaming.ServiceParser.HTTPGetStringAsync("http://127.0.0.1:6666/");
-				Assert.Fail("connection failure detection failed");
-			}
-			catch (Streaming.StreamNetworkFailue) {; }
-
-			try
-			{
-				await Streaming.ServiceParser.HTTPGetStringAsync("http://thisdomainshouldntexistasdasd.net/");
-				Assert.Fail("dns failure detection failed");
-			}
-			catch (Streaming.StreamNetworkFailue) {; }
 		}
-
-		[TestMethod]
-		public void CanHttp()
-		{
-			Streaming.ServiceParser.HTTPGetString("http://example.com/");
-		}
-
-		[TestMethod]
-		public void CanDetectHttpFail()
-		{
-			try
-			{
-				Streaming.ServiceParser.HTTPGetString("http://example.com/404");
-				Assert.Fail("404 detection failed");
-			}
-			catch (Streaming.StreamNetworkFailue) {; }
-
-			try
-			{
-				Streaming.ServiceParser.HTTPGetString("http://127.0.0.1:6666/");
-				Assert.Fail("connection failure detection failed");
-			}
-			catch (Streaming.StreamNetworkFailue) {; }
-
-			try
-			{
-				Streaming.ServiceParser.HTTPGetString("http://thisdomainshouldntexistasdasd.net/");
-				Assert.Fail("dns failure detection failed");
-			}
-			catch (Streaming.StreamNetworkFailue) {; }
-		}
-
 	}
+
 
 
 }

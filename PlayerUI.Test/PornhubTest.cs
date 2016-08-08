@@ -6,20 +6,24 @@ using PlayerUI.Streaming;
 namespace PlayerUI.Test
 {
 	[TestClass]
-	public class PornhubTest
+	public class PornhubTest:StreamingTest<PornhubParser>
 	{
 
-		PornhubParser parser = new PornhubParser();
-
+		protected override string[] CorrectUris { get { return correctUris; } }
 		string[] correctUris = new string[] {
 			"http://www.pornhub.com/view_video.php?viewkey=439767200",
 			"https://www.pornhub.com/view_video.php?viewkey=439767200",
 			"http://pornhub.com/view_video.php?viewkey=439767200",
 			"http://pornhub.com/view_video.php?viewkey=439767200",
 			"http://www.PORNHUB.com/view_video.php?viewkey=439767200",
-			"http://www.pornhub.com/view_video.php?smth=asdf&viewkey=439767200"
+			"http://www.pornhub.com/view_video.php?smth=asdf&viewkey=439767200",
+			"www.pornhub.com/view_video.php?viewkey=439767200",
+			"pornhub.com/view_video.php?viewkey=439767200",
+			"http://pornhub.com/view_video.php?viewkey=439767200",
+			"https://pornhub.com/view_video.php?viewkey=439767200",
 		};
 
+		protected override string[] IncorrectUris { get { return incorrectUris; } }
 		string[] incorrectUris = new string[] {
 			"ftp://www.pornhub.com/view_video.php?viewkey=439767200",
 			"www.pornhub.com/asdf.php?viewkey=439767200",
@@ -33,19 +37,7 @@ namespace PlayerUI.Test
 			"\n"
 		};
 
-		[TestMethod]
-		public void ShouldParseURIs()
-		{
-			foreach (var uri in correctUris)
-				Assert.IsTrue(parser.CanParse(uri), "should parse " + uri);
-		}
-
-		[TestMethod]
-		public void ShouldntParseURIs()
-		{
-			foreach (var uri in incorrectUris)
-				Assert.IsTrue(!parser.CanParse(uri), "shouldn't parse " + uri);
-		}
+	
 
 
 		[TestMethod]

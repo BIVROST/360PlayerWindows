@@ -23,8 +23,10 @@ namespace PlayerUI.Streaming
 		{
 			switch (projection)
 			{
-				case "sphere": return MediaDecoder.ProjectionMode.Sphere;
+				case "sphere":
+					return MediaDecoder.ProjectionMode.Sphere;
 				case "sphere-180-equirect":
+					return MediaDecoder.ProjectionMode.Dome;
 				case "sphere-180-fisheye":
 				case "cylinder":
 				case "cylinder-stacked":
@@ -33,19 +35,6 @@ namespace PlayerUI.Streaming
 				default:
 					throw new StreamParsingFailed("Projection unknown: " + projection);
 			}
-		}
-
-		internal VideoQuality? ParseQuality(string quality)
-		{
-			switch (quality)
-			{
-				case "480p": return null;
-				case "720p": return VideoQuality.hdready;
-				case "1080p": return VideoQuality.fullhd;
-				case "2k": return VideoQuality.q2k;
-				case "4k": return VideoQuality.q4k;
-			};
-			throw new StreamParsingFailed("Quality unknown: " + quality);
 		}
 
 		internal MediaDecoder.VideoMode ParseStereo(string stereo)
@@ -75,17 +64,41 @@ namespace PlayerUI.Streaming
 				VideoContainer container = (VideoContainer)Enum.Parse(typeof(VideoContainer), format.Name);
 				foreach (JToken q in format.Value.Children<JToken>())
 				{
-					var quality = ParseQuality((string)q);
-					if (!quality.HasValue)
+					int width, height, quality;
+					switch((string)q)
 					{
-						Warn("Ignoring very low quality: " + (string)q);
-						continue;
+						case "480p":
+							Warn("Ignoring very low quality: " + (string)q);
+							continue;
+
+						case "720p":
+							quality = 1;  width = 1280; height = 720;
+							break;
+
+						case "1080p":
+							quality = 2; width = 1920; height = 1080;
+							break;
+
+						case "2k":
+							quality = 3; width = 2048; height = 1024;
+							break;
+
+						case "4k":
+							quality = 4; width = 3840; height = 2160;
+							break;
+
+						default:
+							Warn("unknown quality: " + q);
+							continue;
 					}
+
 					var urlKey = "video_file_path_" + format.Name + "_" + (string)q;
 					VideoStream video = new VideoStream()
 					{
 						container = container,
-						quality = quality.Value,
+						quality = quality,
+						width = width,
+						height = height,
 						url = (string)metadata["attributes"][urlKey],
 						hasAudio = true
 					};

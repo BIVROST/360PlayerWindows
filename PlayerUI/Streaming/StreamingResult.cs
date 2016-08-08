@@ -9,18 +9,18 @@ using System.Linq;
 
 namespace PlayerUI.Streaming
 {
-	public enum VideoQuality
-	{
-		//							width		alias		YT normal		YT spherical
-		//						s  <1024p			(do not use - filtered out)
-		unknown = 0,      // ?
-		hdready = 1280,   //<1920		720p		1280x720			1280x640
-		fullhd = 1920,		//<2048		1080p		1920x1080		1920x960
-		q2k = 2048,			//<2560		2048x1024									
-		q1440p = 2560,		//<3840		1440p		2560x1440		2560x1280
-		q4k = 4320,			//<7680		2160p		3840x2160		3840x1920
-		q8k = 7680,       //>=7680		4320p		7680x4320
-	}
+	//public enum VideoQuality
+	//{
+	//	//							width		alias		YT normal		YT spherical
+	//	//						s  <1024p			(do not use - filtered out)
+	//	unknown = 0,      // ?
+	//	hdready = 1280,   //<1920		720p		1280x720			1280x640
+	//	fullhd = 1920,		//<2048		1080p		1920x1080		1920x960
+	//	q2k = 2048,			//<2560		2048x1024									
+	//	q1440p = 2560,		//<3840		1440p		2560x1440		2560x1280
+	//	q4k = 4320,			//<7680		2160p		3840x2160		3840x1920
+	//	q8k = 7680,       //>=7680		4320p		7680x4320
+	//}
 
 	public enum VideoCodec { h264, h265, vp8, vp9, other }
 	public enum VideoContainer { mp4, webm, avi, wmv, flv, ogg, _3gp }
@@ -30,9 +30,21 @@ namespace PlayerUI.Streaming
 	public class VideoStream
 	{
 		public string url;
-		public VideoQuality quality;
+
+		/// <summary>
+		/// relative quality - to sort streams by it
+		/// </summary>
+		public int quality;
 		public int? bitrate;
+
+		/// <summary>
+		/// guessed frame width, can be null
+		/// </summary>
 		public int? width;
+
+		/// <summary>
+		/// guessed frame height, can be null
+		/// </summary>
 		public int? height;
 		public long? size;
 
@@ -154,7 +166,8 @@ namespace PlayerUI.Streaming
 
 		protected ServiceParser[] parsers = new ServiceParser[] {
 			new VrideoParser(),
-			new PornhubParser()
+			new PornhubParser(),
+			new LittlstarParser()
 		};
 
 		/// <summary>
@@ -191,26 +204,28 @@ namespace PlayerUI.Streaming
 					client = new HttpClient() { MaxResponseContentBufferSize = 1000000 };
 				var response = await client.GetAsync(uri);
 				if (!response.IsSuccessStatusCode)
-					throw new StreamNetworkFailue("Status " + response.StatusCode, uri);
+					throw new StreamNetworkFailure("Status " + response.StatusCode, uri);
 				return await response.Content.ReadAsStringAsync(); ;
 			}
 			catch (HttpRequestException e) {
-				throw new StreamNetworkFailue("HttpRequestException " + e.Message, uri);
+				throw new StreamNetworkFailure("HttpRequestException " + e.Message, uri);
 			}
 		}
 
-		internal static string HTTPGetString(string uri)
+		internal static string HTTPGetString(string uri, bool defaultHttp=true)
 		{
+			if (!uri.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) && !uri.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
+				uri = (defaultHttp ? "http://" : "https://") + uri;
 			RestClient client = new RestClient(uri);
 			IRestRequest request = new RestRequest(Method.GET);
-			// request.AddHeader("Accept", "text/html");
+			request.AddHeader("Accept", "text/html");
 			IRestResponse response = client.Execute(request);
 
-			if((int)response.StatusCode < 200 || (int)response.StatusCode >= 400)
-				throw new StreamNetworkFailue("Status "+response.StatusCode, uri);
+			if ((int)response.StatusCode < 200 || (int)response.StatusCode >= 400)
+				throw new StreamNetworkFailure("Status "+response.StatusCode, uri);
 
 			if (response.ErrorException != null)
-				throw new StreamNetworkFailue(response.ErrorMessage, uri); 
+				throw new StreamNetworkFailure(response.ErrorMessage, uri, response.ErrorException); 
 			return response.Content;
 		}
 
@@ -235,7 +250,7 @@ namespace PlayerUI.Streaming
 
 
 	public abstract class StreamException : Exception {
-		public StreamException(string message) : base(message) { }
+		public StreamException(string message, Exception innerException = null) : base(message, innerException) { }
 	}
 
 	/// <summary>
@@ -244,7 +259,7 @@ namespace PlayerUI.Streaming
 	[Serializable]
 	public class StreamParsingFailed : StreamException
 	{
-		public StreamParsingFailed(string message) : base(message) { }
+		public StreamParsingFailed(string message, Exception innerException=null) : base(message, innerException) { }
 	}
 
 	/// <summary>
@@ -253,17 +268,17 @@ namespace PlayerUI.Streaming
 	[Serializable]
 	public class StreamNotSupported : StreamException
 	{
-		public StreamNotSupported(string reason) : base(reason) { }
+		public StreamNotSupported(string reason, Exception innerException = null) : base(reason, innerException) { }
 	}
 
 	/// <summary>
 	/// Thrown on network errors
 	/// </summary>
 	[Serializable]
-	public class StreamNetworkFailue : StreamException
+	public class StreamNetworkFailure : StreamException
 	{
 		public string Uri { get; protected set;  }
-		public StreamNetworkFailue(string reason, string uri) : base(reason) {
+		public StreamNetworkFailure(string reason, string uri, Exception innerException = null) : base(reason, innerException) {
 			Uri = uri;
 		}
 	}
