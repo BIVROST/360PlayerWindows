@@ -92,7 +92,7 @@ namespace PlayerUI
 		}
 
 
-		protected SharpDX.Toolkit.Graphics.Effect GetCustomEffect(SharpDX.Toolkit.Graphics.GraphicsDevice gd)
+		public static SharpDX.Toolkit.Graphics.Effect GetCustomEffect(SharpDX.Toolkit.Graphics.GraphicsDevice gd)
 		{
 			var ce = new SharpDX.Toolkit.Graphics.Effect(gd, GammaShader.EffectData);
 			ce.CurrentTechnique = ce.Techniques["ColorTechnique"];
@@ -148,10 +148,9 @@ namespace PlayerUI
 
 			lock (localCritical)
 			{
-				(customEffectL.Parameters["UserTex"]?.GetResource<Texture2D>())?.Dispose();
+				(customEffectL.Parameters["UserTex"]?.GetResource<IDisposable>())?.Dispose();
+				(customEffectR.Parameters["UserTex"]?.GetResource<IDisposable>())?.Dispose();
 				textureL = tL;
-
-				(customEffectR.Parameters["UserTex"]?.GetResource<Texture2D>())?.Dispose();
 				textureR = tR;
 
 				var resourceL = textureL.QueryInterface<SharpDX.DXGI.Resource>();

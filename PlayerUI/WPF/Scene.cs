@@ -34,8 +34,7 @@
 
 
 		SharpDX.Toolkit.Graphics.GraphicsDevice graphicsDevice;
-		SharpDX.Toolkit.Graphics.BasicEffect basicEffect;
-		//SharpDX.Toolkit.Graphics.Effect customEffect;
+		SharpDX.Toolkit.Graphics.Effect customEffect;
 
 		SharpDX.Toolkit.Graphics.GeometricPrimitive primitive;
 		//SharpDX.Toolkit.Graphics.GeometricPrimitive primitive2;
@@ -138,7 +137,11 @@
 				resource = videoTexture.QueryInterface<SharpDX.DXGI.Resource>();
 				sharedTex = _device.OpenSharedResource<Texture2D>(resource.SharedHandle);
 
-				basicEffect.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(graphicsDevice, sharedTex);
+				customEffect.Parameters["UserTex"].SetResource(SharpDX.Toolkit.Graphics.Texture2D.New(graphicsDevice, sharedTex));
+				customEffect.Parameters["gammaFactor"].SetValue(1f);
+				customEffect.CurrentTechnique = customEffect.Techniques["ColorTechnique"];
+				customEffect.CurrentTechnique.Passes[0].Apply();
+
 				//SamplerStateDescription samplerDescription = new SamplerStateDescription()
 				//{
 				//	AddressU = TextureAddressMode.Wrap,
@@ -153,8 +156,8 @@
 				//	MipLodBias = 0
 				//};
 				//SharpDX.Toolkit.Graphics.SamplerState textureSampler = SharpDX.Toolkit.Graphics.SamplerState.New(graphicsDevice, samplerDescription);
-				
-				
+
+
 
 				ShaderResourceView shaderResourceView = new ShaderResourceView(_device, sharedTex);
 
@@ -189,7 +192,7 @@
                 throw new Exception("Scene host device is null");
 
 			graphicsDevice = SharpDX.Toolkit.Graphics.GraphicsDevice.New(_device);
-			basicEffect = new SharpDX.Toolkit.Graphics.BasicEffect(graphicsDevice);
+			customEffect = Headset.GetCustomEffect(graphicsDevice);
 
 
 			//==============
@@ -220,16 +223,16 @@
 			MediaDecoder.Instance.OnFormatChanged += ResizeTexture;
 			//MediaDecoder.Instance.OnReleaseTexture += ReleaseTexture;
 
-			basicEffect.Projection = Matrix.PerspectiveFovRH((float)(72f * Math.PI / 180f), (float)16f/9f, 0.0001f, 50.0f);
-			basicEffect.World = Matrix.Identity;
+			projectionMatrix = Matrix.PerspectiveFovRH((float)(72f * Math.PI / 180f), (float)16f/9f, 0.0001f, 50.0f);
+			worldMatrix = Matrix.Identity;
 
-			basicEffect.PreferPerPixelLighting = false;
+			//basicEffect.PreferPerPixelLighting = false;
 
 			ResizeTexture(MediaDecoder.Instance.TextureL, MediaDecoder.Instance.TextureL);
 
-			basicEffect.TextureEnabled = true;
-			basicEffect.LightingEnabled = false;
-			basicEffect.Sampler = graphicsDevice.SamplerStates.AnisotropicClamp;
+			//basicEffect.TextureEnabled = true;
+			//basicEffect.LightingEnabled = false;
+			//basicEffect.Sampler = graphicsDevice.SamplerStates.AnisotropicClamp;
 
 			primitive = GraphicTools.CreateGeometry(projectionMode, graphicsDevice);
 			//primitive2 = SharpDX.Toolkit.Graphics.GeometricPrimitive.Plane.New(graphicsDevice, 1f,1f);
@@ -317,7 +320,7 @@
 			pitch = 0;
 			Quaternion q1 = Quaternion.RotationYawPitchRoll(yaw, 0, 0);
 			Quaternion q2 = Quaternion.RotationYawPitchRoll(0, pitch, 0);
-			basicEffect.View = Matrix.RotationQuaternion(q2 * q1);
+			viewMatrix = Matrix.RotationQuaternion(q2 * q1);
 			currentRotationQuaternion = q2 * q1;
 		}
 
@@ -332,7 +335,7 @@
 			Disposer.RemoveAndDispose(ref sharedTex);
 			Disposer.RemoveAndDispose(ref resource);
 			Disposer.RemoveAndDispose(ref graphicsDevice);
-			Disposer.RemoveAndDispose(ref basicEffect);
+			Disposer.RemoveAndDispose(ref customEffect);
 			Disposer.RemoveAndDispose(ref primitive);
 		}
 
@@ -372,7 +375,7 @@
                     var viewerPose = displayConfig.GetViewerPose(0);
                     Quaternion oq = new Quaternion(-(float)viewerPose.rotation.x, -(float)viewerPose.rotation.y, -(float)viewerPose.rotation.z, (float)viewerPose.rotation.w);
                     osvrQuaternion = oq;
-                    basicEffect.View = Matrix.RotationQuaternion(oq);
+                    viewMatrix = Matrix.RotationQuaternion(oq);
                 }
                 catch (Exception exc)
                 {
@@ -383,11 +386,11 @@
                 }
             }
 			else {
-				basicEffect.View = Matrix.RotationQuaternion(currentRotationQuaternion);
+				viewMatrix = Matrix.RotationQuaternion(currentRotationQuaternion);
 			}
 
 			currentOffset = Lerp(currentOffset, littlePlanet ? -3f : 0f, deltaTime * 3f);
-            basicEffect.View *= Matrix.Translation(0, 0, currentOffset);
+            viewMatrix *= Matrix.Translation(0, 0, currentOffset);
 
 
 			//basicEffect.View = Matrix.Lerp(basicEffect.View, Matrix.RotationQuaternion(targetRotationQuaternion), 3f * deltaTime);
@@ -422,7 +425,7 @@
 			var speed = 50f;
 			//currentFov = Lerp(currentFov, targetFov, 5f * deltaTime);
 			currentFov = currentFov.LerpInPlace(targetFov, 5f * deltaTime);
-			basicEffect.Projection = Matrix.PerspectiveFovRH((float)(currentFov * Math.PI / 180f), (float)16f / 9f, 0.0001f, 50.0f);
+			projectionMatrix = Matrix.PerspectiveFovRH((float)(currentFov * Math.PI / 180f), (float)16f / 9f, 0.0001f, 50.0f);
 
 
 			// rotation quaternion to heatmap directions
@@ -433,35 +436,34 @@
 				heatmapDelta = 0;
 			}
 
-            //ShellViewModel.Instance.ClearDebugText();
-            //Vector2 v = GraphicTools.QuaternionToYawPitch(currentRotationQuaternion);
-            //var yawdeg = MathUtil.RadiansToDegrees(v.X);
-            //var pitchdeg = MathUtil.RadiansToDegrees(v.Y);
-            //ShellViewModel.Instance.AppendDebugText($"YAW:{yawdeg} \t\t PITCH:{pitchdeg}");
-            //ShellViewModel.Instance.UpdateDebugText();
-            //==========================================
+			//ShellViewModel.Instance.ClearDebugText();
+			//Vector2 v = GraphicTools.QuaternionToYawPitch(currentRotationQuaternion);
+			//var yawdeg = MathUtil.RadiansToDegrees(v.X);
+			//var pitchdeg = MathUtil.RadiansToDegrees(v.Y);
+			//ShellViewModel.Instance.AppendDebugText($"YAW:{yawdeg} \t\t PITCH:{pitchdeg}");
+			//ShellViewModel.Instance.UpdateDebugText();
+			//==========================================
 
-            //if (xpad.IsConnected)
-            //{
-            //    var state = xpad.GetState();
-            //    float padx = state.Gamepad.LeftThumbX / 256;
-            //    float pady = state.Gamepad.LeftThumbY / 256;
-            //    Vector2 padVector = new Vector2(padx, pady);
-            //    if(padVector.LengthSquared() > 5)
-            //    {
-            //        MoveDelta(-1f * padVector.X, 1f * padVector.Y, 0.02f * speed * deltaTime, 4f);
-            //    }
+			if (xpad.IsConnected)
+			{
+				var state = xpad.GetState();
+				float padx = state.Gamepad.LeftThumbX / 256;
+				float pady = state.Gamepad.LeftThumbY / 256;
+				Vector2 padVector = new Vector2(padx, pady);
+				if (padVector.LengthSquared() > 50)
+				{
+					MoveDelta(-1f * padVector.X, 1f * padVector.Y, 0.02f * speed * deltaTime, 4f);
+				}
 
-            //    ButtonOnce(state, GamepadButtonFlags.A, () => ShellViewModel.Instance.PlayPause());
-            //    ButtonOnce(state, GamepadButtonFlags.Y, () => ShellViewModel.Instance.Rewind());
-            //    ButtonOnce(state, GamepadButtonFlags.DPadLeft, () => ShellViewModel.Instance.SeekRelative(-5));
-            //    ButtonOnce(state, GamepadButtonFlags.DPadRight, () => ShellViewModel.Instance.SeekRelative(5));
-            //    ButtonOnce(state, GamepadButtonFlags.DPadUp, () => Caliburn.Micro.Execute.OnUIThreadAsync(() => ShellViewModel.Instance.VolumeRocker.Volume += 0.1));
-            //    ButtonOnce(state, GamepadButtonFlags.DPadDown, () => Caliburn.Micro.Execute.OnUIThreadAsync(() => ShellViewModel.Instance.VolumeRocker.Volume -= 0.1));
+				//ButtonOnce(state, GamepadButtonFlags.A, () => ShellViewModel.Instance.PlayPause());
+				//ButtonOnce(state, GamepadButtonFlags.Y, () => ShellViewModel.Instance.Rewind());
+				//ButtonOnce(state, GamepadButtonFlags.DPadLeft, () => ShellViewModel.Instance.SeekRelative(-5));
+				//ButtonOnce(state, GamepadButtonFlags.DPadRight, () => ShellViewModel.Instance.SeekRelative(5));
+				//ButtonOnce(state, GamepadButtonFlags.DPadUp, () => Caliburn.Micro.Execute.OnUIThreadAsync(() => ShellViewModel.Instance.VolumeRocker.Volume += 0.1));
+				//ButtonOnce(state, GamepadButtonFlags.DPadDown, () => Caliburn.Micro.Execute.OnUIThreadAsync(() => ShellViewModel.Instance.VolumeRocker.Volume -= 0.1));
+			}
 
-            //}
-
-            if (HasFocus)
+			if (HasFocus)
 			{
 				if (Keyboard.IsKeyDown(Key.Left))
 					MoveDelta(1f, 0f, speed * deltaTime, 4f);
@@ -508,22 +510,19 @@
 			//if (!textureReleased)
 			//{
 
+			customEffect.Parameters["WorldViewProj"].SetValue(worldMatrix * viewMatrix * projectionMatrix);
+
+			
 			lock (localCritical)
 			{
-				primitive?.Draw(basicEffect);
-				//primitive?.Draw(customEffect);
-				//primitive?.Draw();
+				primitive.Draw(customEffect);
 			}
-
-			//	basicEffect.World = Matrix.Identity;
-			//	basicEffect.View = Matrix.Identity;
-			//	basicEffect.Projection = Matrix.Identity;
-
-			//	primitive2.Draw(basicEffect);
-			//}
         }
 
 		private bool tUp = false;
+		private Matrix projectionMatrix;
+		private Matrix worldMatrix;
+		private Matrix viewMatrix;
 
 		private float Lerp(float value1, float value2, float amount)
 		{

@@ -111,7 +111,7 @@ float BlurWeights[13] =
 ////////////////////////////////////////////////////////////////////////////////
 float4 ColorPixelShader(PixelInputType input) : SV_Target
 {
-    if ( input.TexCoord.x > 1 || input.TexCoord.x < 0)
+    if(input.TexCoord.x > 1 || input.TexCoord.x < 0)
     {
         float dx = input.TexCoord.x < 0 ? -input.TexCoord.x : input.TexCoord.x - 1;
         float dy = min(input.TexCoord.y, 1 - input.TexCoord.y);
@@ -155,7 +155,10 @@ float4 ColorPixelShader(PixelInputType input) : SV_Target
             color = lerp(color, UserTex.Sample(UserTexSampler, float2(0.5, input.TexCoord.y < 0.5 ? 0.02 : 0.98)), t);
         }
 
-        return pow(pow(0.5-d, 0.7) * color, gammaFactor);
+        
+        color = pow(pow(0.5 - d, 0.7) * color, gammaFactor);
+        color.a = 1;
+        return color;
     }
 
 
