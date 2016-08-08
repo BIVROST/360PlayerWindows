@@ -870,7 +870,7 @@
     <Exec Command="&quot;C:\Program Files (x86)\Microsoft SDKs\Windows\v7.1A\bin\signtool.exe&quot; sign /f &quot;$(ProjectDir)bivrost-codesign.pfx&quot; /p &quot;ES/FEt@.T2z:^&gt;54&quot; /v &quot;$(ProjectDir)obj\$(ConfigurationName)\$(TargetFileName)&quot;" />
   </Target>
   <PropertyGroup>
-    <PostBuildEvent>xcopy $(TargetDir)* D:\Public\BivrostPlayer-latest\ /e /y
+    <PostBuildEvent>xcopy $(TargetDir)* D:\Public\BivrostPlayer-$(ConfigurationName)-latest\ /e /y
 start D:\Public\BivrostPlayer-latest\</PostBuildEvent>
   </PropertyGroup>
 </Project>

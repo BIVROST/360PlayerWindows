@@ -30,22 +30,6 @@ namespace PlayerUI
 			Initialize();
 		}
 
-		void AddPathPatch()
-		{
-			var assembly = System.Uri.UnescapeDataString((new System.Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase)).AbsolutePath);
-			var assemblyPath = Path.GetDirectoryName(assembly);
-
-			if (IntPtr.Size == 8)
-			{
-				//x64
-				//var success = LoadLibrary(assemblyPath + Path.DirectorySeparatorChar + "x64" + Path.DirectorySeparatorChar + "msvcr120.dll");
-			}
-			else
-			{
-				//x86
-				//var success = LoadLibrary(assemblyPath + Path.DirectorySeparatorChar + "x86" + Path.DirectorySeparatorChar + "msvcr120.dll");
-			}
-		}
 
 		protected override void OnStartup(object sender, System.Windows.StartupEventArgs e)
 		{
@@ -383,7 +367,7 @@ namespace PlayerUI
 				{
 					StringBuilder sbname = new StringBuilder(256);
 					NativeMethods.GetClassName(in1, sbname, 256);
-					Console.WriteLine("Found Bivrost player window with class: " + sbname.ToString());
+					Logger.Info("Found Bivrost player window with class: ", sbname);
 					playerPointer = in1;
 				}
 				return true;

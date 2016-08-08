@@ -194,7 +194,7 @@ namespace PlayerUI.Streaming
 		#region util
 
 		protected void Warn(string message) {
-			Console.WriteLine("[" + GetType().Name + " warning]: " + message);
+			Logger.Error("[" + GetType().Name + " warning]: " + message);
 		}
 
 		static HttpClient client;

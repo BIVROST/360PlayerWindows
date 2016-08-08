@@ -32,7 +32,17 @@ namespace PlayerUI
 
 	public class Logic
 	{
-		public static string LocalDataDirectory = "";// Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\BivrostPlayer";
+
+		// Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\BivrostPlayer";
+		private static string _localDataDirectory = "";
+		public static string LocalDataDirectory {
+			get { return _localDataDirectory; }
+			set
+			{
+				_localDataDirectory = value;
+				Logger.RegisterLogDirectory(value);
+			}
+		}
 
 		private static Logic _instance = null;
 		public static Logic Instance {
@@ -53,15 +63,14 @@ namespace PlayerUI
 		{
 			Application.Current.DispatcherUnhandledException += (sender, e) =>
 			{
-				Console.WriteLine("Exception supressed. Success.");
-				//throw new NotImplementedException();
+				Logger.Fatal(e.Exception, "unhandled application exception");
 			};
 
 			AppDomain currentDomain = AppDomain.CurrentDomain;
 			currentDomain.UnhandledException += (sender, e) =>
 			{
-				Console.WriteLine("Exception supressed. Success.");
-            };			
+				Logger.Fatal(e.ExceptionObject as Exception, "unhandled application domain exception");
+			};			
 			settings = new Settings();
 
 			ConfigureSettingsActions();
@@ -73,7 +82,7 @@ namespace PlayerUI
 			}
 			else
 			{
-				Console.WriteLine("InstallId == " + settings.InstallId);
+				Logger.Info("InstallId == " + settings.InstallId);
 			}
 
 			var OsPlatform = Environment.OSVersion.Platform.ToString();
@@ -109,9 +118,9 @@ namespace PlayerUI
 					{
 						socket.OnOpen = () =>
 						{
-							Console.WriteLine("Open!");
+							Logger.Info("WebSocket server open");
 						};
-						socket.OnClose = () => Console.WriteLine("Close!");
+						socket.OnClose = () => Logger.Info("WebSocket server close");
 						socket.OnMessage = message =>
 						{
 							switch (message)

@@ -289,7 +289,6 @@ namespace PlayerUI
 			});
 
 			Logic.Instance.ValidateSettings();
-
 		}
 
 
@@ -356,6 +355,7 @@ namespace PlayerUI
 
 		protected override void OnViewLoaded(object view)
 		{
+			
 			base.OnViewLoaded(view);
 
 			HwndSource source = HwndSource.FromHwnd(new WindowInteropHelper(playerWindow).Handle);
@@ -364,7 +364,7 @@ namespace PlayerUI
 			this.DXCanvas.StopRendering();
 
 			shellView.BufferingStatus.Visibility = Visibility.Collapsed;
-
+			
 			UpdateRecents();
 			ShowStartupUI();
 
@@ -512,7 +512,7 @@ namespace PlayerUI
 			shellView = view as ShellView;
 			DXCanvas = shellView.Canvas1;
 			playerWindow = (view as Window);
-
+			
 #if !DEBUG
 			shellView.BetaActivationMenu.Visibility = Visibility.Collapsed;
 #endif
@@ -532,7 +532,7 @@ namespace PlayerUI
 						//Play();
 					}
 				}
-
+			
 			shellView.MouseMove += WatchUIVisibility;
 
 			uiVisibilityBackgrundChecker = new BackgroundWorker();
@@ -588,6 +588,7 @@ namespace PlayerUI
 			};
 
 			uiVisibilityBackgrundChecker.RunWorkerAsync();
+			
 		}
 
 		private DateTime lastUIMove;
@@ -770,7 +771,7 @@ namespace PlayerUI
 						}
 						catch (Exception e)
 						{
-							Console.WriteLine("Headset detection exception (OpenVR): " + e);
+							Logger.Error("Headset detection exception (OpenVR): " + e);
 						}
 						Notify("OpenVR not detected.");
 						ShellViewModel.SendEvent("headsetError", "openvr");
@@ -1121,14 +1122,14 @@ namespace PlayerUI
 
 		public void Stop()
 		{
-			Console.WriteLine("FILE ENDED");
+			Logger.Info("FILE ENDED");
 			if (Fullscreen) if (!Logic.Instance.settings.DoNotExitFullscreenOnStop) ToggleFullscreen(true);
 			//space press hack
 			Execute.OnUIThread(() => shellView.VideoProgressBar.Focus());
 			ShowBars();
 			ShowStartupUI();
 
-			Console.WriteLine("STOP STOP STOP");
+			Logger.Info("STOP STOP STOP");
 
 			this.DXCanvas.Scene = null;
 

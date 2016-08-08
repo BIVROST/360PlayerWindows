@@ -46,9 +46,7 @@ namespace PlayerUI
 						Directory.CreateDirectory(dataFoler);
 					string recentConfig = dataFoler + "recents";
 
-
-
-					if (File.Exists(recentConfig))
+				if (File.Exists(recentConfig))
 					{
 
 						List<string> tempRecents = JsonConvert.DeserializeObject<List<string>>(File.ReadAllText(recentConfig, Encoding.UTF8));
@@ -62,7 +60,6 @@ namespace PlayerUI
 				catch (Exception exc) {
 					Console.WriteLine("[EXC] " + exc.Message);
 				}
-			
 		}
 
 		public static void AddRecent(string file)

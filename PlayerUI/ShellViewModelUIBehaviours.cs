@@ -172,13 +172,13 @@ namespace PlayerUI
 
 					dropFilesPanelDashAnimation.RepeatBehavior = RepeatBehavior.Forever;
 					dropFilesPanelDashAnimation.Begin(shellView.DropFilesRect, true);
-					Console.WriteLine("Begin storyboard");
+					Logger.Info("Begin storyboard");
 				}
 				else
 				{
 					if (dropFilesPanelDashAnimation.GetCurrentState(shellView.DropFilesRect) == ClockState.Stopped)
 					{
-						Console.WriteLine("Begin storyboard again");
+						Logger.Info("Begin storyboard again");
 						dropFilesPanelDashAnimation.Begin(shellView.DropFilesRect, true);
 					}
 				}
@@ -188,7 +188,7 @@ namespace PlayerUI
 				if (dropFilesPanelDashAnimation != null)
 				{
 					dropFilesPanelDashAnimation.Stop(shellView.DropFilesRect);
-					Console.WriteLine("Stop storyboard");
+					Logger.Info("Stop storyboard");
 				}
 			}
 		}
@@ -255,7 +255,7 @@ namespace PlayerUI
 
         public void DisableTabPress(object sender, object e)
 		{ 			
-			Console.WriteLine("tabstop");
+			Logger.Info("tabstop");
 		}
 
 		public void ChangeFov(System.Windows.Input.MouseWheelEventArgs wheelEventArgs)

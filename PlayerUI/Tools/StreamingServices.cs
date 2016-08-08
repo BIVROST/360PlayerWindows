@@ -226,7 +226,7 @@ namespace PlayerUI.Tools
 				return url;
             }
             catch (Exception exc) {
-                Console.WriteLine("[EXC] " + exc.Message);
+				Logger.Error(exc, "YouTube stream error");
                 return "";
             }
 		}

@@ -122,7 +122,7 @@ namespace Bivrost
 
 		static protected void Log(string msg)
 		{
-			System.Console.WriteLine("[License] " + msg);
+			PlayerUI.Logger.Info("[License] " + msg);
 		}
 
 
