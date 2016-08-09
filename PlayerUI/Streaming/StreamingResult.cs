@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using RestSharp;
 using System.Linq;
+using Logger = Bivrost.Log.Logger;
 
 [assembly: System.Runtime.CompilerServices.InternalsVisibleToAttribute("PlayerUI.Test")]
 
@@ -77,6 +78,12 @@ namespace PlayerUI.Streaming
 			}
 		}
 
+
+		public override string ToString()
+		{
+			return string.Format("[VideoStream {0} container={2} has audio={1}, bitrate={3}, size={4}x{5}, q={6}]", url, hasAudio, container, bitrate, width, height, quality);
+		}
+
 	}
 
 
@@ -118,13 +125,13 @@ namespace PlayerUI.Streaming
 		/// All available stand alone audio streams, excluding those that are in video files.
 		/// Often empty.
 		/// </summary>
-		public List<AudioStream> AudioStreams = new List<AudioStream>();
+		public List<AudioStream> audioStreams = new List<AudioStream>();
 
 		/// <summary>
 		/// All available video streams, some with audio, some without.
 		/// Must have at least one.
 		/// </summary>
-		public List<VideoStream> VideoStreams = new List<VideoStream>();
+		public List<VideoStream> videoStreams = new List<VideoStream>();
 
 		/// <summary>
 		/// Stereoscopy mode (mono, side by side etc)
@@ -143,9 +150,16 @@ namespace PlayerUI.Streaming
 		/// <returns>VideoStream or null when not found</returns>
 		public VideoStream BestQualityVideoStream(VideoContainer containerType)
 		{
-			return VideoStreams.ToList()
+			return videoStreams.ToList()
 				.FindAll(vs => vs.container == containerType)
 				.Aggregate((agg, next) => next.quality > agg.quality ? next : agg);
+		}
+
+
+		public override string ToString()
+		{
+			return string.Format("[StreamingResult for {0} ({1}) title={2} ({3} desc.) stereoscopy={4} projection={5} streams a/v={7}/{6}]",
+					originalURL, serviceName, title, description?.Length, stereoscopy, projection, videoStreams.Count, audioStreams.Count);
 		}
 
 	}
@@ -220,6 +234,8 @@ namespace PlayerUI.Streaming
 			IRestRequest request = new RestRequest(Method.GET);
 			request.AddHeader("Accept", "text/html");
 			IRestResponse response = client.Execute(request);
+
+			Logger.Info("HTTP request: " + uri);
 
 			if ((int)response.StatusCode < 200 || (int)response.StatusCode >= 400)
 				throw new StreamNetworkFailure("Status "+response.StatusCode, uri);

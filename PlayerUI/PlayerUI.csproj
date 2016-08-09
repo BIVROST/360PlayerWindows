@@ -313,6 +313,9 @@
     </Compile>
     <Compile Include="LicenseManagementViewModel.cs" />
     <Compile Include="Logger\Logger.cs" />
+    <Compile Include="Logger\LogWindow.xaml.cs">
+      <DependentUpon>LogWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Logic\BrowserPluginManagement.cs" />
     <Compile Include="Logic\Certificate.cs" />
     <Compile Include="Logic\Logic.cs" />
@@ -448,6 +451,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="LicenseManagementView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Logger\LogWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

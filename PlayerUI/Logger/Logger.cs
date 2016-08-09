@@ -1,142 +1,310 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
-namespace PlayerUI
+namespace Bivrost.Log
 {
-	/// <summary>
-	/// Logger.For(this).Warn();
-	/// </summary>
 
-
-	public static class Logger
+	public interface LogWriter
 	{
-		private enum Type
-		{
-			info,
-			error,
-			notification,
-			fatal
-		}
+		void Write(string time, LogType type, string msg, string path);
+	}
 
+	#region writers
+	/// <summary>
+	/// Windows Event Log Writer. This requires admin rights.
+	/// </summary>
+	public class WindowsEventLogWriter : LogWriter
+	{
 
-		static EventLogEntryType ToEventLogEntryType(this Type t)
+		string sSource;
+		string sLog;
+
+		static EventLogEntryType ToEventLogEntryType(LogType t)
 		{
-			switch(t)
+			switch (t)
 			{
 				default:
-				case Type.info:
-				case Type.notification:
+				case LogType.info:
+				case LogType.notification:
 					return EventLogEntryType.Information;
-				case Type.error:
+				case LogType.error:
 					return EventLogEntryType.Warning;
-				case Type.fatal:
+				case LogType.fatal:
 					return EventLogEntryType.Error;
 			}
 		}
 
-		private static string logFile = null;
 
-		// TODO: async
-		private static void WriteLogEntry(Type type, string msg)
+		public WindowsEventLogWriter(string appname, string logname)
 		{
-			string now = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ssZ");
-			////// windows event log
-			//var sSource = "360Player";
-			//var sLog = "Application";
-
-			//if (!EventLog.SourceExists(sSource))
-			//	EventLog.CreateEventSource(sSource, sLog);
-
-			//EventLog.WriteEntry(sSource, type + ": " + msg, type.ToEventLogEntryType());
+			sSource = appname;
+			sLog = logname;
+		}
 
 
+		public void Write(string time, LogType type, string msg, string path)
+		{
+			if (!EventLog.SourceExists(sSource))
+				EventLog.CreateEventSource(sSource, sLog);
 
-			// trace
-			Trace.WriteLine(msg, type.ToString());
+			EventLog.WriteEntry(sSource, type + ": " + msg, ToEventLogEntryType(type));
+		}
+
+	}
+
+
+	/// <summary>
+	/// Writing to the console
+	/// </summary>
+	public class TraceLogWriter : LogWriter
+	{
+		public void Write(string time, LogType type, string msg, string path)
+		{
+			Trace.WriteLine(time, type.ToString());
 			Trace.Indent();
-			Trace.WriteLine(now);
 			Trace.WriteLine(msg);
+			Trace.WriteLine("");
+			Trace.WriteLine("at " + path);
 			Trace.Unindent();
+			Trace.Flush();
+		}
+	}
 
-			
-			// text log
-			lock (logFile)
+
+	/// <summary>
+	/// Writing to a text file
+	/// </summary>
+	public class TextFileLogWriter : LogWriter
+	{
+
+		public string LogFile { get; protected set; }
+
+
+		public TextFileLogWriter(string logDirectory, string logPrefix = "log", string version = null)
+		{
+			string now = DateTime.Now.ToString("yyyy-MM-ddTHHmmss");
+			if(version == null)
+#if DEBUG
+				version = "DEBUG";
+#else
+				version = "v" + Assembly.GetEntryAssembly().GetName().Version.ToString();
+#endif
+
+			LogFile = logDirectory + string.Format("{2}-{0}-{1}.txt", version, now, logPrefix);
+
+			Logger.Info("Log file: " + LogFile);
+		}
+
+
+		public void Write(string time, LogType type, string msg, string path)
+		{
+			lock (LogFile)
 			{
 				try
 				{
-					File.AppendAllText(logFile, string.Format("[{0}] {1}\r\n\t{2}\r\n\r\n", type, now, msg.Replace("\n", "\n\t")));
+					File.AppendAllText(
+						LogFile,
+						string.Format(
+							"[{0}] {1}\r\n\t{2}\r\n\r\nat {3}\r\n",
+							type,
+							time,
+							msg.Trim().Replace("\r\n", "\r\n\t"),
+							path
+						)
+					);
 				}
-				catch(Exception e)
+				catch (Exception e)
 				{
 					Console.Error.WriteLine("Error writing to text log: " + e);
 				}
 			}
 		}
+	}
 
-		internal static void RegisterLogDirectory(string logDirectory)
+	#endregion
+
+	public enum LogType
+	{
+		info,
+		error,
+		notification,
+		fatal
+	}
+
+
+	public static class Logger
+	{
+
+		/// <summary>
+		/// Returns a normalized path relative to the logger (or provided sourceFilePath)
+		/// </summary>
+		/// <param name="path"></param>
+		/// <param name="sourceFilePath"></param>
+		/// <returns></returns>
+		static string NormalizePath(string path, [CallerFilePath] string sourceFilePath = "")
 		{
-			if (logFile != null)
-				return;
-
-			string now = DateTime.Now.ToString("yyyy-MM-ddTHHmmss");
-			#if DEBUG
-			string version = "DEBUG";
-			#else
-			string version = "v" + Assembly.GetEntryAssembly().GetName().Version.ToString();
-			#endif
-			logFile = logDirectory + string.Format("log-360Player-{0}-{1}.txt", version, now);
-
-			Console.WriteLine("LOG FILE: " + logFile);
-
-			Info("Registered log directory: " + logDirectory);
+			int l = Math.Min(path.Length, sourceFilePath.Length);
+			for (int i = 0; i < l; i++)
+				if (path[i] != sourceFilePath[i])
+					return path.Substring(i);
+			return "(Logger)"; // normalization failed
 		}
 
-		// informacje do debugu, niewyświetlane
-		public static void Info(string fmt, params object[] args)
+
+		static string PathUtil(string sourceFilePath, int sourceLineNumber, string memberName)
 		{
-			WriteLogEntry(Type.info, string.Format(fmt, args));
+			return string.Format("{0}#{1} ({2})", NormalizePath(sourceFilePath), sourceLineNumber, memberName);
 		}
 
-		// informacje do debugu, niewyświetlane
-		public static void Error(string fmt, params object[] args)
+
+		static void WriteLogEntry(LogType type, string msg, string path)
 		{
-			WriteLogEntry(Type.error, string.Format(fmt, args));
+			string now = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
+
+			// normalize newlines to windows format
+			msg = msg.Replace("\r\n", "\n").Replace("\n", "\r\n");
+
+			foreach (var lw in logWriters)
+				lw.Write(now, type, msg, path);
 		}
 
-		public static void Error(Exception e, string additionalMsg="Exception")
+
+		static HashSet<LogWriter> logWriters = new HashSet<LogWriter>();
+		
+
+		public static LogWriter[] LogWriters
 		{
-			WriteLogEntry(Type.error, additionalMsg + "\n" + e);
+			get {
+				var r = new LogWriter[logWriters.Count];
+				logWriters.CopyTo(r);
+				return r;
+			}
 		}
 
-		// informacje dla użytkownika, wyświetlane jako chmurka w rogu (samo zarządza ExecuteOnUIThread)
-		public static void Notification(string fmt, params object[] args)
+		public static void RegisterWriter(LogWriter lw)
 		{
-			WriteLogEntry(Type.notification, string.Format(fmt, args));
-			// TODO
+			logWriters.Add(lw);
+			Info("Registered log writer: " + lw);
 		}
 
-		// informacje dla użytkownika, wyświetlane jako MessageBox, aplikacja umrze po tym
-		public static void Fatal(string fmt, params object[] args)
+
+		public static void UnregisterWriter(LogWriter lw)
 		{
-			string msg = string.Format(fmt, args);
-			WriteLogEntry(Type.fatal, msg);
+			logWriters.Remove(lw);
+			Info("Unregistered log writer: " + lw);
+		}
+
+
+		/// <summary>
+		/// Use for registering degug information.
+		/// Not displayed on screen.
+		/// </summary>
+		/// <param name="msg">the message</param>
+		/// <param name="memberName">(automatically added) source code trace information</param>
+		/// <param name="sourceFilePath">(automatically added) source code trace information</param>
+		/// <param name="sourceLineNumber">(automatically added) source code trace information</param>
+		public static void Info(
+			string msg, 
+			[CallerMemberName] string memberName = "",
+			[CallerFilePath] string sourceFilePath = "",
+			[CallerLineNumber] int sourceLineNumber = 0
+		)
+		{
+			WriteLogEntry(LogType.info, msg, PathUtil(sourceFilePath, sourceLineNumber, memberName));
+		}
+
+
+		/// <summary>
+		/// Use for registering non fatal errors.
+		/// Not displayed on screen.
+		/// </summary>
+		/// <param name="msg">the message</param>
+		/// <param name="memberName">(automatically added) source code trace information</param>
+		/// <param name="sourceFilePath">(automatically added) source code trace information</param>
+		/// <param name="sourceLineNumber">(automatically added) source code trace information</param>
+		public static void Error(
+			string msg,
+			[CallerMemberName] string memberName = "",
+			[CallerFilePath] string sourceFilePath = "",
+			[CallerLineNumber] int sourceLineNumber = 0
+		)
+		{
+			WriteLogEntry(LogType.error, msg, PathUtil(sourceFilePath, sourceLineNumber, memberName));
+		}
+
+
+		/// <summary>
+		/// Use for registering non fatal errors in form of exceptions.
+		/// Not displayed on screen.
+		/// </summary>
+		/// <param name="e">The exception that signalled the error</param>
+		/// <param name="additionalMsg">an optional message</param>
+		/// <param name="memberName">(automatically added) source code trace information</param>
+		/// <param name="sourceFilePath">(automatically added) source code trace information</param>
+		/// <param name="sourceLineNumber">(automatically added) source code trace information</param>
+		public static void Error(
+			Exception e, 
+			string additionalMsg="Exception", 
+			[CallerMemberName] string memberName = "",
+			[CallerFilePath] string sourceFilePath = "",
+			[CallerLineNumber] int sourceLineNumber = 0
+		)
+		{
+			Error(additionalMsg + "\n" + e, memberName, sourceFilePath, sourceLineNumber);
+		}
+
+
+		/// <summary>
+		/// Use for displaying fatal errors. 
+		/// The application is supposed to quit soon after this is called.
+		/// This message will be displayed on screen.
+		/// </summary>
+		/// <param name="msg">the message</param>
+		/// <param name="memberName">(automatically added) source code trace information</param>
+		/// <param name="sourceFilePath">(automatically added) source code trace information</param>
+		/// <param name="sourceLineNumber">(automatically added) source code trace information</param>
+		public static void Fatal(
+			string msg,
+			[CallerMemberName] string memberName = "",
+			[CallerFilePath] string sourceFilePath = "",
+			[CallerLineNumber] int sourceLineNumber = 0
+		)
+		{
+			WriteLogEntry(LogType.error, msg, PathUtil(sourceFilePath, sourceLineNumber, memberName));
 			System.Windows.MessageBox.Show(msg, "Fatal error");
 		}
 
 
-		public static void Fatal(Exception e)
+		/// <summary>
+		/// Use for displaying fatal errors in form of exceptions. 
+		/// The application is supposed to quit soon after this is called.
+		/// This message will be displayed on screen.
+		/// </summary>
+		/// <param name="e">The exception that signalled the error</param>
+		/// <param name="additionalMsg">an additional message</param>
+		/// <param name="memberName">(automatically added) source code trace information</param>
+		/// <param name="sourceFilePath">(automatically added) source code trace information</param>
+		/// <param name="sourceLineNumber">(automatically added) source code trace information</param>
+		public static void Fatal(
+			Exception e,
+			string additionalMsg = "",
+			[CallerMemberName] string memberName = "",
+			[CallerFilePath] string sourceFilePath = "",
+			[CallerLineNumber] int sourceLineNumber = 0
+		)
 		{
-			WriteLogEntry(Type.fatal, e.ToString());
-			System.Windows.MessageBox.Show(e.ToString(), "Fatal error");
+			Fatal((additionalMsg + "\n").Trim() + e, memberName, sourceFilePath, sourceLineNumber);
 		}
 
 
-		public static void Fatal(Exception e, string additionalMsg)
+		static Logger()
 		{
-			WriteLogEntry(Type.fatal, additionalMsg + "\r\n" + e.ToString());
-			System.Windows.MessageBox.Show(e.ToString(), additionalMsg);
+			RegisterWriter(new TraceLogWriter());
 		}
+
 	}
 }

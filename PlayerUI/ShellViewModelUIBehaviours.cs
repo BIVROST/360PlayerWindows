@@ -8,6 +8,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Animation;
+using Logger = Bivrost.Log.Logger;
+
 
 namespace PlayerUI
 {
