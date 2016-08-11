@@ -58,7 +58,7 @@ namespace PlayerUI
 
 			}
 
-			Logger.RegisterWriter(new Bivrost.Log.TextFileLogWriter(Logic.LocalDataDirectory));
+			Logger.RegisterListener(new Bivrost.Log.TextFileLogListener(Logic.LocalDataDirectory));
 
 			
 			string[] args = Environment.GetCommandLineArgs();

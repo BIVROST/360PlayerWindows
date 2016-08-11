@@ -1,27 +1,28 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace Bivrost.Log
 {
 
-	public interface LogWriter
+	public interface LogListener
 	{
 		void Write(string time, LogType type, string msg, string path);
 	}
 
 	#region writers
 	/// <summary>
-	/// Windows Event Log Writer. This requires admin rights.
+	/// Windows Event Log Writer.
 	/// </summary>
-	public class WindowsEventLogWriter : LogWriter
+	public class WindowsEventLogListener : LogListener
 	{
 
 		string sSource;
-		string sLog;
 
 		static EventLogEntryType ToEventLogEntryType(LogType t)
 		{
@@ -39,18 +40,30 @@ namespace Bivrost.Log
 		}
 
 
-		public WindowsEventLogWriter(string appname, string logname)
+		/// <summary>
+		/// Logger with custom application name. This requires admin rights.
+		/// </summary>
+		/// <param name="appname"></param>
+		/// <param name="logname"></param>
+		public WindowsEventLogListener(string appname, string logname)
 		{
+			if (!EventLog.SourceExists(sSource))
+				EventLog.CreateEventSource(sSource, logname);
 			sSource = appname;
-			sLog = logname;
+		}
+
+
+		/// <summary>
+		/// Logger with generic "Application" application name.
+		/// </summary>
+		public WindowsEventLogListener()
+		{
+			sSource = "Application";
 		}
 
 
 		public void Write(string time, LogType type, string msg, string path)
 		{
-			if (!EventLog.SourceExists(sSource))
-				EventLog.CreateEventSource(sSource, sLog);
-
 			EventLog.WriteEntry(sSource, type + ": " + msg, ToEventLogEntryType(type));
 		}
 
@@ -60,7 +73,7 @@ namespace Bivrost.Log
 	/// <summary>
 	/// Writing to the console
 	/// </summary>
-	public class TraceLogWriter : LogWriter
+	public class TraceLogListener : LogListener
 	{
 		public void Write(string time, LogType type, string msg, string path)
 		{
@@ -78,13 +91,13 @@ namespace Bivrost.Log
 	/// <summary>
 	/// Writing to a text file
 	/// </summary>
-	public class TextFileLogWriter : LogWriter
+	public class TextFileLogListener : LogListener
 	{
 
 		public string LogFile { get; protected set; }
 
 
-		public TextFileLogWriter(string logDirectory, string logPrefix = "log", string version = null)
+		public TextFileLogListener(string logDirectory, string logPrefix = "log", string version = null)
 		{
 			string now = DateTime.Now.ToString("yyyy-MM-ddTHHmmss");
 			if(version == null)
@@ -161,6 +174,9 @@ namespace Bivrost.Log
 		}
 
 
+		struct LogElement { public string now; public LogType type; public string msg; public string path; }
+		static ConcurrentQueue<LogElement> logElementQueue = new ConcurrentQueue<LogElement>();
+
 		static void WriteLogEntry(LogType type, string msg, string path)
 		{
 			string now = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
@@ -168,33 +184,60 @@ namespace Bivrost.Log
 			// normalize newlines to windows format
 			msg = msg.Replace("\r\n", "\n").Replace("\n", "\r\n");
 
-			foreach (var lw in logWriters)
-				lw.Write(now, type, msg, path);
+			logElementQueue.Enqueue(new LogElement() { now = now, type = type, msg = msg, path = path });
 		}
 
 
-		static HashSet<LogWriter> logWriters = new HashSet<LogWriter>();
+		static void WriteLogThread()
+		{
+			LogElement e;
+			while (true)
+			{
+				if (logElementQueue.TryDequeue(out e))
+					foreach (var l in listeners)
+						l.Write(e.now, e.type, e.msg, e.path);
+			}
+		}
+
+
+		static HashSet<LogListener> listeners = new HashSet<LogListener>();
 		
 
-		public static LogWriter[] LogWriters
+		public static LogListener[] LogListeners
 		{
 			get {
-				var r = new LogWriter[logWriters.Count];
-				logWriters.CopyTo(r);
+				var r = new LogListener[listeners.Count];
+				listeners.CopyTo(r);
 				return r;
 			}
 		}
 
-		public static void RegisterWriter(LogWriter lw)
+
+		static Thread thread;
+
+
+		public static void RegisterListener(LogListener lw)
 		{
-			logWriters.Add(lw);
+			lock(listeners)
+			{
+				if (thread == null)
+				{
+					thread = new Thread(new ThreadStart(WriteLogThread))
+					{
+						IsBackground = true,
+						Name = "log listener thread"
+					};
+					thread.Start();
+				}
+			}
+			listeners.Add(lw);
 			Info("Registered log writer: " + lw);
 		}
 
 
-		public static void UnregisterWriter(LogWriter lw)
+		public static void UnregisterListener(LogListener lw)
 		{
-			logWriters.Remove(lw);
+			listeners.Remove(lw);
 			Info("Unregistered log writer: " + lw);
 		}
 
@@ -303,7 +346,7 @@ namespace Bivrost.Log
 
 		static Logger()
 		{
-			RegisterWriter(new TraceLogWriter());
+			RegisterListener(new TraceLogListener());
 		}
 
 	}

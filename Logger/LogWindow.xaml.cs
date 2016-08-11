@@ -9,7 +9,7 @@ namespace Bivrost.Log
 	/// <summary>
 	/// Interaction logic for LogWindow.xaml
 	/// </summary>
-	public partial class LogWindow : Window, LogWriter
+	public partial class LogWindow : Window, LogListener
 	{
 		private bool follow;
 		static LogWindow Instance;
@@ -26,17 +26,24 @@ namespace Bivrost.Log
 		}
 
 
+		public static void CloseLogWindowIfOpened()
+		{
+			if (Instance != null)
+				Instance.Close();
+		}
+
+
 		protected override void OnInitialized(EventArgs e)
 		{
 			Instance = this;
 			base.OnInitialized(e);
-			Logger.RegisterWriter(this);
+			Logger.RegisterListener(this);
 		}
 
 
 		protected override void OnClosing(CancelEventArgs e)
 		{
-			Logger.UnregisterWriter(this);
+			Logger.UnregisterListener(this);
 			base.OnClosing(e);
 			Instance = null;
 		}
@@ -63,7 +70,7 @@ namespace Bivrost.Log
 
 		private void OpenTxt(object sender, RoutedEventArgs e)
 		{
-			string f = (Logger.LogWriters.First(lw => lw is TextFileLogWriter) as TextFileLogWriter).LogFile;
+			string f = (Logger.LogListeners.First(lw => lw is TextFileLogListener) as TextFileLogListener).LogFile;
 			System.Diagnostics.Process.Start(f);
 		}
 	}

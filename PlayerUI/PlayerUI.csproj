@@ -312,10 +312,6 @@
       <DependentUpon>LicenseManagementView.xaml</DependentUpon>
     </Compile>
     <Compile Include="LicenseManagementViewModel.cs" />
-    <Compile Include="Logger\Logger.cs" />
-    <Compile Include="Logger\LogWindow.xaml.cs">
-      <DependentUpon>LogWindow.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Logic\BrowserPluginManagement.cs" />
     <Compile Include="Logic\Certificate.cs" />
     <Compile Include="Logic\Logic.cs" />
@@ -451,10 +447,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="LicenseManagementView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Logger\LogWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -854,6 +846,7 @@
       <Name>BivrostAnalytics</Name>
     </ProjectReference>
   </ItemGroup>
+  <Import Project="..\Logger\Logger.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
@@ -878,6 +871,6 @@
   </Target>
   <PropertyGroup>
     <PostBuildEvent>xcopy $(TargetDir)* D:\Public\BivrostPlayer-$(ConfigurationName)-latest\ /e /y
-start D:\Public\BivrostPlayer-latest\</PostBuildEvent>
+start D:\Public\BivrostPlayer-$(ConfigurationName)-latest\</PostBuildEvent>
   </PropertyGroup>
 </Project>
