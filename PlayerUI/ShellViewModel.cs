@@ -22,6 +22,8 @@ using Bivrost;
 using System.Text.RegularExpressions;
 using SharpDX.Direct3D11;
 using SharpDX.XInput;
+using Logger = Bivrost.Log.Logger;
+
 
 namespace PlayerUI
 {
@@ -1043,6 +1045,18 @@ namespace PlayerUI
 		public void OpenAbout()
 		{
 			DialogHelper.ShowDialog<AboutViewModel>();
+		}
+
+
+		public void OpenLogViewer()
+		{
+			if (!Bivrost.Log.LogWindow.IsDisplaying)
+			{
+				Window lv = new Bivrost.Log.LogWindow();
+				lv.Show();
+			}
+			else
+				Logger.Info("Refused to open a second log viewer.");
 		}
 
 		public void FileDropped(DragEventArgs e)

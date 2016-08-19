@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Logger = Bivrost.Log.Logger;
 
 namespace Bivrost
 {
@@ -122,7 +123,7 @@ namespace Bivrost
 
 		static protected void Log(string msg)
 		{
-			PlayerUI.Logger.Info("[License] " + msg);
+			Bivrost.Log.Logger.Info("[License] " + msg);
 		}
 
 

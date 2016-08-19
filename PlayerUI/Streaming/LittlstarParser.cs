@@ -163,7 +163,7 @@ namespace PlayerUI.Streaming
 				stereoscopy = MediaDecoder.VideoMode.Mono,
 				title = (string)jobject["title"],
 				description = (string)jobject["description"],
-				VideoStreams = videostreams
+				videoStreams = videostreams
 			};
 
 		}

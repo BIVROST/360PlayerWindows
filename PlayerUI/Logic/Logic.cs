@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using Logger = Bivrost.Log.Logger;
 
 namespace PlayerUI
 {
@@ -34,15 +35,7 @@ namespace PlayerUI
 	{
 
 		// Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\BivrostPlayer";
-		private static string _localDataDirectory = "";
-		public static string LocalDataDirectory {
-			get { return _localDataDirectory; }
-			set
-			{
-				_localDataDirectory = value;
-				Logger.RegisterLogDirectory(value);
-			}
-		}
+		public static string LocalDataDirectory = "";
 
 		private static Logic _instance = null;
 		public static Logic Instance {

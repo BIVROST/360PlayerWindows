@@ -10,6 +10,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
+using Logger = Bivrost.Log.Logger;
 
 namespace PlayerUI.Tools
 {
@@ -55,7 +56,10 @@ namespace PlayerUI.Tools
 		{
 			serviceResult = Streaming.StreamingFactory.Instance.GetStreamingInfo(uri.AbsoluteUri);
 			if(serviceResult != null) {
-				fileUrl = serviceResult.BestQualityVideoStream(Streaming.VideoContainer.mp4).url;
+				Logger.Info("Detected streaming result: " + serviceResult);
+				Streaming.VideoStream bestmp4 = serviceResult.BestQualityVideoStream(Streaming.VideoContainer.mp4);
+				fileUrl = bestmp4.url;
+				Logger.Info("Using video: " + bestmp4);
 				return true;
 			}
 
@@ -69,6 +73,8 @@ namespace PlayerUI.Tools
 			}
 
 			fileUrl = TryParse(uri, out serviceResult);
+
+			Logger.Info("Detected stream (obsolete parser): " + detectedService + " url=" + fileUrl);
 
 			return !string.IsNullOrWhiteSpace(fileUrl);
 		}

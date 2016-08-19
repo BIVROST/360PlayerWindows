@@ -66,7 +66,7 @@ namespace PlayerUI.Streaming
 			}) { 
 				var matches=Regex.Match(html, "var\\s+player_quality_" + p.Item1 + "\\s*=\\s*'([^;]+)'\\s*;");
 				if (matches.Captures.Count > 0)
-					result.VideoStreams.Add(new VideoStream()
+					result.videoStreams.Add(new VideoStream()
 					{
 						container = VideoContainer.mp4,
 						quality = p.Item2,
@@ -76,7 +76,7 @@ namespace PlayerUI.Streaming
 						hasAudio = true
 					});
 			}
-			if (result.VideoStreams.Count == 0)
+			if (result.videoStreams.Count == 0)
 				throw new StreamParsingFailed("No videos found");
 			
 			return result;

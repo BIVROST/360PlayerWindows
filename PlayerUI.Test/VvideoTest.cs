@@ -74,9 +74,9 @@ namespace PlayerUI.Test
 		public void CanParseStream()
 		{
 			var result = parser.Parse("vrideo.com/watch/KLOtqZE");
-			Assert.IsTrue(result.VideoStreams.Count > 0, "no video streams");
-			Assert.IsFalse(result.VideoStreams.Exists(vs => vs.url == null), "some url contains nulls");
-			Assert.IsTrue(result.VideoStreams.Exists(vs => vs.url == "http://cdn2.vrideo.com/prod_videos/v1/KLOtqZE_4k_full.mp4"), "did not find mp4 4k");
+			Assert.IsTrue(result.videoStreams.Count > 0, "no video streams");
+			Assert.IsFalse(result.videoStreams.Exists(vs => vs.url == null), "some url contains nulls");
+			Assert.IsTrue(result.videoStreams.Exists(vs => vs.url == "http://cdn2.vrideo.com/prod_videos/v1/KLOtqZE_4k_full.mp4"), "did not find mp4 4k");
 			Assert.AreEqual(MediaDecoder.ProjectionMode.Sphere, result.projection);
 			Assert.AreEqual(MediaDecoder.VideoMode.Mono, result.stereoscopy);
 		}

@@ -107,7 +107,7 @@ namespace PlayerUI.Streaming
 						Warn("no video url?");
 					}
 					else
-						result.VideoStreams.Add(video);
+						result.videoStreams.Add(video);
 				}
 			}
 

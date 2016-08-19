@@ -44,9 +44,9 @@ namespace PlayerUI.Test
 		public void CanParseStream()
 		{
 			var result = parser.Parse("http://www.pornhub.com/view_video.php?viewkey=439767200");
-			Assert.IsTrue(result.VideoStreams.Count > 0, "no video streams");
-			Assert.IsFalse(result.VideoStreams.Exists(vs => vs.url == null), "some url contains nulls");
-			Assert.IsTrue(result.VideoStreams.Exists(vs => vs.url.StartsWith("http://cdn")), "no urls starting with cdn");
+			Assert.IsTrue(result.videoStreams.Count > 0, "no video streams");
+			Assert.IsFalse(result.videoStreams.Exists(vs => vs.url == null), "some url contains nulls");
+			Assert.IsTrue(result.videoStreams.Exists(vs => vs.url.StartsWith("http://cdn")), "no urls starting with cdn");
 			Assert.AreEqual(MediaDecoder.ProjectionMode.Dome, result.projection);
 			Assert.AreEqual(MediaDecoder.VideoMode.SideBySide, result.stereoscopy);
 		}

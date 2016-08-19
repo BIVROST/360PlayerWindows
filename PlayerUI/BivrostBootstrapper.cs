@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using Logger = Bivrost.Log.Logger;
 
 namespace PlayerUI
 {
@@ -56,6 +57,8 @@ namespace PlayerUI
 				}
 
 			}
+
+			Logger.RegisterListener(new Bivrost.Log.TextFileLogListener(Logic.LocalDataDirectory));
 
 			
 			string[] args = Environment.GetCommandLineArgs();
@@ -367,7 +370,7 @@ namespace PlayerUI
 				{
 					StringBuilder sbname = new StringBuilder(256);
 					NativeMethods.GetClassName(in1, sbname, 256);
-					Logger.Info("Found Bivrost player window with class: ", sbname);
+					Logger.Info("Found Bivrost player window with class: " + sbname);
 					playerPointer = in1;
 				}
 				return true;

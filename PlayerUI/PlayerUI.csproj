@@ -312,7 +312,6 @@
       <DependentUpon>LicenseManagementView.xaml</DependentUpon>
     </Compile>
     <Compile Include="LicenseManagementViewModel.cs" />
-    <Compile Include="Logger\Logger.cs" />
     <Compile Include="Logic\BrowserPluginManagement.cs" />
     <Compile Include="Logic\Certificate.cs" />
     <Compile Include="Logic\Logic.cs" />
@@ -850,6 +849,7 @@
       <Name>BivrostAnalytics</Name>
     </ProjectReference>
   </ItemGroup>
+  <Import Project="..\Logger\Logger.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
@@ -874,6 +874,6 @@
   </Target>
   <PropertyGroup>
     <PostBuildEvent>xcopy $(TargetDir)* D:\Public\BivrostPlayer-$(ConfigurationName)-latest\ /e /y
-start D:\Public\BivrostPlayer-latest\</PostBuildEvent>
+start D:\Public\BivrostPlayer-$(ConfigurationName)-latest\</PostBuildEvent>
   </PropertyGroup>
 </Project>
