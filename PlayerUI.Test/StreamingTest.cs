@@ -31,21 +31,15 @@ namespace PlayerUI.Test
 		}
 
 
-		[TestMethod]
-		public void CanParseURIs()
-		{
-			foreach (var uri in CorrectUris)
-				//try
-				//{
-					parser.Parse(uri);
-				//}
-				//catch(Exception e)
-				//{
-				//	Assert.Fail("Could not parse URI: " + uri);
-				//	throw;
-				//}
-
-		}
+        [TestMethod]
+        public void CanParseURIs()
+        {
+            foreach (var uri in CorrectUris)
+            {
+                Bivrost.Log.Logger.Info("parsing " + uri + "...");
+                parser.Parse(uri);
+            }
+        }
 	}
 
 

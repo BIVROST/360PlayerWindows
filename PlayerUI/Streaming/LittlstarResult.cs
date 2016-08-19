@@ -8,10 +8,6 @@ using System.Text.RegularExpressions;
 namespace PlayerUI.Streaming
 {
 
-	// https://videos.littlstar.com/22769966-332d-4f03-af2c-8ea68432a2c3/web.mp4
-	// vs https://videos.littlstar.com/22769966-332d-4f03-af2c-8ea68432a2c3/web_hd.mp4
-
-
 	public class LittlstarParser : ServiceParser
 	{
 		public override bool CanParse(string uri)
