@@ -400,7 +400,6 @@
     </Compile>
     <Compile Include="OpenUrlViewModel.cs" />
     <Compile Include="WPF\TopoBuilder.cs" />
-    <Compile Include="YoutubeEngine.cs" />
     <Page Include="AboutView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -874,6 +873,6 @@
   </Target>
   <PropertyGroup>
     <PostBuildEvent>xcopy $(TargetDir)* D:\Public\BivrostPlayer-$(ConfigurationName)-latest\ /e /y
-start D:\Public\BivrostPlayer-$(ConfigurationName)-latest\</PostBuildEvent>
+</PostBuildEvent>
   </PropertyGroup>
 </Project>

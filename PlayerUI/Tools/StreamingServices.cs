@@ -20,7 +20,6 @@ namespace PlayerUI.Tools
 		public enum Service
 		{
 			Url,
-			Youtube,
 			Facebook
 		}
 
@@ -41,8 +40,6 @@ namespace PlayerUI.Tools
 
 			switch(domain)
 			{
-				case "youtube.com": return Service.Youtube;
-				case "youtu.be": return Service.Youtube;
 				case "facebook.com": return Service.Facebook;
 				default: return Service.Url;
 			}

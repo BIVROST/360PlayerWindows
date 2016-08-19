@@ -77,13 +77,12 @@ namespace Bivrost.Log
 	{
 		public void Write(string time, LogType type, string msg, string path)
 		{
-			Trace.WriteLine(time, type.ToString());
-			Trace.Indent();
-			Trace.WriteLine(msg);
-			Trace.WriteLine("");
-			Trace.WriteLine("at " + path);
+			Trace.WriteLine(time + " at " + path, type.ToString());
+            Trace.Indent();
+            Trace.WriteLine(msg);
 			Trace.Unindent();
-			Trace.Flush();
+            Trace.WriteLine("");
+            Trace.Flush();
 		}
 	}
 
@@ -122,7 +121,7 @@ namespace Bivrost.Log
 					File.AppendAllText(
 						LogFile,
 						string.Format(
-							"[{0}] {1}\r\n\t{2}\r\n\r\nat {3}\r\n",
+                            "[{0}] {1} at {3}\r\n\t{2}\r\n\r\n",
 							type,
 							time,
 							msg.Trim().Replace("\r\n", "\r\n\t"),
@@ -182,7 +181,8 @@ namespace Bivrost.Log
 			string now = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
 
 			// normalize newlines to windows format
-			msg = msg.Replace("\r\n", "\n").Replace("\n", "\r\n");
+            if(msg != null)
+			    msg = msg.Replace("\r\n", "\n").Replace("\n", "\r\n");
 
 			logElementQueue.Enqueue(new LogElement() { now = now, type = type, msg = msg, path = path });
 		}

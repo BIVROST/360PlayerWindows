@@ -95,6 +95,7 @@ namespace PlayerUI.Streaming
 		public AudioCodec? codec;
 		public int? frequency;
 		public AudioContainer? container;
+        public int quality;
 	}
 
 
@@ -181,7 +182,9 @@ namespace PlayerUI.Streaming
 		protected ServiceParser[] parsers = new ServiceParser[] {
 			new VrideoParser(),
 			new PornhubParser(),
-			new LittlstarParser()
+			new LittlstarParser(),
+            new YoutubeParser(),
+            new URLParser()
 		};
 
 		/// <summary>
