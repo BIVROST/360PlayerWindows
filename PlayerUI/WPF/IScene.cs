@@ -21,10 +21,13 @@ namespace PlayerUI
 {
     using System;
     using SharpDX.Direct3D11;
+    using System.Collections.Generic;
+    using System.Collections.Concurrent;
 
     public interface ISceneHost
     {
         Device Device { get; }
+        ConcurrentDictionary<System.Windows.Input.Key, bool> KeyState { get; set; }
     }
 
     public interface IScene

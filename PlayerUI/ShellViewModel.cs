@@ -722,12 +722,12 @@ namespace PlayerUI
 					this.DXCanvas.Visibility = Visibility.Visible;
 				});
 
-				this.DXCanvas.Scene = new Scene(_mediaDecoder.TextureL, _mediaDecoder.Projection) { xpad = this.xpad };
-				this.DXCanvas.StartRendering();
+                this.DXCanvas.Scene = new Scene(_mediaDecoder.TextureL, _mediaDecoder.Projection) { xpad = this.xpad };
+                this.DXCanvas.StartRendering();
 
 
 
-				Task.Factory.StartNew(() =>
+                Task.Factory.StartNew(() =>
 				{
 					while (headsets.Any(h => h.Lock))
 					{
@@ -1187,6 +1187,7 @@ namespace PlayerUI
 			});
 
 			waitForPlaybackStop.Set();
+            
 		}
 
 		public override void TryClose(bool? dialogResult = null)
@@ -1374,8 +1375,11 @@ namespace PlayerUI
 		{
 			if (IsPlaying)
 			{
-				if (this.DXCanvas.Scene != null)
-					((Scene)this.DXCanvas.Scene).HasFocus = true;
+                if (this.DXCanvas.Scene != null)
+                {
+                    ((Scene)this.DXCanvas.Scene).HasFocus = true;
+                    this.shellView.PlayPause.Focus();
+                }
 			}
 		}
 

@@ -10,16 +10,26 @@
     using SharpDX.Direct3D11;
     using SharpDX.DXGI;
     using Device = SharpDX.Direct3D11.Device;
-	using SharpDX.Direct3D;
-	using PlayerUI.WPF;
+    using SharpDX.Direct3D;
+    using PlayerUI.WPF;
+    using System.Threading;
+    using System.Collections.Generic;
+    using System.Collections.Concurrent;
 
     public partial class DPFCanvas : Image, ISceneHost
     {
         private Device Device;
+
         private Texture2D RenderTarget;
         private Texture2D DepthStencil;
         private RenderTargetView RenderTargetView;
         private DepthStencilView DepthStencilView;
+
+        private Texture2D RenderTarget2;
+        private Texture2D DepthStencil2;
+        private RenderTargetView RenderTargetView2;
+        private DepthStencilView DepthStencilView2;
+
         private DX11ImageSource D3DSurface;
         private Stopwatch RenderTimer;
         private IScene RenderScene;
@@ -27,11 +37,18 @@
         
 		public Color4 ClearColor = SharpDX.Color.Black;
 
-		public Texture2D extTexture = null;
+		//public Texture2D extTexture = null;
 
 		private SharpDX.DXGI.Device1 dxdevice;
 
 		public event Action NeedsReloading = delegate { };
+
+        public CancellationToken token;
+        public CancellationTokenSource cts;
+        public object renderLock = new object();
+        
+
+        public ConcurrentDictionary<System.Windows.Input.Key, bool> KeyState { get; set; } = new ConcurrentDictionary<System.Windows.Input.Key, bool>();
 
         public DPFCanvas()
         {
@@ -106,10 +123,18 @@
             this.Source = null;
 
             Disposer.RemoveAndDispose(ref this.D3DSurface);
+
             Disposer.RemoveAndDispose(ref this.RenderTargetView);
             Disposer.RemoveAndDispose(ref this.DepthStencilView);
             Disposer.RemoveAndDispose(ref this.RenderTarget);
             Disposer.RemoveAndDispose(ref this.DepthStencil);
+
+            Disposer.RemoveAndDispose(ref this.RenderTargetView2);
+            Disposer.RemoveAndDispose(ref this.DepthStencilView2);
+            Disposer.RemoveAndDispose(ref this.RenderTarget2);
+            Disposer.RemoveAndDispose(ref this.DepthStencil2);
+
+            Disposer.RemoveAndDispose(ref this.dxdevice);
             Disposer.RemoveAndDispose(ref this.Device);
         }
 
@@ -122,8 +147,13 @@
 			Disposer.RemoveAndDispose(ref this.RenderTarget);
 			Disposer.RemoveAndDispose(ref this.DepthStencil);
 
-			int width = 1920;
-			int height = 1080;
+            Disposer.RemoveAndDispose(ref this.RenderTargetView2);
+            Disposer.RemoveAndDispose(ref this.DepthStencilView2);
+            Disposer.RemoveAndDispose(ref this.RenderTarget2);
+            Disposer.RemoveAndDispose(ref this.DepthStencil2);
+
+            int width = (int)System.Windows.SystemParameters.PrimaryScreenWidth;
+			int height = (int)System.Windows.SystemParameters.PrimaryScreenHeight;
 
 			Texture2DDescription colordesc = new Texture2DDescription
 			{
@@ -158,16 +188,51 @@
 			this.RenderTargetView = new RenderTargetView(this.Device, this.RenderTarget);
 			this.DepthStencilView = new DepthStencilView(this.Device, this.DepthStencil);
 
-			this.D3DSurface.SetRenderTargetDX11(this.RenderTarget);
+            this.RenderTarget2 = new Texture2D(this.Device, colordesc);
+            this.DepthStencil2 = new Texture2D(this.Device, depthdesc);
+            this.RenderTargetView2 = new RenderTargetView(this.Device, this.RenderTarget2);
+            this.DepthStencilView2 = new DepthStencilView(this.Device, this.DepthStencil2);
+
+            this.D3DSurface.SetRenderTargetDX11(this.RenderTarget);
         }
 
-		public void StartRendering()
+        public AutoResetEvent waitForFrame = new AutoResetEvent(false);
+        public void RenderThread(object token)
+        {
+            var localToken = (CancellationToken)token;
+            while(!localToken.IsCancellationRequested)
+            {
+                if(waitForFrame.WaitOne(20))
+                    if(!localToken.IsCancellationRequested)
+                    {
+                        if (Monitor.TryEnter(renderLock, 16))
+                        {
+                            this.Render(this.RenderTimer.Elapsed);
+                            Monitor.Exit(renderLock);
+                        }
+                    }
+            }
+        }
+
+        public void StartRendering()
         {
             if (this.RenderTimer.IsRunning)
                 return;
 
+            if (!Device.IsDisposed)
+            {
+                Device.ImmediateContext.ClearRenderTargetView(RenderTargetView, Color4.Black);
+                Device.ImmediateContext.ClearRenderTargetView(RenderTargetView2, Color4.Black);
+            }
+
+
+            cts = new CancellationTokenSource();
+            token = cts.Token;
+            (new Thread(new ParameterizedThreadStart(RenderThread)) { IsBackground = true }).Start(token);
+
             CompositionTarget.Rendering += OnRendering;
             this.RenderTimer.Start();
+            //this.fpsWatch.Start();
         }
 
         public void StopRendering()
@@ -177,24 +242,64 @@
 
             CompositionTarget.Rendering -= OnRendering;
             this.RenderTimer.Stop();
+            //this.fpsWatch.Stop();
+            cts.Cancel();
         }
 
 		private bool odd = false;
+        private TimeSpan lastRender;
+        //private Stopwatch fpsWatch = new Stopwatch();
+        //long frames = 0;
 
         private void OnRendering(object sender, EventArgs e)
         {
-			//if (odd)
-			//{
-			//	odd = false;
-			//	return;
-			//}
-			//else odd = true;
+            //if (odd)
+            //{
+            //	odd = false;
+            //	return;
+            //}
+            //else odd = true;
 
-            if (!this.RenderTimer.IsRunning)
-                return;
-			
-            this.Render(this.RenderTimer.Elapsed);
-			this.D3DSurface.InvalidateD3DImage();
+            //foreach(KeyValuePair<System.Windows.Input.Key, bool> kvp in KeyState)
+            //{
+            //    KeyState[kvp.Key] = System.Windows.Input.Keyboard.IsKeyDown(kvp.Key);
+            //    if (KeyState[kvp.Key])
+            //        ;
+            //}
+
+            RenderingEventArgs args = (RenderingEventArgs)e;
+            if (this.lastRender != args.RenderingTime)
+            {                
+                if (!this.RenderTimer.IsRunning)
+                    return;
+
+                //this.Render(this.RenderTimer.Elapsed);
+
+                foreach (KeyValuePair<System.Windows.Input.Key, bool> kvp in KeyState)
+                {
+                    KeyState[kvp.Key] = System.Windows.Input.Keyboard.IsKeyDown(kvp.Key);
+                    if (KeyState[kvp.Key])
+                        ;
+                }
+
+                if (Monitor.TryEnter(renderLock, 16))
+                {
+                    if (this.Device != null && !Device.IsDisposed && !RenderTarget.IsDisposed && !RenderTarget2.IsDisposed)
+                    {
+                        if (RenderTarget.IsDisposed)
+                            ;
+                        if (RenderTarget2.IsDisposed)
+                            ;
+                        this.Device.ImmediateContext.CopyResource(RenderTarget2, RenderTarget);
+                    }
+                    Monitor.Exit(renderLock);
+                }
+                    this.D3DSurface.InvalidateD3DImage();
+
+                this.waitForFrame.Set();
+
+                this.lastRender = args.RenderingTime;
+            }
         }
 
         protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
@@ -216,18 +321,18 @@
 					return;
 				}
 
-				Texture2D renderTarget = this.RenderTarget;
+				Texture2D renderTarget = this.RenderTarget2;
 				if (renderTarget == null)
 					return;
 
 				int targetWidth = renderTarget.Description.Width;
 				int targetHeight = renderTarget.Description.Height;
 
-				device.ImmediateContext.OutputMerger.SetTargets(this.DepthStencilView, this.RenderTargetView);
+				device.ImmediateContext.OutputMerger.SetTargets(this.DepthStencilView2, this.RenderTargetView2);
 				device.ImmediateContext.Rasterizer.SetViewport(new Viewport(0, 0, targetWidth, targetHeight, 0.0f, 1.0f));
 
-				device.ImmediateContext.ClearRenderTargetView(this.RenderTargetView, this.ClearColor);
-				device.ImmediateContext.ClearDepthStencilView(this.DepthStencilView, DepthStencilClearFlags.Depth | DepthStencilClearFlags.Stencil, 1.0f, 0);
+				device.ImmediateContext.ClearRenderTargetView(this.RenderTargetView2, this.ClearColor);
+				device.ImmediateContext.ClearDepthStencilView(this.DepthStencilView2, DepthStencilClearFlags.Depth | DepthStencilClearFlags.Stencil, 1.0f, 0);
 
 
 

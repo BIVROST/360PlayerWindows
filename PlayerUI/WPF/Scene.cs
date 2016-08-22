@@ -32,8 +32,17 @@
 
 		private object localCritical = new object();
 
+        public bool keyLeft;
+        public bool keyRight;
+        public bool keyUp;
+        public bool keyDown;
+        public bool keyZ;
+        public bool keyT;
+        public bool keyL;
+        public bool keyN;
 
-		SharpDX.Toolkit.Graphics.GraphicsDevice graphicsDevice;
+
+        SharpDX.Toolkit.Graphics.GraphicsDevice graphicsDevice;
 		SharpDX.Toolkit.Graphics.Effect customEffect;
 
 		SharpDX.Toolkit.Graphics.GeometricPrimitive primitive;
@@ -46,7 +55,7 @@
 
 		private float deltaTime = 0;
 		private float lastFrameTime = 0;
-		public bool HasFocus = true;
+		public bool HasFocus {get;set;} = true;
 		private Quaternion targetRotationQuaternion;
 		private Quaternion currentRotationQuaternion;
 		private float lerpSpeed = 3f;
@@ -92,6 +101,30 @@
 			videoTexture = sharedTexture;
 			projectionMode = projection;
 		}
+
+        private bool GetKeyState(Key key)
+        {
+            if (this.Host != null)
+            {
+                if(!this.Host.KeyState.ContainsKey(key))
+                {
+                    this.Host.KeyState.TryAdd(key, false);
+                    return false;
+                }
+                return this.Host.KeyState[key];
+            }
+            return false;
+        }
+
+        bool IsKeyDown(Key key)
+        {
+            return GetKeyState(key);
+        }
+
+        bool IsKeyUp(Key key)
+        {
+            return !GetKeyState(key);
+        }
 
 		//public Vector2 MapCube(int index, Vector2 vector)
 		//{
@@ -159,7 +192,7 @@
 
 
 
-				ShaderResourceView shaderResourceView = new ShaderResourceView(_device, sharedTex);
+				//ShaderResourceView shaderResourceView = new ShaderResourceView(_device, sharedTex);
 
 				//_device.ImmediateContext.PixelShader.SetShaderResource(0, shaderResourceView);
 
@@ -463,54 +496,60 @@
 				//ButtonOnce(state, GamepadButtonFlags.DPadDown, () => Caliburn.Micro.Execute.OnUIThreadAsync(() => ShellViewModel.Instance.VolumeRocker.Volume -= 0.1));
 			}
 
-			if (HasFocus)
-			{
-				if (Keyboard.IsKeyDown(Key.Left))
-					MoveDelta(1f, 0f, speed * deltaTime, 4f);
-				if (Keyboard.IsKeyDown(Key.Right))
-					MoveDelta(-1.0f, 0f, speed * deltaTime, 4f);
-				if (Keyboard.IsKeyDown(Key.Up))
-					MoveDelta(0f, 1f, speed * deltaTime, 4f);
-				if (Keyboard.IsKeyDown(Key.Down))
-					MoveDelta(0f, -1f, speed * deltaTime, 4f);
-				if (Keyboard.IsKeyDown(Key.Z))
-				{
-					ResetFov();
-				}
+           
 
-				if (useOSVR) {
-					if(Keyboard.IsKeyDown(Key.T))
-					{
-						if(tUp)
-						{
-							overrideManual = !overrideManual;
-							tUp = false;
-						}
-					}
-					if (Keyboard.IsKeyUp(Key.T)) tUp = true;
-				}
+            if (HasFocus)
+			{
+                if (IsKeyDown(Key.Left))
+                    MoveDelta(1f, 0f, speed * deltaTime, 4f);
+                if (IsKeyDown(Key.Right))
+                    MoveDelta(-1.0f, 0f, speed * deltaTime, 4f);
+                if (IsKeyDown(Key.Up))
+                    MoveDelta(0f, 1f, speed * deltaTime, 4f);
+                if (IsKeyDown(Key.Down))
+                    MoveDelta(0f, -1f, speed * deltaTime, 4f);
+                if (IsKeyDown(Key.Z))
+                {
+                    ResetFov();
+                }
+
+                if (useOSVR)
+                {
+                    if (IsKeyDown(Key.T))
+                    {
+                        if (tUp)
+                        {
+                            overrideManual = !overrideManual;
+                            tUp = false;
+                        }
+                    }
+                    if (IsKeyUp(Key.T)) tUp = true;
+                }
 
                 if (projectionMode == MediaDecoder.ProjectionMode.Sphere)
-				{
-					if (Keyboard.IsKeyDown(Key.L))
-					{
+                {
+                    if (IsKeyDown(Key.L))
+                    {
                         //littlePlanet = true;
                         StereographicProjection();
                         targetFov = DEFAULT_LITTLE_FOV;
-                        
-					}
-					if (Keyboard.IsKeyDown(Key.N))
-					{
+
+                    }
+                    if (IsKeyDown(Key.N))
+                    {
                         //littlePlanet = false;
                         RectlinearProjection();
-						targetFov = DEFAULT_FOV;
-					}
-				}
-			}
-			//if (!textureReleased)
-			//{
+                        targetFov = DEFAULT_FOV;
+                    }
+                }
 
-			customEffect.Parameters["WorldViewProj"].SetValue(worldMatrix * viewMatrix * projectionMatrix);
+
+            }
+
+            //if (!textureReleased)
+            //{
+
+            customEffect.Parameters["WorldViewProj"].SetValue(worldMatrix * viewMatrix * projectionMatrix);
 
 			
 			lock (localCritical)
@@ -528,5 +567,6 @@
 		{
 			return value1 + (value2 - value1) * amount;
         }
+
     }
 }
