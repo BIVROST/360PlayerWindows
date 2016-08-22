@@ -150,6 +150,7 @@ namespace Bivrost.Log
 
 	public static class Logger
 	{
+        static AutoResetEvent waitForLog = new AutoResetEvent(false);
 
 		/// <summary>
 		/// Returns a normalized path relative to the logger (or provided sourceFilePath)
@@ -185,6 +186,7 @@ namespace Bivrost.Log
 			    msg = msg.Replace("\r\n", "\n").Replace("\n", "\r\n");
 
 			logElementQueue.Enqueue(new LogElement() { now = now, type = type, msg = msg, path = path });
+            waitForLog.Set();
 		}
 
 
@@ -193,7 +195,8 @@ namespace Bivrost.Log
 			LogElement e;
 			while (true)
 			{
-				if (logElementQueue.TryDequeue(out e))
+                waitForLog.WaitOne(5000);
+				while (logElementQueue.TryDequeue(out e))
 					foreach (var l in listeners)
 						l.Write(e.now, e.type, e.msg, e.path);
 			}
