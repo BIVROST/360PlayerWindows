@@ -54,7 +54,7 @@
 				});
 
 			this.StartD3D();
-			this.StartRendering();
+			//this.StartRendering();
         }
 
 		public void LateStartD3D()

@@ -150,7 +150,6 @@ namespace Bivrost.Log
 
 	public static class Logger
 	{
-
 		/// <summary>
 		/// Returns a normalized path relative to the logger (or provided sourceFilePath)
 		/// </summary>
@@ -174,9 +173,10 @@ namespace Bivrost.Log
 
 
 		struct LogElement { public string now; public LogType type; public string msg; public string path; }
-		static ConcurrentQueue<LogElement> logElementQueue = new ConcurrentQueue<LogElement>();
+        static BlockingCollection<LogElement> logElementQueue = new BlockingCollection<LogElement>();
 
-		static void WriteLogEntry(LogType type, string msg, string path)
+
+        static void WriteLogEntry(LogType type, string msg, string path)
 		{
 			string now = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
 
@@ -184,18 +184,17 @@ namespace Bivrost.Log
             if(msg != null)
 			    msg = msg.Replace("\r\n", "\n").Replace("\n", "\r\n");
 
-			logElementQueue.Enqueue(new LogElement() { now = now, type = type, msg = msg, path = path });
+			logElementQueue.Add(new LogElement() { now = now, type = type, msg = msg, path = path });
 		}
 
 
 		static void WriteLogThread()
 		{
-			LogElement e;
 			while (true)
 			{
-				if (logElementQueue.TryDequeue(out e))
-					foreach (var l in listeners)
-						l.Write(e.now, e.type, e.msg, e.path);
+                LogElement e = logElementQueue.Take();				
+				foreach (var l in listeners)
+					l.Write(e.now, e.type, e.msg, e.path);
 			}
 		}
 

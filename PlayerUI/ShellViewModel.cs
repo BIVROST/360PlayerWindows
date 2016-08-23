@@ -370,7 +370,7 @@ namespace PlayerUI
 			UpdateRecents();
 			ShowStartupUI();
 
-			xpad = new Controller(SharpDX.XInput.UserIndex.One);
+			//xpad = new Controller(SharpDX.XInput.UserIndex.One);
 
 			if (File.Exists(FileFromArgs))
 			{
@@ -1389,34 +1389,34 @@ namespace PlayerUI
 		}
 
 
-		public void LegacyTest()
-		{
-			SharpDX.Direct3D.FeatureLevel[] _levels = new SharpDX.Direct3D.FeatureLevel[] { SharpDX.Direct3D.FeatureLevel.Level_10_0 };
-			Device _device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.BgraSupport | DeviceCreationFlags.VideoSupport, _levels);
+		//public void LegacyTest()
+		//{
+		//	SharpDX.Direct3D.FeatureLevel[] _levels = new SharpDX.Direct3D.FeatureLevel[] { SharpDX.Direct3D.FeatureLevel.Level_10_0 };
+		//	Device _device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.BgraSupport | DeviceCreationFlags.VideoSupport, _levels);
 
-			SharpDX.Direct3D11.Texture2DDescription frameTextureDescription = new SharpDX.Direct3D11.Texture2DDescription()
-			{
-				Width = 1920,
-				Height = 1080,
-				MipLevels = 1,
-				ArraySize = 1,
-				Format = SharpDX.DXGI.Format.B8G8R8A8_UNorm,
-				Usage = SharpDX.Direct3D11.ResourceUsage.Default,
-				SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
-				BindFlags = BindFlags.RenderTarget | SharpDX.Direct3D11.BindFlags.ShaderResource,
-				CpuAccessFlags = CpuAccessFlags.None,
-				OptionFlags = ResourceOptionFlags.Shared
-			};
+		//	SharpDX.Direct3D11.Texture2DDescription frameTextureDescription = new SharpDX.Direct3D11.Texture2DDescription()
+		//	{
+		//		Width = 1920,
+		//		Height = 1080,
+		//		MipLevels = 1,
+		//		ArraySize = 1,
+		//		Format = SharpDX.DXGI.Format.B8G8R8A8_UNorm,
+		//		Usage = SharpDX.Direct3D11.ResourceUsage.Default,
+		//		SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
+		//		BindFlags = BindFlags.RenderTarget | SharpDX.Direct3D11.BindFlags.ShaderResource,
+		//		CpuAccessFlags = CpuAccessFlags.None,
+		//		OptionFlags = ResourceOptionFlags.Shared
+		//	};
 
 
-			Texture2D textureL = new SharpDX.Direct3D11.Texture2D(_device, frameTextureDescription);
-			SharpDX.DXGI.Surface surface = textureL.QueryInterface<SharpDX.DXGI.Surface>();
+		//	Texture2D textureL = new SharpDX.Direct3D11.Texture2D(_device, frameTextureDescription);
+		//	SharpDX.DXGI.Surface surface = textureL.QueryInterface<SharpDX.DXGI.Surface>();
 
-			LegacyPlayer.MediaDecoderLegacy md = new LegacyPlayer.MediaDecoderLegacy(surface.NativePointer);
-			md.OpenUrl(@"D:\TestVideos\maroon.mp4");
+		//	LegacyPlayer.MediaDecoderLegacy md = new LegacyPlayer.MediaDecoderLegacy(surface.NativePointer);
+		//	md.OpenUrl(@"D:\TestVideos\maroon.mp4");
 
-			this.DXCanvas.Scene = new Scene(textureL, MediaDecoder.ProjectionMode.Sphere);
-			this.DXCanvas.StartRendering();
-		}
+		//	this.DXCanvas.Scene = new Scene(textureL, MediaDecoder.ProjectionMode.Sphere);
+		//	this.DXCanvas.StartRendering();
+		//}
 	}
 }

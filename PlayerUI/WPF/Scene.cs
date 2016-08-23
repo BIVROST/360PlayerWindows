@@ -444,7 +444,7 @@
 			//ShellViewModel.Instance.UpdateDebugText();
 			//==========================================
 
-			if (xpad.IsConnected)
+			if (xpad != null && xpad.IsConnected)
 			{
 				var state = xpad.GetState();
 				float padx = state.Gamepad.LeftThumbX / 256;
