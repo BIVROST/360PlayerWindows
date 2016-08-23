@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Bivrost.Log;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Text.RegularExpressions;
 
@@ -68,7 +69,7 @@ namespace PlayerUI.Streaming
 					switch((string)q)
 					{
 						case "480p":
-							Warn("Ignoring very low quality: " + (string)q);
+							Logger.Info("Ignoring very low quality: " + (string)q);
 							continue;
 
 						case "720p":
@@ -88,7 +89,7 @@ namespace PlayerUI.Streaming
 							break;
 
 						default:
-							Warn("unknown quality: " + q);
+							Logger.Error("unknown quality: " + q);
 							continue;
 					}
 
@@ -104,7 +105,7 @@ namespace PlayerUI.Streaming
 					};
 					if (video.url == null)
 					{
-						Warn("no video url?");
+                        Logger.Error("no video url?");
 					}
 					else
 						result.videoStreams.Add(video);

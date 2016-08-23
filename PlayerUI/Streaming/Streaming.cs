@@ -24,7 +24,7 @@ namespace PlayerUI.Streaming
 	//}
 
 	public enum VideoCodec { h264, h265, vp8, vp9, other }
-	public enum VideoContainer { mp4, webm, avi, wmv, flv, ogg, _3gp }
+	public enum VideoContainer { mp4, webm, avi, wmv, flv, ogg, _3gp, hls }
 	public enum AudioCodec { aac, mp3, opus, other }
 	public enum AudioContainer { webm, m4a, mp3, in_video }
 
@@ -147,13 +147,19 @@ namespace PlayerUI.Streaming
 		/// <summary>
 		/// Returns highest resolution video stream that is of specific type.
 		/// </summary>
-		/// <param name="containerType"></param>
+		/// <param name="containerType">container that will be required</param>
+        /// <param name="mayNotHaveAudio">set to true to make audio optional</param>
 		/// <returns>VideoStream or null when not found</returns>
-		public VideoStream BestQualityVideoStream(VideoContainer containerType)
+		public VideoStream BestQualityVideoStream(VideoContainer containerType, bool mayNotHaveAudio = false)
 		{
-			return videoStreams.ToList()
-				.FindAll(vs => vs.container == containerType)
-				.Aggregate((agg, next) => next.quality > agg.quality ? next : agg);
+            VideoStream best = videoStreams
+                .Where(vs => vs.hasAudio || mayNotHaveAudio)
+                .Where(vs => vs.container == containerType)
+                .OrderByDescending(vs => vs.quality)
+                .FirstOrDefault();
+            if (best == null)
+                throw new NotSupportedException($"No supported video stream with container {containerType} found, audio optional={mayNotHaveAudio}.");
+            return best;
 		}
 
 
@@ -209,10 +215,6 @@ namespace PlayerUI.Streaming
 	public abstract class ServiceParser {
 
 		#region util
-
-		protected void Warn(string message) {
-			Logger.Error("[" + GetType().Name + " warning]: " + message);
-		}
 
 		static HttpClient client;
 		internal static async Task<string> HTTPGetStringAsync(string uri) {

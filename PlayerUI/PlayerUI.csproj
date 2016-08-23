@@ -49,7 +49,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>true</Optimize>
+    <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -367,7 +367,6 @@
     <Compile Include="Tools\RegistryBase.cs" />
     <Compile Include="Tools\RegistryContext.cs" />
     <Compile Include="Streaming\Streaming.cs" />
-    <Compile Include="Tools\StreamingServices.cs" />
     <Compile Include="Tools\SystemInfo.cs" />
     <Compile Include="Tools\TimeoutBool.cs" />
     <Compile Include="VolumeControlView.xaml.cs">

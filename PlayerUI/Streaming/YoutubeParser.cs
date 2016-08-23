@@ -44,7 +44,7 @@ namespace PlayerUI.Streaming
             }
 
             int code;
-            string jsonStr = YoutubeDL("--ignore-config --no-call-home --dump-json \"" + uri.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"", out code);
+            string jsonStr = YoutubeDL("--ignore-config --no-playlist --no-call-home --dump-json \"" + uri.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"", out code);
             JObject json = JObject.Parse(jsonStr); //  -f 22
 
             List<AudioStream> audioStreams = new List<AudioStream>();
@@ -355,14 +355,8 @@ namespace PlayerUI.Streaming
                 process.StartInfo = start;
                 StringBuilder output = new StringBuilder();
                 StringBuilder error = new StringBuilder();
-                process.OutputDataReceived += (sender, e) => {
-                    output.AppendLine(e.Data);
-                    Logger.Info(e.Data);
-                };
-                process.ErrorDataReceived += (sender, e) => {
-                    Logger.Error(e.Data);
-                    error.AppendLine(e.Data);
-                };
+                process.OutputDataReceived += (sender, e) => output.AppendLine(e.Data);
+                process.ErrorDataReceived += (sender, e) => error.AppendLine(e.Data);
 
                 process.Start();
 

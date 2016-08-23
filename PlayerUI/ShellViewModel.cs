@@ -845,12 +845,8 @@ namespace PlayerUI
 		private void OpenUrlFrom(string url)
 		{
 			if (urlLoadLock)
-			{
 				return;
-			}
-
 			urlLoadLock = true;
-
 
 			Execute.OnUIThreadAsync(() =>
 			{
@@ -863,92 +859,53 @@ namespace PlayerUI
 				{
 					ouvm.Open();
 
-					Execute.OnUIThreadAsync(() =>
-					{
-						if (ouvm.Valid)
-						{
-							NotificationCenter.PushNotification(new NotificationViewModel("Loading..."));
-							if (!string.IsNullOrWhiteSpace(ouvm.VideoUrl))
-							{
-								ResetPlayback();
-
-								SelectedFileName = ouvm.VideoUrl;
-								IsFileSelected = true;
-								if (ouvm.ServiceResult != null)
-								{
-									_mediaDecoder.Projection = ouvm.ServiceResult.projection;
-									_mediaDecoder.StereoMode = ouvm.ServiceResult.stereoscopy;
-									SelectedFileTitle = ouvm.ServiceResult.title;
-								}
-								else
-								{
-									_mediaDecoder.Projection = StreamingServices.GetServiceProjection(ouvm.Uri);
-								}
-
-								Recents.AddRecent(url);
-								UpdateRecents();
-
-								Execute.OnUIThreadAsync(() =>
-								{
-									LoadMedia();
-								});
-							}
-						}
-						else
-						{
-							NotificationCenter.PushNotification(new NotificationViewModel("Url is not valid video or streaming service address."));
-							urlLoadLock = false;
-						}
-					});
+					Execute.OnUIThreadAsync(() => LoadOUVM(ouvm));
 				});
 
 			});
 		}
 
 
-		public void OpenUrl()
-		{
-			SelectedFileTitle = "";
+        public void OpenUrl()
+        {
+            SelectedFileTitle = "";
 
-			OpenUrlViewModel ouvm = DialogHelper.ShowDialogOut<OpenUrlViewModel>();
-			if (ouvm.Valid)
-			{
-				NotificationCenter.PushNotification(new NotificationViewModel("Loading..."));
-				if (!string.IsNullOrWhiteSpace(ouvm.VideoUrl))
-				{
-					SelectedFileName = ouvm.VideoUrl;
-					IsFileSelected = true;
+            OpenUrlViewModel ouvm = DialogHelper.ShowDialogOut<OpenUrlViewModel>();
+            LoadOUVM(ouvm);
+        }
 
-					if (ouvm.ServiceResult != null)
-					{
-						_mediaDecoder.Projection = ouvm.ServiceResult.projection;
-						_mediaDecoder.StereoMode = ouvm.ServiceResult.stereoscopy;
-						SelectedFileTitle = ouvm.ServiceResult.title;
 
-						Recents.AddRecent(ouvm.ServiceResult.originalURL);
-						UpdateRecents();
-					}
-					else
-					{
-						_mediaDecoder.Projection = StreamingServices.GetServiceProjection(ouvm.Uri);
+        /// <summary>
+        /// Must be run on UI thread
+        /// </summary>
+        /// <param name="ouvm"></param>
+        private void LoadOUVM(OpenUrlViewModel ouvm)
+        {
+            if (ouvm.Valid)
+            {
+                NotificationCenter.PushNotification(new NotificationViewModel("Loading..."));
+                ResetPlayback();
 
-						Recents.AddRecent(ouvm.Uri.AbsoluteUri);
-						UpdateRecents();
-					}
+                SelectedFileName = ouvm.ServiceResult.BestQualityVideoStream(Streaming.VideoContainer.mp4).url;
+                IsFileSelected = true;
+                _mediaDecoder.Projection = ouvm.ServiceResult.projection;
+                _mediaDecoder.StereoMode = ouvm.ServiceResult.stereoscopy;
+                SelectedFileTitle = ouvm.ServiceResult.title;
 
-					Execute.OnUIThreadAsync(() =>
-					{
-						LoadMedia();
-					});
-				}
-			}
-			else
-			{
-				NotificationCenter.PushNotification(new NotificationViewModel("Url is not valid video or streaming service address."));
-			}
-		}
+                Recents.AddRecent(ouvm.ServiceResult.originalURL);
+                UpdateRecents();
 
-		public void PlayPause()
+                Execute.OnUIThreadAsync(() => LoadMedia());
+            }
+            else
+            {
+                NotificationCenter.PushNotification(new NotificationViewModel("Url is not valid video or recognised streaming service address."));
+                urlLoadLock = false;
+            }
+        }
+
+
+        public void PlayPause()
 		{
 			//space press hack
 			Execute.OnUIThread(() => shellView.VideoProgressBar.Focus());

@@ -1,4 +1,5 @@
-﻿using Caliburn.Micro;
+﻿using Bivrost.Log;
+using Caliburn.Micro;
 using PlayerUI.Tools;
 using RestSharp;
 using System;
@@ -30,49 +31,17 @@ namespace PlayerUI
 				NotifyOfPropertyChange(() => Url);
 			} }
 
-		public Uri Uri { get; set; }
+		public Streaming.ServiceResult ServiceResult { get; internal set; }
+        public bool Valid { get {
+                return ServiceResult != null;
+            } }
 
-		public string VideoUrl { get; set; }
-
-		public Streaming.ServiceResult ServiceResult { get; set; }
-
-		public bool Valid { get; set; } = false;
-
-		public void Open()
+        public void Open()
 		{
+            ServiceResult = null;
 			Url = Url.Trim();
-			if (string.IsNullOrWhiteSpace(Url)) TryClose();
-
-			//Uri uri;
-			//string correctedUrl;
-			//Valid = StreamingServices.CheckUrlValid(Url, out correctedUrl, out uri);
-
-			//{
-			//	RestClient client = new RestClient(uri);
-			//	IRestRequest request = new RestRequest(Method.HEAD);
-			//	//request.AddHeader("Accept", "text/html");
-			//	IRestResponse response = client.Execute(request);
-			//	if (response.StatusCode != System.Net.HttpStatusCode.OK)
-			//	{
-			//		Valid = false;
-			//		TryClose();
-			//	}
-			//}
-
-			//Uri = uri;
-
-			//if (Valid)
-			//{
-			//	Url = correctedUrl;
-			//	//Console.WriteLine(StreamingServices.DetectService(Uri));
-			//	string videoUrl;
-			//	if (StreamingServices.TryParseVideoFile(Uri, out videoUrl))
-			//	{
-			//		VideoUrl = videoUrl;
-			//	}
-			//}
-
-			//TryClose();
+			if (string.IsNullOrWhiteSpace(Url))
+               TryClose();
 
 			if(view == null)
             {
@@ -92,68 +61,34 @@ namespace PlayerUI
 
 		private void Process()
 		{
-			Uri uri;
-			string correctedUrl;
-			Valid = StreamingServices.CheckUrlValid(Url, out correctedUrl, out uri);
-
+			try
 			{
-				RestClient client = new RestClient(uri);
-				IRestRequest request = new RestRequest(Method.HEAD);
-				request.AddHeader("Accept", "text/html");
-				IRestResponse response = client.Execute(request);
-				if (response.StatusCode != System.Net.HttpStatusCode.OK)
-				{
-                    if(view != null)
-					    Execute.OnUIThreadAsync(() =>
-					    {
-						    Valid = false;
-						    TryClose();
-					    });
-                    return;
-
-				}
+                ServiceResult = null;
+                ServiceResult = Streaming.StreamingFactory.Instance.GetStreamingInfo(Url);
 			}
-
-			Uri = uri;
-
-			if (Valid)
+			catch(Streaming.StreamNotSupported exc)
 			{
-				Url = correctedUrl;
-				//Console.WriteLine(StreamingServices.DetectService(Uri));
-				string videoUrl;
-				Streaming.ServiceResult serviceResult;
-				try
-				{
-					if (StreamingServices.TryParseVideoFile(Uri, out videoUrl, out serviceResult))
-					{
-						VideoUrl = videoUrl;
-						ServiceResult = serviceResult;
-					}
-				}
-				catch(Streaming.StreamNotSupported exc)
-				{
-					Execute.OnUIThreadAsync(() =>
-						ShellViewModel.Instance.NotificationCenter.PushNotification(new NotificationViewModel("Video projection not yet supported."))
-					);
-				}
-				catch(Streaming.StreamParsingFailed exc)
-				{
-					Execute.OnUIThreadAsync(() =>
-						ShellViewModel.Instance.NotificationCenter.PushNotification(new NotificationViewModel("Parsing failed. Unable to open the video."))
-					);
-				}
-				catch (Exception exc)
-				{
-					Execute.OnUIThreadAsync(() =>
-						ShellViewModel.Instance.NotificationCenter.PushNotification(new NotificationViewModel("Media not supported."))
-					); ;
-				}
+                Logger.Error(exc, "Streaming: video not supported. " + Url);
+                Execute.OnUIThreadAsync(() =>
+					ShellViewModel.Instance.NotificationCenter.PushNotification(new NotificationViewModel("Video not yet supported."))
+				);
+			}
+			catch(Streaming.StreamParsingFailed exc)
+			{
+                Logger.Error(exc, "Streaming: Parsing failed. Unable to open the video." + Url);
+                Execute.OnUIThreadAsync(() =>
+					ShellViewModel.Instance.NotificationCenter.PushNotification(new NotificationViewModel("Parsing failed. Unable to open the video."))
+				);
+			}
+			catch (Exception exc)
+			{
+                Logger.Error(exc, "Streaming: media not supported" + Url);
+				Execute.OnUIThreadAsync(() => 
+					ShellViewModel.Instance.NotificationCenter.PushNotification(new NotificationViewModel("Media not supported."))
+				);
 			}
             if (view != null)
-                Execute.OnUIThreadAsync(() =>
-			    {
-				    TryClose();
-			    });
+                Execute.OnUIThreadAsync(() => TryClose());
 		}
 
 	}

@@ -1,4 +1,5 @@
-﻿using HtmlAgilityPack;
+﻿using Bivrost.Log;
+using HtmlAgilityPack;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -68,7 +69,8 @@ namespace PlayerUI.Streaming
 							quality = 1,
 							width = 1334,
 							height = 666,
-							url = (string)kvp.Value
+							url = (string)kvp.Value,
+                            hasAudio = true
 						});
 						break;
 
@@ -79,8 +81,9 @@ namespace PlayerUI.Streaming
 							quality = 2,
 							width = 1920,
 							height = 960,
-							url = (string)kvp.Value
-						});
+							url = (string)kvp.Value,
+                            hasAudio = true
+                        });
 						break;
 
 					case "web":
@@ -90,8 +93,9 @@ namespace PlayerUI.Streaming
 							quality = 3,
 							width = 1920,
 							height = 960,
-							url = (string)kvp.Value
-						});
+							url = (string)kvp.Value,
+                            hasAudio = true
+                        });
 						break;
 
 					case "alcatel":
@@ -101,8 +105,9 @@ namespace PlayerUI.Streaming
 							quality = 4,
 							width = 1920,
 							height = 1080,
-							url = (string)kvp.Value
-						});
+							url = (string)kvp.Value,
+                            hasAudio = true
+                        });
 						break;
 
 					case "oculus_rift":
@@ -112,8 +117,9 @@ namespace PlayerUI.Streaming
 							quality = 5,
 							width = 2160,
 							height = 1080,
-							url = (string)kvp.Value
-						});
+							url = (string)kvp.Value,
+                            hasAudio = true
+                        });
 						break;
 
 					case "gear_vr":
@@ -123,8 +129,9 @@ namespace PlayerUI.Streaming
 							quality = 6,
 							width = 2560,
 							height = 1280,
-							url = (string)kvp.Value
-						});
+							url = (string)kvp.Value,
+                            hasAudio = true
+                        });
 						break;
 
 					case "vr":
@@ -134,8 +141,9 @@ namespace PlayerUI.Streaming
 							quality = 7,
 							width = 2560,
 							height = 1280,
-							url = (string)kvp.Value
-						});
+							url = (string)kvp.Value,
+                            hasAudio = true
+                        });
 						break;
 
 					case "web_hd":
@@ -145,13 +153,24 @@ namespace PlayerUI.Streaming
 							quality = 8,
 							width = 2560,
 							height = 1280,
-							url = (string)kvp.Value
-						});
+							url = (string)kvp.Value,
+                            hasAudio = true
+                        });
 						break;
 
-					default:
-						Warn("littlstar unknown version: " + kvp.Name);
-						break;
+                    case "psvr":
+                        videostreams.Add(new VideoStream()
+                        {
+                            container = VideoContainer.hls,
+                            quality = 9,
+                            url = (string)kvp.Value,
+                            hasAudio = true
+                        });
+                        break;
+
+                    default:
+						Logger.Info($"littlstar unknown version: {kvp.Name} ({(string)kvp.Value})");
+                        break;
 				}
 			}
 
