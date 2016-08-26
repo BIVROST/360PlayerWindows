@@ -54,6 +54,7 @@ namespace PlayerUI.Streaming
                     new VideoStream()
                     {
                         url = uri,
+                        hasAudio = true, // TODO
                         container = VideoContainer.mp4  // TODO
                     }
                 }
