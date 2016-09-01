@@ -149,9 +149,6 @@
 		//		);
 		//}
 
-		Statistics.Heatmap heatmap;
-		float heatmapDelta = 1;
-
 		void ResizeTexture(Texture2D tL, Texture2D tR)
 		{
 			if(MediaDecoder.Instance.TextureReleased) return;
@@ -273,7 +270,6 @@
 			_device.ImmediateContext.Flush();
 			ResetRotation();
 			
-			heatmap = new Statistics.Heatmap();
             
             var devices = SharpDX.RawInput.Device.GetDevices();
             devices.ForEach(dev =>
@@ -360,8 +356,6 @@
 
         void IScene.Detach()
         {
-			//Console.WriteLine(heatmap.ToBase64());
-
 			MediaDecoder.Instance.OnFormatChanged -= ResizeTexture;
 			//MediaDecoder.Instance.OnReleaseTexture -= ReleaseTexture;
 
@@ -462,12 +456,12 @@
 
 
 			// rotation quaternion to heatmap directions
-			heatmapDelta += deltaTime;
-			if(heatmapDelta > 0.33333333f)
-			{
-				heatmap.TrackData(currentRotationQuaternion);
-				heatmapDelta = 0;
-			}
+			//heatmapDelta += deltaTime;
+			//if(heatmapDelta > 0.33333333f)
+			//{
+   //             heatmap.TrackData(0, currentRotationQuaternion, (byte)currentFov);
+   //             heatmapDelta = 0;
+			//}
 
 			//ShellViewModel.Instance.ClearDebugText();
 			//Vector2 v = GraphicTools.QuaternionToYawPitch(currentRotationQuaternion);

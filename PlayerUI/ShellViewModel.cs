@@ -111,7 +111,22 @@ namespace PlayerUI
 		Oculus.OculusPlayback oculusPlayback;
 		OSVRKit.OSVRPlayback osvrPlayback;
 		OpenVR.OpenVRPlayback openVRPlayback;
-		List<Headset> headsets;
+        Headset _currentHeadset = null;
+        public Headset CurrentHeadset {
+            get { return _currentHeadset; }
+            protected set {
+                if (value == _currentHeadset)
+                    return;
+                if(_currentHeadset != null)
+                    HeadsetDisable?.Invoke(_currentHeadset);
+                _currentHeadset = value;
+                if(_currentHeadset != null)
+                    HeadsetEnable?.Invoke(_currentHeadset);
+            }
+        }
+        public event Action<Headset> HeadsetDisable;
+        public event Action<Headset> HeadsetEnable;
+        List<Headset> headsets;
 
 		public ShellViewModel()
 		{
@@ -126,8 +141,9 @@ namespace PlayerUI
 			};
 
 			ShellViewModel.Instance = this;
+            ShellViewModel.OnInstantiated?.Invoke(this);
 
-			var currentParser = Parser.CreateTrigger;
+            var currentParser = Parser.CreateTrigger;
 			Parser.CreateTrigger = (target, triggerText) => ShortcutParser.CanParse(triggerText)
 																? ShortcutParser.CreateTrigger(triggerText)
 																: currentParser(target, triggerText);
@@ -729,6 +745,8 @@ namespace PlayerUI
 
                 Task.Factory.StartNew(() =>
 				{
+                    CurrentHeadset = null;
+
 					while (headsets.Any(h => h.Lock))
 					{
 						Thread.Sleep(50);
@@ -748,6 +766,7 @@ namespace PlayerUI
 							oculusPlayback.Configure(SelectedFileNameLabel, (float)_mediaDecoder.Duration);
 							oculusPlayback.Start();
 							ShellViewModel.SendEvent("headsetConnected", "oculus");
+                            CurrentHeadset = oculusPlayback;
 							return;
 						}
 						Notify("Oculus Rift not detected.");
@@ -768,7 +787,8 @@ namespace PlayerUI
 								openVRPlayback.Configure(SelectedFileNameLabel, (float)_mediaDecoder.Duration);
 								openVRPlayback.Start();
 								ShellViewModel.SendEvent("headsetConnected", "openvr");
-								return;
+                                CurrentHeadset = openVRPlayback;
+                                return;
 							}
 						}
 						catch (Exception e)
@@ -791,7 +811,8 @@ namespace PlayerUI
 							osvrPlayback.Configure(SelectedFileNameLabel, (float)_mediaDecoder.Duration);
 							osvrPlayback.Start();
 							ShellViewModel.SendEvent("headsetConnected", "osvr");
-							return;
+                            CurrentHeadset = osvrPlayback;
+                            return;
 						}
 						Notify("OSVR not detected.");
 						ShellViewModel.SendEvent("headsetError", "osvr");
@@ -1359,7 +1380,9 @@ namespace PlayerUI
 			get { return "Volume: " + (VolumeRocker.IsMuted ? "muted" : (Math.Round(VolumeRocker.Volume * 100) + "%")); }
 		}
 
-		public void VolumeMouseWheel(MouseWheelEventArgs e)
+        public static event Action<ShellViewModel> OnInstantiated;
+
+        public void VolumeMouseWheel(MouseWheelEventArgs e)
 		{
 			VolumeRocker.MouseWheel(e);
 			NotifyOfPropertyChange(() => VolumeTooltip);

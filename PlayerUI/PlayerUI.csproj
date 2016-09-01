@@ -330,6 +330,8 @@
     </Compile>
     <Compile Include="NotificationViewModel.cs" />
     <Compile Include="Oculus\EyeTexture.cs" />
+    <Compile Include="Statistics\LookListener.cs" />
+    <Compile Include="Statistics\ILookProvider.cs" />
     <Compile Include="Oculus\OculusPlayback.cs" />
     <Compile Include="OpenVR\OpenVRExtensions.cs" />
     <Compile Include="OpenVR\OpenVRPlayback.cs" />
@@ -350,7 +352,7 @@
     <Compile Include="SettingsWindowViewModel.cs" />
     <Compile Include="ShellViewModelRemote.cs" />
     <Compile Include="ShellViewModelUIBehaviours.cs" />
-    <Compile Include="Statistics\Heatmap.cs" />
+    <Compile Include="Statistics\LookHistory.cs" />
     <Compile Include="Streaming\PornhubParser.cs" />
     <Compile Include="Streaming\VrideoParser.cs" />
     <Compile Include="TestWindowView.xaml.cs">
@@ -387,6 +389,7 @@
     <Compile Include="WPF\DX11ImageSource.cs" />
     <Compile Include="WPF\EnabledFlowDocument.cs" />
     <Compile Include="WPF\GridLengthAnimation.cs" />
+    <Compile Include="WPF\IConfigurableScene.cs" />
     <Compile Include="WPF\InputBindingTrigger.cs" />
     <Compile Include="WPF\IScene.cs" />
     <Compile Include="WPF\MediaDecoder.cs" />

@@ -1,5 +1,6 @@
 ﻿using BivrostAnalytics;
 using Fleck;
+using PlayerUI.Statistics;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -151,15 +152,20 @@ namespace PlayerUI
 				}
 			});
 
+            lookListener = new LookListener();
 		}
 
-		~Logic()
+        LookListener lookListener;
+
+        ~Logic()
 		{
 			try
 			{
 				webSocketServer.Dispose();
 			}
 			catch (Exception) { }
+
+            lookListener.Dispose();
 		}
 
 		

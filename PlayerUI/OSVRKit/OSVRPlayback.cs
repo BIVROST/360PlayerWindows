@@ -81,8 +81,9 @@ namespace PlayerUI.OSVRKit
 
 		protected override float Gamma { get { return 1f; } }
 
+        public override string DescribeType { get { return "OSVR"; } }
 
-		override protected void Render()
+        override protected void Render()
 		{
 			Lock = true;
 
@@ -402,7 +403,10 @@ namespace PlayerUI.OSVRKit
 							if (vrui.isUIHidden)
 								vrui.SetWorldPosition(viewMatrix.Forward, viewPosition, true);
 
-							vrui.Draw(movieTitle, currentTime, duration);
+                            if (eye == 0)
+                                ProvideLook(viewPosition, viewerEyePose.rotation.ToQuaternion(), OSVRFOV);
+
+                               vrui.Draw(movieTitle, currentTime, duration);
 							vrui.Render(deltaTime, viewMatrix, projectionMatrix, viewPosition, pause);
 						}
 
@@ -450,6 +454,11 @@ namespace PlayerUI.OSVRKit
 		}
 
         public event Action OnGotFocus = delegate {};
+
+
+        public override event Action<Vector3, SharpDX.Quaternion, float> ProvideLook;
+
+        const float OSVRFOV = 90;
 
     }
 }

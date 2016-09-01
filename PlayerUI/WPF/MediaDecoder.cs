@@ -126,13 +126,14 @@ namespace PlayerUI
 
 		private static MediaDecoder _instance = null;
 		public static MediaDecoder Instance { get { return MediaDecoder._instance; } }
+        public static event Action<MediaDecoder> OnInstantiated;
 
 		private SharpDX.Direct3D11.Device _device;
 		private Factory _factory;
 		private FeatureLevel[] _levels = new FeatureLevel[] { FeatureLevel.Level_10_0 };
 		private DXGIDeviceManager _dxgiManager;
 
-		public event Action<bool> OnPlay = delegate { };
+		public event Action OnPlay = delegate { };
 		public event Action<double> OnReady = delegate { };
 		public event Action OnStop = delegate { };
 		public event Action OnEnded = delegate { };
@@ -185,7 +186,9 @@ namespace PlayerUI
 			IsPlaying = false;
 			Ready = false;
 			MediaDecoder._instance = this;
-			_initialized = false;
+            if (MediaDecoder.OnInstantiated != null)
+                MediaDecoder.OnInstantiated(this);
+            _initialized = false;
 
 			_factory = new SharpDX.DXGI.Factory();
 			_device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.BgraSupport | DeviceCreationFlags.VideoSupport, _levels);
@@ -285,7 +288,7 @@ namespace PlayerUI
 							break;
 
 						case MediaEngineEvent.Ended:
-							Console.WriteLine(string.Format("ENDED {0}, {1}", param1, param2));
+                            Console.WriteLine(string.Format("ENDED {0}, {1}", param1, param2));
 							OnEnded();
 							break;
                         case MediaEngineEvent.BufferingStarted:
@@ -326,8 +329,13 @@ namespace PlayerUI
 								//}
 							//});
 							break;
+
+                        case MediaEngineEvent.Playing:
+                            OnPlay?.Invoke();
+                            break;
+
                     }
-				};
+                };
 
 				_mediaEngineEx = _mediaEngine.QueryInterface<MediaEngineEx>();
 				_mediaEngineEx.EnableWindowlessSwapchainMode(true);
@@ -695,14 +703,16 @@ namespace PlayerUI
 
 				_initialized = false;	
 			}
-			
-		}
 
-		private FileStream fileStream;
+            OnStop?.Invoke();
+        }
+
+        private FileStream fileStream;
 		private Stream webStream;
 		private ByteStream stream;
 		private Uri url;
 		private string _fileName;
+        public string FileName { get { return _fileName; } }
 
 		public void LoadMedia(string fileName)
 		{

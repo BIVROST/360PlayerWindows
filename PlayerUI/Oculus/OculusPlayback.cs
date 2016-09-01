@@ -9,13 +9,17 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Device = SharpDX.Direct3D11.Device;
 using PlayerUI.Tools;
+using PlayerUI.Statistics;
 
 namespace PlayerUI.Oculus
 {
 	public class OculusPlayback : Headset
 	{
+        const byte OculusFOV = 75;
 
-		override public bool IsPresent()
+        public override event Action<Vector3, Quaternion, float> ProvideLook;
+
+        override public bool IsPresent()
 		{
 			if (Lock)
 				return true;
@@ -38,8 +42,9 @@ namespace PlayerUI.Oculus
 
 		protected override float Gamma { get { return 2.2f; } }
 
+        public override string DescribeType { get { return "Oculus"; } }
 
-		override protected void Render()
+        override protected void Render()
 		{
 			Lock = true;
 
@@ -306,6 +311,9 @@ namespace PlayerUI.Oculus
 								else
 									primitive.Draw(customEffectL);
 							}
+
+                            if (ProvideLook != null && eyeIndex == 0)
+                                ProvideLook(viewPosition, rotationQuaternion, OculusFOV);
 
 							// reset UI position every frame if it is not visible
 							if (vrui.isUIHidden)

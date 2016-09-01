@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading;
 
 namespace Bivrost.Log
@@ -70,30 +71,43 @@ namespace Bivrost.Log
 	}
 
 
-	/// <summary>
-	/// Writing to the console
-	/// </summary>
-	public class TraceLogListener : LogListener
-	{
-		public void Write(string time, LogType type, string msg, string path)
-		{
-			Trace.WriteLine(time + " at " + path, type.ToString());
+    /// <summary>
+    /// Writing to the console
+    /// </summary>
+    public class TraceLogListener : LogListener
+    {
+        public void Write(string time, LogType type, string msg, string path)
+        {
+            Trace.WriteLine(time + " at " + path, type.ToString());
             Trace.Indent();
             Trace.WriteLine(msg);
-			Trace.Unindent();
+            Trace.Unindent();
             Trace.WriteLine("");
             Trace.Flush();
-		}
-	}
+        }
+    }
+
+    /// <summary>
+    /// Writing to the console
+    /// </summary>
+    public class TraceLogMsgOnlyListener : LogListener
+    {
+        public void Write(string time, LogType type, string msg, string path)
+        {
+            Trace.WriteLine(msg);
+        }
+    }
 
 
-	/// <summary>
-	/// Writing to a text file
-	/// </summary>
-	public class TextFileLogListener : LogListener
+    /// <summary>
+    /// Writing to a text file
+    /// </summary>
+    public class TextFileLogListener : LogListener
 	{
+        private FileStream fp;
+        private UTF8Encoding encoding;
 
-		public string LogFile { get; protected set; }
+        public string LogFile { get; protected set; }
 
 
 		public TextFileLogListener(string logDirectory, string logPrefix = "log", string version = null)
@@ -109,33 +123,21 @@ namespace Bivrost.Log
 			LogFile = logDirectory + string.Format("{2}-{0}-{1}.txt", version, now, logPrefix);
 
 			Logger.Info("Log file: " + LogFile);
-		}
+            fp = new FileStream(LogFile, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
+            encoding = new System.Text.UTF8Encoding(false);
+        }
 
 
 		public void Write(string time, LogType type, string msg, string path)
 		{
-			lock (LogFile)
-			{
-				try
-				{
-					File.AppendAllText(
-						LogFile,
-						string.Format(
-                            "[{0}] {1} at {3}\r\n\t{2}\r\n\r\n",
-							type,
-							time,
-							msg.Trim().Replace("\r\n", "\r\n\t"),
-							path
-						)
-					);
-				}
-				catch (Exception e)
-				{
-					Console.Error.WriteLine("Error writing to text log: " + e);
-				}
-			}
-		}
-	}
+            byte[] buf = encoding.GetBytes($"[{type}] {time} at {path}\r\n\r\n{msg.Trim().Replace("\r\n", "\r\n\t")}\r\n");
+            lock (LogFile)
+            {
+                fp.Write(buf, 0, buf.Length);
+                fp.Flush();
+            }
+        }
+    }
 
 	#endregion
 
@@ -199,17 +201,7 @@ namespace Bivrost.Log
 		}
 
 
-		static HashSet<LogListener> listeners = new HashSet<LogListener>();
-		
-
-		public static LogListener[] LogListeners
-		{
-			get {
-				var r = new LogListener[listeners.Count];
-				listeners.CopyTo(r);
-				return r;
-			}
-		}
+		public static HashSet<LogListener> listeners = new HashSet<LogListener>();
 
 
 		static Thread thread;

@@ -70,7 +70,7 @@ namespace Bivrost.Log
 
 		private void OpenTxt(object sender, RoutedEventArgs e)
 		{
-			string f = (Logger.LogListeners.First(lw => lw is TextFileLogListener) as TextFileLogListener).LogFile;
+			string f = (Logger.listeners.First(lw => lw is TextFileLogListener) as TextFileLogListener).LogFile;
 			System.Diagnostics.Process.Start(f);
 		}
 	}

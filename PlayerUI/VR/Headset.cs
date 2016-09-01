@@ -1,7 +1,9 @@
-﻿using SharpDX.Direct3D11;
+﻿using PlayerUI.Statistics;
+using SharpDX.Direct3D11;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpDX;
 
 namespace PlayerUI
 {
@@ -13,8 +15,8 @@ namespace PlayerUI
 	}
 
 
-	public abstract class Headset
-	{
+	public abstract class Headset : ILookProvider
+    {
 		public Texture2D textureL;
 		public Texture2D textureR;
 		public bool _stereoVideo = false;
@@ -78,7 +80,6 @@ namespace PlayerUI
 			{
 				if (gammaShader == null)
 				{
-
 					string shaderSource = Properties.Resources.GammaShader;
 					SharpDX.Toolkit.Graphics.EffectCompiler compiler = new SharpDX.Toolkit.Graphics.EffectCompiler();
 					var shaderCode = compiler.Compile(shaderSource, "gamma shader", SharpDX.Toolkit.Graphics.EffectCompilerFlags.Debug | SharpDX.Toolkit.Graphics.EffectCompilerFlags.EnableBackwardsCompatibility | SharpDX.Toolkit.Graphics.EffectCompilerFlags.SkipOptimization);
@@ -137,9 +138,12 @@ namespace PlayerUI
 		protected SharpDX.Toolkit.Graphics.GraphicsDevice _gd;
 		protected Device _device;
 
-		abstract protected float Gamma { get; }
+        public abstract event Action<Vector3, Quaternion, float> ProvideLook;
 
-		protected void ResizeTexture(Texture2D tL, Texture2D tR)
+        abstract protected float Gamma { get; }
+        public abstract string DescribeType { get; }
+
+        protected void ResizeTexture(Texture2D tL, Texture2D tR)
 		{
 			if (MediaDecoder.Instance.TextureReleased) return;
 

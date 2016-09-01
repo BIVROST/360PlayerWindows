@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using PlayerUI.Tools;
 using System.Diagnostics;
 using System.ComponentModel;
+using Bivrost.Log;
 
 namespace PlayerUI.OpenVR
 {
@@ -26,7 +27,10 @@ namespace PlayerUI.OpenVR
 
 
 		bool dllsLoaded = false;
-		protected void EnsureDllsLoaded()
+
+        public override event Action<Vector3, Quaternion, float> ProvideLook;
+
+        protected void EnsureDllsLoaded()
 		{
 			if (dllsLoaded)
 				return;
@@ -60,8 +64,9 @@ namespace PlayerUI.OpenVR
 
 		protected override float Gamma { get { return 2.2f; } }
 
+        public override string DescribeType { get { return "OpenVR"; } }
 
-		protected override void Render()
+        protected override void Render()
 		{
 			EnsureDllsLoaded();
 
@@ -218,7 +223,7 @@ namespace PlayerUI.OpenVR
 
 
 						Matrix pm1 = Matrix.PerspectiveFovLH(fieldOfView * ((float)Math.PI / 180f), aspect, 0.001f, 100.0f);
-						Matrix pm2 = hmd.GetProjectionMatrix(eye, 0.001f, 100f, EGraphicsAPIConvention.API_DirectX).ToProjMatrix();
+						//Matrix pm2 = hmd.GetProjectionMatrix(eye, 0.001f, 100f, EGraphicsAPIConvention.API_DirectX).ToProjMatrix();
 
 						Matrix projectionMatrix = pm1;
 
@@ -244,8 +249,11 @@ namespace PlayerUI.OpenVR
 								primitive.Draw(customEffectL);
 						}
 
-						// reset UI position every frame if it is not visible
-						if (vrui.isUIHidden)
+                        if (eye == EVREye.Eye_Left)
+                            ProvideLook(viewPosition, rotationQuaternion, fieldOfView);
+
+                        // reset UI position every frame if it is not visible
+                        if (vrui.isUIHidden)
 							vrui.SetWorldPosition(viewMatrix.Forward, viewPosition, false);
 
 						vrui.Draw(movieTitle, currentTime, duration);
@@ -294,9 +302,9 @@ namespace PlayerUI.OpenVR
 					);
 
 					if (errorLeft != EVRCompositorError.None)
-						Console.WriteLine("VR Compositor failure (left): " + errorLeft);
+						Logger.Error("VR Compositor failure (left): " + errorLeft);
 					if (errorRight != EVRCompositorError.None)
-						Console.WriteLine("VR Compositor failure (right): " + errorRight);
+                        Logger.Error("VR Compositor failure (right): " + errorRight);
 				};
 
 				Valve.VR.OpenVR.Shutdown();
