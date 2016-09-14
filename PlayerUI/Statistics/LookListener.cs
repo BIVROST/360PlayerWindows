@@ -65,26 +65,18 @@ namespace PlayerUI.Statistics
             Info("ended history session " + filename);
             if (history == null)
                 return;
-            Info("http://tools.bivrost360.com/heatmap-viewer/?" + history.ToBase64());
-            SaveSession(Guid.NewGuid(), filename, startTime, DateTime.Now, history, lookProvider);
+            Info("https://tools.bivrost360.com/heatmap-viewer/?" + history.ToBase64());
+            Session session = new Session(Guid.NewGuid(), filename, startTime, DateTime.Now, history, lookProvider);
+            SaveSession(session);
+            //SendStatistics.Send(session);
             history = null;
         }
 
-        private void SaveSession(Guid id, string filename, DateTime start, DateTime end, LookHistory history, ILookProvider lookProvider)
+        private void SaveSession(Session session)
         {
             System.IO.File.WriteAllText(
-                $"{Logic.LocalDataDirectory}/session-{start.ToString("yyyy-MM-ddTHHmmss")}.log", 
-                JsonConvert.SerializeObject(new
-                {
-                    guid = id,
-                    uri = filename,
-                    sample_rate = history.SampleRate,
-                    installation_id = Logic.Instance.settings.InstallId,
-                    time_start = start.ToString("yyyy-MM-ddTHH:mm:sszzz"),
-                    time_end = end.ToString("yyyy-MM-ddTHH:mm:sszzz"),
-                    lookprovider = lookProvider.DescribeType,
-                    history = history.ToBase64()
-                })
+                $"{Logic.LocalDataDirectory}/session-{session.time_start.ToString("yyyy-MM-ddTHHmmss")}.360Session",
+                session.ToJson()
             );
         }
 

@@ -195,8 +195,9 @@ namespace Bivrost.Log
 			while (true)
 			{
                 LogElement e = logElementQueue.Take();				
-				foreach (var l in listeners)
-					l.Write(e.now, e.type, e.msg, e.path);
+                lock(listeners)
+				    foreach (var l in listeners)
+					    l.Write(e.now, e.type, e.msg, e.path);
 			}
 		}
 
@@ -226,22 +227,30 @@ namespace Bivrost.Log
 		}
 
 
-		public static void UnregisterListener(LogListener lw)
-		{
-			listeners.Remove(lw);
-			Info("Unregistered log writer: " + lw);
-		}
+        public static void UnregisterListener(LogListener lw)
+        {
+            lock (listeners)
+                listeners.Remove(lw);
+            Info("Unregistered log writer: " + lw);
+        }
 
 
-		/// <summary>
-		/// Use for registering degug information.
-		/// Not displayed on screen.
-		/// </summary>
-		/// <param name="msg">the message</param>
-		/// <param name="memberName">(automatically added) source code trace information</param>
-		/// <param name="sourceFilePath">(automatically added) source code trace information</param>
-		/// <param name="sourceLineNumber">(automatically added) source code trace information</param>
-		public static void Info(
+        public static void UnregisterListener(Predicate<LogListener> predicate)
+        {
+            lock (listeners)
+                Info("Unregistered " + listeners.RemoveWhere(predicate) + " log writes");
+        }
+
+
+        /// <summary>
+        /// Use for registering degug information.
+        /// Not displayed on screen.
+        /// </summary>
+        /// <param name="msg">the message</param>
+        /// <param name="memberName">(automatically added) source code trace information</param>
+        /// <param name="sourceFilePath">(automatically added) source code trace information</param>
+        /// <param name="sourceLineNumber">(automatically added) source code trace information</param>
+        public static void Info(
 			string msg, 
 			[CallerMemberName] string memberName = "",
 			[CallerFilePath] string sourceFilePath = "",

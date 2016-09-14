@@ -336,6 +336,10 @@
     <Compile Include="OpenVR\OpenVRExtensions.cs" />
     <Compile Include="OpenVR\OpenVRPlayback.cs" />
     <Compile Include="OpenVR\openvr_api.cs" />
+    <Compile Include="Statistics\SendStatistics.xaml.cs">
+      <DependentUpon>SendStatistics.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Statistics\Session.cs" />
     <Compile Include="Streaming\FacebookParser.cs" />
     <Compile Include="Streaming\LittlstarParser.cs" />
     <Compile Include="Streaming\URLParser.cs" />
@@ -467,6 +471,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="ShellView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Statistics\SendStatistics.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

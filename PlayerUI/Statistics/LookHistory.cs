@@ -52,7 +52,7 @@ namespace PlayerUI.Statistics
         private List<HeadPosition> data;
         private int precision;
 
-        public object SampleRate { get { return precision; } }
+        public int SampleRate { get { return precision; } }
 
         /// <summary>
         /// 
@@ -131,10 +131,10 @@ namespace PlayerUI.Statistics
 			return sb.ToString();
 		}
 
-        public static LookHistory FromBase64(string serialized)
-        {
-            throw new NotImplementedException();
-        }
+        //public static LookHistory FromBase64(string serialized)
+        //{
+        //    throw new NotImplementedException();
+        //}
 
 	}
 }
