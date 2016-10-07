@@ -165,8 +165,8 @@ namespace PlayerUI.Streaming
                     // is video or video+audio
                     if (vcodec != "none")
                     {
-                        int width = (int)format["width"];
-                        int height = (int)format["height"];
+                        int? width = (int?)format["width"];
+                        int? height = (int?)format["height"];
                         int? tbr = (int?)format["tbr"];
                         int? vbr = (int?)format["vbr"];
 
@@ -255,7 +255,8 @@ namespace PlayerUI.Streaming
                 }
                 catch(Exception e) when (!(e is StreamException))
                 {
-                    throw new StreamParsingFailed("Failed to parse youtube-dl downloaded youtube metadata", e);
+					//throw new StreamParsingFailed("Failed to parse youtube-dl downloaded youtube metadata", e);
+					Logger.Error("Failed to parse some of youtube-dl downloaded metadata:\n"+format.ToString()+"\n\n"+e);
                 }
 
             }

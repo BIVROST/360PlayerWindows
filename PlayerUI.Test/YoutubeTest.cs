@@ -47,13 +47,14 @@ namespace PlayerUI.Test
         [TestMethod]
         public void ShouldParseURI()
         {
-            // var result = parser.Parse("https://www.youtube.com/watch?v=RWYKrePZwkM");
+            var result = parser.Parse("https://www.youtube.com/watch?v=RWYKrePZwkM");
             // var result = parser.Parse("https://www.youtube.com/watch?v=h8mwhm0PoKc");
-            var result = parser.Parse("https://www.youtube.com/watch?v=hJPwn7o0K7c&index=1&list=PLU8wpH_LfhmvMokgsfQtiHNsP96bU7cnr");
-            ;
+            //var result = parser.Parse("https://www.youtube.com/watch?v=hJPwn7o0K7c&index=1&list=PLU8wpH_LfhmvMokgsfQtiHNsP96bU7cnr");
+            //;
         }
 
 
+        [TestMethod]
         public void CanParseMovieForUSOnly()
         {
             // ERROR: YouTube said: This video is available in United States only
