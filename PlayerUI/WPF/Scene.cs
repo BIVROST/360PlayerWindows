@@ -12,7 +12,7 @@
 	using System.Linq;
 	using System.Collections.Generic;
 	using SharpDX.XInput;
-
+	using Statistics;
 
 	public class Scene : IScene
     {
@@ -77,24 +77,23 @@
         public Controller xpad;
         Dictionary<GamepadButtonFlags, bool> buttonStates = new Dictionary<GamepadButtonFlags, bool>();
 
-		private OSVR.ClientKit.ClientContext context;
-		private OSVR.ClientKit.DisplayConfig displayConfig;
-		private bool useOSVR = false;
-		private bool overrideManual = false;
+		private bool UseVrLook {
+			get {
+				return vrHeadset != null && vrHeadset.LookRotation != null && !overrideManualVrLook;
+			}
+		}
+		public ILookProvider vrHeadset;
+		private bool overrideManualVrLook = false;
 
-        private Quaternion osvrQuaternion;
         public Quaternion GetCurrentLook()
         {
-            if(useOSVR && !overrideManual)
-            {
-                if (osvrQuaternion == null) return Quaternion.Identity;
-                return osvrQuaternion;
-            } else
-            {
-                if (currentRotationQuaternion == null) return Quaternion.Identity;
+            if(UseVrLook)
+				return vrHeadset.LookRotation;
+			else if (currentRotationQuaternion != null)
                 return currentRotationQuaternion;
-            }
-        }
+			else
+				return Quaternion.Identity;
+		}
 
         public Scene(Texture2D sharedTexture, MediaDecoder.ProjectionMode projection)
 		{
@@ -126,28 +125,6 @@
             return !GetKeyState(key);
         }
 
-		//public Vector2 MapCube(int index, Vector2 vector)
-		//{
-		//	Vector2 vector2;
-		//	if (index != 5)
-		//		vector2 = new Vector2(vector.X == 1 ? 0 : 1, vector.Y);
-		//	else
-		//		vector2 = new Vector2(vector.X, vector.Y == 1?0:1);
-
-		//	Dictionary<int, Vector4> map = new Dictionary<int, Vector4>();
-
-		//	map.Add(3, new Vector4(3f, 0f / 3f, 2f, 0f));
-		//	map.Add(2, new Vector4(3f, 1f / 3f, 2f, 0f));
-		//	map.Add(4, new Vector4(3f, 2f / 3f, 2f, 0f));
-		//	map.Add(5, new Vector4(3f, 0f / 3f, 2f, 1f / 2f));
-		//	map.Add(1, new Vector4(3f, 1f / 3f, 2f, 1f / 2f));
-		//	map.Add(0, new Vector4(3f, 2f / 3f, 2f, 1f / 2f));
-
-		//	return new Vector2(
-		//		vector2.X / map[index].X + map[index].Y,
-		//		vector2.Y / map[index].Z + map[index].W
-		//		);
-		//}
 
 		void ResizeTexture(Texture2D tL, Texture2D tR)
 		{
@@ -279,32 +256,32 @@
                 Console.WriteLine($"{dev.DeviceName} :: {dev.DeviceType}");
             });
 
-			useOSVR = Logic.Instance.settings.UserOSVRTracking;
-			if(useOSVR)
-			{
-				OSVR.ClientKit.ClientContext.PreloadNativeLibraries();
-				context = new OSVR.ClientKit.ClientContext("com.bivrost360.desktopplayer");
-				displayConfig = context.GetDisplayConfig();
-				for (int retry = 0; retry < 5; retry++)
-					if (displayConfig == null)
-						displayConfig = context.GetDisplayConfig();
-				if (displayConfig == null) return;
-				do
-				{
-					context.update();
-				} while (!displayConfig.CheckDisplayStartup());
-			}
+			//useOSVR = Logic.Instance.settings.UserOSVRTracking;
+			//if(useOSVR)
+			//{
+			//	OSVR.ClientKit.ClientContext.PreloadNativeLibraries();
+			//	context = new OSVR.ClientKit.ClientContext("com.bivrost360.desktopplayer");
+			//	displayConfig = context.GetDisplayConfig();
+			//	for (int retry = 0; retry < 5; retry++)
+			//		if (displayConfig == null)
+			//			displayConfig = context.GetDisplayConfig();
+			//	if (displayConfig == null) return;
+			//	do
+			//	{
+			//		context.update();
+			//	} while (!displayConfig.CheckDisplayStartup());
+			//}
 		}
 
-		public void SetLook(System.Tuple<float, float,float> euler)
-		{
-			remoteRotationOverride = true;
-			Quaternion q1 = Quaternion.RotationYawPitchRoll(MathUtil.DegreesToRadians(euler.Item2), 0, 0);
-			Quaternion q2 = Quaternion.RotationYawPitchRoll(0, MathUtil.DegreesToRadians(euler.Item1), 0);
-			Quaternion q3 = Quaternion.RotationYawPitchRoll(0, 0, MathUtil.DegreesToRadians(euler.Item3));
-			remoteRotation = Matrix.RotationQuaternion(q3 * (q2 * q1));
-			//remoteRotation = Matrix.RotationYawPitchRoll(MathUtil.DegreesToRadians(euler.Item2), MathUtil.DegreesToRadians(euler.Item1), MathUtil.DegreesToRadians(euler.Item3));
-		}
+		//public void SetLook(System.Tuple<float, float,float> euler)
+		//{
+		//	remoteRotationOverride = true;
+		//	Quaternion q1 = Quaternion.RotationYawPitchRoll(MathUtil.DegreesToRadians(euler.Item2), 0, 0);
+		//	Quaternion q2 = Quaternion.RotationYawPitchRoll(0, MathUtil.DegreesToRadians(euler.Item1), 0);
+		//	Quaternion q3 = Quaternion.RotationYawPitchRoll(0, 0, MathUtil.DegreesToRadians(euler.Item3));
+		//	remoteRotation = Matrix.RotationQuaternion(q3 * (q2 * q1));
+		//	//remoteRotation = Matrix.RotationYawPitchRoll(MathUtil.DegreesToRadians(euler.Item2), MathUtil.DegreesToRadians(euler.Item1), MathUtil.DegreesToRadians(euler.Item3));
+		//}
 
 		public void SetLook(System.Tuple<float,float,float,float> quat)
 		{
@@ -394,30 +371,16 @@
 
 			currentRotationQuaternion = Quaternion.Lerp(currentRotationQuaternion, targetRotationQuaternion, lerpSpeed * deltaTime);
 
-			if (useOSVR && !overrideManual)
-			{
-                try
-                {
-                    context.update();
-                    var viewerPose = displayConfig.GetViewerPose(0);
-                    Quaternion oq = new Quaternion(-(float)viewerPose.rotation.x, -(float)viewerPose.rotation.y, -(float)viewerPose.rotation.z, (float)viewerPose.rotation.w);
-                    osvrQuaternion = oq;
-                    viewMatrix = Matrix.RotationQuaternion(oq);
-                }
-                catch (Exception exc)
-                {
-                    Console.WriteLine("[EXC] " + exc.Message);
-                    Console.WriteLine("[EXC] " + exc.StackTrace);
-                    ;
-                    overrideManual = true;
-                }
-            }
-			else {
-				viewMatrix = Matrix.RotationQuaternion(currentRotationQuaternion);
-			}
+
+			//Console.WriteLine("")
+
+			if (UseVrLook)
+				currentRotationQuaternion = vrHeadset.LookRotation;
 
 			currentOffset = Lerp(currentOffset, littlePlanet ? -3f : 0f, deltaTime * 3f);
-            viewMatrix *= Matrix.Translation(0, 0, currentOffset);
+
+			viewMatrix = Matrix.RotationQuaternion(currentRotationQuaternion);
+			viewMatrix *= Matrix.Translation(0, 0, currentOffset);
 
 
 			//basicEffect.View = Matrix.Lerp(basicEffect.View, Matrix.RotationQuaternion(targetRotationQuaternion), 3f * deltaTime);
@@ -455,21 +418,6 @@
 			projectionMatrix = Matrix.PerspectiveFovRH((float)(currentFov * Math.PI / 180f), (float)16f / 9f, 0.0001f, 50.0f);
 
 
-			// rotation quaternion to heatmap directions
-			//heatmapDelta += deltaTime;
-			//if(heatmapDelta > 0.33333333f)
-			//{
-   //             heatmap.TrackData(0, currentRotationQuaternion, (byte)currentFov);
-   //             heatmapDelta = 0;
-			//}
-
-			//ShellViewModel.Instance.ClearDebugText();
-			//Vector2 v = GraphicTools.QuaternionToYawPitch(currentRotationQuaternion);
-			//var yawdeg = MathUtil.RadiansToDegrees(v.X);
-			//var pitchdeg = MathUtil.RadiansToDegrees(v.Y);
-			//ShellViewModel.Instance.AppendDebugText($"YAW:{yawdeg} \t\t PITCH:{pitchdeg}");
-			//ShellViewModel.Instance.UpdateDebugText();
-			//==========================================
 
 			if (xpad != null && xpad.IsConnected)
 			{
@@ -507,18 +455,13 @@
                     ResetFov();
                 }
 
-                if (useOSVR)
+                if (IsKeyDown(Key.T) && tUp)
                 {
-                    if (IsKeyDown(Key.T))
-                    {
-                        if (tUp)
-                        {
-                            overrideManual = !overrideManual;
-                            tUp = false;
-                        }
-                    }
-                    if (IsKeyUp(Key.T)) tUp = true;
+                    overrideManualVrLook = !overrideManualVrLook;
+                    tUp = false;
                 }
+                if (IsKeyUp(Key.T))
+					tUp = true;
 
                 if (projectionMode == MediaDecoder.ProjectionMode.Sphere)
                 {
@@ -562,5 +505,14 @@
 			return value1 + (value2 - value1) * amount;
         }
 
-    }
+		internal void HeadsetEnabled(Headset headset)
+		{
+			vrHeadset = headset;
+		}
+
+		internal void HeadsetDisabled(Headset headset)
+		{
+			vrHeadset = null;
+		}
+	}
 }

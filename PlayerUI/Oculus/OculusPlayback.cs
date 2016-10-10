@@ -42,9 +42,19 @@ namespace PlayerUI.Oculus
 
 		protected override float Gamma { get { return 2.2f; } }
 
-        public override string DescribeType { get { return "Oculus"; } }
 
-        override protected void Render()
+
+		#region ILookProvider properties
+		public override string DescribeType { get { return "Oculus"; } }
+		Vector3 lookPosition;
+		Quaternion lookRotation;
+
+		public override Vector3 LookPosition { get { return lookPosition; } }
+		public override Quaternion LookRotation { get { return lookRotation; } }
+		public override float LookFov { get { return OculusFOV; } }
+		#endregion
+
+		override protected void Render()
 		{
 			Lock = true;
 
@@ -275,22 +285,22 @@ namespace PlayerUI.Oculus
 
 
 							// Retrieve the eye rotation quaternion and use it to calculate the LookAt direction and the LookUp direction.
-							Quaternion rotationQuaternion = SharpDXHelpers.ToQuaternion(eyePoses[eyeIndex].Orientation);
-							rotationQuaternion = new Quaternion(1, 0, 0, 0) * rotationQuaternion;
-							Matrix rotationMatrix = Matrix.RotationQuaternion(rotationQuaternion);
+							lookRotation = SharpDXHelpers.ToQuaternion(eyePoses[eyeIndex].Orientation);
+							lookRotation = new Quaternion(1, 0, 0, 0) * lookRotation;
+							Matrix rotationMatrix = Matrix.RotationQuaternion(lookRotation);
 							Vector3 lookUp = Vector3.Transform(new Vector3(0, -1, 0), rotationMatrix).ToVector3();
 							Vector3 lookAt = Vector3.Transform(new Vector3(0, 0, 1), rotationMatrix).ToVector3();
 
 							//Vector3 eyeDiff = eyePoses[eyeIndex].Position.ToVector3() - eyePoses[1 - eyeIndex].Position.ToVector3();
-							Vector3 viewPosition = new Vector3(
+							lookPosition = new Vector3(
 								-eyePoses[eyeIndex].Position.X,
 								eyePoses[eyeIndex].Position.Y,
 								eyePoses[eyeIndex].Position.Z
 							);
 
-							Matrix worldMatrix = Matrix.Translation(viewPosition);
+							Matrix worldMatrix = Matrix.Translation(lookPosition);
 
-							Matrix viewMatrix = Matrix.LookAtLH(viewPosition, viewPosition + lookAt, lookUp);
+							Matrix viewMatrix = Matrix.LookAtLH(lookPosition, lookPosition + lookAt, lookUp);
 
 							Matrix projectionMatrix = oculus.Matrix4f_Projection(eyeTexture.FieldOfView, 0.1f, 100.0f, OVRTypes.ProjectionModifier.LeftHanded).ToMatrix();
 							projectionMatrix.Transpose();
@@ -313,14 +323,14 @@ namespace PlayerUI.Oculus
 							}
 
                             if (ProvideLook != null && eyeIndex == 0)
-                                ProvideLook(viewPosition, rotationQuaternion, OculusFOV);
+                                ProvideLook(LookPosition, LookRotation, LookFov);
 
 							// reset UI position every frame if it is not visible
 							if (vrui.isUIHidden)
-								vrui.SetWorldPosition(viewMatrix.Forward, viewPosition, false);
+								vrui.SetWorldPosition(viewMatrix.Forward, lookPosition, false);
 
 							vrui.Draw(movieTitle, currentTime, duration);
-							vrui.Render(deltaTime, viewMatrix, projectionMatrix, viewPosition, pause);
+							vrui.Render(deltaTime, viewMatrix, projectionMatrix, lookPosition, pause);
 
 							// Commits any pending changes to the TextureSwapChain, and advances its current index
 							AssertSuccess(eyeTexture.SwapTextureSet.Commit(), oculus, "Failed to commit the swap chain texture.");

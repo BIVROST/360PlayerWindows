@@ -81,9 +81,17 @@ namespace PlayerUI.OSVRKit
 
 		protected override float Gamma { get { return 1f; } }
 
-        public override string DescribeType { get { return "OSVR"; } }
+		#region ILookProvider properties
+		public override string DescribeType { get { return "OSVR"; } }
+		Vector3 lookPosition;
+		SharpDX.Quaternion lookRotation;
 
-        override protected void Render()
+		public override Vector3 LookPosition { get { return lookPosition; } }
+		public override SharpDX.Quaternion LookRotation { get { return lookRotation; } }
+		public override float LookFov { get { return OSVRFOV; } }
+		#endregion
+
+		override protected void Render()
 		{
 			Lock = true;
 
@@ -371,16 +379,17 @@ namespace PlayerUI.OSVRKit
 							ViewportF vp = new ViewportF(viewport.Left, viewport.Bottom, viewport.Width, viewport.Height);
 							immediateContext.Rasterizer.SetViewport(vp);
 
-							Vector3 viewPosition = viewerEyePose.translation.ToVector3();
+							lookPosition = viewerEyePose.translation.ToVector3();
 
-							Matrix rotationMatrix = Matrix.RotationQuaternion(viewerEyePose.rotation.ToQuaternion());
+							lookRotation = viewerEyePose.rotation.ToQuaternion();
+							Matrix rotationMatrix = Matrix.RotationQuaternion(lookRotation);
 							Vector3 lookUp = Vector3.Transform(new Vector3(0, 1, 0), rotationMatrix).ToVector3();
 							Vector3 lookAt = Vector3.Transform(new Vector3(0, 0, -1), rotationMatrix).ToVector3();
-							Matrix viewMatrix = Matrix.LookAtRH(viewPosition, viewPosition + lookAt, lookUp);
+							Matrix viewMatrix = Matrix.LookAtRH(lookPosition, lookPosition + lookAt, lookUp);
 
 							Matrix projectionMatrix = projectionf.ToMatrix();
 
-							Matrix worldMatrix = Matrix.Translation(viewPosition);
+							Matrix worldMatrix = Matrix.Translation(lookPosition);
 
 							Matrix MVP = worldMatrix * viewMatrix * projectionMatrix;
 							customEffectL.Parameters["WorldViewProj"].SetValue(MVP);
@@ -401,13 +410,13 @@ namespace PlayerUI.OSVRKit
 
 							// reset UI position every frame if it is not visible
 							if (vrui.isUIHidden)
-								vrui.SetWorldPosition(viewMatrix.Forward, viewPosition, true);
+								vrui.SetWorldPosition(viewMatrix.Forward, lookPosition, true);
 
                             if (eye == 0)
-                                ProvideLook(viewPosition, viewerEyePose.rotation.ToQuaternion(), OSVRFOV);
+                                ProvideLook(lookPosition, lookRotation, OSVRFOV);
 
                                vrui.Draw(movieTitle, currentTime, duration);
-							vrui.Render(deltaTime, viewMatrix, projectionMatrix, viewPosition, pause);
+							vrui.Render(deltaTime, viewMatrix, projectionMatrix, lookPosition, pause);
 						}
 
 

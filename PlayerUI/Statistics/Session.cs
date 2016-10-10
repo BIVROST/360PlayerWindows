@@ -26,7 +26,7 @@ namespace PlayerUI.Statistics
             installation_id = Logic.Instance.settings.InstallId;
             time_start = start;
             time_end = end;
-            lookprovider = lookProvider.DescribeType;
+            lookprovider = lookProvider?.DescribeType;
             this.history = history.ToBase64();
         }
 

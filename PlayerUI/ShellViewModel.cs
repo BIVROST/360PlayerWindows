@@ -122,7 +122,7 @@ namespace PlayerUI
                 _currentHeadset = value;
                 if(_currentHeadset != null)
                     HeadsetEnable?.Invoke(_currentHeadset);
-            }
+			}
         }
         public event Action<Headset> HeadsetDisable;
         public event Action<Headset> HeadsetEnable;
@@ -738,12 +738,16 @@ namespace PlayerUI
 					this.DXCanvas.Visibility = Visibility.Visible;
 				});
 
-                this.DXCanvas.Scene = new Scene(_mediaDecoder.TextureL, _mediaDecoder.Projection) { xpad = this.xpad };
+				var scene = new Scene(_mediaDecoder.TextureL, _mediaDecoder.Projection) { xpad = this.xpad };
+				this.DXCanvas.Scene = scene;
                 this.DXCanvas.StartRendering();
 
+				HeadsetEnable += scene.HeadsetEnabled;
+				HeadsetDisable += scene.HeadsetDisabled;
 
 
-                Task.Factory.StartNew(() =>
+
+				Task.Factory.StartNew(() =>
 				{
                     CurrentHeadset = null;
 
