@@ -83,12 +83,6 @@ namespace PlayerUI.OSVRKit
 
 		#region ILookProvider properties
 		public override string DescribeType { get { return "OSVR"; } }
-		Vector3 lookPosition;
-		SharpDX.Quaternion lookRotation;
-
-		public override Vector3 LookPosition { get { return lookPosition; } }
-		public override SharpDX.Quaternion LookRotation { get { return lookRotation; } }
-		public override float LookFov { get { return OSVRFOV; } }
 		#endregion
 
 		override protected void Render()
@@ -379,9 +373,9 @@ namespace PlayerUI.OSVRKit
 							ViewportF vp = new ViewportF(viewport.Left, viewport.Bottom, viewport.Width, viewport.Height);
 							immediateContext.Rasterizer.SetViewport(vp);
 
-							lookPosition = viewerEyePose.translation.ToVector3();
+							Vector3 lookPosition = viewerEyePose.translation.ToVector3();
 
-							lookRotation = viewerEyePose.rotation.ToQuaternion();
+							SharpDX.Quaternion lookRotation = viewerEyePose.rotation.ToQuaternion();
 							Matrix rotationMatrix = Matrix.RotationQuaternion(lookRotation);
 							Vector3 lookUp = Vector3.Transform(new Vector3(0, 1, 0), rotationMatrix).ToVector3();
 							Vector3 lookAt = Vector3.Transform(new Vector3(0, 0, -1), rotationMatrix).ToVector3();
@@ -415,7 +409,7 @@ namespace PlayerUI.OSVRKit
                             if (eye == 0)
                                 ProvideLook(lookPosition, lookRotation, OSVRFOV);
 
-                               vrui.Draw(movieTitle, currentTime, duration);
+                            vrui.Draw(movieTitle, currentTime, duration);
 							vrui.Render(deltaTime, viewMatrix, projectionMatrix, lookPosition, pause);
 						}
 

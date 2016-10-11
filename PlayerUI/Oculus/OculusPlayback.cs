@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using Device = SharpDX.Direct3D11.Device;
 using PlayerUI.Tools;
 using PlayerUI.Statistics;
+using Bivrost.Log;
 
 namespace PlayerUI.Oculus
 {
@@ -17,7 +18,6 @@ namespace PlayerUI.Oculus
 	{
         const byte OculusFOV = 75;
 
-        public override event Action<Vector3, Quaternion, float> ProvideLook;
 
         override public bool IsPresent()
 		{
@@ -25,7 +25,10 @@ namespace PlayerUI.Oculus
 				return true;
 
 			using (Wrap oculus = new Wrap()) {
-				bool success = oculus.Initialize();
+				OVRTypes.InitParams initializationParameters = new OVRTypes.InitParams();
+				initializationParameters.Flags = OVRTypes.InitFlags.RequestVersion;
+
+				bool success = oculus.Initialize(initializationParameters);
 
 				if (!success)
 					return false;
@@ -45,13 +48,8 @@ namespace PlayerUI.Oculus
 
 
 		#region ILookProvider properties
+		public override event Action<Vector3, Quaternion, float> ProvideLook;
 		public override string DescribeType { get { return "Oculus"; } }
-		Vector3 lookPosition;
-		Quaternion lookRotation;
-
-		public override Vector3 LookPosition { get { return lookPosition; } }
-		public override Quaternion LookRotation { get { return lookRotation; } }
-		public override float LookFov { get { return OculusFOV; } }
 		#endregion
 
 		override protected void Render()
@@ -60,8 +58,11 @@ namespace PlayerUI.Oculus
 
 			using (Wrap oculus = new Wrap())
 			{
+				OVRTypes.InitParams initializationParameters = new OVRTypes.InitParams();
+				initializationParameters.Flags = OVRTypes.InitFlags.RequestVersion;
+
 				// Initialize the Oculus runtime.
-				if (!oculus.Initialize())
+				if (!oculus.Initialize(initializationParameters))
 					throw new HeadsetError("Failed to initialize the Oculus runtime library.");
 
 				OVRTypes.GraphicsLuid graphicsLuid;
@@ -285,14 +286,14 @@ namespace PlayerUI.Oculus
 
 
 							// Retrieve the eye rotation quaternion and use it to calculate the LookAt direction and the LookUp direction.
-							lookRotation = SharpDXHelpers.ToQuaternion(eyePoses[eyeIndex].Orientation);
+							Quaternion lookRotation = SharpDXHelpers.ToQuaternion(eyePoses[eyeIndex].Orientation);
 							lookRotation = new Quaternion(1, 0, 0, 0) * lookRotation;
 							Matrix rotationMatrix = Matrix.RotationQuaternion(lookRotation);
 							Vector3 lookUp = Vector3.Transform(new Vector3(0, -1, 0), rotationMatrix).ToVector3();
 							Vector3 lookAt = Vector3.Transform(new Vector3(0, 0, 1), rotationMatrix).ToVector3();
 
 							//Vector3 eyeDiff = eyePoses[eyeIndex].Position.ToVector3() - eyePoses[1 - eyeIndex].Position.ToVector3();
-							lookPosition = new Vector3(
+							Vector3 lookPosition = new Vector3(
 								-eyePoses[eyeIndex].Position.X,
 								eyePoses[eyeIndex].Position.Y,
 								eyePoses[eyeIndex].Position.Z
@@ -322,12 +323,31 @@ namespace PlayerUI.Oculus
 									primitive.Draw(customEffectL);
 							}
 
-                            if (ProvideLook != null && eyeIndex == 0)
-                                ProvideLook(LookPosition, LookRotation, LookFov);
+							if (ProvideLook != null && eyeIndex == 0)
+							{
+                                lookRotation.Invert();
+                                lookRotation = lookRotation * new Quaternion(1, 0, 0, 0);   // rotate 180 in x
+
+                                Vector3 forward = Vector3.Transform(Vector3.ForwardRH, lookRotation);
+                                Vector3 up = Vector3.Transform(Vector3.Up, lookRotation);
+
+                                Logger.Publish("oculus.forward", forward.ToString("0.00"));
+                                Logger.Publish("oculus.up", up.ToString("0.00"));
+                                Logger.Publish("oculus.lookAt", lookAt.ToString("0.00"));
+                                Logger.Publish("oculus.lookUp", lookUp.ToString("0.00"));
+                                Logger.Publish("oculus.vr_quat", lookRotation);
+
+
+                                //ProvideLook(lookPosition, lookRotation, OculusFOV);
+                                //ProvideLook(new Vector3(lookRotation.X, lookRotation.Y, lookRotation.Z), lookRotation, lookRotation.W);
+                                ProvideLook(lookPosition, lookRotation, OculusFOV);
+								Logger.Publish("q.sent", lookRotation);
+							}
 
 							// reset UI position every frame if it is not visible
 							if (vrui.isUIHidden)
 								vrui.SetWorldPosition(viewMatrix.Forward, lookPosition, false);
+
 
 							vrui.Draw(movieTitle, currentTime, duration);
 							vrui.Render(deltaTime, viewMatrix, projectionMatrix, lookPosition, pause);

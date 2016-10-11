@@ -103,10 +103,10 @@ namespace PlayerUI.Statistics
         //Stopwatch hpls = new Stopwatch();
         private void HandleProvideLook(SharpDX.Vector3 position, SharpDX.Quaternion rotation, float fov)
         {
-            history?.TrackData((float)MediaTime, rotation, (byte)fov);
-            //Info($"{hpls.ElapsedMilliseconds:0000}   {_lastMediaTime:000.0000} + {_mediaTimeDelta.Elapsed.TotalSeconds:000.0000} = {_lastMediaTime + _mediaTimeDelta.Elapsed.TotalSeconds:000.0000}");
-            //hpls.Restart();
-        }
+			history?.TrackData((float)MediaTime, rotation, (byte)fov);
+			//Info($"{hpls.ElapsedMilliseconds:0000}   {_lastMediaTime:000.0000} + {_mediaTimeDelta.Elapsed.TotalSeconds:000.0000} = {_lastMediaTime + _mediaTimeDelta.Elapsed.TotalSeconds:000.0000}");
+			//hpls.Restart();
+		}
 
         public void Dispose()
         {

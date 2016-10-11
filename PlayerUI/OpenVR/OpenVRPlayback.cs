@@ -28,8 +28,6 @@ namespace PlayerUI.OpenVR
 
 		bool dllsLoaded = false;
 
-        public override event Action<Vector3, Quaternion, float> ProvideLook;
-
         protected void EnsureDllsLoaded()
 		{
 			if (dllsLoaded)
@@ -67,13 +65,8 @@ namespace PlayerUI.OpenVR
 
 		#region ILookProvider properties
 		public override string DescribeType { get { return "OpenVR"; } }
-		Vector3 lookPosition;
-		Quaternion lookRotation;
+		public override event Action<Vector3, Quaternion, float> ProvideLook;
 
-		public override Vector3 LookPosition { get { return lookPosition; } }
-		public override SharpDX.Quaternion LookRotation { get { return lookRotation; } }
-		float lookFov;
-		public override float LookFov { get { return lookFov; } }
 		#endregion
 
 
@@ -120,7 +113,7 @@ namespace PlayerUI.OpenVR
 			textureBounds[1].vMax = 0.5f - 0.5f * r_top / tanHalfFov.Y;
 
 			float aspect = tanHalfFov.X / tanHalfFov.Y;
-			lookFov = (float)(2.0f * Math.Atan(tanHalfFov.Y) * 180 / Math.PI);
+			float lookFov = (float)(2.0f * Math.Atan(tanHalfFov.Y) * 180 / Math.PI);
 
 
 			Texture2DDescription eyeTextureDescription = new Texture2DDescription()
@@ -220,20 +213,19 @@ namespace PlayerUI.OpenVR
 						context.ClearRenderTargetView(currentEyeView, Color.Black);
 						context.Rasterizer.SetViewport(new Viewport(0, 0, (int)targetWidth, (int)targetHeight, 0.0f, 1.0f));
 
-						//Quaternion lookRotation; // = pose.mDeviceToAbsoluteTracking.GetRotation();
-						//Vector3 lookPosition; // = pose.mDeviceToAbsoluteTracking.GetPosition();
+						Quaternion lookRotation; // = pose.mDeviceToAbsoluteTracking.GetRotation();
+						Vector3 lookPosition; // = pose.mDeviceToAbsoluteTracking.GetPosition();
 						Vector3 scale;
 						Matrix eyePose = hmd.GetEyeToHeadTransform(eye).RebuildTRSMatrix() * pose.mDeviceToAbsoluteTracking.RebuildTRSMatrix();
 						eyePose.Decompose(out scale, out lookRotation, out lookPosition);
 
 						Matrix rotationMatrix = Matrix.RotationQuaternion(lookRotation);
-						Vector3 lookUp = Vector3.Transform(new Vector3(0, 1, 0), rotationMatrix).ToVector3();
-						Vector3 lookAt = Vector3.Transform(new Vector3(0, 0, -1), rotationMatrix).ToVector3();
+						Vector3 lookUp = Vector3.Transform(Vector3.Up, rotationMatrix).ToVector3();
+						Vector3 lookAt = Vector3.Transform(Vector3.ForwardRH, rotationMatrix).ToVector3();
 
-						//Console.WriteLine($"up: {lookUp:00.00} at: {lookAt:00.00} position:{lookPosition:00.00}");
+						//Console.WriteLine($"OpenVR {eye} up: {lookUp:00.00} at: {lookAt:00.00} position:{lookPosition:00.00}");
 
 						Matrix viewMatrix = Matrix.LookAtRH(lookPosition, lookPosition + lookAt, lookUp);
-
 
 						Matrix pm1 = Matrix.PerspectiveFovLH(lookFov * ((float)Math.PI / 180f), aspect, 0.001f, 100.0f);
 						//Matrix pm2 = hmd.GetProjectionMatrix(eye, 0.001f, 100f, EGraphicsAPIConvention.API_DirectX).ToProjMatrix();
@@ -262,8 +254,11 @@ namespace PlayerUI.OpenVR
 								primitive.Draw(customEffectL);
 						}
 
-                        if (eye == EVREye.Eye_Left)
-                            ProvideLook(lookPosition, lookRotation, lookFov);
+						if (eye == EVREye.Eye_Left)
+						{
+							// TODO: normalize
+							ProvideLook(lookPosition, Quaternion.LookAtRH(lookPosition, lookPosition+lookAt, lookUp), lookFov);
+						}
 
                         // reset UI position every frame if it is not visible
                         if (vrui.isUIHidden)

@@ -13,6 +13,7 @@
 	using System.Collections.Generic;
 	using SharpDX.XInput;
 	using Statistics;
+	using Bivrost.Log;
 
 	public class Scene : IScene
     {
@@ -77,18 +78,31 @@
         public Controller xpad;
         Dictionary<GamepadButtonFlags, bool> buttonStates = new Dictionary<GamepadButtonFlags, bool>();
 
-		private bool UseVrLook {
-			get {
-				return vrHeadset != null && vrHeadset.LookRotation != null && !overrideManualVrLook;
-			}
+
+		#region ILookProvider integration
+
+		private Quaternion headsetLookRotation;
+
+		private bool UseVrLook
+		{
+			get { return headsetLookRotation != null && !overrideManualVrLook; }
 		}
-		public ILookProvider vrHeadset;
+
 		private bool overrideManualVrLook = false;
 
-        public Quaternion GetCurrentLook()
+
+		internal void HeadsetEnabled(Headset headset) { headset.ProvideLook += Headset_ProvideLook; Logger.Publish("headset", headset.DescribeType); }
+
+		private void Headset_ProvideLook(Vector3 pos, Quaternion rot, float fov) { headsetLookRotation = rot; Logger.Publish("q.recv", rot); }
+
+		internal void HeadsetDisabled(Headset headset) { headset.ProvideLook -= Headset_ProvideLook; Logger.Publish("headset", null); }
+		#endregion
+
+
+		public Quaternion GetCurrentLook()
         {
             if(UseVrLook)
-				return vrHeadset.LookRotation;
+				return headsetLookRotation;
 			else if (currentRotationQuaternion != null)
                 return currentRotationQuaternion;
 			else
@@ -124,6 +138,12 @@
         {
             return !GetKeyState(key);
         }
+
+
+		public void Dupuj(Quaternion q)
+		{
+			q.Normalize();
+		}
 
 
 		void ResizeTexture(Texture2D tL, Texture2D tR)
@@ -372,15 +392,39 @@
 			currentRotationQuaternion = Quaternion.Lerp(currentRotationQuaternion, targetRotationQuaternion, lerpSpeed * deltaTime);
 
 
+
+
 			//Console.WriteLine("")
 
 			if (UseVrLook)
-				currentRotationQuaternion = vrHeadset.LookRotation;
+				currentRotationQuaternion = headsetLookRotation;
 
 			currentOffset = Lerp(currentOffset, littlePlanet ? -3f : 0f, deltaTime * 3f);
 
-			viewMatrix = Matrix.RotationQuaternion(currentRotationQuaternion);
-			viewMatrix *= Matrix.Translation(0, 0, currentOffset);
+			viewMatrix = Matrix.Translation(0, 0, currentOffset);
+			viewMatrix *= Matrix.RotationQuaternion(currentRotationQuaternion);
+
+			Vector3 lookUp = Vector3.Transform(Vector3.Up, viewMatrix).ToVector3();
+			Vector3 lookAt = Vector3.Transform(Vector3.ForwardRH, viewMatrix).ToVector3();
+
+			//Console.WriteLine($"SCENE: up: {lookUp:00.00}|{Vector3.Transform(Vector3.Up, currentRotationQuaternion):00.00} at: {lookAt:00.00}|{Vector3.Transform(Vector3.ForwardRH, currentRotationQuaternion):00.00}");
+
+			Logger.Publish("scene.forward", lookAt.ToString("0.00"));
+			Logger.Publish("scene.up", lookUp.ToString("0.00"));
+			Logger.Publish("scene.vr_quat", headsetLookRotation);
+
+
+			//Quaternion q = new Quaternion(headsetLookRotation.X, headsetLookRotation.Y, headsetLookRotation.Z, headsetLookRotation.W);
+			//Quaternion q2 = q;
+			//q.X = 666;
+			//;
+			
+
+			//Logger.Publish("q1", q.ToString());
+			//GraphicTools.QuaternionToYawPitch(q);
+			//Logger.Publish("q2", q.ToString());
+
+
 
 
 			//basicEffect.View = Matrix.Lerp(basicEffect.View, Matrix.RotationQuaternion(targetRotationQuaternion), 3f * deltaTime);
@@ -389,20 +433,20 @@
 
 		}
 
-        //public void ButtonOnce(State padState, GamepadButtonFlags button, Action buttonAction)
-        //{
-        //    if(!buttonStates.ContainsKey(button))
-        //        buttonStates.Add(button, false);
-        //    if (padState.Gamepad.Buttons == button)
-        //    {
-        //        if(!buttonStates[button])
-        //        {
-        //            buttonStates[button] = true;
-        //            buttonAction();
-        //        }
-        //    }
-        //    else buttonStates[button] = false;
-        //}
+		//public void ButtonOnce(State padState, GamepadButtonFlags button, Action buttonAction)
+		//{
+		//    if(!buttonStates.ContainsKey(button))
+		//        buttonStates.Add(button, false);
+		//    if (padState.Gamepad.Buttons == button)
+		//    {
+		//        if(!buttonStates[button])
+		//        {
+		//            buttonStates[button] = true;
+		//            buttonAction();
+		//        }
+		//    }
+		//    else buttonStates[button] = false;
+		//}
 
 		void IScene.Render()
         {
@@ -505,14 +549,5 @@
 			return value1 + (value2 - value1) * amount;
         }
 
-		internal void HeadsetEnabled(Headset headset)
-		{
-			vrHeadset = headset;
-		}
-
-		internal void HeadsetDisabled(Headset headset)
-		{
-			vrHeadset = null;
-		}
 	}
 }

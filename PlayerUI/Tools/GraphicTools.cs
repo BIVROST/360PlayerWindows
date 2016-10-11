@@ -192,8 +192,12 @@ namespace PlayerUI.Tools
 			return QuaternionToYawPitch(new Quaternion(-ovrQuatf.X, -ovrQuatf.Y, -ovrQuatf.Z, ovrQuatf.W));
 		}
 
-		public static Vector2 QuaternionToYawPitch(Quaternion q)
-		{			
+		public static Vector2 QuaternionToYawPitch(Quaternion qVeryWTF)
+		{
+            // visual studio compiler bug? 
+            // without this the parameter quaternion is modified by line #208 and this change persists in the calling scope... sometimes
+            Quaternion q = new Quaternion(qVeryWTF.X, qVeryWTF.Y, qVeryWTF.Z, qVeryWTF.W);
+
 			q.Normalize();
 
 			var x = 0f;

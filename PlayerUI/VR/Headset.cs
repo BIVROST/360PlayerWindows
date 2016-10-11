@@ -142,9 +142,6 @@ namespace PlayerUI
 
         abstract protected float Gamma { get; }
         public abstract string DescribeType { get; }
-		public abstract Vector3 LookPosition { get; }
-		public abstract Quaternion LookRotation { get; }
-		public abstract float LookFov { get; }
 
 		protected void ResizeTexture(Texture2D tL, Texture2D tR)
 		{
