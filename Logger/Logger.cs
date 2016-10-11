@@ -344,6 +344,12 @@ namespace Bivrost.Log
 		}
 
 
+		internal static ConcurrentDictionary<string, object> published = new ConcurrentDictionary<string, object>();
+		public static void Publish(string key, object value) {
+			published[key] = value;
+		}
+
+
 		static Logger()
 		{
 			RegisterListener(new TraceLogListener());

@@ -6,22 +6,49 @@
         xmlns:local="clr-namespace:Bivrost.Log"
         mc:Ignorable="d"
         Title="360Player Log" Height="600" Width="400">
-	<Grid>
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition />
-			<ColumnDefinition />
-			<ColumnDefinition />
-		</Grid.ColumnDefinitions>
-		<Grid.RowDefinitions>
-			<RowDefinition />
-			<RowDefinition Height="Auto" />
-		</Grid.RowDefinitions>
-		<ScrollViewer Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Name="ScrollViewer">
-			<TextBox Name="Contents" IsReadOnly="True" TextWrapping="Wrap" />
-		</ScrollViewer>
-		<CheckBox Unchecked="UpdateFollow" Checked="UpdateFollow" Grid.Row="1" Grid.Column="0" Content="follow output" VerticalAlignment="Center" Margin="4" IsChecked="True" Name="Follow"/>
-		<Button Click="Clear" Content="clear" Grid.Column="1" Grid.Row="1" VerticalAlignment="Center" Margin="4"/>
-		<Button Click="OpenTxt" Content="open file" Grid.Column="2" Grid.Row="1" VerticalAlignment="Center" Margin="4"/>
 
-	</Grid>
+	<TabControl x:Name="Tabs">
+		<TabItem Header="Event log">
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition />
+					<ColumnDefinition />
+					<ColumnDefinition />
+				</Grid.ColumnDefinitions>
+				<Grid.RowDefinitions>
+					<RowDefinition />
+					<RowDefinition Height="Auto" />
+				</Grid.RowDefinitions>
+				<ScrollViewer Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Name="ScrollViewer">
+					<TextBox Name="Contents" IsReadOnly="True" TextWrapping="Wrap" />
+				</ScrollViewer>
+				<CheckBox Unchecked="UpdateFollow" Checked="UpdateFollow" Grid.Row="1" Grid.Column="0" Content="follow output" VerticalAlignment="Center" Margin="4" IsChecked="True" Name="Follow"/>
+				<Button Click="Clear" Content="clear" Grid.Column="1" Grid.Row="1" VerticalAlignment="Center" Margin="4"/>
+				<Button Click="OpenTxt" Content="open file" Grid.Column="2" Grid.Row="1" VerticalAlignment="Center" Margin="4"/>
+
+			</Grid>
+		</TabItem>
+		
+		<TabItem Header="Published values" x:Name="Tab_Published">
+			<ListView x:Name="List_Published">
+				<ListView.View>
+					<GridView>
+						<GridView.Columns>
+							<GridViewColumn Header="Key" DisplayMemberBinding="{Binding Key, Mode=OneWay}"  />
+							<GridViewColumn Header="Value">
+								<GridViewColumn.CellTemplate>
+									<DataTemplate>
+										<TextBlock Text="{Binding Value, Mode=OneWay}" FontFamily="Courier New" />
+									</DataTemplate>
+								</GridViewColumn.CellTemplate>
+							</GridViewColumn>
+						</GridView.Columns>
+					</GridView>
+				</ListView.View>
+			</ListView>
+			
+		</TabItem>
+	</TabControl>
+
+	
 </Window>
