@@ -72,14 +72,18 @@ namespace PlayerUI.Statistics
             //double rad2deg = 180 / Math.PI;
 			var v = GraphicTools.QuaternionToYawPitch(quaternion);
             // angle from quaternion should be always [-4PI, 4PI], no need for while loop
-            double yaw = ( Math.PI * 10 - v.X ) % (2 * Math.PI) - Math.PI; // => [-PI, +PI]
+            double yaw = ( Math.PI * 9 + v.X ) % (2 * Math.PI) - Math.PI; // => [-PI, +PI]
             double pitch = -v.Y;    // => [-PI/2, PI/2]
             double yaw01 = yaw / (2 * Math.PI) + 0.5;
             double pitch01 = pitch / Math.PI + 0.5;
             TrackData(t, yaw01, pitch01, fov);
-		}
+            Bivrost.Log.Logger.Publish("history.yaw", yaw * 180f / Math.PI);
+            Bivrost.Log.Logger.Publish("history.pitch", pitch * 180f / Math.PI);
+            Bivrost.Log.Logger.Publish("history.yaw01", yaw01);
+            Bivrost.Log.Logger.Publish("history.pitch01", pitch01);
+        }
 
-		void TrackData(float t, double yaw01, double pitch01, byte fov)
+        void TrackData(float t, double yaw01, double pitch01, byte fov)
 		{
             int idx = (int)Math.Floor(t * precision);
             HeadPosition headPosition = new HeadPosition(yaw01, pitch01, t, fov);

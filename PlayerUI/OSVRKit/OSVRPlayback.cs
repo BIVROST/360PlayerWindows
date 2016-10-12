@@ -407,7 +407,10 @@ namespace PlayerUI.OSVRKit
 								vrui.SetWorldPosition(viewMatrix.Forward, lookPosition, true);
 
                             if (eye == 0)
+                            {
+                                lookRotation.Invert();
                                 ProvideLook(lookPosition, lookRotation, OSVRFOV);
+                            }
 
                             vrui.Draw(movieTitle, currentTime, duration);
 							vrui.Render(deltaTime, viewMatrix, projectionMatrix, lookPosition, pause);
