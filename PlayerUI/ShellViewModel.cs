@@ -474,25 +474,26 @@ namespace PlayerUI
 				shellView._OpenFile.Visibility = Visibility.Collapsed;
 			}
 
-#if DEBUG
-			Task.Factory.StartNew(async () =>
-			{
-				try
-				{
-					long seconds = await Bivrost.LicenseNinja.Verify(Logic.Instance.settings.ProductCode, Logic.Instance.settings.LicenseCode, Logic.Instance.settings.InstallId.ToString());
-				}
-				catch (Bivrost.LicenseNinja.LicenseException err)
-				{
-					Logic.Instance.settings.LicenseCode = "";
-					Logic.Instance.settings.Save();
+            if (Features.RequireLicense)
+            {
+                Task.Factory.StartNew(async () =>
+                {
+                    try
+                    {
+                        long seconds = await Bivrost.LicenseNinja.Verify(Logic.Instance.settings.ProductCode, Logic.Instance.settings.LicenseCode, Logic.Instance.settings.InstallId.ToString());
+                    }
+                    catch (Bivrost.LicenseNinja.LicenseException err)
+                    {
+                        Logic.Instance.settings.LicenseCode = "";
+                        Logic.Instance.settings.Save();
 
-					Execute.OnUIThread(() =>
-					{
-						OpenLicenseManagement();
-					});
-				}
-			});
-#endif
+                        Execute.OnUIThread(() =>
+                        {
+                            OpenLicenseManagement();
+                        });
+                    }
+                });
+            }
 
 		}
 

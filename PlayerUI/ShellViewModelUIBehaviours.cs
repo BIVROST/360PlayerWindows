@@ -373,12 +373,14 @@ namespace PlayerUI
             }
         }
 
-		public void OpenLicenseManagement()
-		{
-#if DEBUG
-			LicenseManagementViewModel lmvm = DialogHelper.ShowDialogOut<LicenseManagementViewModel>();
-			if (lmvm.IsValid == false) Quit();
-#endif
+        public void OpenLicenseManagement()
+        {
+            if (!Features.RequireLicense)
+                return;
+
+            LicenseManagementViewModel lmvm = DialogHelper.ShowDialogOut<LicenseManagementViewModel>();
+            if (lmvm.IsValid == false)
+                Quit();
 		}
     }
 }

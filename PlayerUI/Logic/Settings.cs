@@ -11,6 +11,26 @@ namespace PlayerUI
 {
 
 
+    public static class Features
+    {
+        /// <summary>
+        /// Online heatmap analytics gathering and sending is enabled
+        /// Requires Heatmaps
+        /// </summary>
+        public static bool GhostVR = false;
+
+        /// <summary>
+        /// Local heatmap analytics gathering is enabled
+        /// </summary>
+        public static bool Heatmaps = false;
+
+        /// <summary>
+        /// The build requires an active license from LicenseNinja
+        /// </summary>
+        public static bool RequireLicense = true;
+    }
+
+
     public class Settings
 	{
 #region settings management
@@ -105,10 +125,8 @@ namespace PlayerUI
 
 
 		//License settings
-#if DEBUG
 		public string ProductCode = "360player-beta-canary-sample";
 		public string LicenseCode = "";
-#endif
 
 		//Remote control settings
 

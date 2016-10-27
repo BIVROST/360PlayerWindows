@@ -1,8 +1,4 @@
-﻿#if DEBUG
-#define FEATURE_GHOSTVR
-#endif
-
-using BivrostAnalytics;
+﻿using BivrostAnalytics;
 using Fleck;
 using PlayerUI.Statistics;
 using System;
@@ -156,14 +152,11 @@ namespace PlayerUI
 				}
 			});
 
-            #if FEATURE_GHOSTVR
-            lookListener = new LookListener();
-            #endif
+            if(Features.Heatmaps)
+                lookListener = new LookListener();
 		}
 
-        #if FEATURE_GHOSTVR
         LookListener lookListener;
-        #endif
 
         ~Logic()
 		{
@@ -172,10 +165,8 @@ namespace PlayerUI
 				webSocketServer.Dispose();
 			}
 			catch (Exception) { }
-
-            #if FEATURE_GHOSTVR
-            lookListener.Dispose();
-            #endif
+            
+            lookListener?.Dispose();
 		}
 
 		

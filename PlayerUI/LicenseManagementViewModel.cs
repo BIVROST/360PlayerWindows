@@ -9,7 +9,6 @@ namespace PlayerUI
 {
 	public class LicenseManagementViewModel : Screen
 	{
-#if DEBUG
 
 		public bool IsValid { get; private set; } = false;
 		public string LicenseCode { get; set; }
@@ -28,6 +27,7 @@ namespace PlayerUI
 				}
 				catch (Bivrost.LicenseNinja.LicenseException err)
 				{
+                    Bivrost.Log.Logger.Error(err);
 					IsValid = false;
 				}
 			});
@@ -60,6 +60,5 @@ namespace PlayerUI
 				
 			});			
 		}
-#endif
 	}
 }
