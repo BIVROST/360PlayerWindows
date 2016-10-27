@@ -100,7 +100,7 @@ namespace PlayerUI
 						}
 						else
 						{
-							if(!args[args.Length - 1].EndsWith(".vshost.exe"))
+							if(!args[args.Length - 1].EndsWith(".exe"))
 								ShellViewModel.FileFromArgs = args[args.Length - 1];
 						}
 					}

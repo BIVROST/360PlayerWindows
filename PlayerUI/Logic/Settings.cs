@@ -9,9 +9,11 @@ using PlayerUI.ConfigUI;
 
 namespace PlayerUI
 {
-	public class Settings
+
+
+    public class Settings
 	{
-		#region settings management
+#region settings management
 		private string _settingsFile = "";
 		[JsonIgnore]
 		public string SettingsFile
@@ -49,7 +51,7 @@ namespace PlayerUI
 			File.WriteAllText(SettingsFile, JsonConvert.SerializeObject(this));
 			Console.WriteLine(JsonConvert.SerializeObject(this));
 		}
-		#endregion
+#endregion
 
 
 		public bool BrowserPluginQuestionShown { get; set; } = false;
@@ -98,10 +100,8 @@ namespace PlayerUI
 		[SettingsProperty("Install browsers plugins", ConfigItemType.Action, Caption = "Install plugins")]
 		public System.Action InstallPlugins { get; set; } = () => { };
 
-		[SettingsAdvancedProperty("User OSVR tracking in window", ConfigItemType.Bool)]
-		public bool UserOSVRTracking { get; set; } = false;
-		[SettingsAdvancedProperty("Merge manual and headset input", ConfigItemType.Bool)]
-		public bool MergeInputs { get; set; } = false;
+		[SettingsAdvancedProperty("User headset tracking in window", ConfigItemType.Bool)]
+		public bool UserHeadsetTracking { get; set; } = false;
 
 
 		//License settings

@@ -318,7 +318,7 @@ namespace Bivrost.Log
 		)
 		{
 			WriteLogEntry(LogType.error, msg, PathUtil(sourceFilePath, sourceLineNumber, memberName));
-			System.Windows.MessageBox.Show(msg, "Fatal error");
+			// System.Windows.MessageBox.Show(msg, "Fatal error");
 		}
 
 

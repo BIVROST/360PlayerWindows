@@ -28,6 +28,7 @@ namespace PlayerUI.Statistics
         }
 
         ILookProvider lookProvider = null;
+
         LookHistory history = null;
         private string filename;
         private DateTime startTime;

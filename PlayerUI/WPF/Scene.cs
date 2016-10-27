@@ -85,13 +85,16 @@
 
 		private bool UseVrLook
 		{
-			get { return headsetLookRotation != null && !overrideManualVrLook; }
+			get { return headsetLookRotation != null && SettingsVrLookEnabled; }
 		}
 
-		private bool overrideManualVrLook = false;
+		private bool SettingsVrLookEnabled {
+            get { return Logic.Instance.settings.UserHeadsetTracking; }
+            set { Logic.Instance.settings.UserHeadsetTracking = value; }
+        }
 
 
-		internal void HeadsetEnabled(Headset headset) { headset.ProvideLook += Headset_ProvideLook; Logger.Publish("headset", headset.DescribeType); }
+        internal void HeadsetEnabled(Headset headset) { headset.ProvideLook += Headset_ProvideLook; Logger.Publish("headset", headset.DescribeType); }
 
 		private void Headset_ProvideLook(Vector3 pos, Quaternion rot, float fov) { headsetLookRotation = rot; Logger.Publish("q.recv", rot); }
 
@@ -501,7 +504,7 @@
 
                 if (IsKeyDown(Key.T) && tUp)
                 {
-                    overrideManualVrLook = !overrideManualVrLook;
+                    SettingsVrLookEnabled = !SettingsVrLookEnabled;
                     tUp = false;
                 }
                 if (IsKeyUp(Key.T))
