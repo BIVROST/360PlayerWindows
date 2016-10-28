@@ -156,6 +156,15 @@
                 </MenuItem>
                 <MenuItem Header="Options">
                     <MenuItem Header="Settings" cal:Message.Attach="[Event Click] = [Action OpenSettings]" InputGestureText="Ctrl+P"/>
+                    <!--
+                    <MenuItem Header="Recenter Headset" cal:Message.Attach="[Event Click] = [Action RecenterHeadset]" InputGestureText="R"/>
+                    -->
+                    <Separator />
+                    <MenuItem IsCheckable="True" IsChecked="{Binding HeadsetIsAuto}"  Header="Autodetect VR Headset" />
+                    <MenuItem IsCheckable="True" IsChecked="{Binding HeadsetIsOculus}" Header="Oculus Rift (DK2/CV1)" />
+                    <MenuItem IsCheckable="True" IsChecked="{Binding HeadsetIsOpenVR}" Header="OpenVR (SteamVR, HTC Vive)" />
+                    <MenuItem IsCheckable="True" IsChecked="{Binding HeadsetIsOSVR}" Header="OSVR" />
+                    <MenuItem IsCheckable="True" IsChecked="{Binding HeadsetIsDisable}"  Header="Disable VR" />
                 </MenuItem>
                 <MenuItem Header="Help">
                     <MenuItem Header="Help / Support" cal:Message.Attach="[Event Click] = [Action OpenSupportPage]" InputGestureText="F1"/>

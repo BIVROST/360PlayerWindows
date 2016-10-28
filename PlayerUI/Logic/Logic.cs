@@ -18,10 +18,15 @@ namespace PlayerUI
 	public enum HeadsetMode
 	{
 		Auto,
+
 		OSVR,
-		Oculus,
+
+        [Description("Oculus Rift (DK2, CV1)")]
+        Oculus,
+
 		[Description("SteamVR (OpenVR, HTC Vive)")]
 		OpenVR,
+
 		Disable
 	}
 

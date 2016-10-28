@@ -51,7 +51,7 @@ namespace PlayerUI
                 Logic.Instance.settings.Save();
             }
         }
-
+        
 
         public bool IsPlaying { get { return _mediaDecoder.IsPlaying; } }
 		public bool IsPaused { get; set; }
@@ -1425,34 +1425,71 @@ namespace PlayerUI
 		}
 
 
-		//public void LegacyTest()
-		//{
-		//	SharpDX.Direct3D.FeatureLevel[] _levels = new SharpDX.Direct3D.FeatureLevel[] { SharpDX.Direct3D.FeatureLevel.Level_10_0 };
-		//	Device _device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.BgraSupport | DeviceCreationFlags.VideoSupport, _levels);
-
-		//	SharpDX.Direct3D11.Texture2DDescription frameTextureDescription = new SharpDX.Direct3D11.Texture2DDescription()
-		//	{
-		//		Width = 1920,
-		//		Height = 1080,
-		//		MipLevels = 1,
-		//		ArraySize = 1,
-		//		Format = SharpDX.DXGI.Format.B8G8R8A8_UNorm,
-		//		Usage = SharpDX.Direct3D11.ResourceUsage.Default,
-		//		SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
-		//		BindFlags = BindFlags.RenderTarget | SharpDX.Direct3D11.BindFlags.ShaderResource,
-		//		CpuAccessFlags = CpuAccessFlags.None,
-		//		OptionFlags = ResourceOptionFlags.Shared
-		//	};
+        #region menu opions: headset
+        public void SetHeadset(HeadsetMode headset)
+        {
+            Logger.Info($"Set headset: {headset} (menu option)");
+            Logic.Instance.settings.HeadsetUsage = headset;
+            Logic.Instance.settings.Save();
+            NotifyOfPropertyChange(() => HeadsetIsAuto);
+            NotifyOfPropertyChange(() => HeadsetIsOculus);
+            NotifyOfPropertyChange(() => HeadsetIsOpenVR);
+            NotifyOfPropertyChange(() => HeadsetIsOSVR);
+            NotifyOfPropertyChange(() => HeadsetIsDisable);
+        }
 
 
-		//	Texture2D textureL = new SharpDX.Direct3D11.Texture2D(_device, frameTextureDescription);
-		//	SharpDX.DXGI.Surface surface = textureL.QueryInterface<SharpDX.DXGI.Surface>();
+        public bool HeadsetIsAuto {
+            get { return Logic.Instance.settings.HeadsetUsage == HeadsetMode.Auto; }
+            set { if (value) SetHeadset(HeadsetMode.Auto); }
+        }
+        public bool HeadsetIsOculus {
+            get { return Logic.Instance.settings.HeadsetUsage == HeadsetMode.Oculus; }
+            set { if (value) SetHeadset(HeadsetMode.Oculus); }
+        }
+        public bool HeadsetIsOpenVR {
+            get { return Logic.Instance.settings.HeadsetUsage == HeadsetMode.OpenVR; }
+            set { if (value) SetHeadset(HeadsetMode.OpenVR); }
+        }
+        public bool HeadsetIsOSVR {
+            get { return Logic.Instance.settings.HeadsetUsage == HeadsetMode.OSVR; }
+            set { if (value) SetHeadset(HeadsetMode.OSVR); }
+        }
+        public bool HeadsetIsDisable {
+            get { return Logic.Instance.settings.HeadsetUsage == HeadsetMode.Disable; }
+            set { if (value) SetHeadset(HeadsetMode.Disable); }
+        }
+        #endregion
 
-		//	LegacyPlayer.MediaDecoderLegacy md = new LegacyPlayer.MediaDecoderLegacy(surface.NativePointer);
-		//	md.OpenUrl(@"D:\TestVideos\maroon.mp4");
 
-		//	this.DXCanvas.Scene = new Scene(textureL, MediaDecoder.ProjectionMode.Sphere);
-		//	this.DXCanvas.StartRendering();
-		//}
-	}
+        //public void LegacyTest()
+        //{
+        //	SharpDX.Direct3D.FeatureLevel[] _levels = new SharpDX.Direct3D.FeatureLevel[] { SharpDX.Direct3D.FeatureLevel.Level_10_0 };
+        //	Device _device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.BgraSupport | DeviceCreationFlags.VideoSupport, _levels);
+
+        //	SharpDX.Direct3D11.Texture2DDescription frameTextureDescription = new SharpDX.Direct3D11.Texture2DDescription()
+        //	{
+        //		Width = 1920,
+        //		Height = 1080,
+        //		MipLevels = 1,
+        //		ArraySize = 1,
+        //		Format = SharpDX.DXGI.Format.B8G8R8A8_UNorm,
+        //		Usage = SharpDX.Direct3D11.ResourceUsage.Default,
+        //		SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
+        //		BindFlags = BindFlags.RenderTarget | SharpDX.Direct3D11.BindFlags.ShaderResource,
+        //		CpuAccessFlags = CpuAccessFlags.None,
+        //		OptionFlags = ResourceOptionFlags.Shared
+        //	};
+
+
+        //	Texture2D textureL = new SharpDX.Direct3D11.Texture2D(_device, frameTextureDescription);
+        //	SharpDX.DXGI.Surface surface = textureL.QueryInterface<SharpDX.DXGI.Surface>();
+
+        //	LegacyPlayer.MediaDecoderLegacy md = new LegacyPlayer.MediaDecoderLegacy(surface.NativePointer);
+        //	md.OpenUrl(@"D:\TestVideos\maroon.mp4");
+
+        //	this.DXCanvas.Scene = new Scene(textureL, MediaDecoder.ProjectionMode.Sphere);
+        //	this.DXCanvas.StartRendering();
+        //}
+    }
 }
