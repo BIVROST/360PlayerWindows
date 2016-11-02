@@ -190,7 +190,8 @@ namespace PlayerUI.Streaming
 			new PornhubParser(),
 			new LittlstarParser(),
             new YoutubeParser(),
-            new URLParser()
+            new URLParser(),
+			new LocalFileParser()	// TODO: FacebookParser
 		};
 
 		/// <summary>
@@ -248,6 +249,43 @@ namespace PlayerUI.Streaming
 			if (response.ErrorException != null)
 				throw new StreamNetworkFailure(response.ErrorMessage, uri, response.ErrorException); 
 			return response.Content;
+		}
+
+
+		protected VideoContainer GuessContainerFromExtension(string path)
+		{
+			string extension = System.IO.Path.GetExtension(path).ToLowerInvariant();
+			switch(extension)
+			{
+
+				case "avi":
+					return VideoContainer.avi;
+
+				case "flv":
+					return VideoContainer.flv;
+
+				case "m3u":
+				case "m3u8":
+					return VideoContainer.hls;
+
+				case "webm":
+					return VideoContainer.webm;
+
+				case "ogg":
+				case "ogv":
+					return VideoContainer.ogg;
+
+				case "3gp":
+					return VideoContainer._3gp;
+
+				case "wmv":
+					return VideoContainer.wmv;
+
+				case "m4v":
+				case "mp4":
+				default:
+					return VideoContainer.mp4;
+			}
 		}
 
 		#endregion

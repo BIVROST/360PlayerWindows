@@ -61,35 +61,12 @@ namespace PlayerUI
 
 		private void Process()
 		{
-			try
-			{
-                ServiceResult = null;
-                ServiceResult = Streaming.StreamingFactory.Instance.GetStreamingInfo(Url);
-			}
-			catch(Streaming.StreamNotSupported exc)
-			{
-                Logger.Error(exc, "Streaming: video not supported. " + Url);
-                Execute.OnUIThreadAsync(() =>
-					ShellViewModel.Instance.NotificationCenter.PushNotification(new NotificationViewModel("Video not yet supported."))
-				);
-			}
-			catch(Streaming.StreamParsingFailed exc)
-			{
-                Logger.Error(exc, "Streaming: Parsing failed. Unable to open the video." + Url);
-                Execute.OnUIThreadAsync(() =>
-					ShellViewModel.Instance.NotificationCenter.PushNotification(new NotificationViewModel("Parsing failed. Unable to open the video."))
-				);
-			}
-			catch (Exception exc)
-			{
-                Logger.Error(exc, "Streaming: media not supported" + Url);
-				Execute.OnUIThreadAsync(() => 
-					ShellViewModel.Instance.NotificationCenter.PushNotification(new NotificationViewModel("Media not supported."))
-				);
-			}
+            ServiceResult = Logic.ProcessURI(Url);
+
             if (view != null)
                 Execute.OnUIThreadAsync(() => TryClose());
-		}
 
-	}
+        }
+
+    }
 }

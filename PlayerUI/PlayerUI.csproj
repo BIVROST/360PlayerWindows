@@ -361,6 +361,8 @@
     <Compile Include="Statistics\Session.cs" />
     <Compile Include="Streaming\FacebookParser.cs" />
     <Compile Include="Streaming\LittlstarParser.cs" />
+    <Compile Include="Streaming\LocalFileParser.cs" />
+    <Compile Include="Streaming\BivrostProtocolParser.cs" />
     <Compile Include="Streaming\URLParser.cs" />
     <Compile Include="Streaming\YoutubeParser.cs" />
     <Compile Include="VR\Headset.cs" />

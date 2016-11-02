@@ -56,7 +56,6 @@ namespace Bivrost
 						 new KeyValuePair<string, string>("hash", hash),
 						 new KeyValuePair<string, string>("udid", udid),
 						 new KeyValuePair<string, string>("lang", lang),
-
 					})).Result;
 				www = await result.Content.ReadAsStringAsync();
 				if(!result.IsSuccessStatusCode)

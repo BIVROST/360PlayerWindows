@@ -300,5 +300,58 @@ namespace PlayerUI
                 Logic.Instance.settings.Save();
             }
         }
+
+
+
+        /// <summary>
+        /// Processes an URI and returns a ServiceResult or null on failure
+        /// Displays notifications on errors.
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <returns>ServiceResult with parsed streaming information or null</returns>
+        internal static Streaming.ServiceResult ProcessURI(string uri)
+        {
+            try
+            {
+                return Streaming.StreamingFactory.Instance.GetStreamingInfo(uri);
+            }
+            catch (Streaming.StreamNotSupported exc)
+            {
+                Logger.Error(exc, "Streaming: video not supported. " + uri);
+                Notify("Video not yet supported.");
+            }
+            catch (Streaming.StreamParsingFailed exc)
+            {
+                Logger.Error(exc, "Streaming: Parsing failed. Unable to open the video." + uri);
+                Notify("Parsing failed. Unable to open the video.");
+            }
+            catch (Exception exc)
+            {
+                Logger.Error(exc, "Streaming: media not supported" + uri);
+                Notify("Media not supported.");
+            }
+            return null;
+        }
+
+
+        /// <summary>
+        /// Display a notification visible as a popup
+        /// Does nothing if ShellViewMovel.NotificationCenter is not yet set up.
+        /// </summary>
+        /// <param name="msg">the message</param>
+        /// <param name="memberName">(automatically added) source code trace information</param>
+        /// <param name="sourceFilePath">(automatically added) source code trace information</param>
+        /// <param name="sourceLineNumber">(automatically added) source code trace information</param>
+        public static void Notify(
+            string msg,
+            [System.Runtime.CompilerServices.CallerMemberName] string memberName = "",
+            [System.Runtime.CompilerServices.CallerFilePath] string sourceFilePath = "",
+            [System.Runtime.CompilerServices.CallerLineNumber] int sourceLineNumber = 0
+        )
+        {
+            Logger.Info($"Notification: {msg}", memberName, sourceFilePath, sourceLineNumber);
+            Caliburn.Micro.Execute.OnUIThreadAsync(() => ShellViewModel.Instance?.NotificationCenter?.PushNotification(new NotificationViewModel(msg)));
+        }
+
     }
 }

@@ -47,8 +47,7 @@ namespace PlayerUI
         {
             get { return Logic.Instance.settings.HeadsetUsage; }
             set {
-                Logic.Instance.settings.HeadsetUsage = value;
-                Logic.Instance.settings.Save();
+                SetHeadset(value);
             }
         }
         
@@ -260,31 +259,11 @@ namespace PlayerUI
 			};
 
 			HeadsetMenu = new HeadsetMenuViewModel();
-			HeadsetMenu.OnAuto += () => Task.Factory.StartNew(() =>
-			{
-				Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Automatic headset detection selected.")));
-				this.SettingHeadsetUsage = HeadsetMode.Auto;
-			});
-			HeadsetMenu.OnRift += () => Task.Factory.StartNew(() =>
-			{
-				Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Oculus Rift playback selected.")));
-				this.SettingHeadsetUsage = HeadsetMode.Oculus;
-			});
-			HeadsetMenu.OnOSVR += () => Task.Factory.StartNew(() =>
-			{
-				Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("OSVR playback selected.")));
-				this.SettingHeadsetUsage = HeadsetMode.OSVR;
-			});
-			HeadsetMenu.OnVive += () => Task.Factory.StartNew(() =>
-			{
-				Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("OpenVR playback selected.")));
-				this.SettingHeadsetUsage = HeadsetMode.OpenVR;
-			});
-			HeadsetMenu.OnDisable += () => Task.Factory.StartNew(() =>
-			{
-				Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Headset playback disabled.")));
-				this.SettingHeadsetUsage = HeadsetMode.Disable;
-			});
+			HeadsetMenu.OnAuto += () => HeadsetIsAuto = true;
+			HeadsetMenu.OnRift += () => HeadsetIsOculus = true;
+			HeadsetMenu.OnOSVR += () => HeadsetIsOSVR = true;
+			HeadsetMenu.OnVive += () => HeadsetIsOpenVR = true;
+			HeadsetMenu.OnDisable += () => HeadsetIsDisable = true;
 
 
 			Logic.Instance.OnUpdateAvailable += () => Execute.OnUIThreadAsync(() =>
@@ -767,7 +746,7 @@ namespace PlayerUI
 					{
 						if (oculusPlayback.IsPresent())
 						{
-							Notify("Oculus Rift detected. Starting VR playback...");
+                            Logic.Notify("Oculus Rift detected. Starting VR playback...");
 							oculusPlayback.textureL = _mediaDecoder.TextureL;
 							oculusPlayback.textureR = _mediaDecoder.TextureR;
 							oculusPlayback._stereoVideo = _mediaDecoder.IsStereoRendered;
@@ -778,7 +757,7 @@ namespace PlayerUI
                             CurrentHeadset = oculusPlayback;
 							return;
 						}
-						Notify("Oculus Rift not detected.");
+                        Logic.Notify("Oculus Rift not detected.");
 						ShellViewModel.SendEvent("headsetError", "oculus");
 					}
 
@@ -788,7 +767,7 @@ namespace PlayerUI
 						{
 							if (openVRPlayback.IsPresent())
 							{
-								Notify("OpenVR detected. Starting VR playback...");
+                                Logic.Notify("OpenVR detected. Starting VR playback...");
 								openVRPlayback.textureL = _mediaDecoder.TextureL;
 								openVRPlayback.textureR = _mediaDecoder.TextureR;
 								openVRPlayback._stereoVideo = _mediaDecoder.IsStereoRendered;
@@ -804,7 +783,7 @@ namespace PlayerUI
 						{
 							Logger.Error("Headset detection exception (OpenVR): " + e);
 						}
-						Notify("OpenVR not detected.");
+                        Logic.Notify("OpenVR not detected.");
 						ShellViewModel.SendEvent("headsetError", "openvr");
 					}
 
@@ -823,7 +802,7 @@ namespace PlayerUI
                             CurrentHeadset = osvrPlayback;
                             return;
 						}
-						Notify("OSVR not detected.");
+						Logic.Notify("OSVR not detected.");
 						ShellViewModel.SendEvent("headsetError", "osvr");
 					}
 				});
@@ -841,12 +820,7 @@ namespace PlayerUI
 			//});			
 		}
 
-		void Notify(string v)
-		{
-			Console.WriteLine("NOTIFICATION: " + v);
-			Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel(v)));
-		}
-
+        
 
 		void ResetPlayback()
 		{
@@ -1428,10 +1402,24 @@ namespace PlayerUI
         #region menu opions: headset
         public void SetHeadset(HeadsetMode headset)
         {
+			if (Logic.Instance.settings.HeadsetUsage == headset)
+				return;
+
             Logger.Info($"Set headset: {headset} (menu option)");
             Logic.Instance.settings.HeadsetUsage = headset;
             Logic.Instance.settings.Save();
-            NotifyOfPropertyChange(() => HeadsetIsAuto);
+
+			switch(headset)
+			{
+				case HeadsetMode.Auto: Logic.Notify("Automatic headset detection selected."); break;
+				case HeadsetMode.Oculus: Logic.Notify("Oculus Rift playback selected."); break;
+				case HeadsetMode.OSVR: Logic.Notify("OSVR playback selected."); break;
+				case HeadsetMode.OpenVR: Logic.Notify("OpenVR (SteamVR) playback selected."); break;
+				case HeadsetMode.Disable: Logic.Notify("Headset playback disabled."); break;
+			}
+
+			// TODO: jak to działa?
+			NotifyOfPropertyChange(() => HeadsetIsAuto);
             NotifyOfPropertyChange(() => HeadsetIsOculus);
             NotifyOfPropertyChange(() => HeadsetIsOpenVR);
             NotifyOfPropertyChange(() => HeadsetIsOSVR);
