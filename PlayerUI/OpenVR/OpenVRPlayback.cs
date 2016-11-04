@@ -27,8 +27,9 @@ namespace PlayerUI.OpenVR
 
 
 		bool dllsLoaded = false;
+		SharpDX.Toolkit.Graphics.GeometricPrimitive primitive;
 
-        protected void EnsureDllsLoaded()
+		protected void EnsureDllsLoaded()
 		{
 			if (dllsLoaded)
 				return;
@@ -162,10 +163,11 @@ namespace PlayerUI.OpenVR
 
 			///// END
 
+
 			using (_device = new Device(DriverType.Hardware, DeviceCreationFlags.BgraSupport, new FeatureLevel[] { FeatureLevel.Level_10_0 }))
 			using (DeviceContext context = _device.ImmediateContext)
 			using (_gd = SharpDX.Toolkit.Graphics.GraphicsDevice.New(_device))
-			using (SharpDX.Toolkit.Graphics.GeometricPrimitive primitive = GraphicTools.CreateGeometry(_projection, _gd, false))
+			//using (SharpDX.Toolkit.Graphics.GeometricPrimitive primitive = GraphicTools.CreateGeometry(_projection, _gd, false))
 			using (customEffectL = GetCustomEffect(_gd))
 			using (customEffectR = GetCustomEffect(_gd))
 			using (Texture2D leftEye = new Texture2D(_device, eyeTextureDescription))
@@ -182,6 +184,7 @@ namespace PlayerUI.OpenVR
 
 				ResizeTexture(MediaDecoder.Instance.TextureL, _stereoVideo ? MediaDecoder.Instance.TextureR : MediaDecoder.Instance.TextureL);
 
+				primitive = GraphicTools.CreateGeometry(_projection, _gd, false);
 
 				Stopwatch stopwatch = new Stopwatch();
 				Texture_t leftEyeTex = new Texture_t() { eColorSpace = EColorSpace.Gamma, eType = EGraphicsAPIConvention.API_DirectX, handle = leftEye.NativePointer };
@@ -344,10 +347,19 @@ namespace PlayerUI.OpenVR
 				Valve.VR.OpenVR.Shutdown();
 				MediaDecoder.Instance.OnFormatChanged -= ResizeTexture;
 
+				primitive?.Dispose();
 				context.ClearState();
 				context.Flush();
 			}
 		}
 
+		public override void UpdateSceneSettings(MediaDecoder.ProjectionMode projectionMode, MediaDecoder.VideoMode stereoscopy)
+		{
+			updateSettingsActionQueue.Enqueue(() =>
+			{
+				primitive?.Dispose();
+				primitive = GraphicTools.CreateGeometry(projectionMode, _gd, false);
+			});
+		}
 	}
 }

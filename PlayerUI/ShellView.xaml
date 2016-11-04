@@ -153,7 +153,13 @@
                     <MenuItem Header="Little planet (stereographic) projection" InputGestureText="L"  cal:Message.Attach="[Event Click] = [Action LittlePlanetProjection]" />
                     <Separator />
                     <MenuItem Header="Reset zoom (fov)" InputGestureText="Ctrl+0" cal:Message.Attach="[Event Click] = [Action ResetFov]" />
-                </MenuItem>
+					<Separator />
+					<MenuItem IsCheckable="True" IsChecked="{Binding ProjectionIsAuto}" Header="Automatic projection" />
+					<MenuItem IsCheckable="True" IsChecked="{Binding ProjectionIsEquirectangular}" Header="Equirectangular" />
+					<!-- TODO: cubemap types -->
+					<MenuItem IsCheckable="True" IsChecked="{Binding ProjectionIsCubeFacebook}" Header="Cubemap (Facebook)" />
+					<MenuItem IsCheckable="True" IsChecked="{Binding ProjectionIsDome}" Header="Equirectangular 180 (Dome)" />
+				</MenuItem>
                 <MenuItem Header="Options">
                     <MenuItem Header="Settings" cal:Message.Attach="[Event Click] = [Action OpenSettings]" InputGestureText="Ctrl+P"/>
                     <!--

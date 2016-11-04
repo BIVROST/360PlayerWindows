@@ -15,7 +15,7 @@ namespace PlayerUI
 	}
 
 
-	public abstract class Headset : ILookProvider
+	public abstract class Headset : ILookProvider, IUpdatableSceneSettings
     {
 		public Texture2D textureL;
 		public Texture2D textureR;
@@ -192,5 +192,8 @@ namespace PlayerUI
 
 		abstract public bool IsPresent();
 
+
+		protected Bivrost.ActionQueue updateSettingsActionQueue = new Bivrost.ActionQueue();
+		public abstract void UpdateSceneSettings(MediaDecoder.ProjectionMode projectionMode, MediaDecoder.VideoMode stereoscopy);
 	}
 }

@@ -20,7 +20,9 @@ namespace PlayerUI.OSVRKit
 		bool _preloaded = false;
 		int _selectedOutput = 0;
 
-        override public bool IsPresent()
+		SharpDX.Toolkit.Graphics.GeometricPrimitive primitive;
+
+		override public bool IsPresent()
         {
 			if (!_preloaded)
 			{
@@ -302,7 +304,7 @@ namespace PlayerUI.OSVRKit
 			using (_gd = SharpDX.Toolkit.Graphics.GraphicsDevice.New(_device))
 			using (customEffectL = GetCustomEffect(_gd))
 			using (customEffectR = GetCustomEffect(_gd))
-			using (var primitive = GraphicTools.CreateGeometry(_projection, _gd))
+			//using (var primitive = GraphicTools.CreateGeometry(_projection, _gd))
 			using (vrui = new VRUI(_device, _gd))
 			using (Texture2D depthBuffer = new Texture2D(_device, depthBufferDescription))
 			using (DepthStencilView depthView = new DepthStencilView(_device, depthBuffer))
@@ -311,7 +313,7 @@ namespace PlayerUI.OSVRKit
 			{
 				ResizeTexture(MediaDecoder.Instance.TextureL, _stereoVideo ? MediaDecoder.Instance.TextureR : MediaDecoder.Instance.TextureL);
 				MediaDecoder.Instance.OnFormatChanged += ResizeTexture;
-
+				primitive = GraphicTools.CreateGeometry(_projection, _gd);
 
 				DateTime startTime = DateTime.Now;
 				Vector3 position = new Vector3(0, 0, -1);
@@ -459,7 +461,17 @@ namespace PlayerUI.OSVRKit
 			Lock = false;
 		}
 
-        public event Action OnGotFocus = delegate {};
+
+		public override void UpdateSceneSettings(MediaDecoder.ProjectionMode projectionMode, MediaDecoder.VideoMode stereoscopy)
+		{
+			updateSettingsActionQueue.Enqueue(() =>
+			{
+				primitive?.Dispose();
+				primitive = GraphicTools.CreateGeometry(projectionMode, _gd, true);
+			});
+		}
+
+		public event Action OnGotFocus = delegate {};
 
 
         public override event Action<Vector3, SharpDX.Quaternion, float> ProvideLook;

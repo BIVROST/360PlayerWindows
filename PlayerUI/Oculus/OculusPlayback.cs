@@ -45,7 +45,7 @@ namespace PlayerUI.Oculus
 
 		protected override float Gamma { get { return 2.2f; } }
 
-
+		SharpDX.Toolkit.Graphics.GeometricPrimitive primitive;
 
 		#region ILookProvider properties
 		public override event Action<Vector3, Quaternion, float> ProvideLook;
@@ -93,9 +93,11 @@ namespace PlayerUI.Oculus
 					DepthWriteMask = DepthWriteMask.Zero
 				};
 
-#if DEBUG
-				SharpDX.Configuration.EnableObjectTracking = true;
-#endif
+				//#if DEBUG
+				//				SharpDX.Configuration.EnableObjectTracking = true;
+				//#endif
+
+				
 				using (Hmd hmd = oculus.Hmd_Create(out graphicsLuid))
 				// Create DirectX drawing device.
 				using (_device = new Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.BgraSupport, new SharpDX.Direct3D.FeatureLevel[] { SharpDX.Direct3D.FeatureLevel.Level_10_0 }))
@@ -111,13 +113,14 @@ namespace PlayerUI.Oculus
 				using (vrui = new VRUI(_device, _gd))
 				using (customEffectL = GetCustomEffect(_gd))
 				using (customEffectR = GetCustomEffect(_gd))
-				using (SharpDX.Toolkit.Graphics.GeometricPrimitive primitive = GraphicTools.CreateGeometry(_projection, _gd, false))
+				//using (SharpDX.Toolkit.Graphics.GeometricPrimitive primitive = GraphicTools.CreateGeometry(_projection, _gd, false))
 				{
 					if (hmd == null)
 						throw new HeadsetError("Oculus Rift not detected.");
 					if (hmd.ProductName == string.Empty)
 						throw new HeadsetError("The HMD is not enabled.");
 
+					primitive = GraphicTools.CreateGeometry(_projection, _gd, false);
 
 					Viewport viewport = new Viewport(0, 0, hmd.Resolution.Width, hmd.Resolution.Height, 0.0f, 1.0f);
 					LayerEyeFov layerEyeFov = layers.AddLayerEyeFov();
@@ -238,6 +241,8 @@ namespace PlayerUI.Oculus
 
 					while (!abort)
 					{
+						updateSettingsActionQueue.RunAllActions();
+
 						OVRTypes.Vector3f[] hmdToEyeViewOffsets = { eyeTextures[0].HmdToEyeViewOffset, eyeTextures[1].HmdToEyeViewOffset };
 						//OVR.FrameTiming frameTiming = hmd.GetFrameTiming(0);
 						//OVR.TrackingState trackingState = hmd.GetTrackingState(frameTiming.DisplayMidpointSeconds);
@@ -247,16 +252,7 @@ namespace PlayerUI.Oculus
 
 						// Calculate the position and orientation of each eye.
 						oculus.CalcEyePoses(trackingState.HeadPose.ThePose, hmdToEyeViewOffsets, ref eyePoses);
-
-						// rotation quaternion to heatmap directions
-						//ShellViewModel.Instance.ClearDebugText();
-						//Vector2 v = GraphicTools.QuaternionToYawPitch(trackingState.HeadPose.ThePose.Orientation);
-						//var yawdeg = MathUtil.RadiansToDegrees(v.X);
-						//var pitchdeg = MathUtil.RadiansToDegrees(v.Y);
-						//ShellViewModel.Instance.AppendDebugText($"YAW:{yawdeg} \t\t PITCH:{pitchdeg}");
-						//ShellViewModel.Instance.UpdateDebugText();
-						////==========================================
-
+						
 						float timeSinceStart = (float)(DateTime.Now - startTime).TotalSeconds;
 						deltaTime = (float)(DateTime.Now - lastTime).TotalSeconds;
 						lastTime = DateTime.Now;
@@ -372,6 +368,7 @@ namespace PlayerUI.Oculus
 					waitForRendererStop.Set();
 
 					// Release all resources
+					primitive.Dispose();
 					eyeTextures[0].Dispose();
 					eyeTextures[1].Dispose();
 					immediateContext.ClearState();
@@ -404,5 +401,13 @@ namespace PlayerUI.Oculus
 			throw new HeadsetError(formattedMessage);
 		}
 
+		public override void UpdateSceneSettings(MediaDecoder.ProjectionMode projectionMode, MediaDecoder.VideoMode stereoscopy)
+		{
+			updateSettingsActionQueue.Enqueue(() => 
+			{
+				primitive?.Dispose();
+				primitive = GraphicTools.CreateGeometry(projectionMode, _gd, false);
+			});
+		}
 	}
 }

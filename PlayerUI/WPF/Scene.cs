@@ -14,8 +14,15 @@
 	using SharpDX.XInput;
 	using Statistics;
 	using Bivrost.Log;
+	using Bivrost;
 
-	public class Scene : IScene
+	public interface IUpdatableSceneSettings
+	{
+		void UpdateSceneSettings(MediaDecoder.ProjectionMode projectionMode, MediaDecoder.VideoMode stereoscopy);
+	}
+
+
+	public class Scene : IScene, IUpdatableSceneSettings
     {
         //private class RefBool
         //{
@@ -141,13 +148,7 @@
         {
             return !GetKeyState(key);
         }
-
-
-		public void Dupuj(Quaternion q)
-		{
-			q.Normalize();
-		}
-
+		
 
 		void ResizeTexture(Texture2D tL, Texture2D tR)
 		{
@@ -453,9 +454,9 @@
 
 		void IScene.Render()
         {
-			
+			actionQueue.RunAllActions();
 
-            Device device = this.Host.Device;
+			Device device = this.Host.Device;
             if (device == null)
                 return;
 
@@ -552,5 +553,20 @@
 			return value1 + (value2 - value1) * amount;
         }
 
+
+		#region scene settings updater
+
+		ActionQueue actionQueue = new ActionQueue();
+
+		public void UpdateSceneSettings(MediaDecoder.ProjectionMode projectionMode, MediaDecoder.VideoMode stereoscopy)
+		{
+			actionQueue.Enqueue(() =>
+			{
+				primitive?.Dispose();
+				primitive = GraphicTools.CreateGeometry(projectionMode, graphicsDevice);
+				// TODO: stereoscopy
+			});
+		}
+		#endregion
 	}
 }
