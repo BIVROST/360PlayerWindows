@@ -13,11 +13,29 @@ namespace PlayerUI
 
     public static class Features
     {
-        /// <summary>
-        /// Online heatmap analytics gathering and sending is enabled
-        /// Requires Heatmaps
-        /// </summary>
-        public static bool GhostVR = false;
+
+		public static bool IsDebug =
+#if DEBUG
+			true;
+#else
+			false;
+#endif
+
+		/// <summary>
+		/// This build is a canary build
+		/// </summary>
+		public static bool IsCanary =
+#if CANARY
+			true;
+#else
+			false;
+#endif
+
+		/// <summary>
+		/// Online heatmap analytics gathering and sending is enabled
+		/// Requires Heatmaps
+		/// </summary>
+		public static bool GhostVR = false;
 
         /// <summary>
         /// Local heatmap analytics gathering is enabled
@@ -27,7 +45,7 @@ namespace PlayerUI
         /// <summary>
         /// The build requires an active license from LicenseNinja
         /// </summary>
-        public static bool RequireLicense = true;
+        public static bool RequireLicense = IsCanary;
     }
 
 

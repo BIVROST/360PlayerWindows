@@ -196,6 +196,8 @@ namespace PlayerUI.OpenVR
 
 				while (!abort)
 				{
+					updateSettingsActionQueue.RunAllActions();
+
 					float deltaTime = (float)stopwatch.Elapsed.TotalSeconds;
 					stopwatch.Restart();
 

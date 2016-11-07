@@ -269,8 +269,6 @@ namespace PlayerUI.OSVRKit
 				//swapChain.SetFullscreenState(true, target);
 			}
 
-
-
 			// Create a depth buffer, using the same width and height as the back buffer.
 			Texture2DDescription depthBufferDescription = new Texture2DDescription()
 			{
@@ -343,6 +341,8 @@ namespace PlayerUI.OSVRKit
 						OnGotFocus();
 						first = false;
 					}
+
+					updateSettingsActionQueue.RunAllActions();
 
 					context.update();
 

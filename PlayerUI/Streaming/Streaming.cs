@@ -6,7 +6,9 @@ using RestSharp;
 using System.Linq;
 using Logger = Bivrost.Log.Logger;
 
+#if DEBUG
 [assembly: System.Runtime.CompilerServices.InternalsVisibleToAttribute("PlayerUI.Test")]
+#endif
 
 namespace PlayerUI.Streaming
 {
@@ -215,7 +217,7 @@ namespace PlayerUI.Streaming
 
 	public abstract class ServiceParser {
 
-		#region util
+#region util
 
 		static HttpClient client;
 		internal static async Task<string> HTTPGetStringAsync(string uri) {
@@ -288,7 +290,7 @@ namespace PlayerUI.Streaming
 			}
 		}
 
-		#endregion
+#endregion
 
 		/// <summary>
 		/// Checks if the uri can be parsed by this class.
