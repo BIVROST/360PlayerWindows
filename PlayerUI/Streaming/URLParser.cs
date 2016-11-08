@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,37 +18,36 @@ namespace PlayerUI.Streaming
 
         public override ServiceResult Parse(string uri)
         {
-            // TODO: parse containers (uri.LocalPath.EndsWith())
+			// TODO: check media type
 
-            // TODO: check media type
+			// TODO: if html, try to parse it?
 
-            // TODO: if html, try to parse it?
+			// TODO: search for bivrost-360webplayer tags
 
-            // TODO: search for bivrost-360webplayer tags
-            
-            // TODO: parse tags from filenames (SbS, TaB etc)
+			//RestClient client = new RestClient(uri);
+			//IRestRequest request = new RestRequest(Method.HEAD);
+			//request.AddHeader("Accept", "text/html");
+			//IRestResponse response = client.Execute(request);
+			//if (response.StatusCode != System.Net.HttpStatusCode.OK)
+			//{
+			//    if (view != null)
+			//        Execute.OnUIThreadAsync(() =>
+			//        {
+			//            Valid = false;
+			//            TryClose();
+			//        });
+			//    return;
 
-            //RestClient client = new RestClient(uri);
-            //IRestRequest request = new RestRequest(Method.HEAD);
-            //request.AddHeader("Accept", "text/html");
-            //IRestResponse response = client.Execute(request);
-            //if (response.StatusCode != System.Net.HttpStatusCode.OK)
-            //{
-            //    if (view != null)
-            //        Execute.OnUIThreadAsync(() =>
-            //        {
-            //            Valid = false;
-            //            TryClose();
-            //        });
-            //    return;
+			//}
 
-            //}
+			if (!File.Exists(uri))
+				throw new StreamNetworkFailure("File not available", uri);
 
-
-            return new ServiceResult()
+			return new ServiceResult()
             {
                 originalURL = uri,
                 projection = MediaDecoder.ProjectionMode.Sphere,
+				stereoscopy = GuessStereoscopyFromFileName(uri),
                 serviceName = "plain URL",
                 videoStreams = new List<VideoStream>()
                 {
@@ -55,7 +55,7 @@ namespace PlayerUI.Streaming
                     {
                         url = uri,
                         hasAudio = true, // TODO
-                        container = VideoContainer.mp4  // TODO
+                        container = GuessContainerFromExtension(uri)
                     }
                 }
             };

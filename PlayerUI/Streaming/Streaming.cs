@@ -5,10 +5,14 @@ using System.Threading.Tasks;
 using RestSharp;
 using System.Linq;
 using Logger = Bivrost.Log.Logger;
+using System.Text.RegularExpressions;
+using System.IO;
 
 #if DEBUG
 [assembly: System.Runtime.CompilerServices.InternalsVisibleToAttribute("PlayerUI.Test")]
 #endif
+
+
 
 namespace PlayerUI.Streaming
 {
@@ -188,6 +192,7 @@ namespace PlayerUI.Streaming
 		}
 
 		protected ServiceParser[] parsers = new ServiceParser[] {
+			new BivrostProtocolParser(),
 			new VrideoParser(),
 			new PornhubParser(),
 			new LittlstarParser(),
@@ -260,34 +265,61 @@ namespace PlayerUI.Streaming
 			switch(extension)
 			{
 
-				case "avi":
+				case ".avi":
 					return VideoContainer.avi;
 
-				case "flv":
+				case ".flv":
 					return VideoContainer.flv;
 
-				case "m3u":
-				case "m3u8":
+				case ".m3u":
+				case ".m3u8":
 					return VideoContainer.hls;
 
-				case "webm":
+				case ".webm":
 					return VideoContainer.webm;
 
-				case "ogg":
-				case "ogv":
+				case ".ogg":
+				case ".ogv":
 					return VideoContainer.ogg;
 
-				case "3gp":
+				case ".3gp":
 					return VideoContainer._3gp;
 
-				case "wmv":
+				case ".wmv":
 					return VideoContainer.wmv;
 
-				case "m4v":
-				case "mp4":
-				default:
+				case ".m4v":
+				case ".mp4":
 					return VideoContainer.mp4;
+
+				case "":
+				default:
+					Logger.Info($"GuessContainerFromExtension(${path}) - did not understand extension \"${extension}\", guessing mp4");
+					goto case ".mp4";
 			}
+		}
+
+
+		protected MediaDecoder.VideoMode GuessStereoscopyFromFileName(string path)
+		{
+			string fileName = Path.GetFileNameWithoutExtension(path);
+
+			if (Regex.IsMatch(fileName, @"(\b|_)(SbS|LR)(\b|_)"))
+				return MediaDecoder.VideoMode.SideBySide;
+
+			if (Regex.IsMatch(fileName, @"(\b|_)(RL)(\b|_)"))
+				return MediaDecoder.VideoMode.SideBySideReversed;
+
+			if (Regex.IsMatch(fileName, @"(\b|_)(TaB|TB)(\b|_)"))
+				return MediaDecoder.VideoMode.TopBottom;
+
+			if (Regex.IsMatch(fileName, @"(\b|_)(BaT|BT)(\b|_)"))
+				return MediaDecoder.VideoMode.TopBottomReversed;
+
+			if (Regex.IsMatch(fileName, @"(\b|_)mono(\b|_)"))
+				return MediaDecoder.VideoMode.Mono;
+
+			return MediaDecoder.VideoMode.Autodetect;
 		}
 
 #endregion

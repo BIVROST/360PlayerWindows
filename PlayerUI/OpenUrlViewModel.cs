@@ -14,8 +14,9 @@ namespace PlayerUI
 	{
 		private OpenUrlView view;
 
-		public OpenUrlViewModel()
+		public OpenUrlViewModel(string url = "")
 		{
+			Url = url;
 			DisplayName = "Open video URL";
 		}
 
@@ -26,47 +27,47 @@ namespace PlayerUI
 		}
 
 		private string _url = "";
-		public string Url { get { return _url; } set {
+		public string Url {
+			get { return _url; }
+			set
+			{
 				_url = value;
 				NotifyOfPropertyChange(() => Url);
-			} }
+			}
+		}
 
-		public Streaming.ServiceResult ServiceResult { get; internal set; }
-        public bool Valid { get {
-                return ServiceResult != null;
-            } }
 
+		/// <summary>
+		/// On button press
+		/// </summary>
         public void Open()
 		{
-            ServiceResult = null;
 			Url = Url.Trim();
-			if (string.IsNullOrWhiteSpace(Url))
-               TryClose();
-
-			if(view == null)
-            {
-                Process();
-                return;
-            }
-
-			Task.Factory.StartNew(() =>
-			{
-				Process();
-			});
-
+			
 			view.Open.IsEnabled = false;
 			view.Url.IsEnabled = false;
 			view.progressBar.Visibility = System.Windows.Visibility.Visible;
-        }
 
-		private void Process()
+			// TODO: streaming result process progress bar?
+
+			TryClose(true);
+		}
+		
+
+		/// <summary>
+		/// Executes OpenUrlViewModel window and returns an URL that the user passed, or null if the user cancelled.
+		/// Doesn't check validity
+		/// </summary>
+		public static string GetURI(string defaultUrl = "")
 		{
-            ServiceResult = Logic.ProcessURI(Url);
-
-            if (view != null)
-                Execute.OnUIThreadAsync(() => TryClose());
-
-        }
-
-    }
+			OpenUrlViewModel ouvm = new OpenUrlViewModel(defaultUrl);
+			WindowManager windowManager = new WindowManager();
+			bool? success = windowManager.ShowDialog(ouvm);
+			// return null if user cancelled
+			if (!success.GetValueOrDefault(false))
+				return null;
+			// return a string is open was pressed - even the url is in valid or is empty
+			return ouvm._url ?? "";
+		}
+	}
 }

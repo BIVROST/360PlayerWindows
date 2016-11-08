@@ -346,20 +346,6 @@ namespace PlayerUI
 			}
 		}
 
-		public static VideoMode DetectFromFileName(string fileName)
-		{
-			if (!string.IsNullOrWhiteSpace(fileName))
-			{
-				if (Regex.IsMatch(Path.GetFileNameWithoutExtension(fileName), @"(\b|_)(SbS|LR)(\b|_)")) return VideoMode.SideBySide;
-				if (Regex.IsMatch(Path.GetFileNameWithoutExtension(fileName), @"(\b|_)(RL)(\b|_)")) return VideoMode.SideBySideReversed;
-				if (Regex.IsMatch(Path.GetFileNameWithoutExtension(fileName), @"(\b|_)(TaB|TB)(\b|_)")) return VideoMode.TopBottom;
-				if (Regex.IsMatch(Path.GetFileNameWithoutExtension(fileName), @"(\b|_)(BaT|BT)(\b|_)")) return VideoMode.TopBottomReversed;
-				if (Regex.IsMatch(Path.GetFileNameWithoutExtension(fileName), @"(\b|_)mono(\b|_)")) return VideoMode.Mono;
-			}
-			return VideoMode.Autodetect;
-		}
-
-
 		private MediaSource CreateMediaSource(string sURL)
 		{
 			SourceResolver sourceResolver = new SourceResolver();
@@ -419,18 +405,21 @@ namespace PlayerUI
 					var sns = _mediaEngineEx.NumberOfStreams;
 
 
+					/// TODO: co to tu robi? Czemu _stereoVideo jest zależne od aspectu w taki sposób?
 					float videoAspect = ((float)w) / ((float)h);
 					_stereoVideo = videoAspect < 1.3;
 					h = _stereoVideo ? h / 2 : h;
 
 					CurrentMode = StereoMode;
 
-					if (CurrentMode == VideoMode.Autodetect)
-						CurrentMode = DetectFromFileName(_fileName);
+					// Moved to streaming parser
+					//if (CurrentMode == VideoMode.Autodetect)
+					//	CurrentMode = DetectFromFileName(_fileName);
 
-					Console.WriteLine("VIDEO STEREO MODE: " + CurrentMode);
+					Bivrost.Log.Logger.Info("VIDEO STEREO MODE: " + CurrentMode);
 
-					if (CurrentMode != VideoMode.Mono && CurrentMode != VideoMode.Autodetect) _stereoVideo = true;
+					if (CurrentMode != VideoMode.Mono && CurrentMode != VideoMode.Autodetect)
+						_stereoVideo = true;
 
 
 					//Texture2DDescription frameTextureDescription = new Texture2DDescription()
@@ -688,13 +677,6 @@ namespace PlayerUI
                 }
 
 
-				fileStream?.Close();
-				fileStream?.Dispose();
-				webStream?.Close();
-				webStream?.Dispose();
-				stream?.Close();
-				stream?.Dispose();
-
 				textureL?.Dispose();
 				textureR?.Dispose();
 
@@ -707,10 +689,6 @@ namespace PlayerUI
             OnStop?.Invoke();
         }
 
-        private FileStream fileStream;
-		private Stream webStream;
-		private ByteStream stream;
-		private Uri url;
 		private string _fileName;
         public string FileName { get { return _fileName; } }
 

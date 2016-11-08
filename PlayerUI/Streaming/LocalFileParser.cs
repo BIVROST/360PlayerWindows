@@ -34,6 +34,7 @@ namespace PlayerUI.Streaming
 			{
 				originalURL = path,
 				projection = MediaDecoder.ProjectionMode.Sphere,
+				stereoscopy = GuessStereoscopyFromFileName(uri),
 				serviceName = "Local file",
 				videoStreams = new List<VideoStream>()
 				{

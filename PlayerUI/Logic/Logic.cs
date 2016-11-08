@@ -313,24 +313,36 @@ namespace PlayerUI
         {
             try
             {
-                return Streaming.StreamingFactory.Instance.GetStreamingInfo(uri);
-            }
-            catch (Streaming.StreamNotSupported exc)
+                var sr = Streaming.StreamingFactory.Instance.GetStreamingInfo(uri);
+
+				// no error, but nothing found (probably couldn't parse)
+				if(sr == null)
+					Notify("Url is not valid video or recognised streaming service address.");
+
+				return sr;
+			}
+			catch (Streaming.StreamNotSupported exc)
             {
-                Logger.Error(exc, "Streaming: video not supported. " + uri);
+                Logger.Error(exc, "Streaming: video not supported: " + uri);
                 Notify("Video not yet supported.");
             }
             catch (Streaming.StreamParsingFailed exc)
             {
-                Logger.Error(exc, "Streaming: Parsing failed. Unable to open the video." + uri);
+                Logger.Error(exc, "Streaming: Parsing failed. Unable to open the video: " + uri);
                 Notify("Parsing failed. Unable to open the video.");
             }
-            catch (Exception exc)
+			catch(Streaming.StreamNetworkFailure exc)
+			{
+				Logger.Error(exc, "Streaming: Network/file failuer. Unable to open the video: " + uri);
+				Notify("This file is currently unavailable.");
+			}
+			catch (Exception exc)
             {
-                Logger.Error(exc, "Streaming: media not supported" + uri);
+                Logger.Error(exc, "Streaming: media not supported: " + uri);
                 Notify("Media not supported.");
             }
-            return null;
+
+			return null;
         }
 
 

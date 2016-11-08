@@ -91,19 +91,11 @@ namespace PlayerUI
 			{
 				ownMutex = true;
 
-				if(args != null)
-					if(args.Length > 0)
-					{
-						if(args[0].StartsWith("bivrost:"))
-						{
-							ShellViewModel.FileFromProtocol = args[args.Length - 1];
-						}
-						else
-						{
-							if(!args[args.Length - 1].EndsWith(".exe"))
-								ShellViewModel.FileFromArgs = args[args.Length - 1];
-						}
-					}
+				if(args != null && args.Length > 0)
+				{
+					if(!args[args.Length - 1].EndsWith(".exe"))
+						ShellViewModel.FileFromArgs = args[args.Length - 1];
+				}
 				
 				if (Logic.Instance.settings.EventMode)
 				{

@@ -15,24 +15,24 @@ namespace PlayerUI
 
         private void EnableRemoteControl()
         {
-            Task.Factory.StartNew(() =>
+			Task.Factory.StartNew((System.Action)(() =>
             {
-                remoteControl = ApiServer.InitNancy(apiServer =>
+				remoteControl = ApiServer.InitNancy(apiServer =>
                     {
-                        Log("got unity init, device_id=" + ApiServer.device_id + " movies=[\n" + string.Join(",\n", ApiServer.movies) + "]", ConsoleColor.DarkGreen);
-                        Log("init complete", ConsoleColor.DarkGreen);
+						Log("got unity init, device_id=" + ApiServer.device_id + " movies=[\n" + string.Join(",\n", ApiServer.movies) + "]", ConsoleColor.DarkGreen);
+						Log("init complete", ConsoleColor.DarkGreen);
                     }
                 );
 
-                #region GearVR slave app
+				#region GearVR slave app
 
-                ApiServer.OnBackPressed += () =>
+				ApiServer.OnBackPressed += () =>
                 {
-                    Log("[remote] back pressed", ConsoleColor.DarkGreen);
+					Log("[remote] back pressed", ConsoleColor.DarkGreen);
                 };
 
-                ApiServer.OnStateChange += (state) => {
-                    Log("[remote] state changed: " + state, ConsoleColor.DarkGreen);
+				ApiServer.OnStateChange += (state) => {
+					Log("[remote] state changed: " + state, ConsoleColor.DarkGreen);
 
                     switch (state)
                     {
@@ -45,58 +45,58 @@ namespace PlayerUI
                         //	break;
 
                         case ApiServer.State.pause:
-                            Execute.OnUIThreadAsync(() =>
+							Execute.OnUIThreadAsync(() =>
                             {
                                 if (IsPlaying && !IsPaused)
                                 {
-                                    Pause();
-                                    _mediaDecoder.Seek(remoteTime);
+									Pause();
+									_mediaDecoder.Seek(remoteTime);
                                 }
                             });
                             break;
 
                         case ApiServer.State.play:
-                            Execute.OnUIThreadAsync(() =>
+							Execute.OnUIThreadAsync((System.Action)(() =>
                             {
                                 if (!_ready)
-                                    OpenFileFrom(SelectedFileName);
+                                    this.OpenURI((string)SelectedFileName);
                                 else
-                                    PlayPause();
-                            });
+									PlayPause();
+                            }));
                             break;
 
                         case ApiServer.State.stop:
-                            Execute.OnUIThreadAsync(() =>
+							Execute.OnUIThreadAsync(() =>
                             {
                                 if (IsPlaying)
-                                    Stop();
+									Stop();
                             });
                             break;
                     }
                 };
 
-                ApiServer.OnConfirmPlay += (path) =>
+				ApiServer.OnConfirmPlay += (path) =>
                 {
-                    Log("[remote] path = " + path, ConsoleColor.Green);
+					Log("[remote] path = " + path, ConsoleColor.Green);
                     string remoteFile = path.Split('/').Last();
                     if (File.Exists(Logic.Instance.settings.RemoteControlMovieDirectory + Path.DirectorySeparatorChar + remoteFile))
                     {
-                        IsFileSelected = true;
-                        SelectedFileName = Logic.Instance.settings.RemoteControlMovieDirectory + Path.DirectorySeparatorChar + remoteFile;
+						IsFileSelected = true;
+						SelectedFileName = Logic.Instance.settings.RemoteControlMovieDirectory + Path.DirectorySeparatorChar + remoteFile;
                     }
                     else
                     {
-                        IsFileSelected = false;
-                        SelectedFileName = "";
+						IsFileSelected = false;
+						SelectedFileName = "";
 
-                        Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Requested file \"" + remoteFile + "\" not found in video library.",
+						Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Requested file \"" + remoteFile + "\" not found in video library.",
                             () => {
-                                System.Diagnostics.Process.Start(Logic.Instance.settings.RemoteControlMovieDirectory);
+								System.Diagnostics.Process.Start(Logic.Instance.settings.RemoteControlMovieDirectory);
                             }, "open folder")));
                     }
                 };
 
-                ApiServer.OnPos += (euler, t) =>
+				ApiServer.OnPos += (euler, t) =>
                 {
                     //Log("[remote] position = " + euler.Item1 + ", " + euler.Item2 + ", " + euler.Item3, ConsoleColor.DarkGreen);
                     //remoteTime = (float)(t * MaxTime);
@@ -106,10 +106,10 @@ namespace PlayerUI
                     //}
                 };
 
-                ApiServer.OnPosQuaternion += (quat, t) =>
+				ApiServer.OnPosQuaternion += (quat, t) =>
                 {
-                    //Log("[remote] position = " + quat.Item1 + ", " + euler.Item2 + ", " + euler.Item3, ConsoleColor.DarkGreen);
-                    remoteTime = (float)(t * MaxTime);
+					//Log("[remote] position = " + quat.Item1 + ", " + euler.Item2 + ", " + euler.Item3, ConsoleColor.DarkGreen);
+					remoteTime = (float)(t * MaxTime);
                     if (DXCanvas.Scene != null)
                     {
                         ((Scene)DXCanvas.Scene).SetLook(quat);
@@ -118,23 +118,23 @@ namespace PlayerUI
 
 
 
-                ApiServer.OnInfo += (msg) => {
-                    Log("[remote] msg = " + msg, ConsoleColor.DarkGreen);
+				ApiServer.OnInfo += (msg) => {
+					Log("[remote] msg = " + msg, ConsoleColor.DarkGreen);
                 };
 
-                #endregion
+				#endregion
 
 
-                #region Remote controll app - control API
+				#region Remote controll app - control API
 
-                ApiServer.CommandLoadHandler = (movie, autoplay) =>
+				ApiServer.CommandLoadHandler = (movie, autoplay) =>
                 {
-                    Log("[remote] path = " + movie, ConsoleColor.Green);
+					Log("[remote] path = " + movie, ConsoleColor.Green);
                     string remoteFile = movie.Contains('/') ? movie.Split('/').Last() : movie;
                     if (File.Exists(Logic.Instance.settings.RemoteControlMovieDirectory + Path.DirectorySeparatorChar + remoteFile))
                     {
-                        IsFileSelected = true;
-                        SelectedFileName = Logic.Instance.settings.RemoteControlMovieDirectory + Path.DirectorySeparatorChar + remoteFile;
+						IsFileSelected = true;
+						SelectedFileName = Logic.Instance.settings.RemoteControlMovieDirectory + Path.DirectorySeparatorChar + remoteFile;
 
                         this.LoadMedia(autoplay);
 
@@ -142,20 +142,20 @@ namespace PlayerUI
                     }
                     else
                     {
-                        IsFileSelected = false;
-                        SelectedFileName = "";
+						IsFileSelected = false;
+						SelectedFileName = "";
 
-                        Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Requested file \"" + remoteFile + "\" not found in video library.",
+						Execute.OnUIThreadAsync(() => NotificationCenter.PushNotification(new NotificationViewModel("Requested file \"" + remoteFile + "\" not found in video library.",
                             () => {
-                                System.Diagnostics.Process.Start(Logic.Instance.settings.RemoteControlMovieDirectory);
+								System.Diagnostics.Process.Start(Logic.Instance.settings.RemoteControlMovieDirectory);
                             }, "open folder")));
                         return false;
                     }                    
                 };
 
-                ApiServer.CommandMoviesHandler = () =>
+				ApiServer.CommandMoviesHandler = () =>
                 {
-                    List<string> movies = new List<string>();
+					List<string> movies = new List<string>();
                     var dir = Logic.Instance.settings.RemoteControlMovieDirectory;
                     if (Directory.Exists(dir))
                     {
@@ -175,17 +175,17 @@ namespace PlayerUI
                     return movies.ToArray();
                 };
 
-                ApiServer.CommandPauseHandler = () =>
+				ApiServer.CommandPauseHandler = () =>
                 {
                     if (IsPlaying && !IsPaused)
                     {
-                        Pause();
+						Pause();
                         return true;
                     }
                     return false;
                 };
 
-                ApiServer.CommandPlayingHandler = () =>
+				ApiServer.CommandPlayingHandler = () =>
                 {
                     var info = new ApiServer.PlayingInfo()
                     {
@@ -218,47 +218,47 @@ namespace PlayerUI
                     return info;
                 };
 
-                ApiServer.CommandSeekHandler = (time) =>
+				ApiServer.CommandSeekHandler = (time) =>
                 {
                     if (IsPlaying)
                     {
-                        TimeValue = time;
+						TimeValue = time;
                         return true;
                     }
                     return false;
                 };
 
-                ApiServer.CommandStopAndResetHandler = () =>
+				ApiServer.CommandStopAndResetHandler = () =>
                 {
                     if(IsPlaying)
                     {
-                        Stop();
+						Stop();
                         return true;
                     }
                     return false;
                 };
 
-                ApiServer.CommandUnpauseHandler = () =>
+				ApiServer.CommandUnpauseHandler = () =>
                 {
                     if (IsPlaying && IsPaused)
                     {
-                        UnPause();
+						UnPause();
                         return true;
                     }
                     if(!IsPlaying && IsFileSelected)
                     {
-                        PlayPause();
+						PlayPause();
                         return true;
                     }
                     return false;
                 };
 
 
-                #endregion
+				#endregion
 
-                IsRemoteControlEnabled = true;
+				IsRemoteControlEnabled = true;
 
-            });
+            }));
 
         }
 

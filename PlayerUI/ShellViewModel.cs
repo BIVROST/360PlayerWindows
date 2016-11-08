@@ -68,7 +68,6 @@ namespace PlayerUI
 			}
 		}
 
-		private string _selectedFileName = "";
 		public string SelectedFileNameLabel
 		{
 			get
@@ -79,7 +78,16 @@ namespace PlayerUI
 				return Path.GetFileNameWithoutExtension(SelectedFileName);
 			}
 		}
-		public string SelectedFileName { get { return _selectedFileName; } set { this._selectedFileName = value; NotifyOfPropertyChange(() => SelectedFileName); } }
+
+		private string _selectedFileName = "";
+		public string SelectedFileName {
+			get { return _selectedFileName; }
+			set
+			{
+				this._selectedFileName = value;
+				NotifyOfPropertyChange(() => SelectedFileName);
+			}
+		}
 		public bool IsFileSelected { get; set; }
 
 		public string SelectedFileTitle { get; set; } = "";
@@ -108,7 +116,6 @@ namespace PlayerUI
 		public HeadsetMenuViewModel HeadsetMenu { get; set; }
 
 		public static string FileFromArgs = "";
-		public static string FileFromProtocol = "";
 
 		private Controller xpad;
 		private static TimeoutBool urlLoadLock = false;
@@ -319,39 +326,9 @@ namespace PlayerUI
 			//string clipboardText = Clipboard.GetText();
 			string clipboardText = wmText;
 
-			Console.WriteLine(clipboardText);
+			Logger.Info($"Clipboard: ${clipboardText}");
 
-			if (clipboardText.StartsWith("bivrost:"))
-			{
-				try
-				{
-					var protocol = Protocol.Parse(clipboardText);
-					switch (protocol.stereoscopy)
-					{
-						case Protocol.Stereoscopy.autodetect: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.Autodetect; break;
-						case Protocol.Stereoscopy.mono: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.Mono; break;
-						case Protocol.Stereoscopy.side_by_side: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.SideBySide; break;
-						case Protocol.Stereoscopy.top_and_bottom: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.TopBottom; break;
-						case Protocol.Stereoscopy.top_and_bottom_reversed: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.TopBottomReversed; break;
-					}
-					Loop = protocol.loop.HasValue ? protocol.loop.Value : false;
-					string videoUrl = protocol.urls.FirstOrDefault((u) =>
-					{
-						var b1 = Regex.IsMatch(u, @"(\b|_).mp4(\b|_)");
-						var b2 = Regex.IsMatch(u, @"(\b|_).avi(\b|_)");
-						return b1 || b2;
-					});
-					if (string.IsNullOrWhiteSpace(videoUrl))
-						videoUrl = protocol.urls[0];
-					OpenUrlFrom(videoUrl);
-				}
-				catch (Exception) { }
-
-			}
-			else
-			{
-				OpenFileFrom(clipboardText);
-			}
+			OpenURI(clipboardText);
 		}
 
 		protected override void OnViewLoaded(object view)
@@ -366,57 +343,16 @@ namespace PlayerUI
 
 			shellView.BufferingStatus.Visibility = Visibility.Collapsed;
 			
-			UpdateRecents();
+			UpdateFileRecentsMenuState();
 			ShowStartupUI();
 
 			//xpad = new Controller(SharpDX.XInput.UserIndex.One);
 
-			if (File.Exists(FileFromArgs))
+			if (!string.IsNullOrWhiteSpace(FileFromArgs))
 			{
-				OpenFileFrom(FileFromArgs);
-				//IsFileSelected = true;
-				//SelectedFileName = FileFromArgs;
-				//Play();
-				//Task.Factory.StartNew(() => Execute.OnUIThread(() => {
-				//	Recents.AddRecent(SelectedFileName);
-				//	UpdateRecents();
-				//	ShowPlaybackUI();
-				//}));
+				Logger.Info($"Opening URI from command line arguments: {FileFromArgs}");
+				OpenURI(FileFromArgs);
 			}
-
-			//FileFromProtocol = @"bivrost:https://www.youtube.com/watch?v=edcJ_JNeyhg";
-
-			Task.Factory.StartNew(() =>
-			{
-				if (!string.IsNullOrWhiteSpace(FileFromProtocol))
-				{
-					try
-					{
-						var protocol = Protocol.Parse(FileFromProtocol);
-
-						switch (protocol.stereoscopy)
-						{
-							case Protocol.Stereoscopy.autodetect: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.Autodetect; break;
-							case Protocol.Stereoscopy.mono: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.Mono; break;
-							case Protocol.Stereoscopy.side_by_side: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.SideBySide; break;
-							case Protocol.Stereoscopy.top_and_bottom: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.TopBottom; break;
-							case Protocol.Stereoscopy.top_and_bottom_reversed: _mediaDecoder.StereoMode = MediaDecoder.VideoMode.TopBottomReversed; break;
-						}
-						Loop = protocol.loop.HasValue ? protocol.loop.Value : false;
-						string videoUrl = protocol.urls.FirstOrDefault((u) =>
-						{
-							var b1 = Regex.IsMatch(u, @"(\b|_).mp4(\b|_)");
-							var b2 = Regex.IsMatch(u, @"(\b|_).avi(\b|_)");
-							return b1 || b2;
-						});
-						if (string.IsNullOrWhiteSpace(videoUrl))
-							videoUrl = protocol.urls[0];
-
-						OpenUrlFrom(videoUrl);
-					}
-					catch (Exception) { }
-				}
-			});
 
 			osvrPlayback.OnGotFocus += () => Task.Factory.StartNew(() =>
 			{
@@ -426,16 +362,6 @@ namespace PlayerUI
 				});
 			});
 
-
-
-			//Task.Factory.StartNew(() =>
-			//{
-			//	var connected = OculusPlayback.IsOculusPresent();
-			//	if(!connected)
-			//	{
-			//		NotificationCenter.PushNotification(new NotificationViewModel("Oculus Rift not connected"));
-			//	}
-			//});
 
 			Logic.Instance.CheckForUpdate();
 			Logic.Instance.CheckForBrowsers();
@@ -846,69 +772,51 @@ namespace PlayerUI
 		}
 
 
-		private void OpenUrlFrom(string url)
+		/// <summary>
+		/// Dialog opened from:
+		/// - Open Url button in menu
+		/// - Open Url button on center of screen
+		/// </summary>
+		public void OpenUrl()
 		{
-			if (urlLoadLock)
-				return;
-			urlLoadLock = true;
-
-			Execute.OnUIThreadAsync(() =>
-			{
-				SelectedFileTitle = "";
-
-				NotificationCenter.PushNotification(new NotificationViewModel("Checking url..."));
-				OpenUrlViewModel ouvm = new OpenUrlViewModel();
-				ouvm.Url = url;
-				Task.Factory.StartNew(() =>
-				{
-					ouvm.Open();
-
-					Execute.OnUIThreadAsync(() => LoadOUVM(ouvm));
-				});
-
-			});
+			Execute.OnUIThread(() => IsFileSelected = false);
+			string uri = OpenUrlViewModel.GetURI();
+			OpenURI(uri);
 		}
 
 
-        public void OpenUrl()
-        {
-            SelectedFileTitle = "";
+		public void OpenURI(string uri)
+		{
+			SelectedFileTitle = "";
 
-            OpenUrlViewModel ouvm = DialogHelper.ShowDialogOut<OpenUrlViewModel>();
-            LoadOUVM(ouvm);
-        }
+			Streaming.ServiceResult result = Logic.ProcessURI(uri); /// TODO: blokuje!
+			Logger.Info($"OpenURI: Parsed '{uri}' to {result}");
 
+			if (result == null)
+			{
+				urlLoadLock = false;
+				return;
+			}
 
-        /// <summary>
-        /// Must be run on UI thread
-        /// </summary>
-        /// <param name="ouvm"></param>
-        private void LoadOUVM(OpenUrlViewModel ouvm)
-        {
-            if (ouvm.Valid)
-            {
-                NotificationCenter.PushNotification(new NotificationViewModel("Loading..."));
-                ResetPlayback();
+			Execute.OnUIThread(() =>
+			{
+				Logic.Notify("Loading...");
+				ResetPlayback();
 
-                SelectedFileName = ouvm.ServiceResult.BestQualityVideoStream(Streaming.VideoContainer.mp4).url;
-                IsFileSelected = true;
-                _mediaDecoder.Projection = ouvm.ServiceResult.projection;
-                _mediaDecoder.StereoMode = ouvm.ServiceResult.stereoscopy;
-                SelectedFileTitle = ouvm.ServiceResult.title;
+				SelectedFileName = result.BestQualityVideoStream(Streaming.VideoContainer.mp4).url;
+				IsFileSelected = true;
+				_mediaDecoder.Projection = result.projection;
+				_mediaDecoder.StereoMode = result.stereoscopy;
+				SelectedFileTitle = result.title;
 
-                Recents.AddRecent(ouvm.ServiceResult.originalURL);
-                UpdateRecents();
+				Recents.AddRecent(result.originalURL);
+				UpdateFileRecentsMenuState();
 
-                Execute.OnUIThreadAsync(() => LoadMedia());
-            }
-            else
-            {
-                NotificationCenter.PushNotification(new NotificationViewModel("Url is not valid video or recognised streaming service address."));
-                urlLoadLock = false;
-            }
-        }
+				LoadMedia();
+			});
+		}
 
-
+		
         public void PlayPause()
 		{
 			//space press hack
@@ -972,35 +880,30 @@ namespace PlayerUI
 			});
 		}
 
+
+		/// <summary>
+		/// Open/Choose File dialog invoked from:
+		/// - Menu Open File
+		/// - Open file button
+		/// </summary>
 		public void OpenFile()
 		{
 			Microsoft.Win32.OpenFileDialog ofd = new Microsoft.Win32.OpenFileDialog();
 			//ofd.Filter = "Video MP4|*.mp4|Video M4V|*.m4v|All|*.*";
 			ofd.Filter = MediaDecoder.ExtensionsFilter();
 			bool? result = ofd.ShowDialog();
-			if (result.HasValue)
-				if (result.Value == true)
-				{
-					OpenFileFrom(ofd.FileName);
-				}
+			if (result.GetValueOrDefault(false))
+				OpenURI(ofd.FileName);
 		}
 
-		public void UpdateRecents()
+
+		/// <summary>
+		/// Updates the File->(recent files) menu, binding the action to it and
+		/// pruning to at most 10 entries
+		/// </summary>
+		public void UpdateFileRecentsMenuState()
 		{
-			Recents.UpdateMenu(shellView.FileMenuItem, (file) =>
-			{
-				if (file.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) || file.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
-				{
-					OpenUrlFrom(file);
-				}
-				else if (!File.Exists(file))
-				{
-					Recents.Remove(file);
-					UpdateRecents();
-				}
-				else
-					OpenFileFrom(file);
-			});
+			Recents.UpdateMenu(shellView.FileMenuItem, OpenURI);
 		}
 
 		public void OpenAbout()
@@ -1030,7 +933,7 @@ namespace PlayerUI
 				//if (Path.GetExtension(files[0]) == ".mp4")
 				if (MediaDecoder.CheckExtension(Path.GetExtension(files[0])))
 				{
-					OpenFileFrom(files[0]);
+					OpenURI(files[0]);
 				}
 				else
 				{
@@ -1074,26 +977,6 @@ namespace PlayerUI
 
 		//public bool CanOpenFile { get { return !IsPlaying; } }
 
-		private void OpenFileFrom(string file)
-		{
-			if (File.Exists(file))
-			{
-				Task.Factory.StartNew(() =>
-				{
-					ResetPlayback();
-					IsFileSelected = true;
-					SelectedFileName = file;
-					Execute.OnUIThread(() => LoadMedia());
-					Task.Factory.StartNew(() => Execute.OnUIThread(() =>
-					{
-						Recents.AddRecent(SelectedFileName);
-						UpdateRecents();
-						ShowPlaybackUI();
-					}));
-				});
-
-			}
-		}
 
 		public void Stop()
 		{
@@ -1206,6 +1089,8 @@ namespace PlayerUI
 			NotifyOfPropertyChange(null);	
 		}
 
+
+		#region mouse events
 		private Point _mouseDownPoint;
 		private bool _drag = false;
 		private IInputElement _element;
@@ -1279,7 +1164,10 @@ namespace PlayerUI
 				_element.MouseMove -= MouseMove;
 			}
 		}
+		#endregion
 
+
+		#region fullscreen
 		private bool _fullscreen = false;
 		public bool Fullscreen
 		{
@@ -1325,6 +1213,9 @@ namespace PlayerUI
 		{
 			if (Fullscreen) ToggleFullscreen(true);
 		}
+		#endregion
+
+
 
 		public void OnLostFocus()
 		{
