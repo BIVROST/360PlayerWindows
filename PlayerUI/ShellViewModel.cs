@@ -789,7 +789,7 @@ namespace PlayerUI
 		{
 			SelectedFileTitle = "";
 
-			Streaming.ServiceResult result = Logic.ProcessURI(uri); /// TODO: blokuje!
+			Streaming.ServiceResult result = ServiceResultResolver.DialogProcessURIBlocking(uri);
 			Logger.Info($"OpenURI: Parsed '{uri}' to {result}");
 
 			if (result == null)
@@ -800,7 +800,6 @@ namespace PlayerUI
 
 			Execute.OnUIThread(() =>
 			{
-				Logic.Notify("Loading...");
 				ResetPlayback();
 
 				SelectedFileName = result.BestQualityVideoStream(Streaming.VideoContainer.mp4).url;
@@ -809,7 +808,7 @@ namespace PlayerUI
 				_mediaDecoder.StereoMode = result.stereoscopy;
 				SelectedFileTitle = result.title;
 
-				Recents.AddRecent(result.originalURL);
+				Recents.AddRecent(result);
 				UpdateFileRecentsMenuState();
 
 				LoadMedia();
@@ -833,7 +832,8 @@ namespace PlayerUI
 			}
 			else
 			{
-				if (IsPaused) UnPause();
+				if (IsPaused)
+					UnPause();
 				else Pause();
 			}
 
@@ -897,14 +897,89 @@ namespace PlayerUI
 		}
 
 
+		#region recents
+
 		/// <summary>
 		/// Updates the File->(recent files) menu, binding the action to it and
 		/// pruning to at most 10 entries
 		/// </summary>
 		public void UpdateFileRecentsMenuState()
 		{
-			Recents.UpdateMenu(shellView.FileMenuItem, OpenURI);
+			//Recents.UpdateMenu(shellView.FileMenuItem, OpenURI);
 		}
+
+
+		public class RecentsItem
+		{
+			private Recents.RecentsFormat2.RecentElement recent;
+
+			public RecentsItem(Recents.RecentsFormat2.RecentElement recentElement)
+			{
+				this.recent = recentElement;
+			}
+
+			public class RunRecentItemCommand : ICommand
+			{
+				private RecentsItem recentsItem;
+
+				public RunRecentItemCommand(RecentsItem recentsItem)
+				{
+					this.recentsItem = recentsItem;
+				}
+
+				public event EventHandler CanExecuteChanged;
+
+				public bool CanExecute(object parameter)
+				{
+					return true;
+				}
+
+				public void Execute(object parameter)
+				{
+					ShellViewModel.Instance.OpenURI(recentsItem.recent.uri);
+				}
+			}
+
+
+			public string Header
+			{
+				get { return recent.title; }
+			}
+			public ICommand Command
+			{
+				get { return new RunRecentItemCommand(this); }
+			}
+
+
+
+		}
+
+
+		public List<RecentsItem> Items { get { return Recents.RecentFiles.ConvertAll(r => new RecentsItem(r)); } }
+		
+
+
+		public class ObjectToTypeConverter : System.Windows.Data.IValueConverter
+		{
+			#region IValueConverter Members
+
+			public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+			{
+				if (value == null)
+					return null;
+				else
+					return value.GetType();
+			}
+
+			public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+			{
+				throw new NotImplementedException();
+			}
+
+			#endregion
+		}
+		#endregion
+
 
 		public void OpenAbout()
 		{

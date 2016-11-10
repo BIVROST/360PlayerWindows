@@ -41,6 +41,9 @@ namespace PlayerUI.Streaming
 			if (string.IsNullOrWhiteSpace(videoUrl))
 				videoUrl = protocol.urls[0];
 
+			if (string.IsNullOrWhiteSpace(videoUrl))
+				throw new StreamParsingFailed("no video stated in protocol");
+
 			MediaDecoder.ProjectionMode projection;
 			switch (protocol.projection)
 			{
@@ -48,12 +51,17 @@ namespace PlayerUI.Streaming
 				case Protocol.Projection.equirectangular: projection = MediaDecoder.ProjectionMode.Sphere; break;
 			}
 
+			string title = System.IO.Path.GetFileName(videoUrl);
+			if (string.IsNullOrWhiteSpace(title))
+				title = uri;
+
 			return new ServiceResult()
 			{
 				originalURL = uri,
 				projection = projection,
 				stereoscopy = stereoscopy,
 				serviceName = "Bivrost protocol",
+				title = title,
 				videoStreams = new List<VideoStream>()
 				{
 					new VideoStream()

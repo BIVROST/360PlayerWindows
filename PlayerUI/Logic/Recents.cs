@@ -1,22 +1,56 @@
-﻿using Newtonsoft.Json;
+﻿using Bivrost.Log;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Interactivity;
 
 namespace PlayerUI
 {
 	public class Recents
 	{
-		public static List<string> recentFiles = new List<string>();
+		public class RecentsFormat1 : List<string> { }
 
-		public static void Save()
+		public class RecentsFormat2 : List<RecentsFormat2.RecentElement>
+		{
+			public class RecentElement
+			{
+				public string title;
+				public string uri;
+			}
+
+
+			public static implicit operator RecentsFormat2(RecentsFormat1 rf1)
+			{
+				RecentsFormat2 rf2 = new RecentsFormat2();
+				rf2.AddRange(rf1.ConvertAll(uri => 
+				{
+					Logger.Info("Upgrading recents from v1");
+					string title = uri;
+					if (uri.StartsWith("http", StringComparison.InvariantCultureIgnoreCase) && !string.IsNullOrWhiteSpace(Path.GetFileName(uri)))
+						title = Path.GetFileName(uri);
+					return new RecentElement() { uri = uri, title = title };
+				}));
+				return rf2;
+			}
+		}
+
+
+		static RecentsFormat2 recentFiles = null;
+
+
+		public static RecentsFormat2 RecentFiles
+		{
+			get
+			{
+				if (recentFiles == null)
+					Load();
+				return recentFiles;
+			}
+		}
+
+		static void Save()
 		{
 			try
 			{
@@ -27,84 +61,53 @@ namespace PlayerUI
 				File.WriteAllText(recentConfig, JsonConvert.SerializeObject(recentFiles), Encoding.UTF8);
 			}
 			catch (Exception exc) {
-				Console.WriteLine("[EXC] " + exc.Message);
+				Logger.Error("Recents save: " + exc.Message);
 			}
 		}
 
-		public static void Remove(string file)
+		static void Load()
 		{
-			if (recentFiles.Contains(file))
-				recentFiles.Remove(file);
-		}
-
-		public static void Load()
-		{
-				try
-				{
+			Debug.Assert(recentFiles == null);
+			try
+			{
 				string dataFoler = Logic.LocalDataDirectory;//Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\BivrostPlayer";
-					if (!Directory.Exists(dataFoler))
-						Directory.CreateDirectory(dataFoler);
-					string recentConfig = dataFoler + "recents";
+				if (!Directory.Exists(dataFoler))
+					Directory.CreateDirectory(dataFoler);
+				string recentConfig = dataFoler + "recents";
 
 				if (File.Exists(recentConfig))
-					{
+				{
+					string recentsSerialized = File.ReadAllText(recentConfig, Encoding.UTF8);
 
-						List<string> tempRecents = JsonConvert.DeserializeObject<List<string>>(File.ReadAllText(recentConfig, Encoding.UTF8));
-						if (tempRecents != null)
-						{
-							recentFiles.Clear();
-							recentFiles.AddRange(tempRecents);
-						}
+					try
+					{
+						recentFiles = JsonConvert.DeserializeObject<RecentsFormat2>(recentsSerialized);
+					}
+					// this probably isn't in the newest format, try the older one
+					catch(JsonSerializationException e)
+					{
+						recentFiles = JsonConvert.DeserializeObject<RecentsFormat1>(recentsSerialized);
+						Save();
 					}
 				}
-				catch (Exception exc) {
-					Console.WriteLine("[EXC] " + exc.Message);
-				}
-		}
-
-		public static void AddRecent(string file)
-		{
-			if(recentFiles.Contains(file))
-			{
-				int index = recentFiles.IndexOf(file);
-				recentFiles.RemoveAt(index);
-			}
-			recentFiles.Add(file);
-			if(recentFiles.Count > 10)
-			{
-				recentFiles.RemoveAt(0);
-			}
-			Save();
-		}
-
-		public static void UpdateMenu(MenuItem menuItem, Action<string> bindAction)
-		{
-			List<MenuItem> deleteItems = new List<MenuItem>();
-			foreach (object oitem in menuItem.Items)
-			{
-				MenuItem item = oitem as MenuItem;
-				if (item != null)
+				else
 				{
-					if (((string)item.Tag) == "recent")
-						deleteItems.Add(item);
+					Logger.Info("Creating new recents file");
+					recentFiles = new RecentsFormat2();
 				}
 			}
+			catch (Exception exc) {
+				Logger.Error(exc, "Recents error");
+			}
+		}
 
-			deleteItems.ForEach(di => menuItem.Items.Remove(di));
-
-			recentFiles.Reverse<string>().Take(10).ToList().ForEach(recent =>
-			  {
-				  string header = recent.StartsWith("http", StringComparison.InvariantCultureIgnoreCase) ? recent : Path.GetFileName(recent);
-				  string fileName = recent;
-				  MenuItem newItem = new MenuItem() { Header = header };
-				  newItem.Tag = "recent";
-				  newItem.Click += (sender, e) =>
-				  {
-					  bindAction(fileName);
-				  };
-				  //newItem.InputGestureText = "Ctrl+" + index++ % 10;
-				  menuItem.Items.Add(newItem);
-			  });
+		public static void AddRecent(Streaming.ServiceResult result)
+		{
+			recentFiles.RemoveAll(f => f.uri == result.originalURL);
+			recentFiles.Add(new RecentsFormat2.RecentElement() { title = result.title, uri = result.originalURL });
+			while(recentFiles.Count > 10)
+				recentFiles.RemoveAt(0);
+			Save();
 		}
 
 	}

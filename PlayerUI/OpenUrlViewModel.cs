@@ -48,8 +48,6 @@ namespace PlayerUI
 			view.Url.IsEnabled = false;
 			view.progressBar.Visibility = System.Windows.Visibility.Visible;
 
-			// TODO: streaming result process progress bar?
-
 			TryClose(true);
 		}
 		

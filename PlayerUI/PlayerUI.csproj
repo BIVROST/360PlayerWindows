@@ -82,7 +82,7 @@
     <GenerateManifests>true</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <SignManifests>true</SignManifests>
+    <SignManifests>false</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>false</SignAssembly>
@@ -387,6 +387,9 @@
     </Compile>
     <Compile Include="NotificationViewModel.cs" />
     <Compile Include="Oculus\EyeTexture.cs" />
+    <Compile Include="ServiceResultResolver.xaml.cs">
+      <DependentUpon>ServiceResultResolver.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Statistics\LookListener.cs" />
     <Compile Include="Statistics\ILookProvider.cs" />
     <Compile Include="Oculus\OculusPlayback.cs" />
@@ -525,6 +528,10 @@
     <Page Include="NotificationView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ServiceResultResolver.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="SettingsWindowView.xaml">
       <SubType>Designer</SubType>

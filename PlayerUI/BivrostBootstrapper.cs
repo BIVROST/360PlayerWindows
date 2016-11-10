@@ -38,7 +38,7 @@ namespace PlayerUI
 
 			System.Windows.Forms.Application.EnableVisualStyles();
 
-			if (ApplicationDeployment.IsNetworkDeployed)
+			if (!System.Diagnostics.Debugger.IsAttached && ApplicationDeployment.IsNetworkDeployed)
 			{
 				Logic.LocalDataDirectory = ApplicationDeployment.CurrentDeployment.DataDirectory + "\\";
 

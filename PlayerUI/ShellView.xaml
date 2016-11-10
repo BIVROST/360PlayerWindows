@@ -135,14 +135,30 @@
 
         <DockPanel Grid.Row="0" Grid.RowSpan="2" Background="Transparent" VerticalAlignment="Top" x:Name="topMenuPanel">
             <Menu DockPanel.Dock="Top" Height="22" Padding="2">
-                <MenuItem Header="File" x:Name="FileMenuItem">
-                    <MenuItem Header="Open file" x:Name="OpenFile" InputGestureText="Ctrl+O"/>
-                    <MenuItem Header="Open URL" x:Name="OpenUrl" InputGestureText="Ctrl+U"/>
-                    <Separator />
-                    <MenuItem Header="Quit" x:Name="Quit" InputGestureText="Ctrl+Q"/>
-                    <Separator  />
-                    <MenuItem Header="( no recently opened files )" Foreground="gray" Visibility="Visible" Tag="recent"/>
-                </MenuItem>
+
+				<Menu.Resources>
+					<Style TargetType="{x:Type MenuItem}" x:Key="SpecificMenuType">
+						<Setter Property="MenuItem.Header" Value="{Binding Path=Header}" />
+						<Setter Property="MenuItem.Command" Value="{Binding Path=Command}" />
+					</Style>
+					<CollectionViewSource x:Key="dynamicItems" Source="{Binding Items}"/>
+				</Menu.Resources>
+				
+				
+				<MenuItem Header="File">
+					<MenuItem.ItemsSource>
+						<CompositeCollection>
+							<MenuItem Header="Open file" x:Name="OpenFile" InputGestureText="Ctrl+O"/>
+							<MenuItem Header="Open URL" x:Name="OpenUrl" InputGestureText="Ctrl+U"/>
+							<Separator />
+							<CollectionContainer Collection="{Binding Source={StaticResource dynamicItems }}"/>
+							<Separator />
+							<MenuItem Header="Quit" x:Name="Quit" InputGestureText="Ctrl+Q" HorizontalContentAlignment="Left" VerticalContentAlignment="Top" />
+						</CompositeCollection>
+					</MenuItem.ItemsSource>
+				</MenuItem>
+
+
                 <MenuItem Header="Navigate">
                     <MenuItem Header="Play/Pause" InputGestureText="Space" cal:Message.Attach="[Event Click] = [Action PlayPause]" />
                     <MenuItem Header="Stop" cal:Message.Attach="[Event Click] = [Action Stop]" />

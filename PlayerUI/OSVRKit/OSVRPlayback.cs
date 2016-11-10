@@ -256,6 +256,14 @@ namespace PlayerUI.OSVRKit
 					}
 
 					var bounds = dxgiDevice.Adapter.Outputs[_selectedOutput].Description.DesktopBounds;
+
+
+					//var osvrContext = context;
+					//var x=osvrContext.getRenderManagerConfig().getXPosition();
+					//var y=osvrContext.getRenderManagerConfig().getYPosition();
+					//var w=osvrContext.getDisplayParameters().getResolution(0).getWidth();
+					//var h=osvrContext.getDisplayParameters().getResolution(0).getHeight();
+
 					form.DesktopBounds = new System.Drawing.Rectangle(bounds.X, bounds.Y, bounds.Width, bounds.Height);
 				}
 				else

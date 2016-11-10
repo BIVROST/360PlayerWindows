@@ -1,0 +1,19 @@
+﻿<Window x:Class="PlayerUI.ServiceResultResolver"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:cal="http://www.caliburnproject.org"
+        Title="Opening..." Height="80" Width="650" WindowStyle="ToolWindow" WindowStartupLocation="CenterOwner" ResizeMode="NoResize" ShowInTaskbar="False">
+    <Grid>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="*" />
+			<ColumnDefinition Width="80" />
+		</Grid.ColumnDefinitions>
+		
+		<Button x:Name="Cancel" Content="Cancel" Grid.Column="2" VerticalAlignment="Center" Margin="5" Height="28" Click="Cancel_Click"/>
+
+		<Grid Grid.Column="0" Background="White" Visibility="Visible" x:Name="progressBar">
+			<ProgressBar Margin="8,8" IsIndeterminate="True"/>
+		</Grid>
+		
+    </Grid>
+</Window>

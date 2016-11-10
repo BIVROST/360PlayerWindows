@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Bivrost.Log;
+using System;
 using System.Collections.Generic;
 using System.Deployment.Application;
 using System.Linq;
@@ -15,7 +16,7 @@ namespace PlayerUI
 
 		public static bool CheckForUpdate()
 		{
-			if (ApplicationDeployment.IsNetworkDeployed)
+			if (!System.Diagnostics.Debugger.IsAttached && ApplicationDeployment.IsNetworkDeployed)
 			{
 				ApplicationDeployment ad = ApplicationDeployment.CurrentDeployment;
 
@@ -24,8 +25,9 @@ namespace PlayerUI
 					info = ad.CheckForDetailedUpdate();
 
 				}
-				catch (Exception)
+				catch (Exception ex)
 				{
+					Logger.Error(ex, "Update check failed");
 					return false;
 				}
 
@@ -54,6 +56,7 @@ namespace PlayerUI
 					}
 					catch (DeploymentDownloadException dde)
 					{
+						Logger.Error(dde, "Update deployement failed");
 						if (OnUpdateFail != null) {
 							OnUpdateFail();
 							OnUpdateFail = null;

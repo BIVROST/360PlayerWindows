@@ -101,8 +101,6 @@ namespace PlayerUI
 
 			ProtocolHandler.RegisterProtocol();
 
-			Recents.Load();
-
 			Task.Factory.StartNew(() =>
 			{
 				webSocketServer = new WebSocketServer("ws://127.0.0.1:24876"); // PORT "BIVRO" 24876
@@ -303,47 +301,7 @@ namespace PlayerUI
 
 
 
-        /// <summary>
-        /// Processes an URI and returns a ServiceResult or null on failure
-        /// Displays notifications on errors.
-        /// </summary>
-        /// <param name="uri"></param>
-        /// <returns>ServiceResult with parsed streaming information or null</returns>
-        internal static Streaming.ServiceResult ProcessURI(string uri)
-        {
-            try
-            {
-                var sr = Streaming.StreamingFactory.Instance.GetStreamingInfo(uri);
-
-				// no error, but nothing found (probably couldn't parse)
-				if(sr == null)
-					Notify("Url is not valid video or recognised streaming service address.");
-
-				return sr;
-			}
-			catch (Streaming.StreamNotSupported exc)
-            {
-                Logger.Error(exc, "Streaming: video not supported: " + uri);
-                Notify("Video not yet supported.");
-            }
-            catch (Streaming.StreamParsingFailed exc)
-            {
-                Logger.Error(exc, "Streaming: Parsing failed. Unable to open the video: " + uri);
-                Notify("Parsing failed. Unable to open the video.");
-            }
-			catch(Streaming.StreamNetworkFailure exc)
-			{
-				Logger.Error(exc, "Streaming: Network/file failuer. Unable to open the video: " + uri);
-				Notify("This file is currently unavailable.");
-			}
-			catch (Exception exc)
-            {
-                Logger.Error(exc, "Streaming: media not supported: " + uri);
-                Notify("Media not supported.");
-            }
-
-			return null;
-        }
+    
 
 
         /// <summary>
