@@ -18,7 +18,9 @@
                 Graphics/play_blue.svg
             </sys:String>
 
-            <Style x:Key="{x:Type ToolTip}" TargetType="ToolTip">
+			<ui:ObjectToTypeConverter x:Key="objectToTypeConverter" />
+
+			<Style x:Key="{x:Type ToolTip}" TargetType="ToolTip">
                 <Setter Property="OverridesDefaultStyle" Value="true" />
                 <Setter Property="HasDropShadow" Value="True" />
                 <Setter Property="Template">
@@ -137,23 +139,28 @@
             <Menu DockPanel.Dock="Top" Height="22" Padding="2">
 
 				<Menu.Resources>
-					<Style TargetType="{x:Type MenuItem}" x:Key="SpecificMenuType">
-						<Setter Property="MenuItem.Header" Value="{Binding Path=Header}" />
-						<Setter Property="MenuItem.Command" Value="{Binding Path=Command}" />
+					<Style TargetType="{x:Type MenuItem}">
+						<Style.Triggers>
+							<DataTrigger Binding="{Binding Converter={StaticResource objectToTypeConverter}}" Value="{x:Type ui:RecentsItem}">
+								<Setter Property="Header" Value="{Binding Header}" />
+								<Setter Property="Command" Value="{Binding Command}" />
+							</DataTrigger>
+						</Style.Triggers>
 					</Style>
+
 					<CollectionViewSource x:Key="dynamicItems" Source="{Binding Items}"/>
 				</Menu.Resources>
-				
-				
-				<MenuItem Header="File">
+
+
+				<MenuItem Header="File">					
 					<MenuItem.ItemsSource>
 						<CompositeCollection>
-							<MenuItem Header="Open file" x:Name="OpenFile" InputGestureText="Ctrl+O"/>
-							<MenuItem Header="Open URL" x:Name="OpenUrl" InputGestureText="Ctrl+U"/>
+							<MenuItem Header="Open file" x:Name="OpenFile" InputGestureText="Ctrl+O" />
+							<MenuItem Header="Open URL" x:Name="OpenUrl" InputGestureText="Ctrl+U" />
 							<Separator />
-							<CollectionContainer Collection="{Binding Source={StaticResource dynamicItems }}"/>
+							<CollectionContainer Collection="{Binding Source={StaticResource dynamicItems}}"/>
 							<Separator />
-							<MenuItem Header="Quit" x:Name="Quit" InputGestureText="Ctrl+Q" HorizontalContentAlignment="Left" VerticalContentAlignment="Top" />
+							<MenuItem Header="Quit" x:Name="Quit" InputGestureText="Ctrl+Q" />
 						</CompositeCollection>
 					</MenuItem.ItemsSource>
 				</MenuItem>

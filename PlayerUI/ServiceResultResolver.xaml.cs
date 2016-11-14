@@ -10,14 +10,15 @@ namespace PlayerUI
 	/// </summary>
 	public partial class ServiceResultResolver : Window
 	{
-		protected ServiceResultResolver()
+		protected ServiceResultResolver(Window owner)
 		{
+			Owner = owner;
 			InitializeComponent();
 		}
 
-		public static ServiceResult DialogProcessURIBlocking(string uri)
+		public static ServiceResult DialogProcessURIBlocking(string uri, Window owner)
 		{
-			var window = new ServiceResultResolver();
+			var window = new ServiceResultResolver(owner);
 
 			ServiceResult result = null;
 			bool closed = false;
@@ -25,7 +26,10 @@ namespace PlayerUI
 			var task = Task.Run(() =>
 			{
 				result = StreamingFactory.Instance.GetStreamingInfo(uri);
-				window.Dispatcher.Invoke(() => window.Close());
+				if (closed)
+					Logger.Info($"Streaming result resolving was cancelled before completion. Uri={uri}.");
+				else
+					window.Dispatcher.Invoke(() => window.Close());
 			});
 
 			window.ShowDialog();

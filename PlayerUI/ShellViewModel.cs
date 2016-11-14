@@ -1,7 +1,6 @@
 ﻿using Caliburn.Micro;
 using PlayerUI.ConfigUI;
 using PlayerUI;
-//using PlayerUI.Oculus;
 using PlayerUI.Tools;
 using PlayerUI.WPF;
 using System;
@@ -144,14 +143,11 @@ namespace PlayerUI
 
 		public ShellViewModel()
 		{
-			oculusPlayback = new Oculus.OculusPlayback();
-			osvrPlayback = new OSVRKit.OSVRPlayback();
-			openVRPlayback = new OpenVR.OpenVRPlayback();
 			headsets = new List<Headset>()
 			{
-				oculusPlayback,
-				osvrPlayback,
-				openVRPlayback
+				(oculusPlayback = new Oculus.OculusPlayback()),
+				(osvrPlayback = new OSVRKit.OSVRPlayback()),
+				(openVRPlayback = new OpenVR.OpenVRPlayback())
 			};
 
 			ShellViewModel.Instance = this;
@@ -781,6 +777,11 @@ namespace PlayerUI
 		{
 			Execute.OnUIThread(() => IsFileSelected = false);
 			string uri = OpenUrlViewModel.GetURI();
+			if(uri == null)
+			{
+				Logger.Info("User cancelled OpenURI window.");
+				return;
+			}
 			OpenURI(uri);
 		}
 
@@ -789,7 +790,7 @@ namespace PlayerUI
 		{
 			SelectedFileTitle = "";
 
-			Streaming.ServiceResult result = ServiceResultResolver.DialogProcessURIBlocking(uri);
+			Streaming.ServiceResult result = ServiceResultResolver.DialogProcessURIBlocking(uri, ShellViewModel.Instance.playerWindow);
 			Logger.Info($"OpenURI: Parsed '{uri}' to {result}");
 
 			if (result == null)
@@ -909,75 +910,16 @@ namespace PlayerUI
 		}
 
 
-		public class RecentsItem
-		{
-			private Recents.RecentsFormat2.RecentElement recent;
+		
 
-			public RecentsItem(Recents.RecentsFormat2.RecentElement recentElement)
-			{
-				this.recent = recentElement;
-			}
-
-			public class RunRecentItemCommand : ICommand
-			{
-				private RecentsItem recentsItem;
-
-				public RunRecentItemCommand(RecentsItem recentsItem)
-				{
-					this.recentsItem = recentsItem;
-				}
-
-				public event EventHandler CanExecuteChanged;
-
-				public bool CanExecute(object parameter)
-				{
-					return true;
-				}
-
-				public void Execute(object parameter)
-				{
-					ShellViewModel.Instance.OpenURI(recentsItem.recent.uri);
-				}
-			}
-
-
-			public string Header
-			{
-				get { return recent.title; }
-			}
-			public ICommand Command
-			{
-				get { return new RunRecentItemCommand(this); }
-			}
-
-
-
-		}
+		
 
 
 		public List<RecentsItem> Items { get { return Recents.RecentFiles.ConvertAll(r => new RecentsItem(r)); } }
 		
 
 
-		public class ObjectToTypeConverter : System.Windows.Data.IValueConverter
-		{
-			#region IValueConverter Members
 
-			public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
-			{
-				if (value == null)
-					return null;
-				else
-					return value.GetType();
-			}
-
-			public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
-			{
-				throw new NotImplementedException();
-			}
-
-			#endregion
-		}
 		#endregion
 
 
@@ -1490,5 +1432,70 @@ namespace PlayerUI
 		//	this.DXCanvas.Scene = new Scene(textureL, MediaDecoder.ProjectionMode.Sphere);
 		//	this.DXCanvas.StartRendering();
 		//}
+	}
+
+	public class ObjectToTypeConverter : System.Windows.Data.IValueConverter
+	{
+		#region IValueConverter Members
+
+		public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+		{
+			if (value == null)
+				return null;
+			else
+				return value.GetType();
+		}
+
+		public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+		{
+			throw new NotImplementedException();
+		}
+
+		#endregion
+	}
+
+	public class RecentsItem
+	{
+		private Recents.RecentsFormat2.RecentElement recent;
+
+		public RecentsItem(Recents.RecentsFormat2.RecentElement recentElement)
+		{
+			this.recent = recentElement;
+		}
+
+		public class RunRecentItemCommand : ICommand
+		{
+			private RecentsItem recentsItem;
+
+			public RunRecentItemCommand(RecentsItem recentsItem)
+			{
+				this.recentsItem = recentsItem;
+			}
+
+			public event EventHandler CanExecuteChanged;
+
+			public bool CanExecute(object parameter)
+			{
+				return true;
+			}
+
+			public void Execute(object parameter)
+			{
+				ShellViewModel.Instance.OpenURI(recentsItem.recent.uri);
+			}
+		}
+
+
+		public string Header
+		{
+			get { return recent.title; }
+		}
+		public ICommand Command
+		{
+			get { return new RunRecentItemCommand(this); }
+		}
+
+
+
 	}
 }

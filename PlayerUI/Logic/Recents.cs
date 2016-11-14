@@ -27,9 +27,9 @@ namespace PlayerUI
 				rf2.AddRange(rf1.ConvertAll(uri => 
 				{
 					Logger.Info("Upgrading recents from v1");
-					string title = uri;
-					if (uri.StartsWith("http", StringComparison.InvariantCultureIgnoreCase) && !string.IsNullOrWhiteSpace(Path.GetFileName(uri)))
-						title = Path.GetFileName(uri);
+					string title = Path.GetFileName(uri);
+					if (string.IsNullOrWhiteSpace(title))
+						title = uri;
 					return new RecentElement() { uri = uri, title = title };
 				}));
 				return rf2;
@@ -103,10 +103,17 @@ namespace PlayerUI
 
 		public static void AddRecent(Streaming.ServiceResult result)
 		{
+			// remove duplicate
 			recentFiles.RemoveAll(f => f.uri == result.originalURL);
-			recentFiles.Add(new RecentsFormat2.RecentElement() { title = result.title, uri = result.originalURL });
-			while(recentFiles.Count > 10)
+
+			// trim to at most 9 (so 1 can be added)
+			while (recentFiles.Count > 9)
 				recentFiles.RemoveAt(0);
+
+			string title = result.title;
+			if (string.IsNullOrWhiteSpace(title))
+				title = Path.GetFileName(result.videoStreams[0].url);
+			recentFiles.Insert(0, new RecentsFormat2.RecentElement() { title = title, uri = result.originalURL });
 			Save();
 		}
 
