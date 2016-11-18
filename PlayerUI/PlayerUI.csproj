@@ -102,7 +102,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x64\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;CANARY NET45</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x64</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
@@ -365,12 +365,25 @@
       <DependentUpon>HeadsetMenuView.xaml</DependentUpon>
     </Compile>
     <Compile Include="HeadsetMenuViewModel.cs" />
-    <Compile Include="LicenseManagementView.xaml.cs">
+    <Compile Include="Licensing\LicenseServerUnreachable.xaml.cs">
+      <DependentUpon>LicenseServerUnreachable.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Licensing\LicenseChangeView.xaml.cs">
+      <DependentUpon>LicenseChangeView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Licensing\LicenseServerUnreachableViewModel.cs" />
+    <Compile Include="Licensing\LicenseChangeViewModel.cs" />
+    <Compile Include="Licensing\LicenseManagementView.xaml.cs">
       <DependentUpon>LicenseManagementView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="LicenseManagementViewModel.cs" />
+    <Compile Include="Licensing\LicenseManagementViewModel.cs" />
+    <Compile Include="Licensing\LicenseVerificationViewModel.cs" />
+    <Compile Include="Licensing\LicenseVerificationView.xaml.cs">
+      <DependentUpon>LicenseVerificationView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Logic\BrowserPluginManagement.cs" />
     <Compile Include="Logic\Certificate.cs" />
+    <Compile Include="Logic\Features.cs" />
     <Compile Include="Logic\Logic.cs" />
     <Compile Include="Logic\Protocol.cs" />
     <Compile Include="Logic\ProtocolHandler.cs" />
@@ -430,7 +443,7 @@
     <Compile Include="Tools\DeviceSelectionTool.cs" />
     <Compile Include="Tools\GraphicTools.cs" />
     <Compile Include="Tools\IconHelper.cs" />
-    <Compile Include="Tools\LicenseNinja.cs" />
+    <Compile Include="Licensing\LicenseNinja.cs" />
     <Compile Include="Tools\NativeMethods.cs" />
     <Compile Include="Tools\PublishInfo.cs" />
     <Compile Include="Tools\RegistryBase.cs" />
@@ -517,7 +530,19 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="LicenseManagementView.xaml">
+    <Page Include="Licensing\LicenseServerUnreachable.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Licensing\LicenseChangeView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Licensing\LicenseManagementView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Licensing\LicenseVerificationView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

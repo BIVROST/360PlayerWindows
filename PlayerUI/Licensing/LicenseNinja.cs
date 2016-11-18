@@ -133,19 +133,19 @@ namespace Bivrost
 			public LicenseException(string message) : base(message) { }
 		}
 
-		private class NoLicenseServerConnectionException : LicenseException
+		public class NoLicenseServerConnectionException : LicenseException
 		{
 			public NoLicenseServerConnectionException(string message) : base(message) { }
 		}
-		private class ProtocolErrorException : LicenseException
+		public class ProtocolErrorException : LicenseException
 		{
 			public ProtocolErrorException(string message) : base(message) { }
 		}
-		private class LicenseDeniedException : LicenseException
+		public class LicenseDeniedException : LicenseException
 		{
 			public LicenseDeniedException(string message) : base(message) { }
 		}
-		private class TimeEndedException : LicenseDeniedException
+		public class TimeEndedException : LicenseDeniedException
 		{
 			public TimeEndedException() : base("license time ended") { }
 		}

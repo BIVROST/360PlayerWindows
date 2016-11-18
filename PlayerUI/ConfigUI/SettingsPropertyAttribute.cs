@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace PlayerUI.ConfigUI
 {
@@ -12,6 +9,7 @@ namespace PlayerUI.ConfigUI
 		public string Caption = "";
 		public ConfigItemType Type = ConfigItemType.String;
 		public bool ReadOnly = false;
+		public FeaturesEnum requiredFeatures = FeaturesEnum.none;
 
 		public SettingsPropertyAttribute(string displayName, ConfigItemType type)
 		{

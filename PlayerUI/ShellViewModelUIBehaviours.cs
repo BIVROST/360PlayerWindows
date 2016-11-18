@@ -255,6 +255,12 @@ namespace PlayerUI
 #endif
         }
 
+
+		public void OpenLicenseManagement()
+		{
+			LicenseManagementViewModel.OpenLicenseManagement();
+		}
+
         public void DisableTabPress(object sender, object e)
 		{ 			
 			Logger.Info("tabstop");
@@ -373,14 +379,6 @@ namespace PlayerUI
             }
         }
 
-        public void OpenLicenseManagement()
-        {
-            if (!Features.RequireLicense)
-                return;
 
-            LicenseManagementViewModel lmvm = DialogHelper.ShowDialogOut<LicenseManagementViewModel>();
-            if (lmvm.IsValid == false)
-                Quit();
-		}
     }
 }

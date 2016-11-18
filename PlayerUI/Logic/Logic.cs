@@ -323,5 +323,7 @@ namespace PlayerUI
             Caliburn.Micro.Execute.OnUIThreadAsync(() => ShellViewModel.Instance?.NotificationCenter?.PushNotification(new NotificationViewModel(msg)));
         }
 
-    }
+
+
+	}
 }

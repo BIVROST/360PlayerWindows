@@ -11,43 +11,7 @@ namespace PlayerUI
 {
 
 
-    public static class Features
-    {
-
-		public static bool IsDebug =
-#if DEBUG
-			true;
-#else
-			false;
-#endif
-
-		/// <summary>
-		/// This build is a canary build
-		/// </summary>
-		public static bool IsCanary =
-#if CANARY
-			true;
-#else
-			false;
-#endif
-
-		/// <summary>
-		/// Online heatmap analytics gathering and sending is enabled
-		/// Requires Heatmaps
-		/// </summary>
-		public static bool GhostVR = false;
-
-        /// <summary>
-        /// Local heatmap analytics gathering is enabled
-        /// </summary>
-        public static bool Heatmaps = false;
-
-        /// <summary>
-        /// The build requires an active license from LicenseNinja
-        /// </summary>
-        public static bool RequireLicense = IsCanary;
-    }
-
+ 
 
     public class Settings
 	{
@@ -97,7 +61,6 @@ namespace PlayerUI
 		public Guid InstallId { get; set; } = Guid.Empty;
 
 
-		public bool EnableRemoteServer { get; set; } = false;
 		public bool EventMode { get; set; } = false;		
 		public string EventModeSingleFile { get; set; } = "";		
 		public bool EventModeAutoPlay { get; set; } = true;
@@ -112,14 +75,9 @@ namespace PlayerUI
 		[SettingsProperty("Start in fullscreen", ConfigItemType.Bool)]
 		public bool StartInFullScreen { get; set; } = false;
 
-		//[SettingsProperty("Use mouse to look around when Oculus Rift connected", ConfigItemType.Bool)]
-		public bool UseMouseLookWithOculus { get; set; } = true;
-
-		//[SettingsProperty("Use Oculus Rift if available", ConfigItemType.Bool)]
-		public bool UseOculusWhenConnected { get; set; } = true;
-
 		[SettingsProperty("Default VR headset mode", ConfigItemType.Enum)]
 		public HeadsetMode HeadsetUsage { get; set; } = HeadsetMode.Auto;
+
 		[SettingsProperty("OSVR screen number", ConfigItemType.Enum)]
 		public ScreenSelection OSVRScreen { get; set; } = ScreenSelection.Two;
 
@@ -142,43 +100,69 @@ namespace PlayerUI
 		public bool UserHeadsetTracking { get; set; } = false;
 
 
+
+		//GhostVR and heatmaps
+		[SettingsAdvancedProperty("Enable GhostVR analytics", ConfigItemType.Bool, requiredFeatures = FeaturesEnum.ghostVR | FeaturesEnum.heatmaps)]
+		public bool GhostVREnabled
+		{
+			get { return _ghostVREnabled && Features.GhostVR && Features.Heatmaps; }
+			set { _ghostVREnabled = value; }
+		}
+		[JsonIgnore]
+		bool _ghostVREnabled = false;
+
+
+		[SettingsAdvancedProperty("GhostVR license token", ConfigItemType.String, requiredFeatures = FeaturesEnum.ghostVR | FeaturesEnum.heatmaps)]
+		public string GhostVRLicenseToken { get; set; }
+
+
+		[SettingsAdvancedProperty("Save local heatmaps", ConfigItemType.Bool, requiredFeatures = FeaturesEnum.heatmaps)]
+		public bool LocalHeatmaps
+		{
+			get { return _localHeatmaps && Features.Heatmaps; }
+			set { _localHeatmaps = value; }
+		}
+		[JsonIgnore]
+		bool _localHeatmaps = false;
+
+
 		//License settings
 		public string ProductCode = "360player-beta-canary-sample";
 		public string LicenseCode = "";
 
+		[JsonIgnore]
+		[SettingsAdvancedProperty("Reset license number", ConfigItemType.Action, Caption = "Reset license number")]
+		public Action ResetLicense { get; set; } = LicenseManagementViewModel.OpenLicenseManagement;
+
+
+
+
 		//Remote control settings
+		[SettingsAdvancedProperty("Enable http remote control (requires restart)", ConfigItemType.Bool, requiredFeatures = FeaturesEnum.remote)]
+		public bool EnableRemoteControl
+		{
+			get { return _enableRemoteControl && Features.RemoteEnabled; }
+			set { _enableRemoteControl = value; }
+		}
+		[JsonIgnore]
+		bool _enableRemoteControl = false;
 
-#if DEBUG
-		[SettingsAdvancedProperty("Enable http remote control (requires restart)", ConfigItemType.Bool)]
-#endif
-		public bool EnableRemoteControl { get; set; } = false;
 
-#if DEBUG
-		[SettingsAdvancedProperty("Movie directory for remote control playback", ConfigItemType.Path)]
-#endif
+		[SettingsAdvancedProperty("Movie directory for remote control playback", ConfigItemType.Path, requiredFeatures = FeaturesEnum.remote)]
 		public string RemoteControlMovieDirectory { get; set; } = "";
 
-#if DEBUG
-		[SettingsAdvancedProperty("Use black background in player window", ConfigItemType.Bool)]
-#endif
+
+
+		// Debug features
+		[SettingsAdvancedProperty("Use black background in player window", ConfigItemType.Bool, requiredFeatures = FeaturesEnum.isDebug)]
 		public bool UseBlackBackground { get; set; } = false;
 
-#if DEBUG
-		[SettingsAdvancedProperty("Do not exit fullscreen on movie stop", ConfigItemType.Bool)]
-#endif
+		[SettingsAdvancedProperty("Do not exit fullscreen on movie stop", ConfigItemType.Bool, requiredFeatures = FeaturesEnum.isDebug)]
 		public bool DoNotExitFullscreenOnStop { get; set; } = false;
 
-#if DEBUG
-		[SettingsAdvancedProperty("Disable UI", ConfigItemType.Bool)]
-#endif
+		[SettingsAdvancedProperty("Disable UI", ConfigItemType.Bool, requiredFeatures = FeaturesEnum.isDebug)]
 		public bool DisableUI { get; set; } = false;
 
 	}
 
-	public enum TestEnum
-	{
-		Raz,
-		Dwa,
-		Trzy
-	}
 }

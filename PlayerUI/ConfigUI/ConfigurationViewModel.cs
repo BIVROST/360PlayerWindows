@@ -20,12 +20,17 @@ namespace PlayerUI.ConfigUI
 		{
 			DisplayName = "Settings";
 
+			FeaturesEnum features = Features.AsEnum;
+
 			settings = Logic.Instance.settings;
 			var props = settings.GetType().GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(SettingsPropertyAttribute)));
 			props.ToList().ForEach(p =>
 			{
 				SettingsPropertyAttribute attr = p.GetAttributes<SettingsPropertyAttribute>(false).First();
 				PropertyInfo property = p;
+
+				if (!features.HasFlag(attr.requiredFeatures))
+					return;
 
 				var TargetCollection = attr is SettingsAdvancedPropertyAttribute ? ConfigAdvancedItems : ConfigItems;
 

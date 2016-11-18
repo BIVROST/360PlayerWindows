@@ -199,7 +199,7 @@
                     <MenuItem Header="Help / Support" cal:Message.Attach="[Event Click] = [Action OpenSupportPage]" InputGestureText="F1"/>
                     <MenuItem Header="Home Page" cal:Message.Attach="[Event Click] = [Action OpenHomePage]"/>
                     <MenuItem Header="Buy" cal:Message.Attach="[Event Click] = [Action OpenBuyPage]"/>
-                    <MenuItem Header="Beta activation" cal:Message.Attach="[Event Click] = [Action OpenLicenseManagement]" x:Name="BetaActivationMenu"/>
+                    <MenuItem Header="License activation" cal:Message.Attach="[Event Click] = [Action OpenLicenseManagement]"/>
                     <MenuItem Header="Log Viewer" cal:Message.Attach="[Event Click] = [Action OpenLogViewer]"/>
                     <Separator />
                     <MenuItem Header="About Bivrost Player" cal:Message.Attach="[Event Click] = [Action OpenAbout]"/>

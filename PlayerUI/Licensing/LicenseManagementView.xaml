@@ -5,10 +5,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PlayerUI"
         mc:Ignorable="d"
-        Title="LicenseManagementView" Height="110" Width="500" WindowStartupLocation="CenterOwner" ResizeMode="NoResize" ShowInTaskbar="False" Icon="{x:Null}">
+        Title="License Management" Height="Auto" Width="500" WindowStartupLocation="CenterOwner" ResizeMode="NoResize" ShowInTaskbar="False" Icon="{x:Null}" SizeToContent="Height">
 
 	
-    <Grid>
+    <!--<Grid>
 		<Grid.RowDefinitions>
 			<RowDefinition Height="28" />
 			<RowDefinition Height="*" />
@@ -23,5 +23,7 @@
 		<TextBox x:Name="LicenseCode" Margin="8,0,4,8" Height="24" Grid.Column="0" Grid.Row="1" />
 		<Button x:Name="Validate" Content="Validate" Margin="4,0,8,8" Height="24" Grid.Column="1" Grid.Row="1"/>
 		
-	</Grid>
+	</Grid>-->
+	
+	<ContentControl x:Name="WindowContent" Height="Auto" />
 </Window>
