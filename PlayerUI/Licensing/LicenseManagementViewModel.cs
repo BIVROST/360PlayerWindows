@@ -16,9 +16,6 @@ namespace PlayerUI
 	public class LicenseManagementViewModel : Screen
 	{
 
-		public bool IsValid { get; private set; } = false;
-
-
 		public LicenseManagementViewModel(bool changeKey, System.Action onCommit)
 		{
 			if (inLicenseVerification)
@@ -31,7 +28,10 @@ namespace PlayerUI
 			string currentLicense = Logic.Instance.settings.LicenseCode;
 			this.onCommit = onCommit;
 			if (changeKey)
-				OpenLicenseChange(LicenseChangeReason.explicitChange, currentLicense);	// opens dialog to change license
+			{
+				allowClose = true;
+				OpenLicenseChange(LicenseChangeReason.explicitChange, currentLicense);  // opens dialog to change license
+			}
 			else
 				LicenseVerify(currentLicense);	// tries to verify the license, in the background unless an error occurs
 		}
@@ -61,6 +61,8 @@ namespace PlayerUI
 		}
 
 		bool disableCloseLock = false;
+
+		bool allowClose = false;
 
 		void DialogCloseIfOpen()
 		{
@@ -105,7 +107,14 @@ namespace PlayerUI
 
 		void OpenLicenseServerUnreachable(string license)
 		{
-			WindowContent = new LicenseServerUnreachableViewModel(() => ConfirmUseBasicFeatures(), () => LicenseVerify(license));
+			WindowContent = new LicenseServerUnreachableViewModel(
+				() =>
+				{
+					if (ConfirmUseBasicFeatures())
+						LicenseSetBasicFeatures();
+				},
+				() => LicenseVerify(license)
+			);
 			DialogOpenIfNotOpenedYet();
 		}
 
@@ -290,7 +299,7 @@ namespace PlayerUI
 		public override void CanClose(Action<bool> callback)
 		{
 			// when closing is forced, allow it
-			if (disableCloseLock)
+			if (disableCloseLock || allowClose)
 			{
 				callback(true);
 				return;
