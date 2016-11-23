@@ -23,12 +23,10 @@ namespace PlayerUI.Licensing
 			}
 		}
 
-		private System.Action<string> validateCallback = null;
-		private System.Action clearLicenseCallback = null;
-		private LicenseManagementViewModel.LicenceChangeReason reason;
+		private LicenseManagementViewModel.LicenseChangeReason reason;
 
 
-		public LicenseChangeViewModel(LicenseManagementViewModel.LicenceChangeReason reason, string oldLicense, Action<string> openLicenseVerify, System.Action licenseClear)
+		public LicenseChangeViewModel(LicenseManagementViewModel.LicenseChangeReason reason, string oldLicense, Action<string> openLicenseVerify, System.Action licenseClear)
 		{
 			this.LicenseCode = oldLicense;
 			this.reason = reason;
@@ -38,6 +36,12 @@ namespace PlayerUI.Licensing
 
 		//public bool CanValidate { get { return !string.IsNullOrWhiteSpace(_licenseCode); } }
 
+
+		private System.Action clearLicenseCallback = null;
+		public void ClearLicense() { clearLicenseCallback(); }
+
+
+		private System.Action<string> validateCallback = null;
 		public void Validate()
 		{
 			validateCallback(LicenseCode);
@@ -50,18 +54,18 @@ namespace PlayerUI.Licensing
 			{
 				switch(reason)
 				{
-					case LicenseManagementViewModel.LicenceChangeReason.explicitChange:
+					case LicenseManagementViewModel.LicenseChangeReason.explicitChange:
 						return "Enter license key.";
 
-					case LicenseManagementViewModel.LicenceChangeReason.licenseEnded:
+					case LicenseManagementViewModel.LicenseChangeReason.licenseEnded:
 						return "Your license has ended.";
 
-					case LicenseManagementViewModel.LicenceChangeReason.licenseUnknown:
+					case LicenseManagementViewModel.LicenseChangeReason.licenseUnknown:
 						return "Your license number is invalid.";
 
 					default:
 						Logger.Error("Unknown license change reason: " + reason);
-						goto case LicenseManagementViewModel.LicenceChangeReason.explicitChange;
+						goto case LicenseManagementViewModel.LicenseChangeReason.explicitChange;
 				}
 			}
 		}

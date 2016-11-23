@@ -8,20 +8,22 @@
              d:DesignHeight="300" d:DesignWidth="500">
 	<Grid>
 		<Grid.RowDefinitions>
-			<RowDefinition Height="28" />
 			<RowDefinition Height="Auto" />
 			<RowDefinition Height="Auto" />
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="3*"/>
+			<RowDefinition Height="65*"/>
 		</Grid.RowDefinitions>
 		<Grid.ColumnDefinitions>
 			<ColumnDefinition Width="*" />
 		</Grid.ColumnDefinitions>
 
-		<TextBlock Grid.Row="0"  VerticalAlignment="Center" Margin="8" 
+		<TextBlock Grid.Row="0"  VerticalAlignment="Center" Margin="8,9,8,7" 
 				   Text="{Binding Message}"/>
 
-		<TextBox x:Name="LicenseCode" Margin="8,0,4,8" Height="24" Grid.Row="1" />
+		<TextBox x:Name="LicenseCode" Margin="8,2,4,6" Height="24" Grid.Row="1" />
 
-		<DockPanel Grid.Row="2" HorizontalAlignment="Right">
+		<DockPanel Grid.Row="2" HorizontalAlignment="Right" Margin="0,2,0,6.202" Grid.RowSpan="2">
 			<Button x:Name="ClearLicense" Content="Clear license and use basic features" Margin="4,0,8,8" Height="24" HorizontalAlignment="Right" Visibility="{Binding ClearLicenseVisible}" />
 			<Button x:Name="Validate" Content="Validate" Margin="4,0,8,8" Height="24"  HorizontalAlignment="Right"/>
 		</DockPanel>

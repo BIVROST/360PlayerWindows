@@ -16,11 +16,11 @@ using System.Windows.Shapes;
 namespace PlayerUI.Licensing
 {
 	/// <summary>
-	/// Interaction logic for LicenseChangeView.xaml
+	/// Interaction logic for LicenseServerUnreachableView.xaml
 	/// </summary>
-	public partial class LicenseServerUnreachable : UserControl
+	public partial class LicenseServerUnreachableView : UserControl
 	{
-		public LicenseServerUnreachable()
+		public LicenseServerUnreachableView()
 		{
 			InitializeComponent();
 		}

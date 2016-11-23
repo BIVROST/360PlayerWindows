@@ -8,21 +8,36 @@ using System.Windows;
 
 namespace PlayerUI
 {
+
+	/// <summary>
+	/// Window for verifying and changing the license code.
+	/// Look at /docs/360player-license.dia for details on how this works
+	/// </summary>
 	public class LicenseManagementViewModel : Screen
 	{
 
 		public bool IsValid { get; private set; } = false;
 
 
-		public LicenseManagementViewModel(bool changeKey)
+		public LicenseManagementViewModel(bool changeKey, System.Action onCommit)
 		{
+			if (inLicenseVerification)
+			{
+				Logger.Info("License: currently waiting for license verification, ignored duplicate request.");
+				return;
+			}
+
 			DisplayName = "Enter valid license key";
 			string currentLicense = Logic.Instance.settings.LicenseCode;
+			this.onCommit = onCommit;
 			if (changeKey)
-				OpenLicenceChange(LicenceChangeReason.explicitChange, currentLicense);	// opens dialog to change license
+				OpenLicenseChange(LicenseChangeReason.explicitChange, currentLicense);	// opens dialog to change license
 			else
 				LicenseVerify(currentLicense);	// tries to verify the license, in the background unless an error occurs
 		}
+
+		private System.Action onCommit;
+
 
 
 
@@ -30,12 +45,19 @@ namespace PlayerUI
 
 		bool dialogIsOpen = false;
 
+		bool dialogWasOrIsOpen = false;
+
 		void DialogOpenIfNotOpenedYet()
 		{
 			if (dialogIsOpen)
 				return;
-			Execute.OnUIThreadAsync(() => new WindowManager().ShowDialog(this));
+			Execute.OnUIThreadAsync(() =>
+			{
+				try { new WindowManager().ShowDialog(this); }
+				catch (NullReferenceException) { ; }	// sometimes when application closes, this fires
+			});
 			dialogIsOpen = true;
+			dialogWasOrIsOpen = true;
 		}
 
 		bool disableCloseLock = false;
@@ -59,13 +81,13 @@ namespace PlayerUI
 		#endregion
 
 
-		public enum LicenceChangeReason
+		public enum LicenseChangeReason
 		{
 			licenseUnknown,
 			licenseEnded,
 			explicitChange
 		}
-		void OpenLicenceChange(LicenceChangeReason reason, string oldLicense)
+		void OpenLicenseChange(LicenseChangeReason reason, string oldLicense)
 		{
 			WindowContent = new LicenseChangeViewModel(reason, oldLicense, OpenLicenseVerify, LicenseClear);
 			DialogOpenIfNotOpenedYet();
@@ -113,18 +135,18 @@ namespace PlayerUI
 		}
 
 
-		void LicenseStore(string license, object grant)
+		void LicenseStore(string licenseCode, LicenseNinja.License license)
 		{
 			// store new license code
-			if (Logic.Instance.settings.LicenseCode != license)
+			if (Logic.Instance.settings.LicenseCode != licenseCode)
 			{
-				Logger.Info($"New license code: {license}");
-				Logic.Instance.settings.LicenseCode = license;
+				Logger.Info($"New license code: {licenseCode}, license: {license}");
+				Logic.Instance.settings.LicenseCode = licenseCode;
 				Logic.Instance.settings.Save();
 			}
 
 			// continue to LicenseCommit
-			LicenseCommit(grant);
+			LicenseCommit(license);
 		}
 
 
@@ -132,31 +154,38 @@ namespace PlayerUI
 		/// Saves the license key (if not saved already), sets the features
 		/// and closes the license manager.
 		/// </summary>
-		/// <param name="license">verified license</param>
-		/// <param name="grant">object with features to be granted from licensing server</param>
-		void LicenseCommit(object grant)
+		/// <param name="license">object with features to be granted from licensing server</param>
+		void LicenseCommit(LicenseNinja.License license)
 		{
-			if (grant == null)
+			if (license == null || license.grant == null)
+			{
 				Features.SetBasicFeatures();
-
-			// TODO: set features
+			}
+			else
+			{
+				Features.SetFromLicense(license);
+			}
 
 			DialogCloseIfOpen();
+
+			onCommit?.Invoke();
 		}
+
+
+		private bool inLicenseVerification = false;
 
 
 		/// <summary>
 		/// Starts a background verification procedure for given key and displays a progress bar
+		///		if no license && not required -> end licensesetbasicfeatures
+		///		check license:
+		///		if ok -> end licensestore
+		///		if licensedeny -> end openlicensechange(denied/ended)
+		///		if connectionerror -> end openlicenseunreachable
 		/// </summary>
 		/// <param name="newLicense">the license key to be verified</param>
 		private void LicenseVerify(string newLicense)
 		{
-			// if no license && not required -> end licensesetbasicfeatures
-			// check license:
-			// if ok -> end licensestore
-			// if licensedeny -> end openlicensechange(denied/ended)
-			// if connectionerror -> end openlicenseunreachable
-
 			// no license and it's not required
 			if(!Features.RequireLicense && string.IsNullOrEmpty(newLicense))
 			{
@@ -168,29 +197,30 @@ namespace PlayerUI
 			// start license verification in background
 			Task.Factory.StartNew(async () =>
 			{
-				await Task.Delay(5000);
+				//await Task.Delay(5000);
 
-
-				var settings = Logic.Instance.settings;
 				try
 				{
-					long seconds = await LicenseNinja.Verify(settings.ProductCode, newLicense, settings.InstallId.ToString());
-					object grantedFeatures = new object();      // TODO: features
+					var settings = Logic.Instance.settings;
+					inLicenseVerification = true;
+					LicenseNinja.License license = await LicenseNinja.Verify(settings.ProductCode, newLicense, settings.InstallId.ToString());
 					Logger.Info("License: license verified");
+					if(dialogWasOrIsOpen)
+						Logic.Notify("License verified"); 
 					Execute.OnUIThread(() =>
 					{
-						LicenseStore(newLicense, grantedFeatures);
+						LicenseStore(newLicense, license);
 					});
 				}
 				catch (LicenseNinja.TimeEndedException ex)
 				{
 					Logger.Error(ex, $"License: license timed out");
-					Execute.OnUIThread(() => OpenLicenceChange(LicenceChangeReason.licenseEnded, newLicense));
+					Execute.OnUIThread(() => OpenLicenseChange(LicenseChangeReason.licenseEnded, newLicense));
 				}
 				catch (LicenseNinja.LicenseDeniedException ex)
 				{
 					Logger.Error(ex, $"License: license denied");
-					Execute.OnUIThread(() => OpenLicenceChange(LicenceChangeReason.licenseUnknown, newLicense));
+					Execute.OnUIThread(() => OpenLicenseChange(LicenseChangeReason.licenseUnknown, newLicense));
 				}
 				catch (LicenseNinja.NoLicenseServerConnectionException ex)
 				{
@@ -201,6 +231,10 @@ namespace PlayerUI
 				{
 					Logger.Error(ex, $"License: other error");
 					Execute.OnUIThread(() => OpenLicenseServerUnreachable(newLicense));
+				}
+				finally
+				{
+					inLicenseVerification = false;
 				}
 			});
 
@@ -222,6 +256,12 @@ namespace PlayerUI
 				MessageBoxButton.OKCancel
 			);
 			return messageBoxResult == MessageBoxResult.OK;
+		}
+
+
+		private void QuitApplication()
+		{
+			ShellViewModel.Instance.Quit();
 		}
 
 
@@ -260,7 +300,7 @@ namespace PlayerUI
 			{
 				if (ConfirmQuitBecauseOfLicense())
 				{
-					ShellViewModel.Instance.Quit();
+					QuitApplication();
 					callback(true);
 					return;
 				}
@@ -280,74 +320,6 @@ namespace PlayerUI
 		}
 		#endregion
 
-
-		///// <summary>
-		///// Verifies the license at start of the player, in the background.
-		///// If an error occurs, and the build requires a license the user is forced to provide a valid code and verify it via License Ninja.
-		///// If an error occurs, but the build doesn't require a license, the user is notified of a problem and all the extended features are blocked.
-		///// License verification is performed only when the license is required or there is an optional license.
-		///// </summary>
-		//void LicenseCheckInBackground(string licenseCode, Action<bool, string, object> success)
-		//{
-		//	var settings = Logic.Instance.settings;
-
-		//	// if the license is required or there is a license provided
-		//	if (Features.RequireLicense || !string.IsNullOrEmpty(licenseCode))
-		//	{
-		//		// start a license verification in background
-		//		Task.Factory.StartNew(async () =>
-		//		{
-		//			try
-		//			{
-		//				long seconds = await LicenseNinja.Verify(settings.ProductCode, licenseCode, settings.InstallId.ToString());
-		//				Execute.OnUIThread(() => success(true, licenseCode, new object()));
-		//			}
-		//			catch (LicenseNinja.LicenseDeniedException err) when (!Features.RequireLicense)
-		//			{
-		//				Logger.Error(err, $"License: license denied, but the license is not required.");
-		//				Logic.Notify("Your license was denied. Standard features will still work.");
-		//			}
-		//			catch (LicenseNinja.LicenseException err) when (!Features.RequireLicense)
-		//			{
-		//				Logger.Error(err, $"License: license check failed, but the license is not required.");
-		//				Logic.Notify("License server unreachable. Standard features will still work.");
-		//			}
-		//			catch (LicenseNinja.LicenseException err) when (Features.RequireLicense)
-		//			{
-		//				Logger.Error(err, $"License: license check failed");
-
-		//				// reset license info only if the license was denied (not when there is an issue with transmission)
-		//				if (err is LicenseNinja.LicenseDeniedException)
-		//				{
-		//					Logic.Notify("Your license was denied.");
-		//				}
-		//				else
-		//				{
-		//					Logic.Notify("There was a problem connecting to the license server.");
-		//				}
-		//			}
-		//		});
-
-		//		Execute.OnUIThread(() => success(false, licenseCode, new object()));
-		//	}
-		//	else
-		//	{
-		//		// No license and none is required
-		//		Execute.OnUIThread(() => success(true, licenseCode, new object()));
-		//	}
-		//}
-
-
-		public static void OpenLicenseManagement()
-		{
-			new LicenseManagementViewModel(true);
-		}
-
-
-		public static void LicenseCheck()
-		{
-			new LicenseManagementViewModel(false);
-		}
 
 	}
 }

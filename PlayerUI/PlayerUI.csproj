@@ -102,7 +102,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x64\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;CANARY NET45</DefineConstants>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x64</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
@@ -365,8 +365,9 @@
       <DependentUpon>HeadsetMenuView.xaml</DependentUpon>
     </Compile>
     <Compile Include="HeadsetMenuViewModel.cs" />
-    <Compile Include="Licensing\LicenseServerUnreachable.xaml.cs">
-      <DependentUpon>LicenseServerUnreachable.xaml</DependentUpon>
+    <Compile Include="Licensing\LicenseManagement.cs" />
+    <Compile Include="Licensing\LicenseServerUnreachableView.xaml.cs">
+      <DependentUpon>LicenseServerUnreachableView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Licensing\LicenseChangeView.xaml.cs">
       <DependentUpon>LicenseChangeView.xaml</DependentUpon>
@@ -530,7 +531,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Licensing\LicenseServerUnreachable.xaml">
+    <Page Include="Licensing\LicenseServerUnreachableView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

@@ -43,15 +43,15 @@ namespace PlayerUI
 		public string CurrentPosition { get; set; }
 		public string VideoTime { get; set; }
 		public HeadsetMode SettingHeadsetUsage
-        {
-            get { return Logic.Instance.settings.HeadsetUsage; }
-            set {
-                SetHeadset(value);
-            }
-        }
-        
+		{
+			get { return Logic.Instance.settings.HeadsetUsage; }
+			set {
+				SetHeadset(value);
+			}
+		}
 
-        public bool IsPlaying { get { return _mediaDecoder.IsPlaying; } }
+
+		public bool IsPlaying { get { return _mediaDecoder.IsPlaying; } }
 		public bool IsPaused { get; set; }
 		public bool Loop
 		{
@@ -109,7 +109,18 @@ namespace PlayerUI
 		private AutoResetEvent waitForPlaybackReady = new AutoResetEvent(false);
 		private ManualResetEvent waitForPlaybackStop = new ManualResetEvent(false);
 
-		private const string DisplayString = "Bivrost 360Player ™ BETA {0} - FOR NON-COMMERCIAL USE";
+		public string PlayerTitle {
+			get
+			{
+				string title = "Bivrost 360Player ™ BETA";
+				if (IsPlaying)
+					title += $" - now playing {SelectedFileNameLabel}";
+				if (!Features.Commercial)
+					title += " - FOR NON-COMMERCIAL USE";
+				return title;
+			}
+		}
+
 
 		public VolumeControlViewModel VolumeRocker { get; set; }
 		public HeadsetMenuViewModel HeadsetMenu { get; set; }
@@ -158,7 +169,8 @@ namespace PlayerUI
 																? ShortcutParser.CreateTrigger(triggerText)
 																: currentParser(target, triggerText);
 
-			DisplayName = string.Format(DisplayString, "");
+			NotifyOfPropertyChange(() => PlayerTitle);
+
 			CurrentPosition = "00:00:00";
 			VideoLength = "00:00:00";
 
@@ -379,8 +391,15 @@ namespace PlayerUI
 				shellView._OpenFile.Visibility = Visibility.Collapsed;
 			}
 
+			Licensing.LicenseManagement.LicenseCheck(LicenseUpdated);
+		}
 
-			LicenseManagementViewModel.LicenseCheck();
+
+		void LicenseUpdated()
+		{
+			if (!Features.Commercial)
+				Logic.Notify("Please remember that 360Player requires a license for commercial use.");
+			NotifyOfPropertyChange(null);
 		}
 
 
@@ -606,8 +625,9 @@ namespace PlayerUI
 				MaxTime = _mediaDecoder.Duration;
 				VideoLength = (new TimeSpan(0, 0, (int)Math.Floor(_mediaDecoder.Duration))).ToString();
 				UpdateTimeLabel();
-					//DisplayName = DisplayString + " - " + SelectedFileNameLabel;
-					DisplayName = string.Format(DisplayString, " - now playing: " + SelectedFileNameLabel);
+				//DisplayName = DisplayString + " - " + SelectedFileNameLabel;
+
+				NotifyOfPropertyChange(() => PlayerTitle);
 
 				_mediaDecoder.SetVolume(VolumeRocker.Volume);
 					//_mediaDecoder.Play();
@@ -991,8 +1011,6 @@ namespace PlayerUI
 			{
 				shellView.TopBar.Visibility = Visibility.Hidden;
 				this.DXCanvas.Visibility = Visibility.Hidden;
-
-				DisplayName = string.Format(DisplayString, "");
 			});
 
 			Task.Factory.StartNew(() =>
@@ -1025,7 +1043,8 @@ namespace PlayerUI
 			});
 
 			waitForPlaybackStop.Set();
-            
+
+			NotifyOfPropertyChange(() => PlayerTitle);
 		}
 
 		public override void TryClose(bool? dialogResult = null)

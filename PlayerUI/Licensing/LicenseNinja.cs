@@ -23,6 +23,18 @@ namespace Bivrost
 		 *   |        x
 		 *   |
 		 *   x          [time end]
+		 *   
+		 * version 2:
+		 * [APP]    [SRV]
+		 *   |        |
+		 *   | -----> | token=random:int, udid:string, product:string, hash=sha1(token+product+udid+key), lang:string, version=2
+		 *   |        |   (format: http post args)
+		 *   |        |
+		 *   | <- - - | hash=sha1(time+token+product+grant+key), time:int 
+		 *   |        |   (format: http return: "OK|hash|time|grant" or "DENY|human readable message" or "ERROR|technical message")
+		 *   |        x
+		 *   |
+		 *   x          [time end]
 		 */
 
 
@@ -30,20 +42,72 @@ namespace Bivrost
 		const string licenseURI = "https://tools.bivrost360.com/license-ninja/";
 
 
+		public class License
+		{
+			/// <summary>
+			/// How much seconds until license expires?
+			/// </summary>
+			public readonly long time;
+
+			/// <summary>
+			/// String with serialized features or message
+			/// </summary>
+			public readonly string grant;
+
+
+			private Dictionary<string, string> _grantAsDictionary = null;
+
+			public License(int time, string grant)
+			{
+				this.time = time;
+				this.grant = grant;
+			}
+
+			/// <summary>
+			/// Retrieves the grant license as a string->string dictionary.
+			/// Requires format of grant message:
+			///   key[=val][,key[=val]]...
+			/// If value is not given (no =val part) it is null, but the key is in the dictionary
+			/// </summary>
+			public Dictionary<string, string> GrantAsDictionary
+			{
+				get
+				{
+					if (_grantAsDictionary == null)
+					{
+						_grantAsDictionary = new Dictionary<string, string>();
+						if (!string.IsNullOrWhiteSpace(grant))
+						{
+							foreach (string opt in grant.Split(new char[] { ',' }))
+							{
+								string[] keyval = opt.Split(new char[] { '=' }, 2);
+								string key = keyval[0];
+								string val = keyval.Length > 1 ? keyval[1] : null;
+								_grantAsDictionary.Add(key.Trim().ToLowerInvariant(), val?.Trim()?.ToLowerInvariant());
+							}
+						}
+					}
+					return _grantAsDictionary;
+				}
+			}
+
+		}
+
+
 		/// <summary>
-		/// Verifies the license
+		/// Verifies the license, supports LicenseNinja v1 and v2
 		/// </summary>
 		/// <param name="product">The name of your product, not displayed anywhere.</param>
 		/// <param name="key">Your secret key, the same key must be used on the server.</param>
 		/// <param name="udid">Unique installation id</param>
 		/// <param name="lang">Optional language for logs</param>
-		/// <returns>how much seconds until license expires?</returns>
-		public static async Task<long> Verify(string product, string key, string udid, string lang = "?")
+		/// <returns>License details</returns>
+		public static async Task<License> Verify(string product, string key, string udid, string lang = "?")
 		{
 			string token = Guid.NewGuid().ToString();
 			string hash = SHA1(token + product + udid + key);
 
-			Log("requesting license");
+			Logger.Info("LicenseNinja: requesting license");
 			string www;
 			using (var client = new HttpClient())
 			{
@@ -56,30 +120,47 @@ namespace Bivrost
 						 new KeyValuePair<string, string>("hash", hash),
 						 new KeyValuePair<string, string>("udid", udid),
 						 new KeyValuePair<string, string>("lang", lang),
+						 new KeyValuePair<string, string>("version", "2")
 					})).Result;
 				www = await result.Content.ReadAsStringAsync();
 				if(!result.IsSuccessStatusCode)
 					throw new NoLicenseServerConnectionException("network error");
-				Log(www);
+				Logger.Info($"LicenseNinja: received {www}");
 			}
 
 			try
 			{
-				var split = www.Split(new char[] { '|' }, 3);
+				var split = www.Split(new char[] { '|' }, 4);
 				string response = split[0];
 				switch (response)
 				{
-					case "OK":  // OK|hash|time
+					// version 1: OK|hash|time
+					// version 2: OK|hash|time|grant
+					case "OK":  
+						int version = 1;
+
+						// version 1 or 2:
 						string hashReceived = split[1];
 						int time = int.Parse(split[2]);
-						string hashSource = time.ToString() + token.ToString() + product + key;
-						string hashLocal = SHA1(hashSource);
+						string hashSource = $"{time}{token}{product}{key}";
 
+						// version 2, with grant object:
+						string grant = null;
+						if (www.Split(new char[] { '|' }).Length == 4)
+						{
+							version = 2;
+							grant = www.Split(new char[] { '|' }, 4)[3];
+							hashSource = $"{time}{token}{product}{grant}{key}";
+						}
+
+						Logger.Info($"License: version {version}");
+
+						string hashLocal = SHA1(hashSource);
 						if (hashReceived != hashLocal)
 							throw new ProtocolErrorException("hash fail: " + hashReceived + " vs " + hashLocal);
 
 						if (time > 0)
-							return time;
+							return new License(time, grant);
 
 						throw new TimeEndedException();
 
@@ -93,11 +174,7 @@ namespace Bivrost
 						throw new ProtocolErrorException("unknown response: " + response);
 				}
 			}
-			catch (LicenseException e) 
-			{
-				throw;
-			}
-			catch(Exception e)
+			catch(Exception e) when (!(e is LicenseException))
 			{
 				throw new ProtocolErrorException(e.Message);
 			}
@@ -117,12 +194,6 @@ namespace Bivrost
 			byte[] hashBytes = hash.ComputeHash(plainTextBytes);
 			string localChecksum = BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
 			return localChecksum;
-		}
-
-
-		static protected void Log(string msg)
-		{
-			Bivrost.Log.Logger.Info("[License] " + msg);
 		}
 
 

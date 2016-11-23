@@ -5,7 +5,7 @@
 		xmlns:ui="clr-namespace:PlayerUI"
 		xmlns:svgc="http://sharpvectors.codeplex.com/svgc/"
 		xmlns:sys="clr-namespace:System;assembly=mscorlib"		
-        Title="ShellView" Height="600" Width="1066" MinWidth="820"  MinHeight="530" WindowStartupLocation="CenterScreen" Icon="Graphics\sygnet.ico"
+        Title="{Binding PlayerTitle}" Height="600" Width="1066" MinWidth="820"  MinHeight="530" WindowStartupLocation="CenterScreen" Icon="Graphics\sygnet.ico"
 		cal:Message.Attach="[Shortcut Control+U] = [Action OpenUrl]; [Event Deactivated] = [Action OnLostFocus]; [Event Activated] = [Action OnGotFocus]; [Shortcut F1] = [Action OpenSupportPage];
 		[Shortcut Tab] = [Action DisableTabPress($source, $eventArgs)];" Background="Black">
 

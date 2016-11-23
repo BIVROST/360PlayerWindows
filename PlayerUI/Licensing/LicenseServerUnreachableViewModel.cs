@@ -18,11 +18,11 @@ namespace PlayerUI.Licensing
 
 
 		private System.Action useBasicFeaturesCallback;
-		public void UseBasicFeaturesCallback() { useBasicFeaturesCallback(); }
+		public void UseBasicFeatures() { useBasicFeaturesCallback(); }
 
 
 		private System.Action retryCallback;
-		public void RetryCallback() { retryCallback(); }
+		public void Retry() { retryCallback(); }
 
 
 		public bool ClearLicenseVisible { get { return !Features.RequireLicense; } }

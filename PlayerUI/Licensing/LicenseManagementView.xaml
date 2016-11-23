@@ -5,25 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PlayerUI"
         mc:Ignorable="d"
-        Title="License Management" Height="Auto" Width="500" WindowStartupLocation="CenterOwner" ResizeMode="NoResize" ShowInTaskbar="False" Icon="{x:Null}" SizeToContent="Height">
+        Title="License Management" Height="Auto" Width="500" WindowStartupLocation="CenterOwner" ResizeMode="NoResize" ShowInTaskbar="False" Icon="..\Graphics\sygnet.ico" SizeToContent="Height">
 
-	
-    <!--<Grid>
-		<Grid.RowDefinitions>
-			<RowDefinition Height="28" />
-			<RowDefinition Height="*" />
-		</Grid.RowDefinitions>
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="*" />
-			<ColumnDefinition Width="80" />
-		</Grid.ColumnDefinitions>
-
-		<TextBlock VerticalAlignment="Center" Margin="8">Enter valid license code:</TextBlock>
-		
-		<TextBox x:Name="LicenseCode" Margin="8,0,4,8" Height="24" Grid.Column="0" Grid.Row="1" />
-		<Button x:Name="Validate" Content="Validate" Margin="4,0,8,8" Height="24" Grid.Column="1" Grid.Row="1"/>
-		
-	</Grid>-->
-	
 	<ContentControl x:Name="WindowContent" Height="Auto" />
 </Window>

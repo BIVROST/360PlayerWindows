@@ -130,12 +130,6 @@ namespace PlayerUI
 		public string ProductCode = "360player-beta-canary-sample";
 		public string LicenseCode = "";
 
-		[JsonIgnore]
-		[SettingsAdvancedProperty("Reset license number", ConfigItemType.Action, Caption = "Reset license number")]
-		public Action ResetLicense { get; set; } = LicenseManagementViewModel.OpenLicenseManagement;
-
-
-
 
 		//Remote control settings
 		[SettingsAdvancedProperty("Enable http remote control (requires restart)", ConfigItemType.Bool, requiredFeatures = FeaturesEnum.remote)]
