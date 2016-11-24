@@ -225,7 +225,7 @@ namespace PlayerUI.Streaming
 #region util
 
 		static HttpClient client;
-		internal static async Task<string> HTTPGetStringAsync(string uri) {
+		public static async Task<string> HTTPGetStringAsync(string uri) {
 			try {
 				if (client == null)
 					client = new HttpClient() { MaxResponseContentBufferSize = 1000000 };
@@ -239,7 +239,7 @@ namespace PlayerUI.Streaming
 			}
 		}
 
-		internal static string HTTPGetString(string uri, bool defaultHttp=true)
+		public static string HTTPGetString(string uri, bool defaultHttp=true)
 		{
 			if (!uri.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) && !uri.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
 				uri = (defaultHttp ? "http://" : "https://") + uri;
