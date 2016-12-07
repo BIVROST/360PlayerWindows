@@ -109,23 +109,30 @@ namespace Bivrost
 
 			Logger.Info("LicenseNinja: requesting license");
 			string www;
-			using (var client = new HttpClient())
+			try
 			{
-				client.BaseAddress = new Uri(licenseURI);
-				var result = client.PostAsync(
-					licenseURI, 
-					new FormUrlEncodedContent(new[] {
-						 new KeyValuePair<string, string>("token", token),
-						 new KeyValuePair<string, string>("product", product),
-						 new KeyValuePair<string, string>("hash", hash),
-						 new KeyValuePair<string, string>("udid", udid),
-						 new KeyValuePair<string, string>("lang", lang),
-						 new KeyValuePair<string, string>("version", "2")
-					})).Result;
-				www = await result.Content.ReadAsStringAsync();
-				if(!result.IsSuccessStatusCode)
-					throw new NoLicenseServerConnectionException("network error");
-				Logger.Info($"LicenseNinja: received {www}");
+				using (var client = new HttpClient())
+				{
+					client.BaseAddress = new Uri(licenseURI);
+					var result = client.PostAsync(
+						licenseURI,
+						new FormUrlEncodedContent(new[] {
+							 new KeyValuePair<string, string>("token", token),
+							 new KeyValuePair<string, string>("product", product),
+							 new KeyValuePair<string, string>("hash", hash),
+							 new KeyValuePair<string, string>("udid", udid),
+							 new KeyValuePair<string, string>("lang", lang),
+							 new KeyValuePair<string, string>("version", "2")
+						})).Result;
+					www = await result.Content.ReadAsStringAsync();
+					if (!result.IsSuccessStatusCode)
+						throw new NoLicenseServerConnectionException("bad status code");
+					Logger.Info($"LicenseNinja: received {www}");
+				}
+			}
+			catch(Exception e)
+			{
+				throw new NoLicenseServerConnectionException($"network error: {e.Message}");
 			}
 
 			try
