@@ -14,7 +14,7 @@ namespace PlayerUI.Streaming
 			return Regex.IsMatch(uri, @"^(https?://)?(www.)?vrideo.com/watch/.+", RegexOptions.IgnoreCase);
 		}
 
-		internal string UriToId(string uri)
+		public string UriToId(string uri)
 		{
 			var match = Regex.Match(uri, @"vrideo.com/watch/([a-zA-Z0-9]+)", RegexOptions.IgnoreCase);
 			return match.Groups[1].Captures[0].Value;
