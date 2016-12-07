@@ -79,7 +79,7 @@ namespace PlayerUI
 		public HeadsetMode HeadsetUsage { get; set; } = HeadsetMode.Auto;
 
 		[SettingsProperty("OSVR screen number", ConfigItemType.Enum)]
-		public ScreenSelection OSVRScreen { get; set; } = ScreenSelection.Two;
+		public ScreenSelection OSVRScreen { get; set; } = ScreenSelection.Autodetect;
 
 		[SettingsProperty("Face screen in OpenVR", ConfigItemType.Bool)]
 		public bool OpenVRReverse { get; set; } = true;

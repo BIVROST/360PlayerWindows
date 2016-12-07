@@ -9,8 +9,8 @@ using Device = SharpDX.Direct3D11.Device;
 using PlayerUI.Tools;
 using SharpDX.Windows;
 using SharpDX.Direct3D;
-
-
+using Bivrost.Log;
+using System.Linq;
 
 namespace PlayerUI.OSVRKit
 {
@@ -202,8 +202,8 @@ namespace PlayerUI.OSVRKit
 
 			DeviceContext immediateContext = _device.ImmediateContext;
 
+			using (SharpDX.DXGI.Device2 dxgiDevice = _device.QueryInterface<SharpDX.DXGI.Device2>())
 			{
-				SharpDX.DXGI.Device2 dxgiDevice = _device.QueryInterface<SharpDX.DXGI.Device2>();
 
 				//var bounds = dxgiDevice.Adapter.Outputs[1].Description.DesktopBounds;
 				//form.DesktopBounds = new System.Drawing.Rectangle(bounds.X, bounds.Y, bounds.Width, bounds.Height);
@@ -216,65 +216,56 @@ namespace PlayerUI.OSVRKit
 				//    }
 				//});
 
-				if (dxgiDevice.Adapter.Outputs.Length > 1)
+				Rectangle bounds;
+
+				if (Features.IsDebug)
 				{
-					switch (Logic.Instance.settings.OSVRScreen)
+					Logger.Info("OSVR: available screens: " + string.Join("\n", dxgiDevice.Adapter.Outputs.ToList().ConvertAll(o => o.Description.DeviceName)));
+				}
+
+				if (Logic.Instance.settings.OSVRScreen == ScreenSelection.Autodetect)
+				{
+					// start with last screen
+					Output output = dxgiDevice.Adapter.Outputs[dxgiDevice.Adapter.Outputs.Length - 1];
+
+					// but something resembling a HDK 1.4 (1920x1080) will be better
+					foreach (var o in dxgiDevice.Adapter.Outputs)
 					{
-						case ScreenSelection.One:
-							//swapChain.SetFullscreenState(true, dxgiDevice.Adapter.Outputs[0]);
-							_selectedOutput = 0;
-							break;
-						case ScreenSelection.Two:
-							if (dxgiDevice.Adapter.Outputs.Length > 1)
-							{
-								//swapChain.SetFullscreenState(true, dxgiDevice.Adapter.Outputs[1]);
-								_selectedOutput = 1;
-							}
-							else {
-								//swapChain.SetFullscreenState(true, dxgiDevice.Adapter.Outputs[0]);
-								_selectedOutput = 0;
-							}
-							break;
-						case ScreenSelection.Three:
-							if (dxgiDevice.Adapter.Outputs.Length > 2)
-							{
-								//swapChain.SetFullscreenState(true, dxgiDevice.Adapter.Outputs[2]);
-								_selectedOutput = 2;
-							}
-							else {
-								if (dxgiDevice.Adapter.Outputs.Length > 1)
-								{
-									//swapChain.SetFullscreenState(true, dxgiDevice.Adapter.Outputs[1]);
-									_selectedOutput = 1;
-								}
-								else {
-									//swapChain.SetFullscreenState(true, dxgiDevice.Adapter.Outputs[0]);
-									_selectedOutput = 0;
-								}
-							}
-							break;
+						var b = o.Description.DesktopBounds;
+						if (b.Width == 1920 && b.Height == 1080)
+						{
+							Logger.Info("OSVR: found a 1920x1080 candidate for a HDK 1.4");
+							output = o;
+						}
 					}
 
-					var bounds = dxgiDevice.Adapter.Outputs[_selectedOutput].Description.DesktopBounds;
+					// and something resembling a HDK 2.0 (2160x1200) will be even more better
+					foreach (var o in dxgiDevice.Adapter.Outputs)
+					{
+						var b = o.Description.DesktopBounds;
+						if (b.Width == 2160 && b.Height == 1200)
+						{
+							Logger.Info("OSVR: found a 2160x1200 candidate for a HDK 2.0");
+							output = o;
+						}
+					}
 
-
-					//var osvrContext = context;
-					//var x=osvrContext.getRenderManagerConfig().getXPosition();
-					//var y=osvrContext.getRenderManagerConfig().getYPosition();
-					//var w=osvrContext.getDisplayParameters().getResolution(0).getWidth();
-					//var h=osvrContext.getDisplayParameters().getResolution(0).getHeight();
-
-					form.DesktopBounds = new System.Drawing.Rectangle(bounds.X, bounds.Y, bounds.Width, bounds.Height);
+					bounds = output.Description.DesktopBounds;
+					Logger.Info($"OSVR: guessed output ({bounds})");
 				}
 				else
 				{
-					context.Dispose();
-					Lock = false;
-					return;
+					int osvrScreen = (int)Logic.Instance.settings.OSVRScreen;
+					if (osvrScreen >= dxgiDevice.Adapter.Outputs.Length)
+						osvrScreen = dxgiDevice.Adapter.Outputs.Length - 1;
+					bounds = dxgiDevice.Adapter.Outputs[osvrScreen].Description.DesktopBounds;
+					Logger.Info($"OSVR: selected output #{osvrScreen} ({bounds})");
 				}
 
+				form.DesktopBounds = new System.Drawing.Rectangle(bounds.X, bounds.Y, bounds.Width, bounds.Height);
 
-				//swapChain.SetFullscreenState(true, target);
+				if (dxgiDevice.Adapter.Outputs.Length <= 1)
+					Logic.Notify("Only one screen is active. Press Control+S to stop the movie if needed.");
 			}
 
 			// Create a depth buffer, using the same width and height as the back buffer.

@@ -30,11 +30,14 @@ namespace PlayerUI
 		Disable
 	}
 
-	public enum ScreenSelection
+	public enum ScreenSelection:int
 	{
-		One,
-		Two,
-		Three
+		Autodetect = 999,
+		One = 0,
+		Two=1,
+		Three=2,
+		Four=3,
+		Five=4
 	}
 
 	public class Logic
