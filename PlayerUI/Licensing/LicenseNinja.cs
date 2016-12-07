@@ -39,7 +39,7 @@ namespace Bivrost
 
 
 		// Address of your web server containing the license server
-		const string licenseURI = "https://tools.bivrost360.com/license-ninja/";
+		const string licenseURI = "http://tools.bivrost360.com/license-ninja/";
 
 
 		public class License
