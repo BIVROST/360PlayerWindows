@@ -167,9 +167,9 @@
 
 
                 <MenuItem Header="Navigate">
-                    <MenuItem Header="Play/Pause" InputGestureText="Space" cal:Message.Attach="[Event Click] = [Action PlayPause]" />
-                    <MenuItem Header="Stop" cal:Message.Attach="[Event Click] = [Action Stop]" />
-                    <MenuItem Header="Rewind" InputGestureText="Ctrl+R" cal:Message.Attach="[Event Click] = [Action Rewind]" />
+					<MenuItem IsEnabled="{Binding CanStopOrRewind}" Header="Play/Pause" InputGestureText="Space" cal:Message.Attach="[Event Click] = [Action PlayPause]" />
+					<MenuItem IsEnabled="{Binding CanStopOrRewind}" Header="Stop" InputGestureText="Ctrl+S" cal:Message.Attach="[Event Click] = [Action Stop]"  />
+					<MenuItem IsEnabled="{Binding CanStopOrRewind}" Header="Rewind" InputGestureText="Ctrl+R" cal:Message.Attach="[Event Click] = [Action Rewind]" />
                 </MenuItem>
                 <MenuItem Header="View">
                     <MenuItem Header="Normal (gnomic) projection" InputGestureText="N" cal:Message.Attach="[Event Click] = [Action NormalProjection]" />
@@ -210,7 +210,7 @@
 
 
         <ui:DPFCanvas x:Name="Canvas1" Stretch="UniformToFill" Grid.Row="1" Grid.RowSpan="3" HorizontalAlignment="Center" VerticalAlignment="Center"
-					  cal:Message.Attach="[Shortcut Control+O] = [Action OpenFile]; [Shortcut Control+Q] = [Action Quit]; [Shortcut Control+R] = [Action Rewind];  [Shortcut Space] = [Action PlayPause]; 
+					  cal:Message.Attach="[Shortcut Control+O] = [Action OpenFile]; [Shortcut Control+Q] = [Action Quit]; [Shortcut Control+S] = [Action Stop]; [Shortcut Control+R] = [Action Rewind];  [Shortcut Space] = [Action PlayPause]; 
 					  [Shortcut F11] = [Action ToggleFullscreen('true')]; [Shortcut Escape] = [Action EscapeFullscreen]; [Event MouseWheel] = [Action ChangeFov($eventArgs)]; [Shortcut Control+NumPad0] = [Action ResetFov];
 					  [Shortcut Control+D0] = [Action ResetFov]; [Shortcut Control+D] = [Action StopAndVisualize]" />
 

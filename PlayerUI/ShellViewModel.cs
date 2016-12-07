@@ -987,7 +987,7 @@ namespace PlayerUI
 		}
 
 		public bool CanPlay { get { return (!IsPlaying || IsPaused) && IsFileSelected; } }
-		public bool CanStop { get { return IsPlaying; } }
+		public bool CanStopOrRewind { get { return IsPlaying; } }
 
 		//public bool CanOpenFile { get { return !IsPlaying; } }
 
