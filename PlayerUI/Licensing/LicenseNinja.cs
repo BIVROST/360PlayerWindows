@@ -39,7 +39,7 @@ namespace Bivrost
 
 
 		// Address of your web server containing the license server
-		const string licenseURI = "http://tools.bivrost360.com/license-ninja/";
+		const string licenseURI = "https://tools.bivrost360.com/license-ninja/";
 
 
 		public class License
@@ -57,7 +57,7 @@ namespace Bivrost
 
 			private Dictionary<string, string> _grantAsDictionary = null;
 
-			public License(int time, string grant)
+			public License(long time, string grant)
 			{
 				this.time = time;
 				this.grant = grant;
@@ -148,7 +148,7 @@ namespace Bivrost
 
 						// version 1 or 2:
 						string hashReceived = split[1];
-						int time = int.Parse(split[2]);
+						long time = long.Parse(split[2]);
 						string hashSource = $"{time}{token}{product}{key}";
 
 						// version 2, with grant object:

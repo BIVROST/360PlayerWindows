@@ -63,6 +63,9 @@ namespace PlayerUI.Licensing
 					case LicenseManagementViewModel.LicenseChangeReason.licenseUnknown:
 						return "Your license number is invalid.";
 
+					case LicenseManagementViewModel.LicenseChangeReason.licenseRequired:
+						return "A license number is required to use this product.";
+
 					default:
 						Logger.Error("Unknown license change reason: " + reason);
 						goto case LicenseManagementViewModel.LicenseChangeReason.explicitChange;

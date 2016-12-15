@@ -1045,6 +1045,7 @@ namespace PlayerUI
 			waitForPlaybackStop.Set();
 
 			NotifyOfPropertyChange(() => PlayerTitle);
+			NotifyOfPropertyChange(() => CanStopOrRewind);
 		}
 
 		public override void TryClose(bool? dialogResult = null)

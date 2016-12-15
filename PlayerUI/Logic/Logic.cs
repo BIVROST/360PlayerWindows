@@ -43,6 +43,9 @@ namespace PlayerUI
 	public class Logic
 	{
 
+		public const string productCode = "360player-windows";
+
+
 		// Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\BivrostPlayer";
 		public static string LocalDataDirectory = "";
 

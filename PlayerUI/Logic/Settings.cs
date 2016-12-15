@@ -127,7 +127,6 @@ namespace PlayerUI
 
 
 		//License settings
-		public string ProductCode = "360player-beta-canary-sample";
 		public string LicenseCode = "";
 
 

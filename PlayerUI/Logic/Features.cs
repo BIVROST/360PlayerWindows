@@ -118,8 +118,6 @@ namespace PlayerUI
 		/// </summary>
 		internal static void SetBasicFeatures()
 		{
-			if (RequireLicense)
-				throw new Exception("Set basic features cannot work with a required license");
 			GhostVR = false;
 			Heatmaps = false;
 			RemoteEnabled = false;

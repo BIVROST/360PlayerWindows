@@ -87,7 +87,8 @@ namespace PlayerUI
 		{
 			licenseUnknown,
 			licenseEnded,
-			explicitChange
+			explicitChange,
+			licenseRequired
 		}
 		void OpenLicenseChange(LicenseChangeReason reason, string oldLicense)
 		{
@@ -166,7 +167,11 @@ namespace PlayerUI
 		/// <param name="license">object with features to be granted from licensing server</param>
 		void LicenseCommit(LicenseNinja.License license)
 		{
-			if (license == null || license.grant == null)
+			if (license == null && Features.RequireLicense)
+			{
+				throw new Exception("Set basic features cannot work with a required license");
+			}
+			else if (license == null || license.grant == null)
 			{
 				Features.SetBasicFeatures();
 			}
@@ -206,13 +211,13 @@ namespace PlayerUI
 			// start license verification in background
 			Task.Factory.StartNew(async () =>
 			{
-				//await Task.Delay(5000);
+				await Task.Delay(500);	// fake delay so it looks like more wo
 
 				try
 				{
 					var settings = Logic.Instance.settings;
 					inLicenseVerification = true;
-					LicenseNinja.License license = await LicenseNinja.Verify(settings.ProductCode, newLicense, settings.InstallId.ToString());
+					LicenseNinja.License license = await LicenseNinja.Verify(Logic.productCode, newLicense, settings.InstallId.ToString());
 					Logger.Info("License: license verified");
 					if(dialogWasOrIsOpen)
 						Logic.Notify("License verified"); 
@@ -229,7 +234,10 @@ namespace PlayerUI
 				catch (LicenseNinja.LicenseDeniedException ex)
 				{
 					Logger.Error(ex, $"License: license denied");
-					Execute.OnUIThread(() => OpenLicenseChange(LicenseChangeReason.licenseUnknown, newLicense));
+					var reason = string.IsNullOrEmpty(newLicense)
+						?LicenseChangeReason.licenseRequired
+						:LicenseChangeReason.licenseUnknown;
+					Execute.OnUIThread(() => OpenLicenseChange(reason, newLicense));
 				}
 				catch (LicenseNinja.NoLicenseServerConnectionException ex)
 				{
