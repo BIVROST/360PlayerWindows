@@ -112,7 +112,7 @@ namespace PlayerUI
 		public string PlayerTitle {
 			get
 			{
-				string title = "Bivrost 360Player ™ BETA";
+				string title = "Bivrost 360Player ™ " + (Features.IsCanary ? "CANARY" : "BETA");
 				if (IsPlaying)
 					title += $" - now playing {SelectedFileNameLabel}";
 				if (!Features.Commercial)
@@ -678,6 +678,7 @@ namespace PlayerUI
 						}
                         Logic.Notify("Oculus Rift not detected.");
 						ShellViewModel.SendEvent("headsetError", "oculus");
+						Logic.Instance.stats.TrackEvent("Application events", "Headset", "Oculus Rift");
 					}
 
 					if (this.SettingHeadsetUsage == HeadsetMode.Auto || this.SettingHeadsetUsage == HeadsetMode.OpenVR)
@@ -702,8 +703,9 @@ namespace PlayerUI
 						{
 							Logger.Error("Headset detection exception (OpenVR): " + e);
 						}
-                        Logic.Notify("OpenVR not detected.");
+						Logic.Notify("OpenVR not detected.");
 						ShellViewModel.SendEvent("headsetError", "openvr");
+						Logic.Instance.stats.TrackEvent("Application events", "Headset", "OpenVR");
 					}
 
 					if (this.SettingHeadsetUsage == HeadsetMode.Auto || this.SettingHeadsetUsage == HeadsetMode.OSVR)
@@ -723,6 +725,7 @@ namespace PlayerUI
 						}
 						Logic.Notify("OSVR not detected.");
 						ShellViewModel.SendEvent("headsetError", "osvr");
+						Logic.Instance.stats.TrackEvent("Application events", "Headset", "OSVR");
 					}
 				});
 

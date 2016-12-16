@@ -88,11 +88,11 @@
 
 		#region ILookProvider integration
 
-		private Quaternion headsetLookRotation;
+		private Quaternion headsetLookRotation = Quaternion.Identity;
 
 		private bool UseVrLook
 		{
-			get { return headsetLookRotation != null && SettingsVrLookEnabled; }
+			get { return headsetLookRotation != Quaternion.Identity && SettingsVrLookEnabled; }
 		}
 
 		private bool SettingsVrLookEnabled {
@@ -113,7 +113,7 @@
         {
             if(UseVrLook)
 				return headsetLookRotation;
-			else if (currentRotationQuaternion != null)
+			else if (currentRotationQuaternion != Quaternion.Identity)
                 return currentRotationQuaternion;
 			else
 				return Quaternion.Identity;
