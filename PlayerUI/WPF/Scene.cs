@@ -181,6 +181,7 @@
 
         InputDevices.KeyboardInputDevice keyboardInput;
         InputDevices.GamepadInputDevice gamepadInput;
+        InputDevices.NavigatorInputDevice navigatorInput;
 
 
         void IScene.Attach(ISceneHost host)
@@ -188,6 +189,7 @@
             this.Host = host;
             keyboardInput = new InputDevices.KeyboardInputDevice();
             gamepadInput = new InputDevices.GamepadInputDevice();
+            navigatorInput = new InputDevices.NavigatorInputDevice();
 
             _device = host.Device;
 
@@ -486,7 +488,31 @@
                     if (gamepadInput.ButtonPressed(GamepadButtonFlags.DPadDown))
                         Caliburn.Micro.Execute.OnUIThreadAsync(() => ShellViewModel.Instance.VolumeRocker.Volume -= 0.1);
                 }
+
+
+                if(navigatorInput.Active)
+                {
+                    float vYaw = navigatorInput.vRoll + navigatorInput.vYaw;
+                    if (vYaw < -1) vYaw = -1;
+                    if (vYaw > 1) vYaw = 1;
+                    float vPitch = navigatorInput.vPitch;
+                    MoveDelta(velocity * vYaw * deltaTime, velocity * vPitch * deltaTime, 1, 4);
+
+                    if (Logic.Instance.settings.SpaceNavigatorKeysActive)
+                    {
+
+                        if (navigatorInput.leftPressed)
+                            ShellViewModel.Instance.PlayPause();
+
+                        if (navigatorInput.rightPressed)
+                            ShellViewModel.Instance.Rewind();
+                    }
+                }
             }
+
+            // TODO: fixme - in one place
+            navigatorInput.Update(deltaTime);
+
 
             //if (!textureReleased)
             //{

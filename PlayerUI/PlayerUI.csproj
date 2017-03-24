@@ -374,6 +374,7 @@
     <Compile Include="InputDevices\GamepadInputDevice.cs" />
     <Compile Include="InputDevices\InputDevice.cs" />
     <Compile Include="InputDevices\KeyboardInputDevice.cs" />
+    <Compile Include="InputDevices\NavigatorInputDevice.cs" />
     <Compile Include="Licensing\LicenseManagement.cs" />
     <Compile Include="Licensing\LicenseServerUnreachableView.xaml.cs">
       <DependentUpon>LicenseServerUnreachableView.xaml</DependentUpon>
@@ -951,6 +952,10 @@
     <ProjectReference Include="..\..\Managed-OSVR\ClientKit\ClientKit.csproj">
       <Project>{9ab9f53d-1f42-4045-8dfc-9d389d44bb35}</Project>
       <Name>ClientKit</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\3Dconnexion-driver-master\3DconnexionDriver.csproj">
+      <Project>{9b78c331-7940-45c7-aaf9-e98270462bd4}</Project>
+      <Name>3DconnexionDriver</Name>
     </ProjectReference>
     <ProjectReference Include="..\BivrostAnalytics\BivrostAnalytics.csproj">
       <Project>{30c06ae1-7390-488d-bd15-8ee43ec76308}</Project>

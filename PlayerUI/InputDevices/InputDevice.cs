@@ -2,6 +2,8 @@
 //       ShellViewModel.uiVisibilityBackgrundChecker
 
 
+using System;
+
 namespace PlayerUI.InputDevices
 {
     abstract public class InputDevice
@@ -27,9 +29,8 @@ namespace PlayerUI.InputDevices
 
     //abstract public class OculusRemoteInputDevice : InputDevice { }
     //abstract public class HTCViveWandInputDevice : InputDevice { }
-
     //abstract public class MouseInputDevice : InputDevice { }
- 
-    //abstract public class NavigatorInputDevice : InputDevice { }
+
+
 
 }

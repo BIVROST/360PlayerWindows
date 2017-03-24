@@ -13,3 +13,8 @@ Build Managed-OSVR
 https://answers.microsoft.com/en-us/insider/forum/insider_wintp-insider_install/how-to-instal-net-framework-35-on-windows-10/450b3ba6-4d19-45ae-840e-78519f36d7a4?auth=1
 
 Restart Visual Studio
+
+
+
+3. Space Navigator 3d Connexion:
+http://www.3dconnexion.pl/service/drivers.html

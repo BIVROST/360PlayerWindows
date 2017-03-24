@@ -156,6 +156,10 @@ namespace PlayerUI
 		[SettingsAdvancedProperty("Disable UI", ConfigItemType.Bool, requiredFeatures = FeaturesEnum.isDebug)]
 		public bool DisableUI { get; set; } = false;
 
-	}
+        [SettingsAdvancedProperty("Space Navigator: invert pitch", ConfigItemType.Bool)]
+        public bool SpaceNavigatorInvertPitch { get; set; } = false;
+        [SettingsAdvancedProperty("Space Navigator: shortcut keys active", ConfigItemType.Bool)]
+        public bool SpaceNavigatorKeysActive { get; internal set; } = true;
+    }
 
 }

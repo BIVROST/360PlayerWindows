@@ -323,7 +323,10 @@ namespace PlayerUI
 				BringToFront(data);
 				handled = true;
 			}
-			return IntPtr.Zero;
+
+            InputDevices.NavigatorInputDevice.WndProc(msg, wParam, lParam); 
+
+            return IntPtr.Zero;
 		}
 
 		public void BringToFront(string wmText = "")
@@ -343,7 +346,8 @@ namespace PlayerUI
 			
 			base.OnViewLoaded(view);
 
-			HwndSource source = HwndSource.FromHwnd(new WindowInteropHelper(playerWindow).Handle);
+            IntPtr windowHandle = new WindowInteropHelper(playerWindow).Handle;
+            HwndSource source = HwndSource.FromHwnd(windowHandle);
 			source.AddHook(new HwndSourceHook(WndProc));
 
 			this.DXCanvas.StopRendering();
@@ -352,8 +356,6 @@ namespace PlayerUI
 			
 			UpdateFileRecentsMenuState();
 			ShowStartupUI();
-
-			//xpad = new Controller(SharpDX.XInput.UserIndex.One);
 
 			if (!string.IsNullOrWhiteSpace(FileFromArgs))
 			{
@@ -391,6 +393,8 @@ namespace PlayerUI
 			}
 
 			Licensing.LicenseManagement.LicenseCheck(LicenseUpdated);
+
+            InputDevices.NavigatorInputDevice.TryInit(windowHandle);
 		}
 
 
