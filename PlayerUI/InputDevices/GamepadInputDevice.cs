@@ -46,24 +46,31 @@ namespace PlayerUI.InputDevices
         Gamepad prevGamepad;
         public override void Update(float deltaTime)
         {
-            prevGamepad = gamepad;
-            gamepad = xpad.GetState().Gamepad;
+			float dvPitch = 0;
+			float dvYaw = 0;
 
-            float dvYaw = 0;
-            if (gamepad.LeftThumbX < -Gamepad.LeftThumbDeadZone)
-                dvYaw = (gamepad.LeftThumbX + Gamepad.LeftThumbDeadZone) / (32768f - Gamepad.LeftThumbDeadZone);
-            else if (gamepad.LeftThumbX > Gamepad.LeftThumbDeadZone)
-                dvYaw = (gamepad.LeftThumbX - Gamepad.LeftThumbDeadZone) / (32767f - Gamepad.LeftThumbDeadZone);
+			if (Active)
+			{
+				prevGamepad = gamepad;
+				gamepad = xpad.GetState().Gamepad;
 
-            float dvPitch = 0;
-            if (gamepad.LeftThumbY < -Gamepad.LeftThumbDeadZone)
-                dvPitch = (gamepad.LeftThumbY + Gamepad.LeftThumbDeadZone) / (32768f - Gamepad.LeftThumbDeadZone);
-            else if (gamepad.LeftThumbY > Gamepad.LeftThumbDeadZone)
-                dvPitch = (gamepad.LeftThumbY - Gamepad.LeftThumbDeadZone) / (32767f - Gamepad.LeftThumbDeadZone);
+				
+				if (gamepad.LeftThumbX < -Gamepad.LeftThumbDeadZone)
+					dvYaw = (gamepad.LeftThumbX + Gamepad.LeftThumbDeadZone) / (32768f - Gamepad.LeftThumbDeadZone);
+				else if (gamepad.LeftThumbX > Gamepad.LeftThumbDeadZone)
+					dvYaw = (gamepad.LeftThumbX - Gamepad.LeftThumbDeadZone) / (32767f - Gamepad.LeftThumbDeadZone);
 
-            dvYaw = -dvYaw;
+				
+				if (gamepad.LeftThumbY < -Gamepad.LeftThumbDeadZone)
+					dvPitch = (gamepad.LeftThumbY + Gamepad.LeftThumbDeadZone) / (32768f - Gamepad.LeftThumbDeadZone);
+				else if (gamepad.LeftThumbY > Gamepad.LeftThumbDeadZone)
+					dvPitch = (gamepad.LeftThumbY - Gamepad.LeftThumbDeadZone) / (32767f - Gamepad.LeftThumbDeadZone);
 
-            vPitch = vPitch.LerpInPlace(dvPitch, deltaTime * 4);
+				dvYaw = -dvYaw;
+			}
+			
+
+			vPitch = vPitch.LerpInPlace(dvPitch, deltaTime * 4);
             vYaw = vYaw.LerpInPlace(dvYaw, deltaTime * 4);
         }
     }
