@@ -40,16 +40,6 @@
 
 		private object localCritical = new object();
 
-        public bool keyLeft;
-        public bool keyRight;
-        public bool keyUp;
-        public bool keyDown;
-        public bool keyZ;
-        public bool keyT;
-        public bool keyL;
-        public bool keyN;
-
-
         SharpDX.Toolkit.Graphics.GraphicsDevice graphicsDevice;
 		SharpDX.Toolkit.Graphics.Effect customEffect;
 
@@ -82,7 +72,6 @@
 		private MediaDecoder.ProjectionMode projectionMode;
 		private SharpDX.DXGI.Resource resource;
 
-        public Controller xpad;
         Dictionary<GamepadButtonFlags, bool> buttonStates = new Dictionary<GamepadButtonFlags, bool>();
 
 
@@ -124,20 +113,6 @@
 			videoTexture = sharedTexture;
 			projectionMode = projection;
 		}
-
-        bool IsKeyDown(Key key)
-        {
-            if (Host == null)
-                return false;
-            return Host.Keyboard.KeyDown(key);
-        }
-
-        bool IsKeyUp(Key key)
-        {
-            if (Host == null)
-                return false;
-            return Host.Keyboard.KeyUp(key);
-        }
 
 
         void ResizeTexture(Texture2D tL, Texture2D tR)
@@ -199,13 +174,20 @@
 			tempVideotexture?.Dispose();
 		}
 
-		//void ReleaseTexture()
-		//{
-		//	textureReleased = true;
-		//}
+        //void ReleaseTexture()
+        //{
+        //	textureReleased = true;
+        //}
 
-		void IScene.Attach(ISceneHost host)
+        InputDevices.KeyboardInputDevice keyboardInput;
+        InputDevices.GamepadInputDevice gamepadInput;
+
+
+        void IScene.Attach(ISceneHost host)
         {
+            keyboardInput = new InputDevices.KeyboardInputDevice(host.Keyboard);
+            gamepadInput = new InputDevices.GamepadInputDevice();
+
             this.Host = host;
             _device = host.Device;
 
@@ -267,7 +249,7 @@
             {
                 if(dev.DeviceType == SharpDX.RawInput.DeviceType.Mouse)
                     SharpDX.RawInput.Device.RegisterDevice(SharpDX.Multimedia.UsagePage.Generic, SharpDX.Multimedia.UsageId.GenericMouse, SharpDX.RawInput.DeviceFlags.None, dev.Handle);
-                Console.WriteLine($"{dev.DeviceName} :: {dev.DeviceType}");
+                Console.WriteLine($"Scene::Attach DX device: {dev.DeviceName} :: {dev.DeviceType}");
             });
 
 			//useOSVR = Logic.Instance.settings.UserOSVRTracking;
@@ -427,20 +409,7 @@
 
 		}
 
-		//public void ButtonOnce(State padState, GamepadButtonFlags button, Action buttonAction)
-		//{
-		//    if(!buttonStates.ContainsKey(button))
-		//        buttonStates.Add(button, false);
-		//    if (padState.Gamepad.Buttons == button)
-		//    {
-		//        if(!buttonStates[button])
-		//        {
-		//            buttonStates[button] = true;
-		//            buttonAction();
-		//        }
-		//    }
-		//    else buttonStates[button] = false;
-		//}
+
 
 		void IScene.Render()
         {
@@ -450,79 +419,71 @@
             if (device == null)
                 return;
 
-			var speed = 50f;
 			//currentFov = Lerp(currentFov, targetFov, 5f * deltaTime);
 			currentFov = currentFov.LerpInPlace(targetFov, 5f * deltaTime);
 			projectionMatrix = Matrix.PerspectiveFovRH((float)(currentFov * Math.PI / 180f), (float)16f / 9f, 0.0001f, 50.0f);
 
-
-
-			if (xpad != null && xpad.IsConnected)
-			{
-				var state = xpad.GetState();
-				float padx = state.Gamepad.LeftThumbX / 256;
-				float pady = state.Gamepad.LeftThumbY / 256;
-				Vector2 padVector = new Vector2(padx, pady);
-				if (padVector.LengthSquared() > 50)
-				{
-					MoveDelta(-1f * padVector.X, 1f * padVector.Y, 0.02f * speed * deltaTime, 4f);
-				}
-
-				//ButtonOnce(state, GamepadButtonFlags.A, () => ShellViewModel.Instance.PlayPause());
-				//ButtonOnce(state, GamepadButtonFlags.Y, () => ShellViewModel.Instance.Rewind());
-				//ButtonOnce(state, GamepadButtonFlags.DPadLeft, () => ShellViewModel.Instance.SeekRelative(-5));
-				//ButtonOnce(state, GamepadButtonFlags.DPadRight, () => ShellViewModel.Instance.SeekRelative(5));
-				//ButtonOnce(state, GamepadButtonFlags.DPadUp, () => Caliburn.Micro.Execute.OnUIThreadAsync(() => ShellViewModel.Instance.VolumeRocker.Volume += 0.1));
-				//ButtonOnce(state, GamepadButtonFlags.DPadDown, () => Caliburn.Micro.Execute.OnUIThreadAsync(() => ShellViewModel.Instance.VolumeRocker.Volume -= 0.1));
-			}
-
-           
+            keyboardInput.Update(deltaTime);
+            gamepadInput.Update(deltaTime);
 
             if (HasFocus)
 			{
-                //public override void Update()
-                //{
-                if (IsKeyDown(Key.Left))
-                    MoveDelta(1f, 0f, speed * deltaTime, 4f);
-                if (IsKeyDown(Key.Right))
-                    MoveDelta(-1.0f, 0f, speed * deltaTime, 4f);
-                if (IsKeyDown(Key.Up))
-                    MoveDelta(0f, 1f, speed * deltaTime, 4f);
-                if (IsKeyDown(Key.Down))
-                    MoveDelta(0f, -1f, speed * deltaTime, 4f);
-                //}
-
-                if (IsKeyDown(Key.Z))
+                if (keyboardInput.Active)
                 {
-                    ResetFov();
-                }
+                    MoveDelta(keyboardInput.vYaw * deltaTime, keyboardInput.vPitch * deltaTime, 1, 4);
 
-                if (IsKeyDown(Key.T) && tUp)
-                {
-                    SettingsVrLookEnabled = !SettingsVrLookEnabled;
-                    tUp = false;
-                }
-                if (IsKeyUp(Key.T))
-					tUp = true;
-
-                if (projectionMode == MediaDecoder.ProjectionMode.Sphere)
-                {
-                    if (IsKeyDown(Key.L))
+                    if (Host != null && Host.Keyboard.KeyPressed(Key.Z))
                     {
-                        //littlePlanet = true;
-                        StereographicProjection();
-                        targetFov = DEFAULT_LITTLE_FOV;
-
+                        ResetFov();
                     }
-                    if (IsKeyDown(Key.N))
+
+                    if (Host != null && Host.Keyboard.KeyPressed(Key.T))
                     {
-                        //littlePlanet = false;
-                        RectlinearProjection();
-                        targetFov = DEFAULT_FOV;
+                        SettingsVrLookEnabled = !SettingsVrLookEnabled;
+                    }
+
+                    if (projectionMode == MediaDecoder.ProjectionMode.Sphere)
+                    {
+                        if (Host != null && Host.Keyboard.KeyPressed(Key.L))
+                        {
+                            //littlePlanet = true;
+                            StereographicProjection();
+                            targetFov = DEFAULT_LITTLE_FOV;
+
+                        }
+                        if (Host != null && Host.Keyboard.KeyPressed(Key.N))
+                        {
+                            //littlePlanet = false;
+                            RectlinearProjection();
+                            targetFov = DEFAULT_FOV;
+                        }
                     }
                 }
+                
 
 
+                if(gamepadInput.Active)
+                {
+                    MoveDelta(gamepadInput.vYaw * deltaTime, gamepadInput.vPitch * deltaTime, 1, 4);
+
+                    if (gamepadInput.ButtonPressed(GamepadButtonFlags.A))
+                        ShellViewModel.Instance.PlayPause();
+
+                    if (gamepadInput.ButtonPressed(GamepadButtonFlags.Y))
+                        ShellViewModel.Instance.Rewind();
+
+                    if (gamepadInput.ButtonPressed(GamepadButtonFlags.DPadLeft))
+                        ShellViewModel.Instance.SeekRelative(-5);
+
+                    if (gamepadInput.ButtonPressed(GamepadButtonFlags.DPadRight))
+                        ShellViewModel.Instance.SeekRelative(5);
+
+                    if (gamepadInput.ButtonPressed(GamepadButtonFlags.DPadUp))
+                        Caliburn.Micro.Execute.OnUIThreadAsync(() => ShellViewModel.Instance.VolumeRocker.Volume += 0.1);
+
+                    if (gamepadInput.ButtonPressed(GamepadButtonFlags.DPadDown))
+                        Caliburn.Micro.Execute.OnUIThreadAsync(() => ShellViewModel.Instance.VolumeRocker.Volume -= 0.1);
+                }
             }
 
             //if (!textureReleased)
@@ -537,7 +498,6 @@
 			}
         }
 
-		private bool tUp = false;
 		private Matrix projectionMatrix;
 		private Matrix worldMatrix;
 		private Matrix viewMatrix;
