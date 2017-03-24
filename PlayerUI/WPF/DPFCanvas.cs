@@ -47,16 +47,12 @@
         public CancellationTokenSource cts;
         public object renderLock = new object();
 
-        InputDevices.Keyboard _keyboard = new InputDevices.Keyboard();
-        public InputDevices.Keyboard Keyboard { get { return _keyboard; } }
-
 
         public DPFCanvas()
         {
             this.RenderTimer = new Stopwatch();
             this.Loaded += this.Window_Loaded;
             this.Unloaded += this.Window_Closing;
-            //_keyboard = new InputDevices.Keyboard(Window);
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -276,9 +272,7 @@
                     return;
 
                 //this.Render(this.RenderTimer.Elapsed);
-
-                Keyboard.UpdateKeyState();
- 
+                
 
                 if (Monitor.TryEnter(renderLock, 16))
                 {

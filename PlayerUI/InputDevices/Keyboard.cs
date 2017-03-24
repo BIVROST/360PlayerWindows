@@ -1,61 +1,67 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Windows;
 using System.Windows.Input;
 
 namespace PlayerUI.InputDevices
 {
-    public class Keyboard
+    public class Keyboard 
     {
-        enum KeyState { up, pressed, down, released }
 
-        ConcurrentDictionary<Key, KeyState> keys { get; set; } = new ConcurrentDictionary<Key, KeyState>();
+        #region static global state
+        private static BitArray state;
+        private static object locker = new object();
 
-
-        //public Keyboard()
-        //{
-        //      TODO: currently global per app
-        //    EventManager.RegisterClassHandler(typeof(Window), UIElement.KeyDownEvent, new KeyEventHandler((s,e) => Console.WriteLine("DOWN: " + e.Key)));
-        //}
-
-        public void UpdateKeyState()
+        static Keyboard()
         {
-            foreach (KeyValuePair<Key, KeyState> kvp in keys)
+            lock (locker)
             {
-                bool isDown = System.Windows.Input.Keyboard.IsKeyDown(kvp.Key);
-                switch(kvp.Value)
-                {
-                    case KeyState.up:
-                        if (isDown)
-                            keys[kvp.Key] = KeyState.pressed;
-                        break;
-
-                    case KeyState.pressed:
-                        if (isDown)
-                            keys[kvp.Key] = KeyState.down;
-                        else
-                            keys[kvp.Key] = KeyState.released;
-                        break;
-
-                    case KeyState.down:
-                        if (!isDown)
-                            keys[kvp.Key] = KeyState.released;
-                        break;
-
-                    case KeyState.released:
-                        if (isDown)
-                            keys[kvp.Key] = KeyState.pressed;
-                        else
-                            keys[kvp.Key] = KeyState.up;
-                        break;
-                }
+                const int maxKey = 255;
+                state = new BitArray(maxKey, false);
+                EventManager.RegisterClassHandler(typeof(Window), UIElement.KeyDownEvent, new KeyEventHandler(HandleKeyDown));
+                EventManager.RegisterClassHandler(typeof(Window), UIElement.KeyUpEvent, new KeyEventHandler(HandleKeyUp));
             }
         }
 
 
-        public void RegisterTrackedKey(Key key) {
-            if (!keys.ContainsKey(key)) // mark so it will be polled during next UpdateKeyState
-                keys[key] = KeyState.up;
-            //System.Windows.Input.Keyboard.IsKeyDown(key) ? KeyState.pressed : KeyState.up;
+        private static void HandleKeyDown(object sender, KeyEventArgs e)
+        {
+            lock(locker)
+                state.Set((byte)e.Key, true);
+        }
+
+        private static void HandleKeyUp(object sender, KeyEventArgs e)
+        {
+            lock(locker)
+                state.Set((byte)e.Key, false);
+        }
+        #endregion
+
+        private BitArray currentState;
+        private BitArray prevState;
+
+        public Keyboard()
+        {
+            prevState = new BitArray(state.Length);
+            currentState = new BitArray(state.Length);
+            for (int i = state.Length - 1; i >= 0; i--)
+            {
+                prevState[i] = currentState[i] = state[i];
+            }
+        }
+
+        public void Update()
+        {
+            lock (locker)
+            {
+                for (int i = state.Length - 1; i >= 0; i--)
+                {
+                    prevState[i] = currentState[i];
+                    currentState[i] = state[i];
+                }
+            }
         }
 
 
@@ -66,8 +72,8 @@ namespace PlayerUI.InputDevices
         /// <returns>was the key just pressed</returns>
         public bool KeyPressed(Key key)
         {
-            RegisterTrackedKey(key);
-            return keys[key] == KeyState.pressed;
+            byte k = (byte)key;
+            return currentState[k] && !prevState[k];
         }
 
         /// <summary>
@@ -77,8 +83,8 @@ namespace PlayerUI.InputDevices
         /// <returns>was the key just released</returns>
         public bool KeyReleased(Key key)
         {
-            RegisterTrackedKey(key);
-            return keys[key] == KeyState.released;
+            byte k = (byte)key;
+            return !currentState[k] && prevState[k];
         }
 
         /// <summary>
@@ -88,8 +94,8 @@ namespace PlayerUI.InputDevices
         /// <returns>is the key currently down, also returns true in the pressed state</returns>
         public bool KeyDown(Key key)
         {
-            RegisterTrackedKey(key);
-            return keys[key] == KeyState.down || keys[key] == KeyState.pressed;
+            byte k = (byte)key;
+            return currentState[k];
         }
 
         /// <summary>
@@ -99,8 +105,8 @@ namespace PlayerUI.InputDevices
         /// <returns>is the key currently not pressed, also returns true in the released state</returns>
         public bool KeyUp(Key key)
         {
-            RegisterTrackedKey(key);
-            return keys[key] == KeyState.up || keys[key] == KeyState.released;
+            byte k = (byte)key;
+            return !currentState[k];
         }
 
     }

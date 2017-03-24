@@ -27,7 +27,6 @@ namespace PlayerUI
     public interface ISceneHost
     {
         Device Device { get; }
-        InputDevices.Keyboard Keyboard { get; }
     }
 
     public interface IScene

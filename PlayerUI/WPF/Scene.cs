@@ -179,16 +179,18 @@
         //	textureReleased = true;
         //}
 
+        InputDevices.Keyboard keyboard;
         InputDevices.KeyboardInputDevice keyboardInput;
         InputDevices.GamepadInputDevice gamepadInput;
 
 
         void IScene.Attach(ISceneHost host)
         {
-            keyboardInput = new InputDevices.KeyboardInputDevice(host.Keyboard);
+            this.Host = host;
+            keyboard = new InputDevices.Keyboard();
+            keyboardInput = new InputDevices.KeyboardInputDevice(keyboard);
             gamepadInput = new InputDevices.GamepadInputDevice();
 
-            this.Host = host;
             _device = host.Device;
 
             if (_device == null)
@@ -423,6 +425,7 @@
 			currentFov = currentFov.LerpInPlace(targetFov, 5f * deltaTime);
 			projectionMatrix = Matrix.PerspectiveFovRH((float)(currentFov * Math.PI / 180f), (float)16f / 9f, 0.0001f, 50.0f);
 
+            keyboard.Update();
             keyboardInput.Update(deltaTime);
             gamepadInput.Update(deltaTime);
 
@@ -432,26 +435,26 @@
                 {
                     MoveDelta(keyboardInput.vYaw * deltaTime, keyboardInput.vPitch * deltaTime, 1, 4);
 
-                    if (Host != null && Host.Keyboard.KeyPressed(Key.Z))
+                    if (Host != null && keyboard.KeyPressed(Key.Z))
                     {
                         ResetFov();
                     }
 
-                    if (Host != null && Host.Keyboard.KeyPressed(Key.T))
+                    if (Host != null && keyboard.KeyPressed(Key.T))
                     {
                         SettingsVrLookEnabled = !SettingsVrLookEnabled;
                     }
 
                     if (projectionMode == MediaDecoder.ProjectionMode.Sphere)
                     {
-                        if (Host != null && Host.Keyboard.KeyPressed(Key.L))
+                        if (Host != null && keyboard.KeyPressed(Key.L))
                         {
                             //littlePlanet = true;
                             StereographicProjection();
                             targetFov = DEFAULT_LITTLE_FOV;
 
                         }
-                        if (Host != null && Host.Keyboard.KeyPressed(Key.N))
+                        if (Host != null && keyboard.KeyPressed(Key.N))
                         {
                             //littlePlanet = false;
                             RectlinearProjection();
