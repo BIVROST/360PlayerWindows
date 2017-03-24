@@ -125,32 +125,22 @@
 			projectionMode = projection;
 		}
 
-        private bool GetKeyState(Key key)
-        {
-            if (this.Host != null)
-            {
-                if(!this.Host.KeyState.ContainsKey(key))
-                {
-                    this.Host.KeyState.TryAdd(key, false);
-                    return false;
-                }
-                return this.Host.KeyState[key];
-            }
-            return false;
-        }
-
         bool IsKeyDown(Key key)
         {
-            return GetKeyState(key);
+            if (Host == null)
+                return false;
+            return Host.Keyboard.KeyDown(key);
         }
 
         bool IsKeyUp(Key key)
         {
-            return !GetKeyState(key);
+            if (Host == null)
+                return false;
+            return Host.Keyboard.KeyUp(key);
         }
-		
 
-		void ResizeTexture(Texture2D tL, Texture2D tR)
+
+        void ResizeTexture(Texture2D tL, Texture2D tR)
 		{
 			if(MediaDecoder.Instance.TextureReleased) return;
 			var tempResource = resource;
@@ -490,6 +480,8 @@
 
             if (HasFocus)
 			{
+                //public override void Update()
+                //{
                 if (IsKeyDown(Key.Left))
                     MoveDelta(1f, 0f, speed * deltaTime, 4f);
                 if (IsKeyDown(Key.Right))
@@ -498,6 +490,8 @@
                     MoveDelta(0f, 1f, speed * deltaTime, 4f);
                 if (IsKeyDown(Key.Down))
                     MoveDelta(0f, -1f, speed * deltaTime, 4f);
+                //}
+
                 if (IsKeyDown(Key.Z))
                 {
                     ResetFov();

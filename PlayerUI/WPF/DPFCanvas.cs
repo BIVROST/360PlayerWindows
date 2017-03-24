@@ -46,15 +46,17 @@
         public CancellationToken token;
         public CancellationTokenSource cts;
         public object renderLock = new object();
-        
 
-        public ConcurrentDictionary<System.Windows.Input.Key, bool> KeyState { get; set; } = new ConcurrentDictionary<System.Windows.Input.Key, bool>();
+        InputDevices.Keyboard _keyboard = new InputDevices.Keyboard();
+        public InputDevices.Keyboard Keyboard { get { return _keyboard; } }
+
 
         public DPFCanvas()
         {
             this.RenderTimer = new Stopwatch();
             this.Loaded += this.Window_Loaded;
             this.Unloaded += this.Window_Closing;
+            //_keyboard = new InputDevices.Keyboard(Window);
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -275,12 +277,8 @@
 
                 //this.Render(this.RenderTimer.Elapsed);
 
-                foreach (KeyValuePair<System.Windows.Input.Key, bool> kvp in KeyState)
-                {
-                    KeyState[kvp.Key] = System.Windows.Input.Keyboard.IsKeyDown(kvp.Key);
-                    if (KeyState[kvp.Key])
-                        ;
-                }
+                Keyboard.UpdateKeyState();
+ 
 
                 if (Monitor.TryEnter(renderLock, 16))
                 {

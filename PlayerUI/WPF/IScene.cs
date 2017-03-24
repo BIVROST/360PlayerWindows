@@ -27,7 +27,7 @@ namespace PlayerUI
     public interface ISceneHost
     {
         Device Device { get; }
-        ConcurrentDictionary<System.Windows.Input.Key, bool> KeyState { get; set; }
+        InputDevices.Keyboard Keyboard { get; }
     }
 
     public interface IScene
