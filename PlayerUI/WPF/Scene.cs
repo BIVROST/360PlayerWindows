@@ -179,7 +179,6 @@
         //	textureReleased = true;
         //}
 
-        InputDevices.Keyboard keyboard;
         InputDevices.KeyboardInputDevice keyboardInput;
         InputDevices.GamepadInputDevice gamepadInput;
 
@@ -187,8 +186,7 @@
         void IScene.Attach(ISceneHost host)
         {
             this.Host = host;
-            keyboard = new InputDevices.Keyboard();
-            keyboardInput = new InputDevices.KeyboardInputDevice(keyboard);
+            keyboardInput = new InputDevices.KeyboardInputDevice();
             gamepadInput = new InputDevices.GamepadInputDevice();
 
             _device = host.Device;
@@ -425,7 +423,8 @@
 			currentFov = currentFov.LerpInPlace(targetFov, 5f * deltaTime);
 			projectionMatrix = Matrix.PerspectiveFovRH((float)(currentFov * Math.PI / 180f), (float)16f / 9f, 0.0001f, 50.0f);
 
-            keyboard.Update();
+
+            const float velocity = 90f; // deg per second
             keyboardInput.Update(deltaTime);
             gamepadInput.Update(deltaTime);
 
@@ -433,28 +432,28 @@
 			{
                 if (keyboardInput.Active)
                 {
-                    MoveDelta(keyboardInput.vYaw * deltaTime, keyboardInput.vPitch * deltaTime, 1, 4);
+                    MoveDelta(velocity * keyboardInput.vYaw * deltaTime, velocity * keyboardInput.vPitch * deltaTime, 1, 4);
 
-                    if (Host != null && keyboard.KeyPressed(Key.Z))
+                    if (keyboardInput.KeyPressed(Key.Z))
                     {
                         ResetFov();
                     }
 
-                    if (Host != null && keyboard.KeyPressed(Key.T))
+                    if (keyboardInput.KeyPressed(Key.T))
                     {
                         SettingsVrLookEnabled = !SettingsVrLookEnabled;
                     }
 
                     if (projectionMode == MediaDecoder.ProjectionMode.Sphere)
                     {
-                        if (Host != null && keyboard.KeyPressed(Key.L))
+                        if (keyboardInput.KeyPressed(Key.L))
                         {
                             //littlePlanet = true;
                             StereographicProjection();
                             targetFov = DEFAULT_LITTLE_FOV;
 
                         }
-                        if (Host != null && keyboard.KeyPressed(Key.N))
+                        if (keyboardInput.KeyPressed(Key.N))
                         {
                             //littlePlanet = false;
                             RectlinearProjection();
@@ -467,7 +466,7 @@
 
                 if(gamepadInput.Active)
                 {
-                    MoveDelta(gamepadInput.vYaw * deltaTime, gamepadInput.vPitch * deltaTime, 1, 4);
+                    MoveDelta(velocity * gamepadInput.vYaw * deltaTime, velocity * gamepadInput.vPitch * deltaTime, 1, 4);
 
                     if (gamepadInput.ButtonPressed(GamepadButtonFlags.A))
                         ShellViewModel.Instance.PlayPause();

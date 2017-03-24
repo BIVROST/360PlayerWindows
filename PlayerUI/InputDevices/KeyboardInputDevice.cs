@@ -1,20 +1,18 @@
-﻿using System;
+﻿using PlayerUI.Tools;
 using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Input;
 
 namespace PlayerUI.InputDevices
 {
-    public class Keyboard 
+    public class KeyboardInputDevice : InputDevice
     {
 
         #region static global state
         private static BitArray state;
         private static object locker = new object();
 
-        static Keyboard()
+        static KeyboardInputDevice()
         {
             lock (locker)
             {
@@ -28,13 +26,13 @@ namespace PlayerUI.InputDevices
 
         private static void HandleKeyDown(object sender, KeyEventArgs e)
         {
-            lock(locker)
+            lock (locker)
                 state.Set((byte)e.Key, true);
         }
 
         private static void HandleKeyUp(object sender, KeyEventArgs e)
         {
-            lock(locker)
+            lock (locker)
                 state.Set((byte)e.Key, false);
         }
         #endregion
@@ -42,25 +40,13 @@ namespace PlayerUI.InputDevices
         private BitArray currentState;
         private BitArray prevState;
 
-        public Keyboard()
+        public KeyboardInputDevice()
         {
             prevState = new BitArray(state.Length);
             currentState = new BitArray(state.Length);
             for (int i = state.Length - 1; i >= 0; i--)
             {
                 prevState[i] = currentState[i] = state[i];
-            }
-        }
-
-        public void Update()
-        {
-            lock (locker)
-            {
-                for (int i = state.Length - 1; i >= 0; i--)
-                {
-                    prevState[i] = currentState[i];
-                    currentState[i] = state[i];
-                }
             }
         }
 
@@ -107,6 +93,37 @@ namespace PlayerUI.InputDevices
         {
             byte k = (byte)key;
             return !currentState[k];
+        }
+
+
+        public override bool Active
+        {
+            get { return true; }
+        }
+
+        public override void Update(float deltaTime)
+        {
+            lock (locker)
+            {
+                for (int i = state.Length - 1; i >= 0; i--)
+                {
+                    prevState[i] = currentState[i];
+                    currentState[i] = state[i];
+                }
+            }
+
+            float dvYaw = 0;
+            float dvPitch = 0;
+            if (KeyDown(Key.Left))
+                dvYaw += 1;
+            if (KeyDown(Key.Right))
+                dvYaw -= 1;
+            if (KeyDown(Key.Up))
+                dvPitch += 1;
+            if (KeyDown(Key.Down))
+                dvPitch -= 1;
+            vPitch = vPitch.LerpInPlace(dvPitch, deltaTime * 4);
+            vYaw = vYaw.LerpInPlace(dvYaw, deltaTime * 4);
         }
 
     }

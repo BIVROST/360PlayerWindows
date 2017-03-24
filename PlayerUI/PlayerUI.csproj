@@ -371,8 +371,9 @@
       <DependentUpon>HeadsetMenuView.xaml</DependentUpon>
     </Compile>
     <Compile Include="HeadsetMenuViewModel.cs" />
+    <Compile Include="InputDevices\GamepadInputDevice.cs" />
     <Compile Include="InputDevices\InputDevice.cs" />
-    <Compile Include="InputDevices\Keyboard.cs" />
+    <Compile Include="InputDevices\KeyboardInputDevice.cs" />
     <Compile Include="Licensing\LicenseManagement.cs" />
     <Compile Include="Licensing\LicenseServerUnreachableView.xaml.cs">
       <DependentUpon>LicenseServerUnreachableView.xaml</DependentUpon>
