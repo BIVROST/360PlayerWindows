@@ -202,7 +202,7 @@
                     <MenuItem Header="License activation" cal:Message.Attach="[Event Click] = [Action OpenLicenseManagement]"/>
                     <MenuItem Header="Log Viewer" cal:Message.Attach="[Event Click] = [Action OpenLogViewer]"/>
                     <Separator />
-                    <MenuItem Header="About Bivrost Player" cal:Message.Attach="[Event Click] = [Action OpenAbout]"/>
+                    <MenuItem Header="About BIVROST 360Player" cal:Message.Attach="[Event Click] = [Action OpenAbout]"/>
                 </MenuItem>
             </Menu>
 

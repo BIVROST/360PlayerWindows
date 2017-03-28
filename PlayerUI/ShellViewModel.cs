@@ -112,7 +112,7 @@ namespace PlayerUI
 		public string PlayerTitle {
 			get
 			{
-				string title = "Bivrost 360Player ™ " + (Features.IsCanary ? "CANARY" : "BETA");
+				string title = "BIVROST 360Player ™ " + (Features.IsCanary ? "CANARY" : "BETA");
 				if (IsPlaying)
 					title += $" - now playing {SelectedFileNameLabel}";
 				if (!Features.Commercial)
