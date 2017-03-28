@@ -566,7 +566,7 @@ namespace PlayerUI
 											Console.WriteLine("Playback exception " + exc.Message);
 										}
 							}
-						}
+						} else Thread.Sleep(1);
 					}
 				}
 
