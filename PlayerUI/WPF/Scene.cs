@@ -379,8 +379,9 @@
 
 			currentOffset = Lerp(currentOffset, littlePlanet ? -3f : 0f, deltaTime * 3f);
 
-			viewMatrix = Matrix.Translation(0, 0, currentOffset);
-			viewMatrix *= Matrix.RotationQuaternion(currentRotationQuaternion);
+			viewMatrix = Matrix.RotationQuaternion(currentRotationQuaternion);
+			viewMatrix *= Matrix.Translation(0, 0, currentOffset);
+			
 
 			Vector3 lookUp = Vector3.Transform(Vector3.Up, viewMatrix).ToVector3();
 			Vector3 lookAt = Vector3.Transform(Vector3.ForwardRH, viewMatrix).ToVector3();
