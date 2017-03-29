@@ -67,7 +67,7 @@ namespace PlayerUI.Statistics
             if (history == null)
                 return;
             Info("https://tools.bivrost360.com/heatmap-viewer/?" + history.ToBase64());
-            Session session = new Session(Guid.NewGuid(), filename, startTime, DateTime.Now, history, lookProvider);
+            Session session = new Session(filename, startTime, DateTime.Now, history, lookProvider);
             SaveSession(session);
             //SendStatistics.Send(session);
             history = null;

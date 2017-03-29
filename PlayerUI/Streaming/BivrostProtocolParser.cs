@@ -11,8 +11,12 @@ namespace PlayerUI.Streaming
 
 	public class BivrostProtocolParser : ServiceParser
 	{
+        public override string ServiceName
+        {
+            get { return "Bivrost protocol"; }
+        }
 
-		public override bool CanParse(string url)
+        public override bool CanParse(string url)
 		{
 			var uri = new Uri(url);
 			return uri.Scheme == "bivrost";
@@ -55,12 +59,10 @@ namespace PlayerUI.Streaming
 			if (string.IsNullOrWhiteSpace(title))
 				title = uri;
 
-			return new ServiceResult()
+			return new ServiceResult(uri, ServiceName, URIToMediaId(uri))
 			{
-				originalURL = uri,
 				projection = projection,
 				stereoscopy = stereoscopy,
-				serviceName = "Bivrost protocol",
 				title = title,
 				videoStreams = new List<VideoStream>()
 				{

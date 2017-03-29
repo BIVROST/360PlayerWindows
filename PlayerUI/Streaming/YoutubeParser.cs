@@ -15,6 +15,10 @@ namespace PlayerUI.Streaming
 {
     public class YoutubeParser : ServiceParser
     {
+        public override string ServiceName
+        {
+            get { return "YouTube"; }
+        }
 
         public override bool CanParse(string uri)
         {
@@ -261,15 +265,14 @@ namespace PlayerUI.Streaming
 
             }
 
-            return new ServiceResult()
+            string originalURL = (string)json["webpage_url"];
+            return new ServiceResult(originalURL, ServiceName, URIToMediaId(originalURL))
             {
                 description = (string)json["description"],
                 audioStreams = audioStreams,
                 videoStreams = videoStreams,
-                serviceName = "youtube",
                 stereoscopy = MediaDecoder.VideoMode.Autodetect,
                 title = (string)json["fulltitle"],
-                originalURL = (string)json["webpage_url"],
                 projection = MediaDecoder.ProjectionMode.Sphere // always?
                 // duration = (float)json["duration"]
             };

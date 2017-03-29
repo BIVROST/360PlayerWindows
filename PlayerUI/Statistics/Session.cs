@@ -14,13 +14,14 @@ namespace PlayerUI.Statistics
         public DateTime time_end;
         public string lookprovider;
         public string history;
+        public string media_id;
 
-        readonly static string CURRENT_VERSION = "0.20160905";
+        readonly static string CURRENT_VERSION = "0.20170321";
 
-        public Session(Guid id, string filename, DateTime start, DateTime end, LookHistory history, ILookProvider lookProvider)
+        public Session(string filename, DateTime start, DateTime end, LookHistory history, ILookProvider lookProvider)
         {
             version = CURRENT_VERSION;
-            guid = id;
+            guid = Guid.NewGuid();
             uri = filename;
             sample_rate = history.SampleRate;
             installation_id = Logic.Instance.settings.InstallId;

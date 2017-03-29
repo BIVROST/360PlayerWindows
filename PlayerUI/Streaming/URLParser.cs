@@ -10,6 +10,11 @@ namespace PlayerUI.Streaming
 
     public class URLParser : ServiceParser
     {
+        public override string ServiceName
+        {
+            get { return "plain URL"; }
+        }
+
         public override bool CanParse(string url)
         {
             var uri = new Uri(url);
@@ -43,12 +48,10 @@ namespace PlayerUI.Streaming
 			if (!File.Exists(uri))
 				throw new StreamNetworkFailure("File not available", uri);
 
-			return new ServiceResult()
+			return new ServiceResult(uri, ServiceName, URIToMediaId(uri))
             {
-                originalURL = uri,
                 projection = MediaDecoder.ProjectionMode.Sphere,
 				stereoscopy = GuessStereoscopyFromFileName(uri),
-                serviceName = "plain URL",
                 videoStreams = new List<VideoStream>()
                 {
                     new VideoStream()

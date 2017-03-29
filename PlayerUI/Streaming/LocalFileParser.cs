@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -30,12 +31,23 @@ namespace PlayerUI.Streaming
 			if (!File.Exists(path))
 				throw new StreamNetworkFailure("File not found", path);
 
-			return new ServiceResult()
+            FileInfo fileInfo = new FileInfo(path);
+
+            int consideredBytes = 1048576;
+            if (fileInfo.Length < consideredBytes)
+                consideredBytes = (int)fileInfo.Length;
+
+            byte[] data = new byte[consideredBytes];
+            fileInfo.OpenRead().Read(data, 0, consideredBytes);
+
+            SHA1 sha = new SHA1CryptoServiceProvider();
+            byte[] hash = sha.ComputeHash(data);
+            string mediaId = $"sha1+len:{string.Concat(Array.ConvertAll(hash, x => x.ToString("x2")))}+{fileInfo.Length}";
+
+            return new ServiceResult(path, ServiceName, mediaId)
 			{
-				originalURL = path,
 				projection = MediaDecoder.ProjectionMode.Sphere,
 				stereoscopy = GuessStereoscopyFromFileName(uri),
-				serviceName = "Local file",
 				videoStreams = new List<VideoStream>()
 				{
 					new VideoStream()
@@ -47,5 +59,10 @@ namespace PlayerUI.Streaming
 				}
 			};
 		}
-	}
+
+        public override string ServiceName
+        {
+            get { return "Local file"; }
+        }
+    }
 }

@@ -8,7 +8,12 @@ namespace PlayerUI.Streaming
 
 	public class VrideoParser : ServiceParser
 	{
-		public override bool CanParse(string uri)
+        public override string ServiceName
+        {
+            get { return "VRideo"; }
+        }
+
+        public override bool CanParse(string uri)
 		{
 			if (uri == null) return false;
 			return Regex.IsMatch(uri, @"^(https?://)?(www.)?vrideo.com/watch/.+", RegexOptions.IgnoreCase);
@@ -52,7 +57,7 @@ namespace PlayerUI.Streaming
 
 		public override ServiceResult Parse(string url)
 		{
-			var result = new ServiceResult() { originalURL = url, serviceName = "Vrideo" };
+            var result = new ServiceResult(url, ServiceName, URIToMediaId(url));
 			string id = UriToId(url);
 			string jsonString = HTTPGetString("http://www.vrideo.com/api/v1/videos?video_ids=" + id);
 			JObject metadata = (JObject)JObject.Parse(jsonString)["items"][0];

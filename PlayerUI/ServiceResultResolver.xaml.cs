@@ -25,8 +25,9 @@ namespace PlayerUI
 
 			var task = Task.Run(() =>
 			{
-				result = StreamingFactory.Instance.GetStreamingInfo(uri);
-				if (closed)
+                //result = StreamingFactory.Instance.GetStreamingInfo(uri);
+                result = ProcessURI(uri);
+                if (closed)
 					Logger.Info($"Streaming result resolving was cancelled before completion. Uri={uri}.");
 				else
 					window.Dispatcher.Invoke(() => window.Close());
@@ -49,7 +50,7 @@ namespace PlayerUI
 		/// </summary>
 		/// <param name="uri"></param>
 		/// <returns>ServiceResult with parsed streaming information or null</returns>
-		public static ServiceResult ProcessURI(string uri)
+		protected static ServiceResult ProcessURI(string uri)
 		{
 			try
 			{
@@ -73,7 +74,7 @@ namespace PlayerUI
 			}
 			catch (Streaming.StreamNetworkFailure exc)
 			{
-				Logger.Error(exc, "Streaming: Network/file failuer. Unable to open the video: " + uri);
+				Logger.Error(exc, "Streaming: Network/file failure. Unable to open the video: " + uri);
 				Logic.Notify("This file is currently unavailable.");
 			}
 			catch (System.Exception exc)

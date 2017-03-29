@@ -11,7 +11,12 @@ namespace PlayerUI.Streaming
 
 	public class LittlstarParser : ServiceParser
 	{
-		public override bool CanParse(string uri)
+        public override string ServiceName
+        {
+            get { return "Littlstar"; }
+        }
+
+        public override bool CanParse(string uri)
 		{
 			if (uri == null) return false;
 			return Regex.IsMatch(uri, @"^(https?://)?(www.)?(embed.)?littlstar.com/videos/.+", RegexOptions.IgnoreCase);
@@ -174,10 +179,9 @@ namespace PlayerUI.Streaming
 				}
 			}
 
-			return new ServiceResult()
+            string originalURL = "https://www.littlstar.com/videos/" + id;
+            return new ServiceResult(originalURL, ServiceName, originalURL)
 			{
-				originalURL = "https://www.littlstar.com/videos/" + id,
-				serviceName = "Littlstar",
 				projection = MediaDecoder.ProjectionMode.Sphere,
 				stereoscopy = MediaDecoder.VideoMode.Mono,
 				title = (string)jobject["title"],

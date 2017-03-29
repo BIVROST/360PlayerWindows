@@ -10,6 +10,11 @@ namespace PlayerUI.Streaming
 {
     public class FacebookParser : ServiceParser
     {
+        public override string ServiceName
+        {
+            get { return "Facebook"; }
+        }
+
         public override bool CanParse(string uri)
         {
             return false;

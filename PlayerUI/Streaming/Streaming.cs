@@ -110,13 +110,15 @@ namespace PlayerUI.Streaming
 	{
 		/// <summary>
 		/// The URL where the movie can be viewed as intended by the website its from.
+        /// Required
 		/// </summary>
-		public string originalURL;
+		public readonly string originalURL;
 
 		/// <summary>
 		/// The displayable name of the service, ex. YouTube
+        /// Required
 		/// </summary>
-		public string serviceName;
+		public readonly string serviceName;
 
 		/// <summary>
 		/// The title of this movie, if available. Can be null.
@@ -136,7 +138,7 @@ namespace PlayerUI.Streaming
 
 		/// <summary>
 		/// All available video streams, some with audio, some without.
-		/// Must have at least one.
+		/// Required - must have at least one.
 		/// </summary>
 		public List<VideoStream> videoStreams = new List<VideoStream>();
 
@@ -149,6 +151,16 @@ namespace PlayerUI.Streaming
 		/// Projection mode (equirectangular, cubemap types, dome etc)
 		/// </summary>
 		public MediaDecoder.ProjectionMode projection = MediaDecoder.ProjectionMode.Sphere;
+
+        public readonly string mediaId;
+
+
+        public ServiceResult(string originalURL, string serviceName, string mediaId)
+        {
+            this.originalURL = originalURL;
+            this.serviceName = serviceName;
+            this.mediaId = mediaId;
+        }
 
 		/// <summary>
 		/// Returns highest resolution video stream that is of specific type.
@@ -322,6 +334,16 @@ namespace PlayerUI.Streaming
 			return MediaDecoder.VideoMode.Autodetect;
 		}
 
+        protected static string URIToMediaId(string URI)
+        {
+            return "uri:" + URI;
+        }
+
+        protected static string GuidToMediaId(Guid guid)
+        {
+            return "guid:" + guid.ToString();
+        }
+
 #endregion
 
 		/// <summary>
@@ -338,6 +360,9 @@ namespace PlayerUI.Streaming
 		/// <param name="url">url of the service</param>
 		/// <returns>true if succeeded</returns>
 		public abstract ServiceResult Parse(string uri);
+
+
+        public abstract string ServiceName { get; }
 		
 	}
 

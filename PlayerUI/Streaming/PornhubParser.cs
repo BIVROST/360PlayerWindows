@@ -6,7 +6,13 @@ namespace PlayerUI.Streaming
 {
 	public class PornhubParser : ServiceParser
 	{
-		public override bool CanParse(string uri)
+
+        public override string ServiceName
+        {
+            get { return "PornHub"; }
+        }
+
+        public override bool CanParse(string uri)
 		{
 			if (uri == null) return false;
 			return Regex.IsMatch(uri, @"^(https?://)?(www.)?pornhub.com/view_video.php?.+", RegexOptions.IgnoreCase);
@@ -39,7 +45,7 @@ namespace PlayerUI.Streaming
 
 		public override ServiceResult Parse(string uri)
 		{
-			var result = new ServiceResult() { originalURL = uri, serviceName = "Pornhub" };
+			var result = new ServiceResult(uri, ServiceName, URIToMediaId(uri));
 			string html = HTTPGetString(uri);
 
 			//var match = Regex.Match(html, @"vrProps\s*=\s*({[^;]+})\s*;");
