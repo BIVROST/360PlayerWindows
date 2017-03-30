@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace PlayerUI.Statistics
@@ -13,8 +14,8 @@ namespace PlayerUI.Statistics
 
         public class Trigger
         {
-            private AsyncStateMachine asm;
-            private int iteration = -1;
+            protected AsyncStateMachine asm;
+            protected int iteration = -1;
 
             internal Trigger(AsyncStateMachine asm)
             {
@@ -22,10 +23,13 @@ namespace PlayerUI.Statistics
             }
 
             public bool IsActive {
-                get { return asm.currentIteration == iteration; }
+                get {
+                    return asm.currentIteration == iteration;
+                }
             }
 
             public bool Use() {
+                Console.WriteLine("USE ACTIVE: " + asm.currentIteration + ((asm.currentIteration == iteration) ? "==" : "!=") + iteration);
                 if (!IsActive)
                     return false;
                 Clear();
@@ -37,12 +41,52 @@ namespace PlayerUI.Statistics
                 iteration = -1;
             }
 
-            public void Activate()
+            virtual public void Activate()
             {
                 iteration = asm.currentIteration;
                 asm.Iterate();
             }
         }
+
+        public class WaitTrigger : Trigger
+        {
+            private Thread waitThread;
+
+            public WaitTrigger(AsyncStateMachine asm) : base(asm)
+            {
+            }
+
+            // TODO: manual reset event 
+            // http://stackoverflow.com/questions/5793177/how-to-abort-a-thread-when-it-is-sleeping
+
+            public void Reset(float seconds)
+            {
+                Cancel();
+                iteration = asm.currentIteration;
+                waitThread = new Thread(() =>
+                {
+                    Console.WriteLine("SLEEP START");
+                    Thread.Sleep(TimeSpan.FromSeconds(seconds));
+                    Console.WriteLine($"SLEEP END iter={iteration}, asm.iter={asm.currentIteration}");
+                    if (asm.currentIteration == iteration)
+                        asm.Iterate();
+                })
+                { IsBackground = true, Name = "WaitTrigger thread" };
+                waitThread.Start();
+            }
+
+            public override void Activate()
+            {
+                throw new NotImplementedException("Use reset");
+            }
+
+            public void Cancel()
+            {
+                if (waitThread != null && waitThread.IsAlive)
+                    waitThread.Abort();
+            }
+        }
+
 
         private int currentIteration = 0;
         private IEnumerator<object> sm;
@@ -62,15 +106,21 @@ namespace PlayerUI.Statistics
         {
             return new Trigger(this);
         }
-
-        private void Iterate()
+        public WaitTrigger CreateWaitTrigger()
         {
-            sm.MoveNext();
-            currentIteration++;
+            return new WaitTrigger(this);
         }
 
-
-
+        private object syncRoot = new object();
+        private void Iterate()
+        {
+            lock (syncRoot)
+            {
+                sm.MoveNext();
+                Console.WriteLine("ASM:" + currentIteration + "->" + (currentIteration + 1));
+                currentIteration++;
+            }
+        }
 
     }
 
@@ -81,6 +131,10 @@ namespace PlayerUI.Statistics
         private AsyncStateMachine.Trigger uiConnectTrigger;
         private AsyncStateMachine.Trigger uiCancelTrigger;
         private AsyncStateMachine.Trigger uiDisconnectTrigger;
+        private AsyncStateMachine.Trigger tokenVerifiedTrigger;
+        private AsyncStateMachine.Trigger tokenVerificationFailedTrigger;
+        private AsyncStateMachine.Trigger tokenVerificationPendingOrErrorTrigger;
+        private AsyncStateMachine.WaitTrigger waitTrigger;
 
         public enum Status { pending, connected, disconnected };
 
@@ -162,6 +216,10 @@ namespace PlayerUI.Statistics
             uiConnectTrigger = sm.CreateTrigger();
             uiCancelTrigger = sm.CreateTrigger();
             uiDisconnectTrigger = sm.CreateTrigger();
+            tokenVerifiedTrigger = sm.CreateTrigger();
+            tokenVerificationFailedTrigger = sm.CreateTrigger();
+            tokenVerificationPendingOrErrorTrigger = sm.CreateTrigger();
+            waitTrigger = sm.CreateWaitTrigger();
         }
 
         protected IEnumerable<object> StateMachine()
@@ -185,6 +243,7 @@ namespace PlayerUI.Statistics
             {
                 if (uiConnectTrigger.Use())
                     goto connecting;
+                yield return null;
             }
 
             connecting:
@@ -194,9 +253,31 @@ namespace PlayerUI.Statistics
 
             pending:
             status = Status.pending;
-            VerifyToken(() => goto pending_wait;);
+            VerifyToken();
+            while (true)
+            {
+                if (tokenVerifiedTrigger.Use())
+                    goto verified;
+                if (tokenVerificationFailedTrigger.Use())
+                    goto connecting_failed;
+                if (tokenVerificationPendingOrErrorTrigger.Use())
+                    goto pending_wait;
+                if (uiCancelTrigger.Use())
+                    goto cancel_pending;
+                yield return null;
+            }
+
 
             pending_wait:
+            waitTrigger.Reset(20.0f);
+            while(true)
+            {
+                if (waitTrigger.Use())
+                    goto pending;
+                if (uiCancelTrigger.Use())
+                    goto cancel_pending;
+                yield return null;
+            }
 
             cancel_pending:
 
@@ -213,6 +294,17 @@ namespace PlayerUI.Statistics
             disconnect:
 
             yield return null;
+        }
+
+        private void VerifyToken()
+        {
+            throw new NotImplementedException();
+            // should trigger tokenVerifiedTrigger or tokenVerificationFailedTrigger
+        }
+
+        private void OpenConnectionPageInBrowser()
+        {
+            throw new NotImplementedException();
         }
     }
 }
