@@ -406,6 +406,7 @@
     <Compile Include="ServiceResultResolver.xaml.cs">
       <DependentUpon>ServiceResultResolver.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Statistics\GhostVRConnector.cs" />
     <Compile Include="Statistics\LookListener.cs" />
     <Compile Include="Statistics\ILookProvider.cs" />
     <Compile Include="Oculus\OculusPlayback.cs" />

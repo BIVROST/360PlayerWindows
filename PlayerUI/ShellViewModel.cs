@@ -85,8 +85,15 @@ namespace PlayerUI
 			{
 				this._selectedFileName = value;
 				NotifyOfPropertyChange(() => SelectedFileName);
+                if (value == null)
+                    SelectedServiceResult = null;
 			}
 		}
+        public Streaming.ServiceResult SelectedServiceResult
+        {
+            get; protected set;
+        }
+
 		public bool IsFileSelected { get; set; }
 
 		public string SelectedFileTitle { get; set; } = "";
@@ -233,6 +240,7 @@ namespace PlayerUI
 				{
 					NotificationCenter.PushNotification(MediaDecoderHelper.GetNotification(error));
 					SelectedFileName = null;
+                    SelectedServiceResult = null;
 					ShowStartupUI();
 				});
 				SendEvent("playbackError", error);
@@ -804,6 +812,8 @@ namespace PlayerUI
 				ResetPlayback();
 
 				SelectedFileName = result.BestQualityVideoStream(Streaming.VideoContainer.mp4).url;
+                SelectedServiceResult = result;
+
 				IsFileSelected = true;
 				_mediaDecoder.Projection = result.projection;
 				_mediaDecoder.StereoMode = result.stereoscopy;

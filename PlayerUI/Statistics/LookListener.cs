@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Bivrost.Log;
 using Newtonsoft.Json;
+using PlayerUI.Streaming;
 
 namespace PlayerUI.Statistics
 {
@@ -32,6 +33,7 @@ namespace PlayerUI.Statistics
         LookHistory history = null;
         private string filename;
         private DateTime startTime;
+        private ServiceResult serviceResult;
 
         public LookListener()
         {
@@ -67,7 +69,7 @@ namespace PlayerUI.Statistics
             if (history == null)
                 return;
             Info("https://tools.bivrost360.com/heatmap-viewer/?" + history.ToBase64());
-            Session session = new Session(filename, startTime, DateTime.Now, history, lookProvider);
+            Session session = new Session(filename, startTime, DateTime.Now, history, lookProvider, serviceResult);
             SaveSession(session);
             //SendStatistics.Send(session);
             history = null;
@@ -86,6 +88,7 @@ namespace PlayerUI.Statistics
             history = new LookHistory(10, MediaDecoder.Instance.Duration);
             Info("new history session: " + MediaDecoder.Instance.FileName);
             filename = MediaDecoder.Instance.FileName;
+            serviceResult = ShellViewModel.Instance.SelectedServiceResult;
             startTime = DateTime.Now;
         }
 
