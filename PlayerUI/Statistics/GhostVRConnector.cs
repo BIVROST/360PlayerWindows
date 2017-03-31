@@ -12,12 +12,12 @@ namespace PlayerUI.Statistics
     public sealed class AsyncStateMachine
     {
 
-        public class Trigger
+        public abstract class AbstractTrigger
         {
             protected AsyncStateMachine asm;
-            protected int iteration = -1;
+            volatile protected int iteration = -1;
 
-            internal Trigger(AsyncStateMachine asm)
+            internal AbstractTrigger(AsyncStateMachine asm)
             {
                 this.asm = asm;
             }
@@ -30,15 +30,23 @@ namespace PlayerUI.Statistics
 
             public bool Use() {
                 Console.WriteLine("USE ACTIVE: " + asm.currentIteration + ((asm.currentIteration == iteration) ? "==" : "!=") + iteration);
-                if (!IsActive)
-                    return false;
+                bool wasActive = IsActive;
                 Clear();
-                return true;
+                return wasActive;
             }
 
-            public void Clear()
+            public virtual void Clear()
             {
                 iteration = -1;
+            }
+
+        }
+
+
+        public class Trigger:AbstractTrigger
+        {
+            public Trigger(AsyncStateMachine asm) : base(asm)
+            {
             }
 
             virtual public void Activate()
@@ -48,7 +56,8 @@ namespace PlayerUI.Statistics
             }
         }
 
-        public class WaitTrigger : Trigger
+
+        public class WaitTrigger : AbstractTrigger
         {
             private Thread waitThread;
 
@@ -59,31 +68,44 @@ namespace PlayerUI.Statistics
             // TODO: manual reset event 
             // http://stackoverflow.com/questions/5793177/how-to-abort-a-thread-when-it-is-sleeping
 
+            ManualResetEvent mre = new ManualResetEvent(false);
+
             public void Reset(float seconds)
             {
-                Cancel();
+                Clear();
                 iteration = asm.currentIteration;
+                mre.Reset();
                 waitThread = new Thread(() =>
                 {
-                    Console.WriteLine("SLEEP START");
-                    Thread.Sleep(TimeSpan.FromSeconds(seconds));
-                    Console.WriteLine($"SLEEP END iter={iteration}, asm.iter={asm.currentIteration}");
+                    //Console.WriteLine("SLEEP START");
+                    //Thread.Sleep(TimeSpan.FromSeconds(seconds));
+                    Console.WriteLine($"asm.currentIteration == {asm.currentIteration}, iteration == {iteration}");
+                    mre.WaitOne(TimeSpan.FromSeconds(seconds));
+                    //if (!))
+                    //{
+                    //    Console.WriteLine($"SLEEP ABORT iter={iteration}, asm.iter={asm.currentIteration}");
+                    //    return; // aborted
+                    //}
+
+                    //Console.WriteLine($"SLEEP END iter={iteration}, asm.iter={asm.currentIteration}");
                     if (asm.currentIteration == iteration)
+                    {
+                        Console.WriteLine("iterate");
                         asm.Iterate();
+                    }
                 })
                 { IsBackground = true, Name = "WaitTrigger thread" };
                 waitThread.Start();
             }
 
-            public override void Activate()
-            {
-                throw new NotImplementedException("Use reset");
-            }
 
-            public void Cancel()
+            public override void Clear()
             {
-                if (waitThread != null && waitThread.IsAlive)
-                    waitThread.Abort();
+                iteration = -1;
+                //Console.WriteLine("WILL ABORT");
+                mre.Set();
+                //if (waitThread != null && waitThread.IsAlive)
+                //    waitThread.Abort();
             }
         }
 
@@ -117,7 +139,7 @@ namespace PlayerUI.Statistics
             lock (syncRoot)
             {
                 sm.MoveNext();
-                Console.WriteLine("ASM:" + currentIteration + "->" + (currentIteration + 1));
+                //Console.WriteLine("ASM:" + currentIteration + "->" + (currentIteration + 1));
                 currentIteration++;
             }
         }
