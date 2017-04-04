@@ -1,162 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+using ChanibaL;
+using RestSharp;
+using Bivrost.Log;
+using Newtonsoft.Json;
 
 namespace PlayerUI.Statistics
 {
-
-
-    public sealed class AsyncStateMachine
-    {
-
-        public abstract class AbstractTrigger
-        {
-            protected AsyncStateMachine asm;
-            volatile protected int iteration = -1;
-
-            internal AbstractTrigger(AsyncStateMachine asm)
-            {
-                this.asm = asm;
-            }
-
-            public bool IsActive {
-                get {
-                    return asm.currentIteration == iteration;
-                }
-            }
-
-            public bool Use() {
-                Console.WriteLine("USE ACTIVE: " + asm.currentIteration + ((asm.currentIteration == iteration) ? "==" : "!=") + iteration);
-                bool wasActive = IsActive;
-                Clear();
-                return wasActive;
-            }
-
-            public virtual void Clear()
-            {
-                iteration = -1;
-            }
-
-        }
-
-
-        public class Trigger:AbstractTrigger
-        {
-            public Trigger(AsyncStateMachine asm) : base(asm)
-            {
-            }
-
-            virtual public void Activate()
-            {
-                iteration = asm.currentIteration;
-                asm.Iterate();
-            }
-        }
-
-
-        public class WaitTrigger : AbstractTrigger
-        {
-            private Thread waitThread;
-
-            public WaitTrigger(AsyncStateMachine asm) : base(asm)
-            {
-            }
-
-            // TODO: manual reset event 
-            // http://stackoverflow.com/questions/5793177/how-to-abort-a-thread-when-it-is-sleeping
-
-            ManualResetEvent mre = new ManualResetEvent(false);
-
-            public void Reset(float seconds)
-            {
-                Clear();
-                iteration = asm.currentIteration;
-                mre.Reset();
-                waitThread = new Thread(() =>
-                {
-                    //Console.WriteLine("SLEEP START");
-                    //Thread.Sleep(TimeSpan.FromSeconds(seconds));
-                    Console.WriteLine($"asm.currentIteration == {asm.currentIteration}, iteration == {iteration}");
-                    mre.WaitOne(TimeSpan.FromSeconds(seconds));
-                    //if (!))
-                    //{
-                    //    Console.WriteLine($"SLEEP ABORT iter={iteration}, asm.iter={asm.currentIteration}");
-                    //    return; // aborted
-                    //}
-
-                    //Console.WriteLine($"SLEEP END iter={iteration}, asm.iter={asm.currentIteration}");
-                    if (asm.currentIteration == iteration)
-                    {
-                        Console.WriteLine("iterate");
-                        asm.Iterate();
-                    }
-                })
-                { IsBackground = true, Name = "WaitTrigger thread" };
-                waitThread.Start();
-            }
-
-
-            public override void Clear()
-            {
-                iteration = -1;
-                //Console.WriteLine("WILL ABORT");
-                mre.Set();
-                //if (waitThread != null && waitThread.IsAlive)
-                //    waitThread.Abort();
-            }
-        }
-
-
-        private int currentIteration = 0;
-        private IEnumerator<object> sm;
-
-        public AsyncStateMachine(Func<IEnumerable<object>> stateMachine)
-        {
-            sm = stateMachine().GetEnumerator();
-        }
-
-
-        public AsyncStateMachine(IEnumerator<object> stateMachineEnumerator)
-        {
-            sm = stateMachineEnumerator;
-        }
-
-        public Trigger CreateTrigger()
-        {
-            return new Trigger(this);
-        }
-        public WaitTrigger CreateWaitTrigger()
-        {
-            return new WaitTrigger(this);
-        }
-
-        private object syncRoot = new object();
-        private void Iterate()
-        {
-            lock (syncRoot)
-            {
-                sm.MoveNext();
-                //Console.WriteLine("ASM:" + currentIteration + "->" + (currentIteration + 1));
-                currentIteration++;
-            }
-        }
-
-    }
-
-
+    
     public class GhostVRConnector
     {
-        private AsyncStateMachine sm;
-        private AsyncStateMachine.Trigger uiConnectTrigger;
-        private AsyncStateMachine.Trigger uiCancelTrigger;
-        private AsyncStateMachine.Trigger uiDisconnectTrigger;
-        private AsyncStateMachine.Trigger tokenVerifiedTrigger;
-        private AsyncStateMachine.Trigger tokenVerificationFailedTrigger;
-        private AsyncStateMachine.Trigger tokenVerificationPendingOrErrorTrigger;
-        private AsyncStateMachine.WaitTrigger waitTrigger;
+
+        StateMachine sm;
 
         public enum Status { pending, connected, disconnected };
 
@@ -164,37 +19,56 @@ namespace PlayerUI.Statistics
         protected Guid? Token { get; set; } = null;
         protected string Name { get; set; } = null;
 
+#if DEBUG || CANARY
+		public string DevelopmentToken { get { return Logic.Instance.settings.GhostVRLicenseToken; } }
+#endif
 
-        public void Disconnect() { uiDisconnectTrigger.Activate(); }
-        public void Connect() { uiConnectTrigger.Activate(); }
-        public void Cancel() { uiCancelTrigger.Activate();  }
+
+		public void Disconnect() { disconnectTrigger?.Invoke(); }
+        public void Connect() { connectTrigger?.Invoke(); }
+        public void Cancel() { cancelTrigger?.Invoke();  }
+
+        protected Action disconnectTrigger;
+        protected Action connectTrigger;
+        protected Action cancelTrigger;
 
 
-        public class PlayerDetails
+		private void Log(string v)
+		{
+			Logger.Info("[GhostVR] " + v);
+		}
+
+
+		private void Log(string tag, ErrorResponse errorResponse)
+		{
+			Log(tag + " error: " + errorResponse);
+		}
+
+
+		#region GhostVR API
+
+		public class PlayerDetails
         {
+			public enum LicenseType { development, pro, normal };
+			public readonly string name = "BIVROST 360Player";
+			public string version;
+			public LicenseType licenseType;
 
-            public readonly string name = "BIVROST 360Player";
-            //public enum LicenseType { debug, unregistered, commercial, canary };
-            public string version;
-            //public LicenseType licenseType;
-
-            static public PlayerDetails Current {
+			static public PlayerDetails Current {
                 get {
-                    //**@license_type@:enum(debug, commercial, canary, unregistered) - grupa licencji z której pochodzi player.@debug@ - build developerski, @canary@ - build developerski rozpowszechniony do testów, @commercial@ - build z prawem
-                    //LicenseType licenseType;
-                    //if (Features.IsDebug)
-                    //    licenseType = LicenseType.debug;
-                    //else if (Features.IsCanary)
-                    //    licenseType = LicenseType.canary;
-                    //else if (Features.Commercial)
-                    //    licenseType = LicenseType.commercial;
-                    //else
-                    //    licenseType = LicenseType.unregistered;
-                    return new PlayerDetails()
+					//**@license_type@:enum(development, pro, normal) - grupa licencji z której pochodzi player.
+					LicenseType licenseType;
+					if (Features.IsDebug || Features.IsCanary)
+						licenseType = LicenseType.development;
+					else if (Features.Commercial)
+						licenseType = LicenseType.pro;
+					else
+						licenseType = LicenseType.normal;
+					return new PlayerDetails()
                     {
-                        version = Tools.PublishInfo.ApplicationIdentity?.Version?.ToString()
-                        //licenseType = licenseType
-                    };
+                        version = Tools.PublishInfo.ApplicationIdentity?.Version?.ToString(),
+						licenseType = licenseType
+					};
                 }
             }
 
@@ -203,130 +77,306 @@ namespace PlayerUI.Statistics
                 get
                 {
                     // https://www.npmjs.com/package/qs
-
-                    //                     player%5Bname%5D=Bivrost%20360%20Player&player%5Bversion%5D=1.2.3'
-                    //Edit
-                    //player_details ={ name: "Bivrost 360 Player", version: "1.2.3" }
-                    //                    Zostanie zakodowany jako:
-
-                    //                    player % 5Bname % 5D = Bivrost % 20360 % 20Player & player % 5Bversion % 5D = 1.2.3
-                    //Przykład w środowisku node:
-
-                    //> require('qs').stringify({ player: { name: "Bivrost 360 Player", version: "1.2.3" } })
-                    //'player%5Bname%5D=Bivrost%20360%20Player&player%5Bversion%5D=1.2.3'
                     return string.Join("&",
                         Uri.EscapeDataString("player[name]") + "=" + Uri.EscapeDataString(name),
-                        Uri.EscapeDataString("player[version]") + "=" + Uri.EscapeDataString(version ?? "")
-                        //Uri.EscapeDataString("player[license_type]") + "=" + Uri.EscapeDataString(licenseType.ToString())
-                    );
+                        Uri.EscapeDataString("player[version]") + "=" + Uri.EscapeDataString(version ?? ""),
+						Uri.EscapeDataString("player[license_type]") + "=" + Uri.EscapeDataString(licenseType.ToString())
+					);
 
 
                 }
             }
         }
 
-        
-        public void authorizeToken()
-        {
 
+		string GhostVREndpoint {  get { return "https://dev.ghostvr.io/api/v1/"; } }
+
+		enum TokenStatus { ok, pending, rejected };
+
+		enum ApiStatus { success, error }
+
+		class ApiResponse
+		{
+			public int code;
+			public ApiStatus status;
+		}
+
+		class ErrorResponse:ApiResponse
+		{
+			public string message;
+		}
+
+
+		class VerifyTokenResponse: ApiResponse
+		{
+			public string name;
+			public TokenStatus verification_status;
+		}
+
+
+		void VerifyToken(Action<VerifyTokenResponse> onSuccess, Action onErrorOrPending, Action onRejection)
+        {
+			var client = new RestClient(GhostVREndpoint);
+			var request = new RestRequest("verify_player_token ", Method.POST);
+			request.AddParameter("access_token", Token, ParameterType.GetOrPost);
+			client.ExecuteAsync(request, (response, req) => 
+			{
+				if ((int)response.StatusCode >= 400)
+				{
+					var errorResponse = SimpleJson.DeserializeObject<ErrorResponse>(response.Content);
+					Log("VerifyToken", errorResponse);
+					onErrorOrPending();
+				}
+				else
+				{
+					var successResponse = SimpleJson.DeserializeObject<VerifyTokenResponse>(response.Content);
+					switch(successResponse.verification_status)
+					{
+						case TokenStatus.ok:
+							Log("VerifyToken OK");
+							onSuccess(successResponse);
+							break;
+						case TokenStatus.pending:
+							Log("VerifyToken pending");
+							onErrorOrPending();
+							break;
+						case TokenStatus.rejected:
+							Log("VerifyToken rejected");
+							onRejection();
+							break;
+					}
+				}
+			});
         }
 
 
-        public GhostVRConnector()
+		void DiscardToken()
+		{
+			var client = new RestClient(GhostVREndpoint);
+			var request = new RestRequest("discard_player_token", Method.POST);
+			request.AddParameter("access_token", Token, ParameterType.GetOrPost);
+			client.ExecuteAsync(request, (response, req) => { Log("DiscardToken: " + response.StatusCode); });
+		}
+
+
+		void AuthorizePlayerInBrowser()
         {
-            sm = new AsyncStateMachine(StateMachine);
-            uiConnectTrigger = sm.CreateTrigger();
-            uiCancelTrigger = sm.CreateTrigger();
-            uiDisconnectTrigger = sm.CreateTrigger();
-            tokenVerifiedTrigger = sm.CreateTrigger();
-            tokenVerificationFailedTrigger = sm.CreateTrigger();
-            tokenVerificationPendingOrErrorTrigger = sm.CreateTrigger();
-            waitTrigger = sm.CreateWaitTrigger();
+			string uri = GhostVREndpoint + "authorize_player"
+				+ "?access_token=" + Token.ToString()
+				+ "&installation_id=" + Logic.Instance.settings.InstallId
+				+ "&" + PlayerDetails.Current.AsQsFormat;
+			System.Diagnostics.Process.Start(uri);
+		}
+
+
+		class VideoSessionResponse:ApiResponse
+		{
+			public string response;
+			public string followUp;
+		}
+
+		public void VideoSession(Session session, string token, Action<string> onSuccess, Action<string> onFailure)
+		{
+			//var client = new RestClient(GhostVREndpoint);
+			//var request = new RestRequest("video_session", Method.POST);
+			var client = new RestClient("https://api.ghostvr.io/v1/");      // FIXME
+			//var client = new RestClient("http://localhost:8888/");
+			var request = new RestRequest("session", Method.POST);
+
+			request.AddHeader("Authorization", $"Bearer {token}");
+			request.AddParameter("application/json; charset=UTF-8", session.ToJson(), ParameterType.RequestBody);
+			client.ExecuteAsync(request, (response, req) =>
+			{
+				if ((int)response.StatusCode >= 400 || (int)response.StatusCode < 200)
+				{
+					var errorResponse = JsonConvert.DeserializeObject<ErrorResponse>(response.Content);
+					Log("VideoSession", errorResponse);
+					onFailure(errorResponse.message);
+				}
+				else
+				{
+					var successResponse = JsonConvert.DeserializeObject<VideoSessionResponse>(response.Content);
+					Log("VideoSession sent");
+					var uri = new UriBuilder(successResponse.followUp);
+					if(uri.Query == "?" || uri.Query == "")
+						uri.Query = $"access_token={token}";
+					else
+						uri.Query += $"&access_token={token}";
+
+					onSuccess(uri.ToString());
+				}
+			});
+		}
+
+		#endregion
+
+
+		#region StateMachine
+
+
+		public GhostVRConnector()
+        {
+            sm = new StateMachine(StateIdle);
         }
 
-        protected IEnumerable<object> StateMachine()
+
+        void StateIdle() {
+            if (status == Status.connected)
+                sm.SwitchState(StateConnected);
+            if (status == Status.disconnected)
+                sm.SwitchState(StateDisconnected);
+            if (status == Status.pending)
+                sm.SwitchState(StatePending);
+        }
+
+        void StateDisconnected()
         {
-            goto init;
-
-            init:
-            switch (status)
+            if(sm.EnterState)
             {
-                case Status.connected: goto verify;
-                case Status.disconnected: goto disconnected;
-                case Status.pending: goto pending;
+                Token = null;
+                Name = null;
+                status = Status.disconnected;
+                connectTrigger = sm.ValidOnlyInThisState(() => sm.SwitchStateExternalImmidiate(StateConnecting));
             }
 
+            if (sm.ExitState)
+                connectTrigger = null;
+        }
 
-            disconnected:
-            Token = null;
-            Name = null;
-            status = Status.disconnected;
-            while(true)
-            {
-                if (uiConnectTrigger.Use())
-                    goto connecting;
-                yield return null;
-            }
-
-            connecting:
+        void StateConnecting() {
             Token = Guid.NewGuid();
-            OpenConnectionPageInBrowser();
-            goto pending;
-
-            pending:
-            status = Status.pending;
-            VerifyToken();
-            while (true)
-            {
-                if (tokenVerifiedTrigger.Use())
-                    goto verified;
-                if (tokenVerificationFailedTrigger.Use())
-                    goto connecting_failed;
-                if (tokenVerificationPendingOrErrorTrigger.Use())
-                    goto pending_wait;
-                if (uiCancelTrigger.Use())
-                    goto cancel_pending;
-                yield return null;
-            }
-
-
-            pending_wait:
-            waitTrigger.Reset(20.0f);
-            while(true)
-            {
-                if (waitTrigger.Use())
-                    goto pending;
-                if (uiCancelTrigger.Use())
-                    goto cancel_pending;
-                yield return null;
-            }
-
-            cancel_pending:
-
-            connecting_failed:
-
-            verified:
-
-            verify:
-
-            verifying_failed:
-
-            connected:
-
-            disconnect:
-
-            yield return null;
+            AuthorizePlayerInBrowser();
+            sm.SwitchState(StatePending);
         }
 
-        private void VerifyToken()
+        void StatePending()
         {
-            throw new NotImplementedException();
-            // should trigger tokenVerifiedTrigger or tokenVerificationFailedTrigger
+            if (sm.EnterState)
+            {
+                status = Status.pending;
+				VerifyToken(
+					sm.ValidOnlyInThisState<VerifyTokenResponse>(vtr => sm.SwitchState(StateVerified(vtr))),
+					sm.StateSwitcherValidOnlyInThisState(StatePendingWait),
+					sm.StateSwitcherValidOnlyInThisState(StateConnectingFailed)
+                );
+				cancelTrigger = sm.StateSwitcherValidOnlyInThisState(StateCancelPending);
+			}
+
+			if(sm.ExitState)
+			{
+				cancelTrigger = null;
+			}
         }
 
-        private void OpenConnectionPageInBrowser()
-        {
-            throw new NotImplementedException();
-        }
-    }
+
+		void StatePendingWait()
+		{
+			if(sm.EnterState)
+			{
+				cancelTrigger = sm.StateSwitcherValidOnlyInThisState(StateCancelPending);
+			}
+
+			if (sm.TimeInState > 20)
+				sm.SwitchState(StatePending);
+
+			if(sm.ExitState)
+			{
+				cancelTrigger = null;
+			}
+		}
+
+
+		void StateConnectingFailed()
+		{
+			if(sm.EnterState)
+			{
+				Logic.Notify("Connecting to GhostVR failed.");
+				sm.SwitchState(StateDisconnected);
+			}
+		}
+
+
+		void StateCancelPending()
+		{
+			if(sm.EnterState)
+			{
+				Logic.Notify("Connecting to GhostVR aborted.");
+				DiscardToken();
+				sm.SwitchState(StateDisconnected);
+			}
+		}
+
+
+		StateMachine.State StateVerified(VerifyTokenResponse verifyTokenResponse)
+		{
+			return () =>
+			{
+				if (sm.EnterState)
+				{
+					Name = verifyTokenResponse.name;
+					status = Status.connected;
+					sm.SwitchState(StateConnected);
+				}
+			};
+		}
+
+
+		void StateConnected()
+		{
+			if(sm.EnterState)
+			{
+				disconnectTrigger = sm.StateSwitcherValidOnlyInThisState(StateDisconnect);
+			}
+
+			if (sm.TimeInState > 600)
+				sm.SwitchState(StateVerify);
+
+			if(sm.ExitState)
+			{
+				disconnectTrigger = null;
+			}
+		}
+
+
+		void StateVerify()
+		{
+			if(sm.EnterState)
+			{
+				VerifyToken(
+					sm.ValidOnlyInThisState<VerifyTokenResponse>(verifyApiResponse => {
+						sm.SwitchState(StateVerified(verifyApiResponse));
+					}),
+					sm.StateSwitcherValidOnlyInThisState(StateVerificationFailed),
+					sm.StateSwitcherValidOnlyInThisState(StateDisconnect)
+				);
+				disconnectTrigger = sm.StateSwitcherValidOnlyInThisState(StateDisconnect);
+			}
+
+			if (sm.ExitState)
+				disconnectTrigger = null;
+		}
+
+
+		void StateVerificationFailed()
+		{
+			if(sm.EnterState)
+			{
+				Logic.Notify("GhostVR verification failed.");
+				sm.SwitchState(StateConnected);
+			}
+		}
+
+
+		void StateDisconnect()
+		{
+			if(sm.EnterState)
+			{
+				Logic.Notify("You have been disconnected from GhostVR.");
+				DiscardToken();
+				sm.SwitchState(StateDisconnected);
+			}
+		}
+
+		#endregion
+	}
 }

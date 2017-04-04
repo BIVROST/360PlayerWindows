@@ -115,7 +115,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PornhubTest.cs" />
     <Compile Include="PlayerDetailsTest.cs" />
-    <Compile Include="StateMachineTest.cs" />
     <Compile Include="VvideoTest.cs" />
     <Compile Include="YoutubeTest.cs" />
   </ItemGroup>

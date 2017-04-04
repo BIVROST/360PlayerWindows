@@ -102,17 +102,17 @@ namespace PlayerUI
 
 
 		//GhostVR and heatmaps
-		[SettingsAdvancedProperty("Enable GhostVR analytics", ConfigItemType.Bool, requiredFeatures = FeaturesEnum.ghostVR | FeaturesEnum.heatmaps)]
+		[SettingsAdvancedProperty("Enable GhostVR analytics", ConfigItemType.Bool, requiredFeatures = FeaturesEnum.ghostVR)]
 		public bool GhostVREnabled
 		{
-			get { return _ghostVREnabled && Features.GhostVR && Features.Heatmaps; }
+			get { return _ghostVREnabled && Features.GhostVR; }
 			set { _ghostVREnabled = value; }
 		}
 		[JsonIgnore]
 		bool _ghostVREnabled = false;
 
 
-		[SettingsAdvancedProperty("GhostVR license token", ConfigItemType.String, requiredFeatures = FeaturesEnum.ghostVR | FeaturesEnum.heatmaps)]
+		[SettingsAdvancedProperty("GhostVR license token", ConfigItemType.String, requiredFeatures = FeaturesEnum.ghostVR)]
 		public string GhostVRLicenseToken { get; set; }
 
 

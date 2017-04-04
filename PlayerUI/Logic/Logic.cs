@@ -161,13 +161,24 @@ namespace PlayerUI
 				}
 			});
 
-            if(Features.Heatmaps)
-                lookListener = new LookListener();
+            lookListener = new LookListener();
+
+			//if (Features.GhostVR)
+			//{
+				ghostVRConnector = new GhostVRConnector();
+				lookListener.RegisterSessionSink(new GhostVRSessionSink(ghostVRConnector));
+			//}
+
+			//if(Features.Heatmaps)
+			//{
+				lookListener.RegisterSessionSink(new FileStorageSessionSink());
+			//}
 		}
 
         LookListener lookListener;
+		GhostVRConnector ghostVRConnector;
 
-        ~Logic()
+		~Logic()
 		{
 			try
 			{

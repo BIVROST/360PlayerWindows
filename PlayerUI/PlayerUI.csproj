@@ -406,7 +406,9 @@
     <Compile Include="ServiceResultResolver.xaml.cs">
       <DependentUpon>ServiceResultResolver.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Statistics\FileStorageSessionSink.cs" />
     <Compile Include="Statistics\GhostVRConnector.cs" />
+    <Compile Include="Statistics\ISessionSink.cs" />
     <Compile Include="Statistics\LookListener.cs" />
     <Compile Include="Statistics\ILookProvider.cs" />
     <Compile Include="Oculus\OculusPlayback.cs" />
@@ -417,6 +419,7 @@
       <DependentUpon>SendStatistics.xaml</DependentUpon>
     </Compile>
     <Compile Include="Statistics\Session.cs" />
+    <Compile Include="Statistics\StateMachine.cs" />
     <Compile Include="Streaming\FacebookParser.cs" />
     <Compile Include="Streaming\LittlstarParser.cs" />
     <Compile Include="Streaming\LocalFileParser.cs" />
@@ -651,6 +654,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <None Include="Shaders\GammaShader.fx" />
+    <Resource Include="Resources\icon-ghostvr.ico" />
     <Content Include="x64\openvr_api.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
