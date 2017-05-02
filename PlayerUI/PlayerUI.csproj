@@ -415,8 +415,8 @@
     <Compile Include="OpenVR\OpenVRExtensions.cs" />
     <Compile Include="OpenVR\OpenVRPlayback.cs" />
     <Compile Include="OpenVR\openvr_api.cs" />
-    <Compile Include="Statistics\SendStatistics.xaml.cs">
-      <DependentUpon>SendStatistics.xaml</DependentUpon>
+    <Compile Include="Statistics\GhostVRSessionSink.xaml.cs">
+      <DependentUpon>GhostVRSessionSink.xaml</DependentUpon>
     </Compile>
     <Compile Include="Statistics\Session.cs" />
     <Compile Include="Statistics\StateMachine.cs" />
@@ -573,7 +573,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Statistics\SendStatistics.xaml">
+    <Page Include="Statistics\GhostVRSessionSink.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

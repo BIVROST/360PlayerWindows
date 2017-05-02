@@ -44,6 +44,7 @@ namespace PlayerUI.Statistics
 		protected SendStatistics(Session session, GhostVRConnector ghostVRConnector)
 		{
 			InitializeComponent();
+			close.Click += (s, e) => Close();
 			cancel.Click += (s, e) => Close();
 			uiMode = UIMode.loading;
 			ghostVRConnector.VideoSession(session, ghostVRConnector.DevelopmentToken, SessionSendSuccess, SessionSendFailure);

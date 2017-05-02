@@ -177,33 +177,46 @@ namespace PlayerUI.Statistics
 
 		public void VideoSession(Session session, string token, Action<string> onSuccess, Action<string> onFailure)
 		{
+			if (string.IsNullOrEmpty(token))
+			{
+				onFailure("No GhostVR token available");
+				return;
+			}
+
 			//var client = new RestClient(GhostVREndpoint);
 			//var request = new RestRequest("video_session", Method.POST);
 			var client = new RestClient("https://api.ghostvr.io/v1/");      // FIXME
-			//var client = new RestClient("http://localhost:8888/");
 			var request = new RestRequest("session", Method.POST);
 
 			request.AddHeader("Authorization", $"Bearer {token}");
 			request.AddParameter("application/json; charset=UTF-8", session.ToJson(), ParameterType.RequestBody);
 			client.ExecuteAsync(request, (response, req) =>
 			{
-				if ((int)response.StatusCode >= 400 || (int)response.StatusCode < 200)
+				try
 				{
-					var errorResponse = JsonConvert.DeserializeObject<ErrorResponse>(response.Content);
-					Log("VideoSession", errorResponse);
-					onFailure(errorResponse.message);
-				}
-				else
-				{
-					var successResponse = JsonConvert.DeserializeObject<VideoSessionResponse>(response.Content);
-					Log("VideoSession sent");
-					var uri = new UriBuilder(successResponse.followUp);
-					if(uri.Query == "?" || uri.Query == "")
-						uri.Query = $"access_token={token}";
+					if ((int)response.StatusCode >= 400 || (int)response.StatusCode < 200)
+					{
+						var errorResponse = JsonConvert.DeserializeObject<ErrorResponse>(response.Content);
+						Log("VideoSession", errorResponse);
+						onFailure(errorResponse?.message);
+					}
 					else
-						uri.Query += $"&access_token={token}";
+					{
+						var successResponse = JsonConvert.DeserializeObject<VideoSessionResponse>(response.Content);
+						Log("VideoSession sent");
+						var uri = new UriBuilder(successResponse.followUp);
+						if (uri.Query == "?" || uri.Query == "")
+							uri.Query = $"access_token={token}";
+						else
+							uri.Query += $"&access_token={token}";
 
-					onSuccess(uri.ToString());
+						onSuccess(uri.ToString());
+					}
+				}
+				catch(Exception e)
+				{
+					Logger.Error(e);
+					onFailure("Server returned malformed data");
 				}
 			});
 		}
