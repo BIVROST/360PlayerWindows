@@ -3,10 +3,11 @@
 INSTALLATION_ID="$(uuidgen)"
 ACCESS_TOKEN="$(uuidgen)"
 GHOSTVR="http://dev.ghostvr.io/api/v1/"
+GHOSTVR="http://localhost:3000/api/v1/"
 
-xcurl() {
+curl() {
 	(>&2 echo "DEBUG CURL:" "$@")
-	command ssh odyn curl "$@" | tee /dev/stderr
+	command curl "$@" | tee /dev/stderr
 	echo "" >/dev/stderr
 }
 
@@ -28,7 +29,7 @@ if ! hash jq 2>/dev/null; then
 fi
 
 echo "PREMATURE VERIFY TOKEN"
-curl -s "${GHOSTVR}verify_player_token?access_token=${ACCESS_TOKEN}" | jq .response.verification_status
+curl -s "${GHOSTVR}verify_player_token" -d "access_token=${ACCESS_TOKEN}" | jq .response.verification_status
 
 
 echo ""
@@ -36,8 +37,8 @@ echo "AUTHORIZE_PLAYER"
 
 AUTH_URI="${GHOSTVR}authorize_player?access_token=${ACCESS_TOKEN}&installation_id=${INSTALLATION_ID}&player%5Bname%5D=Bivrost%20360%20Player&player%5Bversion%5D=1.2.3"
 
-# fix
-AUTH_URI="http://bivrost.dev.ghostvr.io/ui/authorize_player?access_token=${ACCESS_TOKEN}&installation_id=${INSTALLATION_ID}&player%5Bname%5D=Bivrost%20360%20Player&player%5Bversion%5D=1.2.3"
+# fix 
+# AUTH_URI="http://bivrost.dev.ghostvr.io/ui/authorize_player?access_token=${ACCESS_TOKEN}&installation_id=${INSTALLATION_ID}&player%5Bname%5D=Bivrost%20360%20Player&player%5Bversion%5D=1.2.3"
 browser "$AUTH_URI"
 
 sleep 3
@@ -46,7 +47,7 @@ echo ""
 echo "VERIFY_TOKEN"
 STATUS="pending"
 while true; do
-	STATUS=$(curl -s "${GHOSTVR}verify_player_token?access_token=${ACCESS_TOKEN}" | jq -r .data.verification_status | tr -d '\n\r')
+	STATUS=$(curl -s "${GHOSTVR}verify_player_token" -d "access_token=${ACCESS_TOKEN}" | jq -r .data.verification_status | tr -d '\n\r')
 	sleep 1
 	echo "  verification_status:$STATUS $(xxd <<< "$STATUS")"
 	case "$STATUS" in
@@ -78,35 +79,42 @@ SESSION=$(cat<<END
 END
 )
 
-FOLLOW_UP=$(curl -v "${GHOSTVR}video_session" -H "Authorization: Bearer $ACCESS_TOKEN" -H 'Content-Type: application/json; charset=UTF-8' --data "$SESSION" | jq -r .data.follow_up | tr -d '\n\r')
+FOLLOW_UP=$(curl -s "${GHOSTVR}video_session" -H "Authorization: Bearer $ACCESS_TOKEN" -H 'Content-Type: application/json; charset=UTF-8' --data "$SESSION" | jq -r .data.follow_up | tr -d '\n\r')
 echo "follow_up=$FOLLOW_UP"
 # fix
-FOLLOW_UP="$FOLLOW_UP&access_token=$ACCESS_TOKEN"
+# FOLLOW_UP="$FOLLOW_UP&access_token=$ACCESS_TOKEN"
 browser "$FOLLOW_UP"
 
 echo "...wait for discard (enter)..."
 read __unused
+curl -s "${GHOSTVR}verify_player_token" -d "access_token=${ACCESS_TOKEN}"
 
-	curl -s "${GHOSTVR}verify_player_token?access_token=${ACCESS_TOKEN}"
-
-	echo ""
-echo "DISCARD TOKEN/GET"
-curl -s "${GHOSTVR}discard_player_token?access_token=${ACCESS_TOKEN}"
+#echo ""
+#echo "DISCARD TOKEN/GET"
+#curl -s "${GHOSTVR}discard_player_token?access_token=${ACCESS_TOKEN}"
 
 echo ""
 echo "DISCARD TOKEN/POST"
 curl -s "${GHOSTVR}discard_player_token" -d "access_token=${ACCESS_TOKEN}"
 
-echo ""
-echo "DISCARD TOKEN/HEADER"
-curl -s "${GHOSTVR}discard_player_token" -H "Authorization: Bearer ${ACCESS_TOKEN}" 
+#echo ""
+#echo "DISCARD TOKEN/HEADER"
+#curl -s "${GHOSTVR}discard_player_token" -H "Authorization: Bearer ${ACCESS_TOKEN}" 
 
+
+echo ""
+echo "SEND VIDEO SESSION WITH EXPIRED TOKEN"
+curl -s "${GHOSTVR}video_session" -H "Authorization: Bearer $ACCESS_TOKEN" -H 'Content-Type: application/json; charset=UTF-8' --data "$SESSION"
+
+echo ""
+echo "SEND VIDEO SESSION WITH INVALID TOKEN"
+curl -s "${GHOSTVR}video_session" -H "Authorization: Bearer INVALID" -H 'Content-Type: application/json; charset=UTF-8' --data "$SESSION"
 
 
 echo ""
 echo "VERIFY_TOKEN (x10)"
 for i in {1..10}; do
-	curl -s "${GHOSTVR}verify_player_token?access_token=${ACCESS_TOKEN}"
+	curl -s "${GHOSTVR}verify_player_token" -d "access_token=${ACCESS_TOKEN}"
 	sleep 1
 done
 
