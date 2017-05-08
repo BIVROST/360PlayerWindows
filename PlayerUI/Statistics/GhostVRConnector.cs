@@ -4,6 +4,7 @@ using ChanibaL;
 using RestSharp;
 using Bivrost.Log;
 using Newtonsoft.Json;
+using System.Threading;
 
 namespace PlayerUI.Statistics
 {
@@ -12,17 +13,38 @@ namespace PlayerUI.Statistics
     {
 
         StateMachine sm;
+		private Thread periodicUpdater;
 
-        public enum Status { pending, connected, disconnected };
+		public enum Status { pending, connected, disconnected };
 
-        protected Status status { get; set; } = Status.disconnected;
-        protected Guid? Token { get; set; } = null;
-        protected string Name { get; set; } = null;
+        public Status status { get; private set; } = Status.disconnected;
 
-#if DEBUG || CANARY
-		public string DevelopmentToken { get { return Logic.Instance.settings.GhostVRLicenseToken; } }
-#endif
+        protected Guid? Token
+		{
+			get
+			{
+				string strtoken = Logic.Instance.settings.GhostVRLicenseToken;
+				if (string.IsNullOrEmpty(strtoken))
+					return null;
 
+				Guid token;
+				if (Guid.TryParse(strtoken, out token))
+					return token;
+
+				Logger.Error("[GhostVR] cannot parse token from settings, removed");
+				return null;
+			}
+			set
+			{
+				if (value.HasValue)
+					Logic.Instance.settings.GhostVRLicenseToken = value.Value.ToString();
+				else
+					Logic.Instance.settings.GhostVRLicenseToken = null;
+				Logic.Instance.settings.Save();
+			}
+		}
+
+        public string Name { get; private set; } = null;
 
 		public void Disconnect() { disconnectTrigger?.Invoke(); }
         public void Connect() { connectTrigger?.Invoke(); }
@@ -32,6 +54,7 @@ namespace PlayerUI.Statistics
         protected Action connectTrigger;
         protected Action cancelTrigger;
 
+		public bool IsConnected { get { return status == Status.connected; } }
 
 		private void Log(string v)
 		{
@@ -39,7 +62,7 @@ namespace PlayerUI.Statistics
 		}
 
 
-		private void Log(string tag, ErrorResponse errorResponse)
+		private void Log(string tag, ApiResponseError errorResponse)
 		{
 			Log(tag + " error: " + errorResponse);
 		}
@@ -89,78 +112,76 @@ namespace PlayerUI.Statistics
         }
 
 
-		string GhostVREndpoint {  get { return "https://dev.ghostvr.io/api/v1/"; } }
+		string GhostVREndpoint {  get { return "http://localhost:3000/api/v1/"; } }
 
-		enum TokenStatus { ok, pending, rejected };
 
-		enum ApiStatus { success, error }
+		void ApiRequest<T>(string endpoint, Action<RestRequest> arguments, Action<T> onSuccess, Action<string> onError)
+		{
+			var client = new RestClient(GhostVREndpoint);
+			var request = new RestRequest(endpoint, Method.POST);
+			if(Token.HasValue)
+				request.AddHeader("Authentication", "Bearer " + Token.Value);
+			arguments(request);
+			client.ExecuteAsync(request, (response, request_) =>
+			{
+				try
+				{
+					if (response.ErrorException != null)
+					{
+						Log("Cannot connect to GhostVR API: " + response.ErrorMessage);
+						onError("Cannot connect to GhostVR API: " + response.ErrorMessage);
+						return;
+					}
+						
+
+					ApiResponse apiResponse = JsonConvert.DeserializeObject<ApiResponse>(response.Content);
+					if (apiResponse.status == ApiResponse.ApiStatus.success)
+					{
+						ApiResponseSuccess<T> apiResponseSuccess = JsonConvert.DeserializeObject<ApiResponseSuccess<T>>(response.Content);
+						Log("ApiRequest success: " + endpoint);
+						onSuccess(apiResponseSuccess.data);
+					}
+					else
+					{
+						ApiResponseError apiResponseError = JsonConvert.DeserializeObject<ApiResponseError>(response.Content);
+						Log("ApiRequest error: " + endpoint);
+						onError($"{apiResponseError.status} {apiResponseError.message} ({apiResponseError.code})");
+					}
+				}
+				catch (Exception e)
+				{
+					Log("ApiRequest parse error:" + endpoint + e);
+					onError("an exception occurred: " + e);
+				}
+			});
+		}
+
+		enum TokenStatus { pending, ok, rejected };
+
 
 		class ApiResponse
 		{
-			public int code;
+			public enum ApiStatus { success, error, fail }
 			public ApiStatus status;
 		}
 
-		class ErrorResponse:ApiResponse
+
+		class ApiResponseError:ApiResponse
 		{
 			public string message;
+			public string code;
+			public string data;
 		}
 
 
-		class VerifyTokenResponse: ApiResponse
+		class ApiResponseSuccess<T>:ApiResponse
 		{
-			public string name;
-			public TokenStatus verification_status;
-		}
-
-
-		void VerifyToken(Action<VerifyTokenResponse> onSuccess, Action onErrorOrPending, Action onRejection)
-        {
-			var client = new RestClient(GhostVREndpoint);
-			var request = new RestRequest("verify_player_token ", Method.POST);
-			request.AddParameter("access_token", Token, ParameterType.GetOrPost);
-			client.ExecuteAsync(request, (response, req) => 
-			{
-				if ((int)response.StatusCode >= 400)
-				{
-					var errorResponse = SimpleJson.DeserializeObject<ErrorResponse>(response.Content);
-					Log("VerifyToken", errorResponse);
-					onErrorOrPending();
-				}
-				else
-				{
-					var successResponse = SimpleJson.DeserializeObject<VerifyTokenResponse>(response.Content);
-					switch(successResponse.verification_status)
-					{
-						case TokenStatus.ok:
-							Log("VerifyToken OK");
-							onSuccess(successResponse);
-							break;
-						case TokenStatus.pending:
-							Log("VerifyToken pending");
-							onErrorOrPending();
-							break;
-						case TokenStatus.rejected:
-							Log("VerifyToken rejected");
-							onRejection();
-							break;
-					}
-				}
-			});
-        }
-
-
-		void DiscardToken()
-		{
-			var client = new RestClient(GhostVREndpoint);
-			var request = new RestRequest("discard_player_token", Method.POST);
-			request.AddParameter("access_token", Token, ParameterType.GetOrPost);
-			client.ExecuteAsync(request, (response, req) => { Log("DiscardToken: " + response.StatusCode); });
+			public T data;
 		}
 
 
 		void AuthorizePlayerInBrowser()
-        {
+		{
 			string uri = GhostVREndpoint + "authorize_player"
 				+ "?access_token=" + Token.ToString()
 				+ "&installation_id=" + Logic.Instance.settings.InstallId
@@ -169,56 +190,76 @@ namespace PlayerUI.Statistics
 		}
 
 
-		class VideoSessionResponse:ApiResponse
+		class VerifyTokenResponse : ApiResponse
 		{
-			public string response;
-			public string followUp;
+			public string team_name;
+			public TokenStatus verification_status;
 		}
 
-		public void VideoSession(Session session, string token, Action<string> onSuccess, Action<string> onFailure)
+
+		void VerifyPlayerToken(Action<VerifyTokenResponse> onSuccess, Action onPending, Action onRejection, Action<string> onError)
 		{
-			if (string.IsNullOrEmpty(token))
-			{
-				onFailure("No GhostVR token available");
-				return;
-			}
-
-			//var client = new RestClient(GhostVREndpoint);
-			//var request = new RestRequest("video_session", Method.POST);
-			var client = new RestClient("https://api.ghostvr.io/v1/");      // FIXME
-			var request = new RestRequest("session", Method.POST);
-
-			request.AddHeader("Authorization", $"Bearer {token}");
-			request.AddParameter("application/json; charset=UTF-8", session.ToJson(), ParameterType.RequestBody);
-			client.ExecuteAsync(request, (response, req) =>
-			{
-				try
-				{
-					if ((int)response.StatusCode >= 400 || (int)response.StatusCode < 200)
+			ApiRequest<VerifyTokenResponse>(
+				"verify_player_token",
+				r => r.AddParameter("access_token", Token.Value, ParameterType.GetOrPost),
+				response => {
+					switch (response.verification_status)
 					{
-						var errorResponse = JsonConvert.DeserializeObject<ErrorResponse>(response.Content);
-						Log("VideoSession", errorResponse);
-						onFailure(errorResponse?.message);
+						case TokenStatus.ok:
+							Log("VerifyToken OK");
+							onSuccess(response);
+							break;
+						case TokenStatus.pending:
+							Log("VerifyToken pending");
+							onPending();
+							break;
+						case TokenStatus.rejected:
+							Log("VerifyToken rejected");
+							onRejection();
+							break;
 					}
-					else
-					{
-						var successResponse = JsonConvert.DeserializeObject<VideoSessionResponse>(response.Content);
-						Log("VideoSession sent");
-						var uri = new UriBuilder(successResponse.followUp);
-						if (uri.Query == "?" || uri.Query == "")
-							uri.Query = $"access_token={token}";
-						else
-							uri.Query += $"&access_token={token}";
+				},
+				error => {
+					onError(error);
+				}
+			);
+		}
 
-						onSuccess(uri.ToString());
-					}
-				}
-				catch(Exception e)
+
+		void DiscardPlayerToken()
+		{
+			var client = new RestClient(GhostVREndpoint);
+			var request = new RestRequest("discard_player_token", Method.POST);
+			request.AddParameter("access_token", Token, ParameterType.GetOrPost);
+			client.ExecuteAsync(request, (response, req) => { Log("DiscardToken: " + response.StatusCode); });
+		}
+
+
+
+
+
+		class VideoSessionResponse : ApiResponse
+		{
+			public string follow_up;
+		}
+
+		public void VideoSession(Session session, Action<string> onSuccess, Action<string> onFailure)
+		{
+			ApiRequest<VideoSessionResponse>(
+				"video_session",
+				r => r.AddParameter("application/json; charset=UTF-8", session.ToJson(), ParameterType.RequestBody),
+				success => 
 				{
-					Logger.Error(e);
-					onFailure("Server returned malformed data");
-				}
-			});
+					Log("VideoSession sent");
+					var uri = new UriBuilder(success.follow_up);
+					//if (uri.Query == "?" || uri.Query == "")
+					//	uri.Query = $"access_token={token}";
+					//else
+					//	uri.Query += $"&access_token={token}";
+					onSuccess(uri.ToString());
+				},
+				error => onFailure(error)
+			);
 		}
 
 		#endregion
@@ -229,18 +270,35 @@ namespace PlayerUI.Statistics
 
 		public GhostVRConnector()
         {
-            sm = new StateMachine(StateIdle);
+            sm = new StateMachine(StateIdle) { logThisStateMachine = true };
+			System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+			sw.Start();
+			periodicUpdater = new Thread(() =>
+			{
+				while (true)
+				{
+					if (sm.CurrentlyExecuting)
+						continue;
+					lock (sm.CurrentlyExecutingSyncRoot)
+					{
+						sm.Update((float)sw.Elapsed.TotalSeconds);
+						sw.Restart();
+					}
+					Thread.Sleep(1000);
+				}
+			}) { Name = "GhostVR state machine periodic updater", IsBackground = true };
+			periodicUpdater.Start();
+			sm.Update(0);
         }
 
 
         void StateIdle() {
-            if (status == Status.connected)
-                sm.SwitchState(StateConnected);
-            if (status == Status.disconnected)
-                sm.SwitchState(StateDisconnected);
-            if (status == Status.pending)
-                sm.SwitchState(StatePending);
+			if (Token.HasValue) // has a stored token - will check
+				sm.SwitchState(StatePending);
+			else
+				sm.SwitchState(StateDisconnected);
         }
+
 
         void StateDisconnected()
         {
@@ -251,10 +309,8 @@ namespace PlayerUI.Statistics
                 status = Status.disconnected;
                 connectTrigger = sm.ValidOnlyInThisState(() => sm.SwitchStateExternalImmidiate(StateConnecting));
             }
-
-            if (sm.ExitState)
-                connectTrigger = null;
         }
+
 
         void StateConnecting() {
             Token = Guid.NewGuid();
@@ -262,22 +318,19 @@ namespace PlayerUI.Statistics
             sm.SwitchState(StatePending);
         }
 
+
         void StatePending()
         {
             if (sm.EnterState)
             {
                 status = Status.pending;
-				VerifyToken(
+				VerifyPlayerToken(
 					sm.ValidOnlyInThisState<VerifyTokenResponse>(vtr => sm.SwitchState(StateVerified(vtr))),
 					sm.StateSwitcherValidOnlyInThisState(StatePendingWait),
-					sm.StateSwitcherValidOnlyInThisState(StateConnectingFailed)
-                );
+					sm.StateSwitcherValidOnlyInThisState(StateConnectingFailed),
+					sm.ValidOnlyInThisState<string>(vtr => sm.SwitchState(StatePendingWait))
+				);
 				cancelTrigger = sm.StateSwitcherValidOnlyInThisState(StateCancelPending);
-			}
-
-			if(sm.ExitState)
-			{
-				cancelTrigger = null;
 			}
         }
 
@@ -289,13 +342,8 @@ namespace PlayerUI.Statistics
 				cancelTrigger = sm.StateSwitcherValidOnlyInThisState(StateCancelPending);
 			}
 
-			if (sm.TimeInState > 20)
+			if (sm.TimeInState > 5)
 				sm.SwitchState(StatePending);
-
-			if(sm.ExitState)
-			{
-				cancelTrigger = null;
-			}
 		}
 
 
@@ -314,7 +362,7 @@ namespace PlayerUI.Statistics
 			if(sm.EnterState)
 			{
 				Logic.Notify("Connecting to GhostVR aborted.");
-				DiscardToken();
+				DiscardPlayerToken();
 				sm.SwitchState(StateDisconnected);
 			}
 		}
@@ -326,8 +374,9 @@ namespace PlayerUI.Statistics
 			{
 				if (sm.EnterState)
 				{
-					Name = verifyTokenResponse.name;
+					Name = verifyTokenResponse.team_name;
 					status = Status.connected;
+					Logic.Notify($"Connected to GhostVR team {Name}");
 					sm.SwitchState(StateConnected);
 				}
 			};
@@ -342,35 +391,29 @@ namespace PlayerUI.Statistics
 			}
 
 			if (sm.TimeInState > 600)
-				sm.SwitchState(StateVerify);
-
-			if(sm.ExitState)
-			{
-				disconnectTrigger = null;
-			}
+				sm.SwitchState(StateVerifyAgain);
 		}
 
 
-		void StateVerify()
+		void StateVerifyAgain()
 		{
 			if(sm.EnterState)
 			{
-				VerifyToken(
+				VerifyPlayerToken(
 					sm.ValidOnlyInThisState<VerifyTokenResponse>(verifyApiResponse => {
-						sm.SwitchState(StateVerified(verifyApiResponse));
+						sm.SwitchState(StateConnected);
 					}),
-					sm.StateSwitcherValidOnlyInThisState(StateVerificationFailed),
-					sm.StateSwitcherValidOnlyInThisState(StateDisconnect)
+					sm.StateSwitcherValidOnlyInThisState(StateVerificationAgainFailed),
+					sm.StateSwitcherValidOnlyInThisState(StateDisconnect),
+					sm.ValidOnlyInThisState<string>(err => sm.SwitchState(StateDisconnect))
 				);
+
 				disconnectTrigger = sm.StateSwitcherValidOnlyInThisState(StateDisconnect);
 			}
-
-			if (sm.ExitState)
-				disconnectTrigger = null;
 		}
 
 
-		void StateVerificationFailed()
+		void StateVerificationAgainFailed()
 		{
 			if(sm.EnterState)
 			{
@@ -385,7 +428,7 @@ namespace PlayerUI.Statistics
 			if(sm.EnterState)
 			{
 				Logic.Notify("You have been disconnected from GhostVR.");
-				DiscardToken();
+				DiscardPlayerToken();
 				sm.SwitchState(StateDisconnected);
 			}
 		}

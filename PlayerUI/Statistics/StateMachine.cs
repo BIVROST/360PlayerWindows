@@ -129,6 +129,12 @@ namespace ChanibaL
         public bool CurrentlyExecuting { get; protected set; }
 
 
+		/// <summary>
+		/// An object that may will be locked when the SM updates. Can be used for external synchronization.
+		/// </summary>
+		public readonly object CurrentlyExecutingSyncRoot = new object();
+
+
         /// <summary>
         /// State machine stores deltaTime, so on state switch it doesn't add time in the same frame
         /// </summary>
@@ -213,7 +219,7 @@ namespace ChanibaL
                 if (withAutoUpdate)
                     SwitchStateExternalImmidiate(nextState);
                 else
-                    SwitchStateExternalImmidiate(nextState);
+                    SwitchStateExternalDelayed(nextState);
             });
         }
 
@@ -399,39 +405,42 @@ namespace ChanibaL
         /// </param>
         public void Update(float deltaTime)
         {
-            if (CurrentlyExecuting)
-                throw new Exception("Cannot execute Update while Update is still running");
-            watchdogRunsThisFrame = 0;
-            CurrentlyExecuting = true;
-            nextState = forceNextChange;    // null if none
+			if (CurrentlyExecuting)
+				throw new Exception("Cannot execute Update while Update is still running");
+			lock (CurrentlyExecutingSyncRoot)
+			{
+				watchdogRunsThisFrame = 0;
+				CurrentlyExecuting = true;
+				nextState = forceNextChange;    // null if none
 
-            DeltaTime = deltaTime;
-            RunState();
-            EnterState = false;
+				DeltaTime = deltaTime;
+				RunState();
+				EnterState = false;
 
-            if (Ended && !ignoreEndUpdate)
-                LogWarning(this + " ended, but still updating");
+				if (Ended && !ignoreEndUpdate)
+					LogWarning(this + " ended, but still updating");
 
-            while (nextState != null)
-            {
-                CurrentState = nextState;
-                nextState = null;
-                Ticks++;
+				while (nextState != null)
+				{
+					CurrentState = nextState;
+					nextState = null;
+					Ticks++;
 
-                EnterState = true;
-                ExitState = false;
-                deltaTime = 0f;
-                TimeInState = 0;
-                RunState();
+					EnterState = true;
+					ExitState = false;
+					deltaTime = 0f;
+					TimeInState = 0;
+					RunState();
 
-                EnterState = false;
-            }
+					EnterState = false;
+				}
 
-            CurrentlyExecuting = false;
-            forceNextChange = null;
+				CurrentlyExecuting = false;
+				forceNextChange = null;
 
-            FramesInState++;
-            TimeInState += deltaTime;
+				FramesInState++;
+				TimeInState += deltaTime;
+			}
         }
 
 

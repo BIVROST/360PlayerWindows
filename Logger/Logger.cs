@@ -211,18 +211,18 @@ namespace Bivrost.Log
 		public static void RegisterListener(LogListener lw)
 		{
 			lock(listeners)
+				listeners.Add(lw);
+
+			if (thread == null)
 			{
-				if (thread == null)
+				thread = new Thread(new ThreadStart(WriteLogThread))
 				{
-					thread = new Thread(new ThreadStart(WriteLogThread))
-					{
-						IsBackground = true,
-						Name = "log listener thread"
-					};
-					thread.Start();
-				}
+					IsBackground = true,
+					Name = "log listener thread"
+				};
+				thread.Start();
 			}
-			listeners.Add(lw);
+
 			Info("Registered log writer: " + lw);
 		}
 
@@ -238,7 +238,7 @@ namespace Bivrost.Log
         public static void UnregisterListener(Predicate<LogListener> predicate)
         {
             lock (listeners)
-                Info("Unregistered " + listeners.RemoveWhere(predicate) + " log writes");
+                Info("Unregistered " + listeners.RemoveWhere(predicate) + " log writer");
         }
 
 

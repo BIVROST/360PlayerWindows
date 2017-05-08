@@ -1411,7 +1411,28 @@ namespace PlayerUI
 			set { if (value) SetProjection(MediaDecoder.ProjectionMode.Dome); }
 		}
 		#endregion
-	
+
+
+		#region menu options: analitics
+		public bool AnaliticsMenuActive
+		{
+			get
+			{
+				return Logic.Instance.lookListener.AnySinkRegistered;
+			}
+		}
+
+		public bool GhostVREnabled
+		{
+			get { return Logic.Instance.settings.GhostVREnabled; }
+			set { Logic.Instance.settings.GhostVREnabled = value;}
+		}
+
+		public void GhostVRConnect() { Logic.Instance.ghostVRConnector.Connect(); }
+		public void GhostVRCancel() { Logic.Instance.ghostVRConnector.Cancel(); }
+		public void GhostVRDisconnect() { Logic.Instance.ghostVRConnector.Disconnect(); }
+		#endregion
+
 	}
 
 	#region recents menu helpers

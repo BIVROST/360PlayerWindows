@@ -66,6 +66,8 @@ namespace PlayerUI
 
 		public Logic()
 		{
+			_instance = this;
+
 			Application.Current.DispatcherUnhandledException += (sender, e) =>
 			{
 				Logger.Fatal(e.Exception, "unhandled application exception");
@@ -163,20 +165,20 @@ namespace PlayerUI
 
             lookListener = new LookListener();
 
-			//if (Features.GhostVR)
-			//{
+			if (Features.GhostVR || Features.IsDebug)
+			{
 				ghostVRConnector = new GhostVRConnector();
 				lookListener.RegisterSessionSink(new GhostVRSessionSink(ghostVRConnector));
-			//}
+			}
 
-			//if(Features.Heatmaps)
-			//{
+			if (Features.Heatmaps || Features.IsDebug)
+			{
 				lookListener.RegisterSessionSink(new FileStorageSessionSink());
-			//}
+			}
 		}
 
-        LookListener lookListener;
-		GhostVRConnector ghostVRConnector;
+        public LookListener lookListener;
+		public GhostVRConnector ghostVRConnector;
 
 		~Logic()
 		{

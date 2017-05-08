@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Bivrost.Log;
 using PlayerUI.Streaming;
 
 namespace PlayerUI.Statistics
@@ -24,21 +23,28 @@ namespace PlayerUI.Statistics
             }
         }
 
-        ILookProvider lookProvider = null;
+		public bool AnySinkRegistered {
+			get
+			{
+				return sessionSinks.Count > 0;
+			}
+		}
+
+		ILookProvider lookProvider = null;
 
         LookHistory history = null;
         private string filename;
         private DateTime startTime;
         private ServiceResult serviceResult;
-		private HashSet<ISessionSink> sessionSinks = new HashSet<ISessionSink>();
+		private List<ISessionSink> sessionSinks = new List<ISessionSink>();
 
 		public LookListener()
         {
             MediaDecoder.OnInstantiated += MediaDecoder_OnInstantiated;
             ShellViewModel.OnInstantiated += ShellViewModel_OnInstantiated;
 
-            listeners.Clear();
-            listeners.Add(new TraceLogMsgOnlyListener());
+            //listeners.Clear();
+            //listeners.Add(new TraceLogMsgOnlyListener());
         }
 
         private void ShellViewModel_OnInstantiated(ShellViewModel shellViewModel)

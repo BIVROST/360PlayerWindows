@@ -47,7 +47,7 @@ namespace PlayerUI.Statistics
 			close.Click += (s, e) => Close();
 			cancel.Click += (s, e) => Close();
 			uiMode = UIMode.loading;
-			ghostVRConnector.VideoSession(session, ghostVRConnector.DevelopmentToken, SessionSendSuccess, SessionSendFailure);
+			ghostVRConnector.VideoSession(session, SessionSendSuccess, SessionSendFailure);
 		}
 
 		private void SessionSendSuccess(string followUpUrl)
@@ -114,7 +114,7 @@ namespace PlayerUI.Statistics
 		{
 			get
 			{
-				return Logic.Instance.settings.GhostVREnabled;
+				return Logic.Instance.settings.GhostVREnabled && Logic.Instance.ghostVRConnector.IsConnected;
 			}
 		}
 	}
