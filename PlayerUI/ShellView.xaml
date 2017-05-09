@@ -123,7 +123,10 @@
                 </Setter>
             </Style>
 
-        </ResourceDictionary>
+			<!-- http://stackoverflow.com/questions/20570148/wpf-mvvm-hiding-button-using-booleantovisibilityconverter -->
+			<BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+		</ResourceDictionary>
     </Window.Resources>
 
     <Grid Background="#303030" UseLayoutRounding="True" cal:Message.Attach="[Event Drop] = [Action FileDropped($eventArgs)]; [Event PreviewDragOver] = [Action FilePreviewDragEnter($eventArgs)];
@@ -183,10 +186,22 @@
 					<MenuItem IsCheckable="True" IsChecked="{Binding ProjectionIsCubeFacebook}" Header="Cubemap (Facebook)" />
 					<MenuItem IsCheckable="True" IsChecked="{Binding ProjectionIsDome}" Header="Equirectangular 180 (Dome)" />
 				</MenuItem>
-				<MenuItem Header="Analitics" IsEnabled="{Binding AnaliticsMenuActive}">
-					<MenuItem Header="GhostVR connect" cal:Message.Attach="[Event Click] = [Action GhostVRConnect]" />
-					<MenuItem Header="GhostVR cancel" cal:Message.Attach="[Event Click] = [Action GhostVRCancel]" />
-					<MenuItem Header="GhostVR disconnect" cal:Message.Attach="[Event Click] = [Action GhostVRDisconnect]" />
+				<MenuItem Header="Analitics"  Visibility="{Binding AnaliticsMenuActive, Mode=OneWay, Converter={StaticResource BoolToVis}, FallbackValue=Hidden}">
+					<MenuItem Header="About analytics (TODO)" />
+
+					<Separator Visibility="{Binding GhostVRAvailable, Mode=OneWay, Converter={StaticResource BoolToVis}, FallbackValue=Hidden}" />
+					<MenuItem Visibility="{Binding GhostVRAvailable, Mode=OneWay, Converter={StaticResource BoolToVis}, FallbackValue=Hidden}" Header="{Binding GhostVRLabel}" IsEnabled="False" FontWeight="Bold" />
+					<MenuItem Visibility="{Binding GhostVRAvailableAndConnected, Mode=OneWay, Converter={StaticResource BoolToVis}, FallbackValue=Hidden}" Header="GhostVR enabled" IsCheckable="True" IsChecked="{Binding GhostVREnabled}" />
+					<MenuItem Visibility="{Binding GhostVRAvailableAndConnected, Mode=OneWay, Converter={StaticResource BoolToVis}, FallbackValue=Hidden}" Header="Disconnect from GhostVR" cal:Message.Attach="[Event Click] = [Action GhostVRDisconnect]"/>
+					<MenuItem Visibility="{Binding GhostVRAvailableAndDisconnected, Mode=OneWay, Converter={StaticResource BoolToVis}, FallbackValue=Hidden}" Header="Connect to GhostVR" cal:Message.Attach="[Event Click] = [Action GhostVRConnect]"/>
+					<MenuItem Visibility="{Binding GhostVRAvailableAndPending, Mode=OneWay, Converter={StaticResource BoolToVis}, FallbackValue=Hidden}" Header="Cancel connecting" cal:Message.Attach="[Event Click] = [Action GhostVRCancel]"/>
+					<MenuItem Visibility="{Binding GhostVRAvailable, Mode=OneWay, Converter={StaticResource BoolToVis}, FallbackValue=Hidden}" Header="About GhostVR (TODO)" IsEnabled="False" />
+
+					<Separator Visibility="{Binding LocalSessionsAvailable, Mode=OneWay, Converter={StaticResource BoolToVis}, FallbackValue=Hidden}" />
+					<MenuItem Visibility="{Binding LocalSessionsAvailable, Mode=OneWay, Converter={StaticResource BoolToVis}, FallbackValue=Hidden}" Header="Locally stored sessions (TODO)" IsEnabled="False" FontWeight="Bold" />
+					<MenuItem Visibility="{Binding LocalSessionsAvailable, Mode=OneWay, Converter={StaticResource BoolToVis}, FallbackValue=Hidden}" Header="Set output directory" />
+					<MenuItem Visibility="{Binding LocalSessionsAvailable, Mode=OneWay, Converter={StaticResource BoolToVis}, FallbackValue=Hidden}" Header="Local store enabled" IsCheckable="True" IsChecked="False" />
+					<MenuItem Visibility="{Binding LocalSessionsAvailable, Mode=OneWay, Converter={StaticResource BoolToVis}, FallbackValue=Hidden}" Header="About locally stored sessions" />
 				</MenuItem>
                 <MenuItem Header="Options">
                     <MenuItem Header="Settings" cal:Message.Attach="[Event Click] = [Action OpenSettings]" InputGestureText="Ctrl+P"/>

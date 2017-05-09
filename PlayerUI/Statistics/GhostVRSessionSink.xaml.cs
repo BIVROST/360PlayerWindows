@@ -54,7 +54,14 @@ namespace PlayerUI.Statistics
 		{
 			Execute.OnUIThread(() => 
 			{
-				uiMode = UIMode.form;
+				browser.LoadCompleted += (s, e) =>
+				{
+					uiMode = UIMode.form;
+				};
+				browser.Navigated += (s, e) =>
+				{
+					;
+				};
 				browser.Navigate(followUpUrl);
 				ScriptingHelper helper = new ScriptingHelper();
 				//browser.ContextMenu = false;
@@ -88,6 +95,7 @@ namespace PlayerUI.Statistics
 			Close();
 		}
 
+
 		private void Helper_OnCanceled()
 		{
 			Logger.Info("GhostVR form said it was canceled");
@@ -114,6 +122,7 @@ namespace PlayerUI.Statistics
 		{
 			get
 			{
+				Logger.Info($"[GhostVR] session sink will be used = {Logic.Instance.settings.GhostVREnabled && Logic.Instance.ghostVRConnector.IsConnected}");
 				return Logic.Instance.settings.GhostVREnabled && Logic.Instance.ghostVRConnector.IsConnected;
 			}
 		}

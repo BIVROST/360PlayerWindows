@@ -70,19 +70,24 @@ namespace ChanibaL
         int id;
 
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="StateMachine"/> class.
-        /// </summary>
-        /// <param name='initState'>
-        /// Initial state
-        /// </param>
-        /// <param name='log'>
-        /// Should the state changes of this state machine be logged to the console?
-        /// </param>
-        public StateMachine(State initState, bool log = false)
+		/// <summary>
+		/// Initializes a new instance of the <see cref="StateMachine"/> class.
+		/// </summary>
+		/// <param name='initState'>
+		/// Initial state
+		/// </param>
+		/// <param name='log'>
+		/// Should the state changes of this state machine be logged to the console?
+		/// </param>
+		/// <param name="logDelegate">
+		/// Enable logging of this SM to a custom logging output, null for none
+		/// </summary>
+
+		/// </param>
+		public StateMachine(State initState, LogDelegate logDelegate = null)
         {
+			this.logDelegate = logDelegate;
             id = ++maxId;
-            logThisStateMachine = log;
             CurrentState = initState;
             FramesInState = 0;
             TimeInState = 0;
@@ -91,9 +96,7 @@ namespace ChanibaL
             Ended = false;
             IsPushedState = false;
             Ticks = 0;
-
-			if(logThisStateMachine)
-				LogDebug(this + "init");
+			LogDebug(this + "init");
         }
 
 
@@ -171,13 +174,6 @@ namespace ChanibaL
         {
             return timeInState >= TimeInState && timeInState < TimeInState + DeltaTime;
         }
-
-
-        /// <summary>
-        /// Enable logging of this SM to Debug.Log.
-        /// This does not modify printing warnings.
-        /// </summary>
-        public bool logThisStateMachine = false;
 
 
         /// <summary>
@@ -291,34 +287,56 @@ namespace ChanibaL
             TimeInState = 0;
         }
 
+
+		#region logging
+		public delegate void LogDelegate(string message, bool isWarning);
+
+
+		readonly LogDelegate logDelegate;
+
+
         private void LogWarning(string v)
         {
-#if UNITY_5 || UNITY_6
-            UnityEngine.Debug.LogWarning(v);
-#else
-            Console.Error.WriteLine(v);
-#endif
+			if(logDelegate != null)
+				logDelegate(v, true);
         }
 
         private void LogDebug(string v)
         {
+			if (logDelegate != null)
+				logDelegate(v, false);
+		}
+
 #if UNITY_5 || UNITY_6
-            UnityEngine.Debug.Log(v);
-#else
-            Console.WriteLine(v);
+		public static void LogDelegateUnityDebug(LogSeverity severity, string message) 
+		{
+			if (isWarning)
+				UnityEngine.Debug.LogWarning(message);
+			else
+				UnityEngine.Debug.Log(message);
+		}
 #endif
-        }
+
+		public static void LogDelegateDiagnosticsTrace(string message, bool isWarning)
+		{
+			if (isWarning)
+				System.Diagnostics.Trace.WriteLine(message, "warning");
+			else
+				System.Diagnostics.Trace.WriteLine(message, "info");
+		}
+
+		#endregion
 
 
-        /// <summary>
-        /// Switches the current state. The next state will be run just after this one, without any delay.
-        /// The exitstate/enterstate flags will be set.
-        /// Use only from other states of this SM.
-        /// </summary>
-        /// <param name='nextState'>
-        /// The next state.
-        /// </param>
-        public void SwitchState(State nextState)
+		/// <summary>
+		/// Switches the current state. The next state will be run just after this one, without any delay.
+		/// The exitstate/enterstate flags will be set.
+		/// Use only from other states of this SM.
+		/// </summary>
+		/// <param name='nextState'>
+		/// The next state.
+		/// </param>
+		public void SwitchState(State nextState)
         {
             if (!CurrentlyExecuting)
                 LogWarning(this + " switched state from outside of another state (use SwitchStateExternal* if this is not a bug)");

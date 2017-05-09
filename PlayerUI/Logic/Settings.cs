@@ -109,11 +109,15 @@ namespace PlayerUI
 			set { _ghostVREnabled = value; }
 		}
 		[JsonIgnore]
-		bool _ghostVREnabled = false;
+		bool _ghostVREnabled = true;
 
 
 		[SettingsAdvancedProperty("GhostVR license token", ConfigItemType.String, requiredFeatures = FeaturesEnum.ghostVR)]
 		public string GhostVRLicenseToken { get; set; }
+
+
+		[SettingsAdvancedProperty("GhostVR API endpoint override", ConfigItemType.String, requiredFeatures = FeaturesEnum.ghostVR | FeaturesEnum.isDebugOrCanary)]
+		public string GhostVREndpointOverride { get; set; } = "http://dev.ghostvr.io/api/v1/";
 
 
 		[SettingsAdvancedProperty("Save local heatmaps", ConfigItemType.Bool, requiredFeatures = FeaturesEnum.heatmaps)]

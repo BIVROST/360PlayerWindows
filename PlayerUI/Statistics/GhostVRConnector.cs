@@ -15,9 +15,23 @@ namespace PlayerUI.Statistics
         StateMachine sm;
 		private Thread periodicUpdater;
 
-		public enum Status { pending, connected, disconnected };
+		public enum ConnectionStatus { pending, connected, disconnected };
 
-        public Status status { get; private set; } = Status.disconnected;
+		ConnectionStatus _status = ConnectionStatus.disconnected;
+        public ConnectionStatus status
+		{
+			get { return _status; }
+			set
+			{
+				if (value == _status)
+					return;
+				_status = value;
+				StatusChanged?.Invoke(status);
+				Log($"Connection status changed to {value}");
+			}
+		}
+
+		public event Action<ConnectionStatus> StatusChanged;
 
         protected Guid? Token
 		{
@@ -54,7 +68,7 @@ namespace PlayerUI.Statistics
         protected Action connectTrigger;
         protected Action cancelTrigger;
 
-		public bool IsConnected { get { return status == Status.connected; } }
+		public bool IsConnected { get { return status == ConnectionStatus.connected; } }
 
 		private void Log(string v)
 		{
@@ -112,16 +126,33 @@ namespace PlayerUI.Statistics
         }
 
 
-		string GhostVREndpoint {  get { return "http://localhost:3000/api/v1/"; } }
+		string GhostVREndpoint {
+			get
+			{
+#if DEBUG || CANARY
+				if (!string.IsNullOrWhiteSpace(Logic.Instance.settings.GhostVREndpointOverride))
+					return Logic.Instance.settings.GhostVREndpointOverride;
+#endif
+				return "https://api.ghostvr.io/api/v1/";
+			}
+		}
 
+		public bool potentialAuthError;
 
 		void ApiRequest<T>(string endpoint, Action<RestRequest> arguments, Action<T> onSuccess, Action<string> onError)
 		{
 			var client = new RestClient(GhostVREndpoint);
 			var request = new RestRequest(endpoint, Method.POST);
+			if (endpoint == "verify_player_token" && GhostVREndpoint == "http://dev.ghostvr.io/api/v1/")
+			{
+				request = new RestRequest(endpoint, Method.GET);
+				Log("Temporary hack: verify_player_token is GET");
+			}
 			if(Token.HasValue)
-				request.AddHeader("Authentication", "Bearer " + Token.Value);
+				request.AddHeader("Authorization", "Bearer " + Token.Value);
 			arguments(request);
+			Log($"API request: {endpoint} {request} token={(Token.HasValue ? Token.Value.ToString() : "(none)")}");
+
 			client.ExecuteAsync(request, (response, request_) =>
 			{
 				try
@@ -130,9 +161,9 @@ namespace PlayerUI.Statistics
 					{
 						Log("Cannot connect to GhostVR API: " + response.ErrorMessage);
 						onError("Cannot connect to GhostVR API: " + response.ErrorMessage);
+						potentialAuthError = true;
 						return;
 					}
-						
 
 					ApiResponse apiResponse = JsonConvert.DeserializeObject<ApiResponse>(response.Content);
 					if (apiResponse.status == ApiResponse.ApiStatus.success)
@@ -144,14 +175,16 @@ namespace PlayerUI.Statistics
 					else
 					{
 						ApiResponseError apiResponseError = JsonConvert.DeserializeObject<ApiResponseError>(response.Content);
-						Log("ApiRequest error: " + endpoint);
+						Log($"ApiRequest error: {endpoint}, {apiResponseError.status} {apiResponseError.message} ({apiResponseError.code})");
 						onError($"{apiResponseError.status} {apiResponseError.message} ({apiResponseError.code})");
+						potentialAuthError = true;
 					}
 				}
 				catch (Exception e)
 				{
 					Log("ApiRequest parse error:" + endpoint + e);
 					onError("an exception occurred: " + e);
+					potentialAuthError = true;
 				}
 			});
 		}
@@ -186,6 +219,7 @@ namespace PlayerUI.Statistics
 				+ "?access_token=" + Token.ToString()
 				+ "&installation_id=" + Logic.Instance.settings.InstallId
 				+ "&" + PlayerDetails.Current.AsQsFormat;
+			Log($"Opening URI in browser: {uri}...");
 			System.Diagnostics.Process.Start(uri);
 		}
 
@@ -199,6 +233,12 @@ namespace PlayerUI.Statistics
 
 		void VerifyPlayerToken(Action<VerifyTokenResponse> onSuccess, Action onPending, Action onRejection, Action<string> onError)
 		{
+			if(!Token.HasValue)
+			{
+				onError("no token to verify");
+				return;
+			}
+
 			ApiRequest<VerifyTokenResponse>(
 				"verify_player_token",
 				r => r.AddParameter("access_token", Token.Value, ParameterType.GetOrPost),
@@ -270,7 +310,7 @@ namespace PlayerUI.Statistics
 
 		public GhostVRConnector()
         {
-            sm = new StateMachine(StateIdle) { logThisStateMachine = true };
+			sm = new StateMachine(StateInit, (msg, warn) => { if (warn) Logger.Error(msg); else Logger.Info(msg); });
 			System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
 			sw.Start();
 			periodicUpdater = new Thread(() =>
@@ -286,16 +326,17 @@ namespace PlayerUI.Statistics
 					}
 					Thread.Sleep(1000);
 				}
-			}) { Name = "GhostVR state machine periodic updater", IsBackground = true };
+			}) { Name = "GhostVR SM periodic updater", IsBackground = true };
 			periodicUpdater.Start();
 			sm.Update(0);
         }
 
 
-        void StateIdle() {
-			if (Token.HasValue) // has a stored token - will check
-				sm.SwitchState(StatePending);
-			else
+        void StateInit() {
+			if (Token.HasValue && Features.GhostVR) // has a stored token - will check
+				sm.SwitchState(StateVerifyOldToken);
+
+			if (!Token.HasValue && Features.GhostVR)
 				sm.SwitchState(StateDisconnected);
         }
 
@@ -306,7 +347,7 @@ namespace PlayerUI.Statistics
             {
                 Token = null;
                 Name = null;
-                status = Status.disconnected;
+                status = ConnectionStatus.disconnected;
                 connectTrigger = sm.ValidOnlyInThisState(() => sm.SwitchStateExternalImmidiate(StateConnecting));
             }
         }
@@ -323,7 +364,7 @@ namespace PlayerUI.Statistics
         {
             if (sm.EnterState)
             {
-                status = Status.pending;
+                status = ConnectionStatus.pending;
 				VerifyPlayerToken(
 					sm.ValidOnlyInThisState<VerifyTokenResponse>(vtr => sm.SwitchState(StateVerified(vtr))),
 					sm.StateSwitcherValidOnlyInThisState(StatePendingWait),
@@ -333,6 +374,22 @@ namespace PlayerUI.Statistics
 				cancelTrigger = sm.StateSwitcherValidOnlyInThisState(StateCancelPending);
 			}
         }
+
+
+		void StateVerifyOldToken()
+		{
+			if (sm.EnterState)
+			{
+				status = ConnectionStatus.pending;
+				VerifyPlayerToken(
+					sm.ValidOnlyInThisState<VerifyTokenResponse>(vtr => sm.SwitchState(StateVerified(vtr))),
+					sm.StateSwitcherValidOnlyInThisState(StateConnectingFailed),
+					sm.StateSwitcherValidOnlyInThisState(StateConnectingFailed),
+					sm.ValidOnlyInThisState<string>(vtr => sm.SwitchState(StateConnectingFailed))
+				);
+				cancelTrigger = sm.StateSwitcherValidOnlyInThisState(StateCancelPending);
+			}
+		}
 
 
 		void StatePendingWait()
@@ -375,7 +432,7 @@ namespace PlayerUI.Statistics
 				if (sm.EnterState)
 				{
 					Name = verifyTokenResponse.team_name;
-					status = Status.connected;
+					status = ConnectionStatus.connected;
 					Logic.Notify($"Connected to GhostVR team {Name}");
 					sm.SwitchState(StateConnected);
 				}
@@ -387,10 +444,11 @@ namespace PlayerUI.Statistics
 		{
 			if(sm.EnterState)
 			{
+				potentialAuthError = false;
 				disconnectTrigger = sm.StateSwitcherValidOnlyInThisState(StateDisconnect);
 			}
 
-			if (sm.TimeInState > 600)
+			if (sm.TimeInState > 600 || potentialAuthError)
 				sm.SwitchState(StateVerifyAgain);
 		}
 
@@ -403,11 +461,10 @@ namespace PlayerUI.Statistics
 					sm.ValidOnlyInThisState<VerifyTokenResponse>(verifyApiResponse => {
 						sm.SwitchState(StateConnected);
 					}),
-					sm.StateSwitcherValidOnlyInThisState(StateVerificationAgainFailed),
 					sm.StateSwitcherValidOnlyInThisState(StateDisconnect),
-					sm.ValidOnlyInThisState<string>(err => sm.SwitchState(StateDisconnect))
+					sm.StateSwitcherValidOnlyInThisState(StateDisconnect),
+					sm.ValidOnlyInThisState<string>(err => sm.SwitchState(StateVerificationAgainFailed))
 				);
-
 				disconnectTrigger = sm.StateSwitcherValidOnlyInThisState(StateDisconnect);
 			}
 		}
@@ -418,8 +475,10 @@ namespace PlayerUI.Statistics
 			if(sm.EnterState)
 			{
 				Logic.Notify("GhostVR verification failed.");
-				sm.SwitchState(StateConnected);
+				cancelTrigger = sm.StateSwitcherValidOnlyInThisState(StateDisconnect);
 			}
+			if(sm.TimeInState > 10)
+				sm.SwitchState(StateConnected);
 		}
 
 

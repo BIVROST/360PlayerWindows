@@ -312,6 +312,8 @@ namespace PlayerUI
 					);
 			});
 
+			GhostVRBindStatusChangeToProperties();
+
 			Logic.Instance.ValidateSettings();
 		}
 
@@ -941,9 +943,9 @@ namespace PlayerUI
 
 		public void OpenLogViewer()
 		{
-			if (!Bivrost.Log.LogWindow.IsDisplaying)
+			if (!Bivrost.Log.LogWindowLogListener.IsDisplaying)
 			{
-				Window lv = new Bivrost.Log.LogWindow();
+				Window lv = new Bivrost.Log.LogWindowLogListener();
 				lv.Show();
 			}
 			else
@@ -1414,13 +1416,15 @@ namespace PlayerUI
 
 
 		#region menu options: analitics
-		public bool AnaliticsMenuActive
-		{
-			get
-			{
-				return Logic.Instance.lookListener.AnySinkRegistered;
-			}
-		}
+		public bool AnaliticsMenuActive { get { return LocalSessionsAvailable || GhostVRAvailable; } }
+
+		public bool LocalSessionsAvailable { get { return Features.Heatmaps; } }
+
+		private Statistics.GhostVRConnector ghostVRConnector {  get { return Logic.Instance.ghostVRConnector; } }
+		public bool GhostVRAvailable { get { return Features.GhostVR; } }
+		public bool GhostVRAvailableAndDisconnected { get {	return GhostVRAvailable && ghostVRConnector.status == Statistics.GhostVRConnector.ConnectionStatus.disconnected; } }
+		public bool GhostVRAvailableAndConnected { get { return GhostVRAvailable && ghostVRConnector.status == Statistics.GhostVRConnector.ConnectionStatus.connected; } }
+		public bool GhostVRAvailableAndPending { get { return GhostVRAvailable && ghostVRConnector.status == Statistics.GhostVRConnector.ConnectionStatus.pending; } }
 
 		public bool GhostVREnabled
 		{
@@ -1428,9 +1432,39 @@ namespace PlayerUI
 			set { Logic.Instance.settings.GhostVREnabled = value;}
 		}
 
-		public void GhostVRConnect() { Logic.Instance.ghostVRConnector.Connect(); }
-		public void GhostVRCancel() { Logic.Instance.ghostVRConnector.Cancel(); }
-		public void GhostVRDisconnect() { Logic.Instance.ghostVRConnector.Disconnect(); }
+		public string GhostVRLabel
+		{
+			get
+			{
+				switch (ghostVRConnector.status)
+				{
+					case Statistics.GhostVRConnector.ConnectionStatus.connected:
+						return $"GhostVR: connected to team {ghostVRConnector.Name}";
+					case Statistics.GhostVRConnector.ConnectionStatus.pending:
+						return "GhostVR: waiting for connection...";
+					case Statistics.GhostVRConnector.ConnectionStatus.disconnected:
+						return "GhostVR: not connected";
+					default: throw new ArgumentOutOfRangeException();
+				}
+			}
+		}
+
+		public void GhostVRConnect() { ghostVRConnector.Connect(); }
+		public void GhostVRCancel() { ghostVRConnector.Cancel(); }
+		public void GhostVRDisconnect() { ghostVRConnector.Disconnect(); }
+
+		public void GhostVRBindStatusChangeToProperties()
+		{
+			ghostVRConnector.StatusChanged += (status) =>
+			{
+				NotifyOfPropertyChange(() => GhostVRAvailable);
+				NotifyOfPropertyChange(() => GhostVRAvailableAndConnected);
+				NotifyOfPropertyChange(() => GhostVRAvailableAndDisconnected);
+				NotifyOfPropertyChange(() => GhostVRAvailableAndPending);
+				NotifyOfPropertyChange(() => GhostVREnabled);
+				NotifyOfPropertyChange(() => GhostVRLabel);
+			};
+		}
 		#endregion
 
 	}

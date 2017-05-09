@@ -48,19 +48,19 @@ namespace PlayerUI
 					SetAddRemoveProgramsIcon();
 					AssociateFileExtensions();
 				});
-
-			} else
+			}
+			else
 			{
 				{
 					string path = (new System.Uri(Assembly.GetExecutingAssembly().CodeBase)).AbsolutePath;
 					Logic.LocalDataDirectory = Path.GetDirectoryName(path) + "\\";
 				}
-
 			}
 
 			Logger.RegisterListener(new Bivrost.Log.TextFileLogListener(Logic.LocalDataDirectory));
+			Logger.RegisterListener(new Bivrost.Log.TraceLogListener(false));
 
-			
+
 			string[] args = Environment.GetCommandLineArgs();
 			
 			try {

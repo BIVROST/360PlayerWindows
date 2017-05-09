@@ -23,7 +23,8 @@ namespace PlayerUI
 		heatmaps = 8,
 		requireLicense = 16,
 		remote = 32,
-		commercialUse = 64
+		commercialUse = 64,
+		isDebugOrCanary = 128
 	}
 
 
@@ -47,9 +48,15 @@ namespace PlayerUI
 			{
 				FeaturesEnum fe = new FeaturesEnum();
 				if (IsDebug)
+				{
 					fe |= FeaturesEnum.isDebug;
+					fe |= FeaturesEnum.isDebugOrCanary;
+				}
 				if (IsCanary)
+				{
 					fe |= FeaturesEnum.isCanary;
+					fe |= FeaturesEnum.isDebugOrCanary;
+				}
 				if (GhostVR)
 					fe |= FeaturesEnum.ghostVR;
 				if (Heatmaps)
