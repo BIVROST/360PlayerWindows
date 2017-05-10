@@ -113,7 +113,7 @@ namespace PlayerUI
 
 
 
-		//GhostVR and heatmaps
+		//GhostVR and locally stored sessions
 		[SettingsAdvancedProperty("Enable GhostVR analytics", ConfigItemType.Bool, requiredFeatures = FeaturesEnum.ghostVR)]
 		public bool GhostVREnabled
 		{
@@ -132,14 +132,17 @@ namespace PlayerUI
 		public string GhostVREndpointOverride { get; set; } = "http://dev.ghostvr.io/api/v1/";
 
 
-		[SettingsAdvancedProperty("Save local heatmaps", ConfigItemType.Bool, requiredFeatures = FeaturesEnum.heatmaps)]
-		public bool LocalHeatmaps
+		[SettingsAdvancedProperty("Local video analytics sessions enabled", ConfigItemType.Bool, requiredFeatures = FeaturesEnum.locallyStoredSessions)]
+		public bool LocallyStoredSessions
 		{
-			get { return _localHeatmaps && Features.Heatmaps; }
-			set { _localHeatmaps = value; }
+			get { return _locallyStoredSessions && Features.LocallyStoredSessions; }
+			set { _locallyStoredSessions = value; }
 		}
 		[JsonIgnore]
-		bool _localHeatmaps = false;
+		bool _locallyStoredSessions = false;
+
+		[SettingsAdvancedProperty("Local video analytics sessions directory", ConfigItemType.String, requiredFeatures = FeaturesEnum.locallyStoredSessions)]
+		public string LocallyStoredSessionsDirectory { get; set; } = null;
 
 
 		//License settings

@@ -6,7 +6,7 @@ using Bivrost.Log;
 using Newtonsoft.Json;
 using System.Threading;
 
-namespace PlayerUI.Statistics
+namespace PlayerUI.VideoAnalytics
 {
     
     public class GhostVRConnector

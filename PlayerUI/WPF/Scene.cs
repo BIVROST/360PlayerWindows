@@ -12,7 +12,7 @@
 	using System.Linq;
 	using System.Collections.Generic;
 	using SharpDX.XInput;
-	using Statistics;
+	using VideoAnalytics;
 	using Bivrost.Log;
 	using Bivrost;
 

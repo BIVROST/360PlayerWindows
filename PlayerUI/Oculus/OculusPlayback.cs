@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Device = SharpDX.Direct3D11.Device;
 using PlayerUI.Tools;
-using PlayerUI.Statistics;
+using PlayerUI.VideoAnalytics;
 using Bivrost.Log;
 
 namespace PlayerUI.Oculus

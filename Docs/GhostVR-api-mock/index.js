@@ -100,7 +100,7 @@ app.all("/mock/test", function(req,res) {
 	res.jsend({mock:true, info:info});
 });
 
-app.get("/moxck/follow_up/:video_id", function(req,res) {
+app.get("/mock/follow_up/:video_id", function(req,res) {
 	log("mock:follow_up");
 	res.send(
 		"FOLLOW UP for "+req.params.video_id
@@ -111,6 +111,7 @@ app.get("/moxck/follow_up/:video_id", function(req,res) {
 		+'\n<button onclick="(function(xhr) { xhr.open(\'get\', \'http://xherrrr.com\'); xhr.send(); } )(new XMLHttpRequest());">xhr error nxdomain</button>'
 		+'\n<a href="http://errrrrrrrrrrrrrrrrr.com">navigation error nxdomain</a>'
 		+'\n<a href="/errrr">navigation error 404</a>'
+		+'\n<button onclick="(function(){ for(var i=1000; i--; ) { var p=document.createElement(\'span\'); p.appendChild(document.createTextNode(\'All work and no play makes Jack a very dull boy. \')); document.body.appendChild(p);} })()">wall of text</button>'
 	);
 });
 

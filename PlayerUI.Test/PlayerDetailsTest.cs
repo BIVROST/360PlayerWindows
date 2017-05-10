@@ -9,7 +9,7 @@ namespace PlayerUI.Test
         [TestMethod]
         public void TestPlayerDetailsCurrentWorks()
         {
-            var pd = PlayerUI.Statistics.GhostVRConnector.PlayerDetails.Current;
+            var pd = PlayerUI.VideoAnalytics.GhostVRConnector.PlayerDetails.Current;
             Assert.AreEqual(pd.name, "BIVROST 360Player");
 
         }
@@ -18,7 +18,7 @@ namespace PlayerUI.Test
         [TestMethod]
         public void TestPlayerDetailsQsWorks()
         {
-            var pd = new PlayerUI.Statistics.GhostVRConnector.PlayerDetails()
+            var pd = new PlayerUI.VideoAnalytics.GhostVRConnector.PlayerDetails()
             {
                 //licenseType = Statistics.GhostVRConnector.PlayerDetails.LicenseType.debug,
                 version = "0.0.0.0"

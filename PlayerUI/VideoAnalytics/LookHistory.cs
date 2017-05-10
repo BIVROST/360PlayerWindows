@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 
 
-namespace PlayerUI.Statistics
+namespace PlayerUI.VideoAnalytics
 {
 	public class LookHistory
 	{
@@ -57,7 +57,7 @@ namespace PlayerUI.Statistics
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="precision">How many times per second should heatmaps be sampled</param>
+        /// <param name="precision">How many times per second should orientation be sampled</param>
         /// <param name="mediaLength">How long is this medium</param>
         public LookHistory(int precision, double mediaLength)
 		{

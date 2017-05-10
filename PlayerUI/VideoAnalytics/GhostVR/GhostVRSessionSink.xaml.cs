@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using System.Security.Permissions;
 using System.Windows;
 
-namespace PlayerUI.Statistics
+namespace PlayerUI.VideoAnalytics
 {
 	/// <summary>
 	/// Interaction logic for SendStatistics.xaml

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using PlayerUI.Streaming;
 
-namespace PlayerUI.Statistics
+namespace PlayerUI.VideoAnalytics
 {
 	public class LookListener: IDisposable
     {

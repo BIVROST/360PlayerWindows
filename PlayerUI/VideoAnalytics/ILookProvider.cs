@@ -1,7 +1,7 @@
 ﻿using System;
 using SharpDX;
 
-namespace PlayerUI.Statistics
+namespace PlayerUI.VideoAnalytics
 {
     public interface ILookProvider
     {

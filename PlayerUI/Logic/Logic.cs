@@ -1,6 +1,6 @@
 ﻿using BivrostAnalytics;
 using Fleck;
-using PlayerUI.Statistics;
+using PlayerUI.VideoAnalytics;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -158,12 +158,14 @@ namespace PlayerUI
 
             lookListener = new LookListener();
 			ghostVRConnector = new GhostVRConnector();
+			locallyStoredSessions = new LocallyStoredSessionSink();
 			lookListener.RegisterSessionSink(new GhostVRSessionSink(ghostVRConnector));
-			lookListener.RegisterSessionSink(new FileStorageSessionSink());
+			lookListener.RegisterSessionSink(locallyStoredSessions);
 		}
 
         public LookListener lookListener;
 		public GhostVRConnector ghostVRConnector;
+		public LocallyStoredSessionSink locallyStoredSessions;
 
 		~Logic()
 		{

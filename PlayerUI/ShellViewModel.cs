@@ -1413,25 +1413,40 @@ namespace PlayerUI
 		#endregion
 
 
+
 		#region menu options: analitics
 		public bool AnaliticsMenuActive { get { return LocalSessionsAvailable || GhostVRAvailable; } }
 
 		public void AnalyticsAbout()
 		{
+			MessageBox.Show("This feature is not yet publically available.\r\nPlease contact support for details");
 		}
 
-		public bool LocalSessionsAvailable { get { return Features.Heatmaps; } }
+		public bool LocalSessionsAvailable { get { return Features.LocallyStoredSessions; } }
 		public bool LocalSessionsEnabled
 		{
-			get { return Logic.Instance.settings.LocalHeatmaps; }
-			set { Logic.Instance.settings.LocalHeatmaps = value; }
+			get { return Logic.Instance.settings.LocallyStoredSessions; }
+			set { Logic.Instance.settings.LocallyStoredSessions = value; }
+		}
+		public void LocalSessionsSetDirectory()
+		{
+			VideoAnalytics.LocallyStoredSessionSink lss = Logic.Instance.locallyStoredSessions;
+			using (var dialog = new System.Windows.Forms.FolderBrowserDialog() { Description = "Select directory to store local sessions", SelectedPath = lss.DestinationDirectory })
+			{
+				var result = dialog.ShowDialog();
+				if (result == System.Windows.Forms.DialogResult.OK && !string.IsNullOrWhiteSpace(dialog.SelectedPath))
+				{
+					lss.DestinationDirectory = dialog.SelectedPath;
+				}
+			}
+
 		}
 
-		private Statistics.GhostVRConnector ghostVRConnector {  get { return Logic.Instance.ghostVRConnector; } }
+		private VideoAnalytics.GhostVRConnector ghostVRConnector {  get { return Logic.Instance.ghostVRConnector; } }
 		public bool GhostVRAvailable { get { return Features.GhostVR; } }
-		public bool GhostVRAvailableAndDisconnected { get {	return GhostVRAvailable && ghostVRConnector.status == Statistics.GhostVRConnector.ConnectionStatus.disconnected; } }
-		public bool GhostVRAvailableAndConnected { get { return GhostVRAvailable && ghostVRConnector.status == Statistics.GhostVRConnector.ConnectionStatus.connected; } }
-		public bool GhostVRAvailableAndPending { get { return GhostVRAvailable && ghostVRConnector.status == Statistics.GhostVRConnector.ConnectionStatus.pending; } }
+		public bool GhostVRAvailableAndDisconnected { get {	return GhostVRAvailable && ghostVRConnector.status == VideoAnalytics.GhostVRConnector.ConnectionStatus.disconnected; } }
+		public bool GhostVRAvailableAndConnected { get { return GhostVRAvailable && ghostVRConnector.status == VideoAnalytics.GhostVRConnector.ConnectionStatus.connected; } }
+		public bool GhostVRAvailableAndPending { get { return GhostVRAvailable && ghostVRConnector.status == VideoAnalytics.GhostVRConnector.ConnectionStatus.pending; } }
 
 		public bool GhostVREnabled
 		{
@@ -1445,11 +1460,11 @@ namespace PlayerUI
 			{
 				switch (ghostVRConnector.status)
 				{
-					case Statistics.GhostVRConnector.ConnectionStatus.connected:
+					case VideoAnalytics.GhostVRConnector.ConnectionStatus.connected:
 						return $"GhostVR: connected to team {ghostVRConnector.Name}";
-					case Statistics.GhostVRConnector.ConnectionStatus.pending:
+					case VideoAnalytics.GhostVRConnector.ConnectionStatus.pending:
 						return "GhostVR: waiting for connection...";
-					case Statistics.GhostVRConnector.ConnectionStatus.disconnected:
+					case VideoAnalytics.GhostVRConnector.ConnectionStatus.disconnected:
 						return "GhostVR: not connected";
 					default: throw new ArgumentOutOfRangeException();
 				}

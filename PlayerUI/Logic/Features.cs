@@ -20,7 +20,7 @@ namespace PlayerUI
 		isDebug = 1,
 		isCanary = 2,
 		ghostVR = 4,
-		heatmaps = 8,
+		locallyStoredSessions = 8,
 		requireLicense = 16,
 		remote = 32,
 		commercialUse = 64,
@@ -61,8 +61,8 @@ namespace PlayerUI
 				}
 				if (GhostVR)
 					fe |= FeaturesEnum.ghostVR;
-				if (Heatmaps)
-					fe |= FeaturesEnum.heatmaps;
+				if (LocallyStoredSessions)
+					fe |= FeaturesEnum.locallyStoredSessions;
 				if (RequireLicense)
 					fe |= FeaturesEnum.requireLicense;
 				if (RemoteEnabled)
@@ -101,16 +101,15 @@ namespace PlayerUI
 
 		/// <summary>
 		/// Online heatmap analytics gathering and sending is enabled
-		/// Requires Heatmaps
 		/// </summary>
 		[FeatureGrantedFromLicense("ghostvr")]
 		public static bool GhostVR = false;
 
 		/// <summary>
-		/// Local heatmap analytics gathering is enabled
+		/// Local video analytics session gathering is enabled
 		/// </summary>
-		[FeatureGrantedFromLicense("heatmap")]
-		public static bool Heatmaps = false;
+		[FeatureGrantedFromLicense("locally-stored-sessions")]
+		public static bool LocallyStoredSessions = false;
 
 		/// <summary>
 		/// Is the API for the remote enabled
@@ -131,7 +130,7 @@ namespace PlayerUI
 		internal static void SetBasicFeatures()
 		{
 			GhostVR = false;
-			Heatmaps = false;
+			LocallyStoredSessions = false;
 			RemoteEnabled = false;
 			Commercial = false;
 		}

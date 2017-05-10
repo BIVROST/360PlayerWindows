@@ -406,20 +406,20 @@
     <Compile Include="ServiceResultResolver.xaml.cs">
       <DependentUpon>ServiceResultResolver.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Statistics\FileStorageSessionSink.cs" />
-    <Compile Include="Statistics\GhostVRConnector.cs" />
-    <Compile Include="Statistics\ISessionSink.cs" />
-    <Compile Include="Statistics\LookListener.cs" />
-    <Compile Include="Statistics\ILookProvider.cs" />
+    <Compile Include="VideoAnalytics\LocallyStoredSessions\LocallyStoredSessionsSink.cs" />
+    <Compile Include="VideoAnalytics\GhostVR\GhostVRConnector.cs" />
+    <Compile Include="VideoAnalytics\ISessionSink.cs" />
+    <Compile Include="VideoAnalytics\LookListener.cs" />
+    <Compile Include="VideoAnalytics\ILookProvider.cs" />
     <Compile Include="Oculus\OculusPlayback.cs" />
     <Compile Include="OpenVR\OpenVRExtensions.cs" />
     <Compile Include="OpenVR\OpenVRPlayback.cs" />
     <Compile Include="OpenVR\openvr_api.cs" />
-    <Compile Include="Statistics\GhostVRSessionSink.xaml.cs">
+    <Compile Include="VideoAnalytics\GhostVR\GhostVRSessionSink.xaml.cs">
       <DependentUpon>GhostVRSessionSink.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Statistics\Session.cs" />
-    <Compile Include="Statistics\StateMachine.cs" />
+    <Compile Include="VideoAnalytics\Session.cs" />
+    <Compile Include="VideoAnalytics\StateMachine.cs" />
     <Compile Include="Streaming\FacebookParser.cs" />
     <Compile Include="Streaming\LittlstarParser.cs" />
     <Compile Include="Streaming\LocalFileParser.cs" />
@@ -439,7 +439,7 @@
     <Compile Include="SettingsWindowViewModel.cs" />
     <Compile Include="ShellViewModelRemote.cs" />
     <Compile Include="ShellViewModelUIBehaviours.cs" />
-    <Compile Include="Statistics\LookHistory.cs" />
+    <Compile Include="VideoAnalytics\LookHistory.cs" />
     <Compile Include="Streaming\PornhubParser.cs" />
     <Compile Include="Streaming\VrideoParser.cs" />
     <Compile Include="TestWindowView.xaml.cs">
@@ -573,7 +573,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Statistics\GhostVRSessionSink.xaml">
+    <Page Include="VideoAnalytics\GhostVR\GhostVRSessionSink.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -955,9 +955,7 @@
       <Name>BivrostAnalytics</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Statistics\NewFolder1\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="..\Logger\Logger.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
