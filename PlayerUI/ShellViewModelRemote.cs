@@ -19,8 +19,8 @@ namespace PlayerUI
             {
 				remoteControl = ApiServer.InitNancy(apiServer =>
                     {
-						Log("got unity init, device_id=" + ApiServer.device_id + " movies=[\n" + string.Join(",\n", ApiServer.movies) + "]", ConsoleColor.DarkGreen);
-						Log("init complete", ConsoleColor.DarkGreen);
+						Log("got unity init, device_id=" + ApiServer.device_id + " movies=[\n" + string.Join(",\n", ApiServer.movies) + "]");
+						Log("init complete");
                     }
                 );
 
@@ -28,11 +28,11 @@ namespace PlayerUI
 
 				ApiServer.OnBackPressed += () =>
                 {
-					Log("[remote] back pressed", ConsoleColor.DarkGreen);
+					Log("[remote] back pressed");
                 };
 
 				ApiServer.OnStateChange += (state) => {
-					Log("[remote] state changed: " + state, ConsoleColor.DarkGreen);
+					Log("[remote] state changed: " + state);
 
                     switch (state)
                     {
@@ -77,7 +77,7 @@ namespace PlayerUI
 
 				ApiServer.OnConfirmPlay += (path) =>
                 {
-					Log("[remote] path = " + path, ConsoleColor.Green);
+					Log("[remote] path = " + path);
                     string remoteFile = path.Split('/').Last();
                     if (File.Exists(Logic.Instance.settings.RemoteControlMovieDirectory + Path.DirectorySeparatorChar + remoteFile))
                     {
@@ -119,7 +119,7 @@ namespace PlayerUI
 
 
 				ApiServer.OnInfo += (msg) => {
-					Log("[remote] msg = " + msg, ConsoleColor.DarkGreen);
+					Log("[remote] msg = " + msg);
                 };
 
 				#endregion
@@ -129,7 +129,7 @@ namespace PlayerUI
 
 				ApiServer.CommandLoadHandler = (movie, autoplay) =>
                 {
-					Log("[remote] path = " + movie, ConsoleColor.Green);
+					Log("[remote] path = " + movie);
                     string remoteFile = movie.Contains('/') ? movie.Split('/').Last() : movie;
                     if (File.Exists(Logic.Instance.settings.RemoteControlMovieDirectory + Path.DirectorySeparatorChar + remoteFile))
                     {

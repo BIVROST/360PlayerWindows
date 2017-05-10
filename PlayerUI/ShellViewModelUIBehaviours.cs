@@ -258,7 +258,7 @@ namespace PlayerUI
 
 		public void OpenLicenseManagement()
 		{
-			Licensing.LicenseManagement.OpenLicenseManagement(LicenseUpdated);
+			Licensing.LicenseManagement.OpenLicenseManagement(null);
 		}
 
         public void DisableTabPress(object sender, object e)

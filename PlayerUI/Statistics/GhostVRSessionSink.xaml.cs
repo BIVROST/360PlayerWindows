@@ -54,14 +54,7 @@ namespace PlayerUI.Statistics
 		{
 			Execute.OnUIThread(() => 
 			{
-				browser.LoadCompleted += (s, e) =>
-				{
-					uiMode = UIMode.form;
-				};
-				browser.Navigated += (s, e) =>
-				{
-					;
-				};
+				browser.LoadCompleted += (s, e) => uiMode = UIMode.form;
 				browser.Navigate(followUpUrl);
 				ScriptingHelper helper = new ScriptingHelper();
 				//browser.ContextMenu = false;

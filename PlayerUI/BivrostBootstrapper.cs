@@ -36,6 +36,8 @@ namespace PlayerUI
 		{
 			//AddPathPatch();
 
+			Logic.Prepare();
+
 			System.Windows.Forms.Application.EnableVisualStyles();
 
 			if (!System.Diagnostics.Debugger.IsAttached && ApplicationDeployment.IsNetworkDeployed)

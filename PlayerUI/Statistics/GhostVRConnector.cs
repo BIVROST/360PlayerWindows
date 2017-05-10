@@ -317,13 +317,14 @@ namespace PlayerUI.Statistics
 			{
 				while (true)
 				{
-					if (sm.CurrentlyExecuting)
-						continue;
-					lock (sm.CurrentlyExecutingSyncRoot)
-					{
-						sm.Update((float)sw.Elapsed.TotalSeconds);
-						sw.Restart();
-					}
+					if (!sm.CurrentlyExecuting)
+						lock (sm.CurrentlyExecutingSyncRoot)
+						{
+							if (sm.CurrentlyExecuting)
+								continue;
+							sm.Update((float)sw.Elapsed.TotalSeconds);
+							sw.Restart();
+						}
 					Thread.Sleep(1000);
 				}
 			}) { Name = "GhostVR SM periodic updater", IsBackground = true };

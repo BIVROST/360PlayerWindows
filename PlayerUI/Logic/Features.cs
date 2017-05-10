@@ -36,13 +36,15 @@ namespace PlayerUI
 		public FeatureGrantedFromLicenseAttribute(string name) { this.name = name.Trim().ToLowerInvariant(); }
 	}
 
+
+	/// <summary>
+	/// List of features that are granted to this build.
+	/// The list of features may change at runtime (for example when a license key is changed),
+	/// this will trigger the ListUpdated event.
+	/// </summary>
 	public static class Features
 	{
-
-
-
-
-		public static FeaturesEnum AsEnum
+		internal static FeaturesEnum AsEnum
 		{
 			get
 			{
@@ -69,6 +71,9 @@ namespace PlayerUI
 				return fe;
 			}
 		}
+
+
+		public static event Action ListUpdated;
 
 
 		public static bool IsDebug =
@@ -164,6 +169,11 @@ namespace PlayerUI
 			{
 				Logger.Error(kvp.Value != null ? $"Unknown feature granted: {kvp.Key} = {kvp.Value}" : $"Unknown feature granted: {kvp.Key} (no value)");
 			}
+		}
+
+		internal static void TriggerListUpdated()
+		{
+			ListUpdated?.Invoke();
 		}
 	}
 

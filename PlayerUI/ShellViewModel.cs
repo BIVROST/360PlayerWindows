@@ -401,7 +401,8 @@ namespace PlayerUI
 				shellView._OpenFile.Visibility = Visibility.Collapsed;
 			}
 
-			Licensing.LicenseManagement.LicenseCheck(LicenseUpdated);
+			Features.ListUpdated += LicenseUpdated;
+			Licensing.LicenseManagement.LicenseCheck(null);
 		}
 
 
@@ -414,12 +415,9 @@ namespace PlayerUI
 
 
 
-		private void Log(string message, ConsoleColor color)
+		private void Log(string message)
 		{
-			var oldColor = Console.ForegroundColor;
-			Console.ForegroundColor = color;
-			Console.WriteLine(message);
-			Console.ForegroundColor = oldColor;
+			Logger.Info($"[Remote] message");
 		}
 
 
@@ -1418,7 +1416,16 @@ namespace PlayerUI
 		#region menu options: analitics
 		public bool AnaliticsMenuActive { get { return LocalSessionsAvailable || GhostVRAvailable; } }
 
+		public void AnalyticsAbout()
+		{
+		}
+
 		public bool LocalSessionsAvailable { get { return Features.Heatmaps; } }
+		public bool LocalSessionsEnabled
+		{
+			get { return Logic.Instance.settings.LocalHeatmaps; }
+			set { Logic.Instance.settings.LocalHeatmaps = value; }
+		}
 
 		private Statistics.GhostVRConnector ghostVRConnector {  get { return Logic.Instance.ghostVRConnector; } }
 		public bool GhostVRAvailable { get { return Features.GhostVR; } }
@@ -1453,7 +1460,7 @@ namespace PlayerUI
 		public void GhostVRCancel() { ghostVRConnector.Cancel(); }
 		public void GhostVRDisconnect() { ghostVRConnector.Disconnect(); }
 
-		public void GhostVRBindStatusChangeToProperties()
+		void GhostVRBindStatusChangeToProperties()
 		{
 			ghostVRConnector.StatusChanged += (status) =>
 			{

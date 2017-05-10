@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.IO;
 using PlayerUI.ConfigUI;
+using Bivrost.Log;
 
 namespace PlayerUI
 {
@@ -34,6 +35,17 @@ namespace PlayerUI
 			}
 			SettingsFile = configFile;
 			Load();
+
+			if (InstallId == Guid.Empty)
+			{
+				InstallId = Guid.NewGuid();
+				Save();
+			}
+			else
+			{
+				Logger.Info("InstallId == " + InstallId);
+			}
+
 		}
 
 
@@ -86,15 +98,15 @@ namespace PlayerUI
 
 		[JsonIgnore]
 		[SettingsAdvancedProperty("Reset Analytics ID", ConfigItemType.Action, Caption = "Reset ID")]
-		public System.Action ResetInstallId { get; set; } = () => { };
+		public System.Action ResetInstallId { get; set; }
 
 		[JsonIgnore]
 		[SettingsAdvancedProperty("Reset player configuration", ConfigItemType.Action, Caption = "Reset")]
-		public System.Action ResetConfiguration { get; set; } = () => { };
+		public System.Action ResetConfiguration { get; set; }
 
 		[JsonIgnore]
 		[SettingsProperty("Install browsers plugins", ConfigItemType.Action, Caption = "Install plugins")]
-		public System.Action InstallPlugins { get; set; } = () => { };
+		public System.Action InstallPlugins { get; set; }
 
 		[SettingsAdvancedProperty("User headset tracking in window", ConfigItemType.Bool)]
 		public bool UserHeadsetTracking { get; set; } = false;
