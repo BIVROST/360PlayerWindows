@@ -8,9 +8,9 @@
 		Icon="pack://application:,,,/Resources/icon-ghostvr.ico"
         Title="Send session to GhostVR" 
 		SizeToContent="WidthAndHeight" WindowStartupLocation="CenterOwner"
-		MinWidth="550" MinHeight="300"
+		ResizeMode="NoResize"
 		>
-    <Grid Width="800" Height="500" MinWidth="400" MinHeight="300">
+    <Grid Width="800" Height="500">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="auto" />

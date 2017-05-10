@@ -112,6 +112,7 @@ app.get("/mock/follow_up/:video_id", function(req,res) {
 		+'\n<a href="http://errrrrrrrrrrrrrrrrr.com">navigation error nxdomain</a>'
 		+'\n<a href="/errrr">navigation error 404</a>'
 		+'\n<button onclick="(function(){ for(var i=1000; i--; ) { var p=document.createElement(\'span\'); p.appendChild(document.createTextNode(\'All work and no play makes Jack a very dull boy. \')); document.body.appendChild(p);} })()">wall of text</button>'
+		+'\n<button onclick="(function() { alert( ( window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth ) + \' x \' + ( window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight ) ); })()">size alert</button>'
 	);
 });
 

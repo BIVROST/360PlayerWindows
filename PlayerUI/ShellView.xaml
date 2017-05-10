@@ -197,8 +197,8 @@
 					<MenuItem Visibility="{Binding GhostVRAvailableAndPending, Mode=OneWay, Converter={StaticResource BoolToVis}, FallbackValue=Hidden}" Header="Cancel connecting" cal:Message.Attach="[Event Click] = [Action GhostVRCancel]"/>
 
 					<Separator Visibility="{Binding LocalSessionsAvailable, Mode=OneWay, Converter={StaticResource BoolToVis}, FallbackValue=Hidden}" />
-					<MenuItem Visibility="{Binding LocalSessionsAvailable, Mode=OneWay, Converter={StaticResource BoolToVis}, FallbackValue=Hidden}" Header="Locally stored sessions" IsEnabled="False" FontWeight="Bold" IsChecked="{Binding LocalSessionsEnabled}"/>
-					<MenuItem Visibility="{Binding LocalSessionsAvailable, Mode=OneWay, Converter={StaticResource BoolToVis}, FallbackValue=Hidden}" Header="Local store enabled" IsCheckable="True" IsChecked="False" />
+					<MenuItem Visibility="{Binding LocalSessionsAvailable, Mode=OneWay, Converter={StaticResource BoolToVis}, FallbackValue=Hidden}" Header="Locally stored sessions" IsEnabled="False" FontWeight="Bold" />
+					<MenuItem Visibility="{Binding LocalSessionsAvailable, Mode=OneWay, Converter={StaticResource BoolToVis}, FallbackValue=Hidden}" Header="Local store enabled" IsCheckable="True" IsChecked="{Binding LocalSessionsEnabled}" />
 					<MenuItem Visibility="{Binding LocalSessionsAvailable, Mode=OneWay, Converter={StaticResource BoolToVis}, FallbackValue=Hidden}" Header="Set output directory" cal:Message.Attach="[Event Click] = [Action LocalSessionsSetDirectory]" />
 				</MenuItem>
                 <MenuItem Header="Options">
