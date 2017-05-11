@@ -57,7 +57,7 @@
 				<Paragraph>
 					<Button Style="{StaticResource HyperlinkButton}" Focusable="False" Cursor="Hand" cal:Message.Attach="[Event Click] = [Action ShowLibs]">
 						<TextBlock Margin="0,0,0,-3">
-								Bivrost 360Player is using 3rd party libraries and components.
+								BIVROST 360Player is using 3rd party libraries and components.
 						</TextBlock>
 					</Button>
 				</Paragraph>

@@ -10,6 +10,8 @@ namespace PlayerUI.Tools
 	{
 		public static float LerpInPlace(this float value1, float value2, float amount)
 		{
+            if (amount < 0) amount = 0;
+            if (amount > 1) amount = 1;
 			return value1 + (value2 - value1) * amount;
 		}
 

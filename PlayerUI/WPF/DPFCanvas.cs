@@ -46,9 +46,7 @@
         public CancellationToken token;
         public CancellationTokenSource cts;
         public object renderLock = new object();
-        
 
-        public ConcurrentDictionary<System.Windows.Input.Key, bool> KeyState { get; set; } = new ConcurrentDictionary<System.Windows.Input.Key, bool>();
 
         public DPFCanvas()
         {
@@ -274,13 +272,7 @@
                     return;
 
                 //this.Render(this.RenderTimer.Elapsed);
-
-                foreach (KeyValuePair<System.Windows.Input.Key, bool> kvp in KeyState)
-                {
-                    KeyState[kvp.Key] = System.Windows.Input.Keyboard.IsKeyDown(kvp.Key);
-                    if (KeyState[kvp.Key])
-                        ;
-                }
+                
 
                 if (Monitor.TryEnter(renderLock, 16))
                 {

@@ -13,7 +13,7 @@ namespace PlayerUI
 	{
 		public AboutViewModel()
 		{
-			DisplayName = "About Bivrost Player";
+			DisplayName = "About BIVROST 360Player";
 			try
 			{
 				if(Tools.PublishInfo.ApplicationIdentity != null)

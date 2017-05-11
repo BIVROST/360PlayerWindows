@@ -1,0 +1,7 @@
+The Siapp.cs File is intellectual property of 3Dconnexions. It was provided to me (Arne Lüdtke) under the following waiver:
+
+1)	This waiver is applicable only to the file “Siapp.cs” provided to you on May 17, 2016.
+2)	You keep the copyright notices in the file referred to in condition 1) above.
+3)	You make a reference in your product’s materials to having obtained authorisation from 3Dconnexion to allow publicly distribution of the file referred to in condition 1) above.
+
+The Licence of 3Dconnexion is attached in LicenseAgreement3DxSDK.txt

@@ -52,8 +52,9 @@ namespace PlayerUI
 			} else
 			{
 				{
-					string path = (new System.Uri(Assembly.GetExecutingAssembly().CodeBase)).AbsolutePath;
-					Logic.LocalDataDirectory = Path.GetDirectoryName(path) + "\\";
+                    string path = (new System.Uri(Assembly.GetExecutingAssembly().CodeBase, true)).AbsolutePath;
+                    //string path = Assembly.GetExecutingAssembly().CodeBase;
+                    Logic.LocalDataDirectory = Path.GetDirectoryName(path) + Path.DirectorySeparatorChar;
 				}
 
 			}

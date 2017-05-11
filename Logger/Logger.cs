@@ -119,10 +119,9 @@ namespace Bivrost.Log
 #else
 				version = "v" + Assembly.GetEntryAssembly().GetName().Version.ToString();
 #endif
-
 			LogFile = logDirectory + string.Format("{2}-{0}-{1}.txt", version, now, logPrefix);
-
-			Logger.Info("Log file: " + LogFile);
+                        
+            Logger.Info("Log file: " + LogFile);
             fp = new FileStream(LogFile, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
             encoding = new System.Text.UTF8Encoding(false);
         }

@@ -112,7 +112,7 @@ namespace PlayerUI
 		public string PlayerTitle {
 			get
 			{
-				string title = "Bivrost 360Player ™ " + (Features.IsCanary ? "CANARY" : "BETA");
+				string title = "BIVROST 360Player ™ " + (Features.IsCanary ? "CANARY" : "BETA");
 				if (IsPlaying)
 					title += $" - now playing {SelectedFileNameLabel}";
 				if (!Features.Commercial)
@@ -127,7 +127,6 @@ namespace PlayerUI
 
 		public static string FileFromArgs = "";
 
-		private Controller xpad;
 		private static TimeoutBool urlLoadLock = false;
 
 		public NotificationCenterViewModel NotificationCenter { get; set; }
@@ -324,7 +323,10 @@ namespace PlayerUI
 				BringToFront(data);
 				handled = true;
 			}
-			return IntPtr.Zero;
+
+            InputDevices.NavigatorInputDevice.WndProc(msg, wParam, lParam); 
+
+            return IntPtr.Zero;
 		}
 
 		public void BringToFront(string wmText = "")
@@ -344,7 +346,8 @@ namespace PlayerUI
 			
 			base.OnViewLoaded(view);
 
-			HwndSource source = HwndSource.FromHwnd(new WindowInteropHelper(playerWindow).Handle);
+            IntPtr windowHandle = new WindowInteropHelper(playerWindow).Handle;
+            HwndSource source = HwndSource.FromHwnd(windowHandle);
 			source.AddHook(new HwndSourceHook(WndProc));
 
 			this.DXCanvas.StopRendering();
@@ -353,8 +356,6 @@ namespace PlayerUI
 			
 			UpdateFileRecentsMenuState();
 			ShowStartupUI();
-
-			//xpad = new Controller(SharpDX.XInput.UserIndex.One);
 
 			if (!string.IsNullOrWhiteSpace(FileFromArgs))
 			{
@@ -392,6 +393,8 @@ namespace PlayerUI
 			}
 
 			Licensing.LicenseManagement.LicenseCheck(LicenseUpdated);
+
+            InputDevices.NavigatorInputDevice.TryInit(windowHandle);
 		}
 
 
@@ -459,7 +462,7 @@ namespace PlayerUI
 			uiVisibilityBackgrundChecker.WorkerSupportsCancellation = true;
 			uiVisibilityBackgrundChecker.DoWork += (sender, parameters) =>
 			{
-				bool xpadRestart = false;
+				//bool xpadRestart = false;
 
 				while (!ended || uiVisibilityBackgrundChecker.CancellationPending)
 				{
@@ -482,26 +485,26 @@ namespace PlayerUI
 							Execute.OnUIThread(() => Mouse.OverrideCursor = Cursors.None);
 					}
 
-					if (xpad != null)
-						if (xpad.IsConnected)
-						{
-							if (this.DXCanvas.Scene == null)
-							{
-								if (IsFileSelected)
-								{
-									if (xpad.GetState().Gamepad.Buttons == GamepadButtonFlags.Y && !xpadRestart)
-									{
-										xpadRestart = true;
-										if (!_mediaDecoder.IsPlaying)
-											PlayPause();
-										else
-											Rewind();
-									}
-									else xpadRestart = false;
-								}
-								else xpadRestart = false;
-							}
-						}
+					//if (xpad != null)
+					//	if (xpad.IsConnected)
+					//	{
+					//		if (this.DXCanvas.Scene == null)
+					//		{
+					//			if (IsFileSelected)
+					//			{
+					//				if (xpad.GetState().Gamepad.Buttons == GamepadButtonFlags.Y && !xpadRestart)
+					//				{
+					//					xpadRestart = true;
+					//					if (!_mediaDecoder.IsPlaying)
+					//						PlayPause();
+					//					else
+					//						Rewind();
+					//				}
+					//				else xpadRestart = false;
+					//			}
+					//			else xpadRestart = false;
+					//		}
+					//	}
 
 					Thread.Sleep(100);
 				}
@@ -641,7 +644,7 @@ namespace PlayerUI
 					this.DXCanvas.Visibility = Visibility.Visible;
 				});
 
-				var scene = new Scene(_mediaDecoder.TextureL, _mediaDecoder.Projection) { xpad = this.xpad };
+				var scene = new Scene(_mediaDecoder.TextureL, _mediaDecoder.Projection);
 				this.DXCanvas.Scene = scene;
                 this.DXCanvas.StartRendering();
 

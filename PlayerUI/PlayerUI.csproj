@@ -31,14 +31,14 @@
     <UpdatePeriodically>true</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <InstallUrl>http://download.bivrost360.com/player-desktop/canary/</InstallUrl>
+    <InstallUrl>http://download.bivrost360.com/player-desktop/</InstallUrl>
     <TargetCulture>en</TargetCulture>
     <ProductName>Bivrost 360Player</ProductName>
     <PublisherName>BIVROST Sp z o.o.</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <TrustUrlParameters>true</TrustUrlParameters>
-    <ApplicationRevision>193</ApplicationRevision>
+    <ApplicationRevision>196</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>true</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
@@ -128,6 +128,8 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <PublishUrl></PublishUrl>
+    <InstallUrl>http://download.bivrost360.com/player-desktop/canary/</InstallUrl>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release-Canary|x64'">
     <OutputPath>bin\x64\Release-Canary\</OutputPath>
@@ -147,6 +149,8 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <PublishUrl></PublishUrl>
+    <InstallUrl>http://download.bivrost360.com/player-desktop/</InstallUrl>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release-Stable|x64'">
     <OutputPath>bin\x64\Release-Stable\</OutputPath>
@@ -367,6 +371,10 @@
       <DependentUpon>HeadsetMenuView.xaml</DependentUpon>
     </Compile>
     <Compile Include="HeadsetMenuViewModel.cs" />
+    <Compile Include="InputDevices\GamepadInputDevice.cs" />
+    <Compile Include="InputDevices\InputDevice.cs" />
+    <Compile Include="InputDevices\KeyboardInputDevice.cs" />
+    <Compile Include="InputDevices\NavigatorInputDevice.cs" />
     <Compile Include="Licensing\LicenseManagement.cs" />
     <Compile Include="Licensing\LicenseServerUnreachableView.xaml.cs">
       <DependentUpon>LicenseServerUnreachableView.xaml</DependentUpon>
@@ -944,6 +952,10 @@
     <ProjectReference Include="..\..\Managed-OSVR\ClientKit\ClientKit.csproj">
       <Project>{9ab9f53d-1f42-4045-8dfc-9d389d44bb35}</Project>
       <Name>ClientKit</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\3Dconnexion-driver-master\3DconnexionDriver.csproj">
+      <Project>{9b78c331-7940-45c7-aaf9-e98270462bd4}</Project>
+      <Name>3DconnexionDriver</Name>
     </ProjectReference>
     <ProjectReference Include="..\BivrostAnalytics\BivrostAnalytics.csproj">
       <Project>{30c06ae1-7390-488d-bd15-8ee43ec76308}</Project>

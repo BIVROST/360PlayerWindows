@@ -403,7 +403,7 @@ namespace PlayerUI
 					_mediaEngineEx.GetVideoAspectRatio(out cx, out cy);
 					var s3d = _mediaEngineEx.IsStereo3D;
 					var sns = _mediaEngineEx.NumberOfStreams;
-
+					
 
 					/// TODO: co to tu robi? Czemu _stereoVideo jest zależne od aspectu w taki sposób?
 					float videoAspect = ((float)w) / ((float)h);
@@ -524,6 +524,7 @@ namespace PlayerUI
 									Console.WriteLine("[!!!] Render " + formatCounter++);
 								long lastTs = ts;
 							bool result = _mediaEngine.OnVideoStreamTick(out ts);
+								if (!result || ts <= 0) Thread.Sleep(1);
 							if(ts > 0)
 							if (result && ts != lastTs)
 							{
@@ -566,7 +567,7 @@ namespace PlayerUI
 											Console.WriteLine("Playback exception " + exc.Message);
 										}
 							}
-						}
+						} else Thread.Sleep(1);
 					}
 				}
 
