@@ -2,10 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
 
 namespace Bivrost.Log
@@ -13,132 +10,9 @@ namespace Bivrost.Log
 
 	public interface LogListener
 	{
-		void Write(string time, LogType type, string msg, string path);
+		void Write(Logger.LogElement entry);
 	}
 
-	#region writers
-	/// <summary>
-	/// Windows Event Log Writer.
-	/// </summary>
-	public class WindowsEventLogListener : LogListener
-	{
-
-		string sSource;
-
-		static EventLogEntryType ToEventLogEntryType(LogType t)
-		{
-			switch (t)
-			{
-				default:
-				case LogType.info:
-				case LogType.notification:
-					return EventLogEntryType.Information;
-				case LogType.error:
-					return EventLogEntryType.Warning;
-				case LogType.fatal:
-					return EventLogEntryType.Error;
-			}
-		}
-
-
-		/// <summary>
-		/// Logger with custom application name. This requires admin rights.
-		/// </summary>
-		/// <param name="appname"></param>
-		/// <param name="logname"></param>
-		public WindowsEventLogListener(string appname, string logname)
-		{
-			if (!EventLog.SourceExists(sSource))
-				EventLog.CreateEventSource(sSource, logname);
-			sSource = appname;
-		}
-
-
-		/// <summary>
-		/// Logger with generic "Application" application name.
-		/// </summary>
-		public WindowsEventLogListener()
-		{
-			sSource = "Application";
-		}
-
-
-		public void Write(string time, LogType type, string msg, string path)
-		{
-			EventLog.WriteEntry(sSource, type + ": " + msg, ToEventLogEntryType(type));
-		}
-
-	}
-
-
-    /// <summary>
-    /// Writing to the console
-    /// </summary>
-    public class TraceLogListener : LogListener
-    {
-        public void Write(string time, LogType type, string msg, string path)
-        {
-            Trace.WriteLine(time + " at " + path, type.ToString());
-            Trace.Indent();
-            Trace.WriteLine(msg);
-            Trace.Unindent();
-            Trace.WriteLine("");
-            Trace.Flush();
-        }
-    }
-
-    /// <summary>
-    /// Writing to the console
-    /// </summary>
-    public class TraceLogMsgOnlyListener : LogListener
-    {
-        public void Write(string time, LogType type, string msg, string path)
-        {
-            Trace.WriteLine(msg);
-        }
-    }
-
-
-    /// <summary>
-    /// Writing to a text file
-    /// </summary>
-    public class TextFileLogListener : LogListener
-	{
-        private FileStream fp;
-        private UTF8Encoding encoding;
-
-        public string LogFile { get; protected set; }
-
-
-		public TextFileLogListener(string logDirectory, string logPrefix = "log", string version = null)
-		{
-			string now = DateTime.Now.ToString("yyyy-MM-ddTHHmmss");
-			if(version == null)
-#if DEBUG
-				version = "DEBUG";
-#else
-				version = "v" + Assembly.GetEntryAssembly().GetName().Version.ToString();
-#endif
-			LogFile = logDirectory + string.Format("{2}-{0}-{1}.txt", version, now, logPrefix);
-                        
-            Logger.Info("Log file: " + LogFile);
-            fp = new FileStream(LogFile, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
-            encoding = new System.Text.UTF8Encoding(false);
-        }
-
-
-		public void Write(string time, LogType type, string msg, string path)
-		{
-            byte[] buf = encoding.GetBytes($"[{type}] {time} at {path}\r\n\r\n{msg.Trim().Replace("\r\n", "\r\n\t")}\r\n");
-            lock (LogFile)
-            {
-                fp.Write(buf, 0, buf.Length);
-                fp.Flush();
-            }
-        }
-    }
-
-	#endregion
 
 	public enum LogType
 	{
@@ -173,8 +47,9 @@ namespace Bivrost.Log
 		}
 
 
-		struct LogElement { public string now; public LogType type; public string msg; public string path; }
+		public struct LogElement { public string time; public LogType type; public string msg; public string path; }
         static BlockingCollection<LogElement> logElementQueue = new BlockingCollection<LogElement>();
+		static List<LogElement> history = new List<LogElement>();
 
 
         static void WriteLogEntry(LogType type, string msg, string path)
@@ -185,7 +60,14 @@ namespace Bivrost.Log
             if(msg != null)
 			    msg = msg.Replace("\r\n", "\n").Replace("\n", "\r\n");
 
-			logElementQueue.Add(new LogElement() { now = now, type = type, msg = msg, path = path });
+			var logElement = new LogElement() { time = now, type = type, msg = msg, path = path };
+			logElementQueue.Add(logElement);
+			lock (history)
+			{
+				history.Add(logElement);
+				while (history.Count > 50)
+					history.RemoveAt(0);
+			}
 		}
 
 
@@ -196,32 +78,35 @@ namespace Bivrost.Log
                 LogElement e = logElementQueue.Take();				
                 lock(listeners)
 				    foreach (var l in listeners)
-					    l.Write(e.now, e.type, e.msg, e.path);
+					    l.Write(e);
 			}
 		}
 
 
-		public static HashSet<LogListener> listeners = new HashSet<LogListener>();
+		internal static HashSet<LogListener> listeners = new HashSet<LogListener>();
 
 
-		static Thread thread;
+		private static Thread thread;
 
 
 		public static void RegisterListener(LogListener lw)
 		{
 			lock(listeners)
+				listeners.Add(lw);
+
+			if (thread == null)
 			{
-				if (thread == null)
+				thread = new Thread(new ThreadStart(WriteLogThread))
 				{
-					thread = new Thread(new ThreadStart(WriteLogThread))
-					{
-						IsBackground = true,
-						Name = "log listener thread"
-					};
-					thread.Start();
-				}
+					IsBackground = true,
+					Name = "log listener thread"
+				};
+				thread.Start();
 			}
-			listeners.Add(lw);
+
+			foreach (var entry in history)
+				lw.Write(entry);
+
 			Info("Registered log writer: " + lw);
 		}
 
@@ -237,7 +122,7 @@ namespace Bivrost.Log
         public static void UnregisterListener(Predicate<LogListener> predicate)
         {
             lock (listeners)
-                Info("Unregistered " + listeners.RemoveWhere(predicate) + " log writes");
+                Info("Unregistered " + listeners.RemoveWhere(predicate) + " log writer");
         }
 
 
@@ -349,9 +234,10 @@ namespace Bivrost.Log
 		}
 
 
-		static Logger()
+		public static void Unpublish(string key)
 		{
-			RegisterListener(new TraceLogListener());
+			object _unused;
+			published.TryRemove(key, out _unused);
 		}
 
 	}

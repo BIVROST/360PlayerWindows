@@ -85,8 +85,15 @@ namespace PlayerUI
 			{
 				this._selectedFileName = value;
 				NotifyOfPropertyChange(() => SelectedFileName);
+                if (value == null)
+                    SelectedServiceResult = null;
 			}
 		}
+        public Streaming.ServiceResult SelectedServiceResult
+        {
+            get; protected set;
+        }
+
 		public bool IsFileSelected { get; set; }
 
 		public string SelectedFileTitle { get; set; } = "";
@@ -232,6 +239,7 @@ namespace PlayerUI
 				{
 					NotificationCenter.PushNotification(MediaDecoderHelper.GetNotification(error));
 					SelectedFileName = null;
+                    SelectedServiceResult = null;
 					ShowStartupUI();
 				});
 				SendEvent("playbackError", error);
@@ -302,6 +310,8 @@ namespace PlayerUI
 						)
 					);
 			});
+
+			GhostVRBindStatusChangeToProperties();
 
 			Logic.Instance.ValidateSettings();
 		}
@@ -392,9 +402,10 @@ namespace PlayerUI
 				shellView._OpenFile.Visibility = Visibility.Collapsed;
 			}
 
-			Licensing.LicenseManagement.LicenseCheck(LicenseUpdated);
+			Features.ListUpdated += LicenseUpdated;
+			Licensing.LicenseManagement.LicenseCheck(null);
 
-            InputDevices.NavigatorInputDevice.TryInit(windowHandle);
+			InputDevices.NavigatorInputDevice.TryInit(windowHandle);
 		}
 
 
@@ -407,12 +418,9 @@ namespace PlayerUI
 
 
 
-		private void Log(string message, ConsoleColor color)
+		private void Log(string message)
 		{
-			var oldColor = Console.ForegroundColor;
-			Console.ForegroundColor = color;
-			Console.WriteLine(message);
-			Console.ForegroundColor = oldColor;
+			Logger.Info($"[Remote] message");
 		}
 
 
@@ -807,6 +815,8 @@ namespace PlayerUI
 				ResetPlayback();
 
 				SelectedFileName = result.BestQualityVideoStream(Streaming.VideoContainer.mp4).url;
+                SelectedServiceResult = result;
+
 				IsFileSelected = true;
 				_mediaDecoder.Projection = result.projection;
 				_mediaDecoder.StereoMode = result.stereoscopy;
@@ -934,9 +944,9 @@ namespace PlayerUI
 
 		public void OpenLogViewer()
 		{
-			if (!Bivrost.Log.LogWindow.IsDisplaying)
+			if (!Bivrost.Log.LogWindowLogListener.IsDisplaying)
 			{
-				Window lv = new Bivrost.Log.LogWindow();
+				Window lv = new Bivrost.Log.LogWindowLogListener();
 				lv.Show();
 			}
 			else
@@ -1404,7 +1414,84 @@ namespace PlayerUI
 			set { if (value) SetProjection(MediaDecoder.ProjectionMode.Dome); }
 		}
 		#endregion
-	
+
+
+
+		#region menu options: analitics
+		public bool AnaliticsMenuActive { get { return LocalSessionsAvailable || GhostVRAvailable; } }
+
+		public void AnalyticsAbout()
+		{
+			MessageBox.Show("This feature is not yet publically available.\r\nPlease contact support for details");
+		}
+
+		public bool LocalSessionsAvailable { get { return Features.LocallyStoredSessions; } }
+		public bool LocalSessionsEnabled
+		{
+			get { return Logic.Instance.settings.LocallyStoredSessions; }
+			set { Logic.Instance.settings.LocallyStoredSessions = value; }
+		}
+		public void LocalSessionsSetDirectory()
+		{
+			VideoAnalytics.LocallyStoredSessionSink lss = Logic.Instance.locallyStoredSessions;
+			using (var dialog = new System.Windows.Forms.FolderBrowserDialog() { Description = "Select directory to store local sessions", SelectedPath = lss.DestinationDirectory })
+			{
+				var result = dialog.ShowDialog();
+				if (result == System.Windows.Forms.DialogResult.OK && !string.IsNullOrWhiteSpace(dialog.SelectedPath))
+				{
+					lss.DestinationDirectory = dialog.SelectedPath;
+				}
+			}
+
+		}
+
+		private VideoAnalytics.GhostVRConnector ghostVRConnector {  get { return Logic.Instance.ghostVRConnector; } }
+		public bool GhostVRAvailable { get { return Features.GhostVR; } }
+		public bool GhostVRAvailableAndDisconnected { get {	return GhostVRAvailable && ghostVRConnector.status == VideoAnalytics.GhostVRConnector.ConnectionStatus.disconnected; } }
+		public bool GhostVRAvailableAndConnected { get { return GhostVRAvailable && ghostVRConnector.status == VideoAnalytics.GhostVRConnector.ConnectionStatus.connected; } }
+		public bool GhostVRAvailableAndPending { get { return GhostVRAvailable && ghostVRConnector.status == VideoAnalytics.GhostVRConnector.ConnectionStatus.pending; } }
+
+		public bool GhostVREnabled
+		{
+			get { return Logic.Instance.settings.GhostVREnabled; }
+			set { Logic.Instance.settings.GhostVREnabled = value;}
+		}
+
+		public string GhostVRLabel
+		{
+			get
+			{
+				switch (ghostVRConnector.status)
+				{
+					case VideoAnalytics.GhostVRConnector.ConnectionStatus.connected:
+						return $"GhostVR: connected to team {ghostVRConnector.Name}";
+					case VideoAnalytics.GhostVRConnector.ConnectionStatus.pending:
+						return "GhostVR: waiting for connection...";
+					case VideoAnalytics.GhostVRConnector.ConnectionStatus.disconnected:
+						return "GhostVR: not connected";
+					default: throw new ArgumentOutOfRangeException();
+				}
+			}
+		}
+
+		public void GhostVRConnect() { ghostVRConnector.Connect(); }
+		public void GhostVRCancel() { ghostVRConnector.Cancel(); }
+		public void GhostVRDisconnect() { ghostVRConnector.Disconnect(); }
+
+		void GhostVRBindStatusChangeToProperties()
+		{
+			ghostVRConnector.StatusChanged += (status) =>
+			{
+				NotifyOfPropertyChange(() => GhostVRAvailable);
+				NotifyOfPropertyChange(() => GhostVRAvailableAndConnected);
+				NotifyOfPropertyChange(() => GhostVRAvailableAndDisconnected);
+				NotifyOfPropertyChange(() => GhostVRAvailableAndPending);
+				NotifyOfPropertyChange(() => GhostVREnabled);
+				NotifyOfPropertyChange(() => GhostVRLabel);
+			};
+		}
+		#endregion
+
 	}
 
 	#region recents menu helpers

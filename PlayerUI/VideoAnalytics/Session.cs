@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 
-namespace PlayerUI.Statistics
+namespace PlayerUI.VideoAnalytics
 {
     public struct Session
     {
@@ -18,7 +18,7 @@ namespace PlayerUI.Statistics
 
         readonly static string CURRENT_VERSION = "0.20170321";
 
-        public Session(string filename, DateTime start, DateTime end, LookHistory history, ILookProvider lookProvider)
+        public Session(string filename, DateTime start, DateTime end, LookHistory history, ILookProvider lookProvider, Streaming.ServiceResult serviceResult)
         {
             version = CURRENT_VERSION;
             guid = Guid.NewGuid();
@@ -29,6 +29,7 @@ namespace PlayerUI.Statistics
             time_end = end;
             lookprovider = lookProvider?.DescribeType;
             this.history = history.ToBase64();
+            this.media_id = serviceResult.mediaId;
         }
 
 

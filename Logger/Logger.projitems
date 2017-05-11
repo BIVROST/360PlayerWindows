@@ -6,16 +6,19 @@
     <SharedGUID>42ccaf01-b1d7-4960-a466-4097f9c22fb4</SharedGUID>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
-    <Import_RootNamespace>Logger</Import_RootNamespace>
+    <Import_RootNamespace>Bivrost.Log</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Logger.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)LogWindow.xaml.cs">
-      <DependentUpon>LogWindow.xaml</DependentUpon>
+    <Compile Include="$(MSBuildThisFileDirectory)LogWindowLogListener.xaml.cs">
+      <DependentUpon>LogWindowLogListener.xaml</DependentUpon>
     </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)TextFileLogListener.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)TraceLogListener.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)WindowsEventLogListener.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Page Include="$(MSBuildThisFileDirectory)LogWindow.xaml">
+    <Page Include="$(MSBuildThisFileDirectory)LogWindowLogListener.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

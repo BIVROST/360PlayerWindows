@@ -183,6 +183,8 @@ namespace PlayerUI
 			DialogCloseIfOpen();
 
 			onCommit?.Invoke();
+
+			Features.TriggerListUpdated();
 		}
 
 

@@ -4,19 +4,20 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Linq;
 using System.Windows.Threading;
+using System.Collections.Generic;
 
 namespace Bivrost.Log
 {
 	/// <summary>
 	/// Interaction logic for LogWindow.xaml
 	/// </summary>
-	public partial class LogWindow : Window, LogListener
+	public partial class LogWindowLogListener : Window, LogListener
 	{
 		private bool follow;
-		static LogWindow Instance;
+		static LogWindowLogListener Instance;
 		private DispatcherTimer dispatcherTimer;
 
-		public LogWindow()
+		public LogWindowLogListener()
 		{
 			InitializeComponent();
 			Tabs.SelectionChanged += (s, e) => {
@@ -36,6 +37,7 @@ namespace Bivrost.Log
 			UpdatePublishedValues(null, null);
 			List_Published.ItemsSource = Logger.published;
 		}
+
 
 		private void UpdatePublishedValues(object sender, EventArgs e)
 		{
@@ -72,11 +74,11 @@ namespace Bivrost.Log
 			Instance = null;
 		}
 
-		public void Write(string time, LogType type, string msg, string path)
+		public void Write(Logger.LogElement entry)
 		{
 			Contents.Dispatcher.Invoke( () =>
 			{
-				Contents.Text += string.Format("[{1}] {0}\r\n{2}\r\n\r\n{3}\r\n\r\n", time, type, msg, path);
+				Contents.Text += $"[{entry.type}] {entry.time}\r\n{entry.msg}\r\n\r\n{entry.path}\r\n\r\n";
 				if (follow)
 					ScrollViewer.ScrollToEnd();
 			});
@@ -91,6 +93,7 @@ namespace Bivrost.Log
 		{
 			Contents.Clear();
 		}
+
 
 		private void OpenTxt(object sender, RoutedEventArgs e)
 		{

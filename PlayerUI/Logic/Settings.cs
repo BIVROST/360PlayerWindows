@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.IO;
 using PlayerUI.ConfigUI;
+using Bivrost.Log;
 
 namespace PlayerUI
 {
@@ -34,6 +35,17 @@ namespace PlayerUI
 			}
 			SettingsFile = configFile;
 			Load();
+
+			if (InstallId == Guid.Empty)
+			{
+				InstallId = Guid.NewGuid();
+				Save();
+			}
+			else
+			{
+				Logger.Info("InstallId == " + InstallId);
+			}
+
 		}
 
 
@@ -86,44 +98,51 @@ namespace PlayerUI
 
 		[JsonIgnore]
 		[SettingsAdvancedProperty("Reset Analytics ID", ConfigItemType.Action, Caption = "Reset ID")]
-		public System.Action ResetInstallId { get; set; } = () => { };
+		public System.Action ResetInstallId { get; set; }
 
 		[JsonIgnore]
 		[SettingsAdvancedProperty("Reset player configuration", ConfigItemType.Action, Caption = "Reset")]
-		public System.Action ResetConfiguration { get; set; } = () => { };
+		public System.Action ResetConfiguration { get; set; }
 
 		[JsonIgnore]
 		[SettingsProperty("Install browsers plugins", ConfigItemType.Action, Caption = "Install plugins")]
-		public System.Action InstallPlugins { get; set; } = () => { };
+		public System.Action InstallPlugins { get; set; }
 
 		[SettingsAdvancedProperty("User headset tracking in window", ConfigItemType.Bool)]
 		public bool UserHeadsetTracking { get; set; } = false;
 
 
 
-		//GhostVR and heatmaps
-		[SettingsAdvancedProperty("Enable GhostVR analytics", ConfigItemType.Bool, requiredFeatures = FeaturesEnum.ghostVR | FeaturesEnum.heatmaps)]
+		//GhostVR and locally stored sessions
+		[SettingsAdvancedProperty("Enable GhostVR analytics", ConfigItemType.Bool, requiredFeatures = FeaturesEnum.ghostVR)]
 		public bool GhostVREnabled
 		{
-			get { return _ghostVREnabled && Features.GhostVR && Features.Heatmaps; }
+			get { return _ghostVREnabled && Features.GhostVR; }
 			set { _ghostVREnabled = value; }
 		}
 		[JsonIgnore]
-		bool _ghostVREnabled = false;
+		bool _ghostVREnabled = true;
 
 
-		[SettingsAdvancedProperty("GhostVR license token", ConfigItemType.String, requiredFeatures = FeaturesEnum.ghostVR | FeaturesEnum.heatmaps)]
+		[SettingsAdvancedProperty("GhostVR license token", ConfigItemType.String, requiredFeatures = FeaturesEnum.ghostVR)]
 		public string GhostVRLicenseToken { get; set; }
 
 
-		[SettingsAdvancedProperty("Save local heatmaps", ConfigItemType.Bool, requiredFeatures = FeaturesEnum.heatmaps)]
-		public bool LocalHeatmaps
+		[SettingsAdvancedProperty("GhostVR API endpoint override", ConfigItemType.String, requiredFeatures = FeaturesEnum.ghostVR | FeaturesEnum.isDebugOrCanary)]
+		public string GhostVREndpointOverride { get; set; } = "http://dev.ghostvr.io/api/v1/";
+
+
+		[SettingsAdvancedProperty("Local video analytics sessions enabled", ConfigItemType.Bool, requiredFeatures = FeaturesEnum.locallyStoredSessions)]
+		public bool LocallyStoredSessions
 		{
-			get { return _localHeatmaps && Features.Heatmaps; }
-			set { _localHeatmaps = value; }
+			get { return _locallyStoredSessions && Features.LocallyStoredSessions; }
+			set { _locallyStoredSessions = value; }
 		}
 		[JsonIgnore]
-		bool _localHeatmaps = false;
+		bool _locallyStoredSessions = false;
+
+		[SettingsAdvancedProperty("Local video analytics sessions directory", ConfigItemType.String, requiredFeatures = FeaturesEnum.locallyStoredSessions)]
+		public string LocallyStoredSessionsDirectory { get; set; } = null;
 
 
 		//License settings

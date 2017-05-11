@@ -1,0 +1,33 @@
+﻿<Window x:Class="PlayerUI.VideoAnalytics.SendStatistics"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:PlayerUI.VideoAnalytics"
+        mc:Ignorable="d"
+		Icon="pack://application:,,,/Resources/icon-ghostvr.ico"
+        Title="Send session to GhostVR" 
+		SizeToContent="WidthAndHeight" WindowStartupLocation="CenterOwner"
+		ResizeMode="NoResize"
+		>
+    <Grid Width="800" Height="500">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="auto" />
+        </Grid.RowDefinitions>
+
+		<StackPanel Visibility="Visible" Name="loading" Grid.Row="0" Margin="8" VerticalAlignment="Center" HorizontalAlignment="Center">
+			<TextBlock Margin="4" HorizontalAlignment="Center">Sending session data to GhostVR...</TextBlock>
+			<ProgressBar Height="8" Margin="8" IsIndeterminate="True" Width="500"/>
+			<Button x:Name="cancel" Margin="8" Width="80">Cancel</Button>
+		</StackPanel>
+
+		<StackPanel Visibility="Hidden" Name="failed" Grid.Row="0" Margin="8" VerticalAlignment="Center" HorizontalAlignment="Center">
+			<TextBlock Margin="4" HorizontalAlignment="Center">Sorry, sending session data to GhostVR Failed.</TextBlock>
+			<Button x:Name="close" Margin="8" Width="80">Close</Button>
+		</StackPanel>
+
+		<WebBrowser Visibility="Hidden" x:Name="browser" Grid.Row="0" Margin="0" ScrollViewer.VerticalScrollBarVisibility="Visible" />
+
+	</Grid>
+</Window>

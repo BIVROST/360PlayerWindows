@@ -20,10 +20,11 @@ namespace PlayerUI
 		isDebug = 1,
 		isCanary = 2,
 		ghostVR = 4,
-		heatmaps = 8,
+		locallyStoredSessions = 8,
 		requireLicense = 16,
 		remote = 32,
-		commercialUse = 64
+		commercialUse = 64,
+		isDebugOrCanary = 128
 	}
 
 
@@ -35,25 +36,33 @@ namespace PlayerUI
 		public FeatureGrantedFromLicenseAttribute(string name) { this.name = name.Trim().ToLowerInvariant(); }
 	}
 
+
+	/// <summary>
+	/// List of features that are granted to this build.
+	/// The list of features may change at runtime (for example when a license key is changed),
+	/// this will trigger the ListUpdated event.
+	/// </summary>
 	public static class Features
 	{
-
-
-
-
-		public static FeaturesEnum AsEnum
+		internal static FeaturesEnum AsEnum
 		{
 			get
 			{
 				FeaturesEnum fe = new FeaturesEnum();
 				if (IsDebug)
+				{
 					fe |= FeaturesEnum.isDebug;
+					fe |= FeaturesEnum.isDebugOrCanary;
+				}
 				if (IsCanary)
+				{
 					fe |= FeaturesEnum.isCanary;
+					fe |= FeaturesEnum.isDebugOrCanary;
+				}
 				if (GhostVR)
 					fe |= FeaturesEnum.ghostVR;
-				if (Heatmaps)
-					fe |= FeaturesEnum.heatmaps;
+				if (LocallyStoredSessions)
+					fe |= FeaturesEnum.locallyStoredSessions;
 				if (RequireLicense)
 					fe |= FeaturesEnum.requireLicense;
 				if (RemoteEnabled)
@@ -62,6 +71,9 @@ namespace PlayerUI
 				return fe;
 			}
 		}
+
+
+		public static event Action ListUpdated;
 
 
 		public static bool IsDebug =
@@ -89,16 +101,15 @@ namespace PlayerUI
 
 		/// <summary>
 		/// Online heatmap analytics gathering and sending is enabled
-		/// Requires Heatmaps
 		/// </summary>
 		[FeatureGrantedFromLicense("ghostvr")]
 		public static bool GhostVR = false;
 
 		/// <summary>
-		/// Local heatmap analytics gathering is enabled
+		/// Local video analytics session gathering is enabled
 		/// </summary>
-		[FeatureGrantedFromLicense("heatmap")]
-		public static bool Heatmaps = false;
+		[FeatureGrantedFromLicense("locally-stored-sessions")]
+		public static bool LocallyStoredSessions = false;
 
 		/// <summary>
 		/// Is the API for the remote enabled
@@ -119,7 +130,7 @@ namespace PlayerUI
 		internal static void SetBasicFeatures()
 		{
 			GhostVR = false;
-			Heatmaps = false;
+			LocallyStoredSessions = false;
 			RemoteEnabled = false;
 			Commercial = false;
 		}
@@ -157,6 +168,11 @@ namespace PlayerUI
 			{
 				Logger.Error(kvp.Value != null ? $"Unknown feature granted: {kvp.Key} = {kvp.Value}" : $"Unknown feature granted: {kvp.Key} (no value)");
 			}
+		}
+
+		internal static void TriggerListUpdated()
+		{
+			ListUpdated?.Invoke();
 		}
 	}
 

@@ -2,15 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Bivrost.Log;
-using Newtonsoft.Json;
+using PlayerUI.Streaming;
 
-namespace PlayerUI.Statistics
+namespace PlayerUI.VideoAnalytics
 {
-    public class LookListener: IDisposable
+	public class LookListener: IDisposable
     {
 
         double _lastMediaTime = 0;
@@ -27,19 +23,28 @@ namespace PlayerUI.Statistics
             }
         }
 
-        ILookProvider lookProvider = null;
+		public bool AnySinkRegistered {
+			get
+			{
+				return sessionSinks.Count > 0;
+			}
+		}
+
+		ILookProvider lookProvider = null;
 
         LookHistory history = null;
         private string filename;
         private DateTime startTime;
+        private ServiceResult serviceResult;
+		private List<ISessionSink> sessionSinks = new List<ISessionSink>();
 
-        public LookListener()
+		public LookListener()
         {
             MediaDecoder.OnInstantiated += MediaDecoder_OnInstantiated;
             ShellViewModel.OnInstantiated += ShellViewModel_OnInstantiated;
 
-            listeners.Clear();
-            listeners.Add(new TraceLogMsgOnlyListener());
+            //listeners.Clear();
+            //listeners.Add(new TraceLogMsgOnlyListener());
         }
 
         private void ShellViewModel_OnInstantiated(ShellViewModel shellViewModel)
@@ -66,26 +71,20 @@ namespace PlayerUI.Statistics
             Info("ended history session " + filename);
             if (history == null)
                 return;
-            Info("https://tools.bivrost360.com/heatmap-viewer/?" + history.ToBase64());
-            Session session = new Session(filename, startTime, DateTime.Now, history, lookProvider);
-            SaveSession(session);
-            //SendStatistics.Send(session);
+			Session session = new Session(filename, startTime, DateTime.Now, history, lookProvider, serviceResult);
+			foreach (var sink in sessionSinks)
+				if (sink.Enabled)
+					sink.UseSession(session);
             history = null;
         }
 
-        private void SaveSession(Session session)
-        {
-            System.IO.File.WriteAllText(
-                $"{Logic.LocalDataDirectory}/session-{session.time_start.ToString("yyyy-MM-ddTHHmmss")}.360Session",
-                session.ToJson()
-            );
-        }
 
         private void HandlePlay()
         {
             history = new LookHistory(10, MediaDecoder.Instance.Duration);
             Info("new history session: " + MediaDecoder.Instance.FileName);
             filename = MediaDecoder.Instance.FileName;
+            serviceResult = ShellViewModel.Instance.SelectedServiceResult;
             startTime = DateTime.Now;
         }
 
@@ -128,7 +127,12 @@ namespace PlayerUI.Statistics
                 lookProvider.ProvideLook -= HandleProvideLook;
         }
 
-        private void HandleTimeUpdate(double currentTime)
+		internal void RegisterSessionSink(ISessionSink sink)
+		{
+			sessionSinks.Add(sink);
+		}
+
+		private void HandleTimeUpdate(double currentTime)
         {
             MediaTime = currentTime;
         }

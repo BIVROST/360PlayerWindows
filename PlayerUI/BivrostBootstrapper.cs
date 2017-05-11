@@ -36,6 +36,8 @@ namespace PlayerUI
 		{
 			//AddPathPatch();
 
+			Logic.Prepare();
+
 			System.Windows.Forms.Application.EnableVisualStyles();
 
 			if (!System.Diagnostics.Debugger.IsAttached && ApplicationDeployment.IsNetworkDeployed)
@@ -48,20 +50,20 @@ namespace PlayerUI
 					SetAddRemoveProgramsIcon();
 					AssociateFileExtensions();
 				});
-
-			} else
+			}
+			else
 			{
 				{
                     string path = (new System.Uri(Assembly.GetExecutingAssembly().CodeBase, true)).AbsolutePath;
                     //string path = Assembly.GetExecutingAssembly().CodeBase;
                     Logic.LocalDataDirectory = Path.GetDirectoryName(path) + Path.DirectorySeparatorChar;
 				}
-
 			}
 
 			Logger.RegisterListener(new Bivrost.Log.TextFileLogListener(Logic.LocalDataDirectory));
+			Logger.RegisterListener(new Bivrost.Log.TraceLogListener(false));
 
-			
+
 			string[] args = Environment.GetCommandLineArgs();
 			
 			try {

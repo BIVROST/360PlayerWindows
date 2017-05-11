@@ -414,16 +414,20 @@
     <Compile Include="ServiceResultResolver.xaml.cs">
       <DependentUpon>ServiceResultResolver.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Statistics\LookListener.cs" />
-    <Compile Include="Statistics\ILookProvider.cs" />
+    <Compile Include="VideoAnalytics\LocallyStoredSessions\LocallyStoredSessionsSink.cs" />
+    <Compile Include="VideoAnalytics\GhostVR\GhostVRConnector.cs" />
+    <Compile Include="VideoAnalytics\ISessionSink.cs" />
+    <Compile Include="VideoAnalytics\LookListener.cs" />
+    <Compile Include="VideoAnalytics\ILookProvider.cs" />
     <Compile Include="Oculus\OculusPlayback.cs" />
     <Compile Include="OpenVR\OpenVRExtensions.cs" />
     <Compile Include="OpenVR\OpenVRPlayback.cs" />
     <Compile Include="OpenVR\openvr_api.cs" />
-    <Compile Include="Statistics\SendStatistics.xaml.cs">
-      <DependentUpon>SendStatistics.xaml</DependentUpon>
+    <Compile Include="VideoAnalytics\GhostVR\GhostVRSessionSink.xaml.cs">
+      <DependentUpon>GhostVRSessionSink.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Statistics\Session.cs" />
+    <Compile Include="VideoAnalytics\Session.cs" />
+    <Compile Include="VideoAnalytics\StateMachine.cs" />
     <Compile Include="Streaming\FacebookParser.cs" />
     <Compile Include="Streaming\LittlstarParser.cs" />
     <Compile Include="Streaming\LocalFileParser.cs" />
@@ -443,7 +447,7 @@
     <Compile Include="SettingsWindowViewModel.cs" />
     <Compile Include="ShellViewModelRemote.cs" />
     <Compile Include="ShellViewModelUIBehaviours.cs" />
-    <Compile Include="Statistics\LookHistory.cs" />
+    <Compile Include="VideoAnalytics\LookHistory.cs" />
     <Compile Include="Streaming\PornhubParser.cs" />
     <Compile Include="Streaming\VrideoParser.cs" />
     <Compile Include="TestWindowView.xaml.cs">
@@ -577,7 +581,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Statistics\SendStatistics.xaml">
+    <Page Include="VideoAnalytics\GhostVR\GhostVRSessionSink.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -658,6 +662,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <None Include="Shaders\GammaShader.fx" />
+    <Resource Include="Resources\icon-ghostvr.ico" />
     <Content Include="x64\openvr_api.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -962,6 +967,7 @@
       <Name>BivrostAnalytics</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="..\Logger\Logger.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />

@@ -1,6 +1,6 @@
 ﻿using BivrostAnalytics;
 using Fleck;
-using PlayerUI.Statistics;
+using PlayerUI.VideoAnalytics;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -49,13 +49,11 @@ namespace PlayerUI
 		// Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\BivrostPlayer";
 		public static string LocalDataDirectory = "";
 
-		private static Logic _instance = null;
-		public static Logic Instance {
-			get {
-				if (_instance == null)
-					_instance = new Logic();
-				return _instance;
-			}
+		public static Logic Instance { get; protected set; }
+		public static void Prepare() {
+			if (Instance != null)
+				throw new Exception("cannot prepare Logic more than once");
+			Instance = new Logic();
 		}
 
 		public Settings settings;
@@ -64,32 +62,29 @@ namespace PlayerUI
 
 		public event Action OnUpdateAvailable = delegate { };
 
-		public Logic()
+		protected Logic()
 		{
+			Instance = this;
+
 			Application.Current.DispatcherUnhandledException += (sender, e) =>
 			{
 				Logger.Fatal(e.Exception, "unhandled application exception");
 			};
 
-			AppDomain currentDomain = AppDomain.CurrentDomain;
-			currentDomain.UnhandledException += (sender, e) =>
+			AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
 			{
 				Logger.Fatal(e.ExceptionObject as Exception, "unhandled application domain exception");
-			};			
+			};
+
+
+			// bind buttons in settings window
 			settings = new Settings();
+			settings.InstallPlugins = SettingsInstallPlugins;
+			settings.ResetInstallId = SettingsResetInstallId;
+			settings.ResetConfiguration = SettingsResetConfiguration;
 
-			ConfigureSettingsActions();
 
-			if (settings.InstallId == Guid.Empty)
-			{
-				settings.InstallId = Guid.NewGuid();
-				settings.Save();
-			}
-			else
-			{
-				Logger.Info("InstallId == " + settings.InstallId);
-			}
-
+			// prepare google analytics handler
 			var OsPlatform = Environment.OSVersion.Platform.ToString();
 			var OsVersion = Environment.OSVersion.Version.ToString();
 			var OsVersionString = Environment.OSVersion.VersionString;
@@ -161,13 +156,18 @@ namespace PlayerUI
 				}
 			});
 
-            if(Features.Heatmaps)
-                lookListener = new LookListener();
+            lookListener = new LookListener();
+			ghostVRConnector = new GhostVRConnector();
+			locallyStoredSessions = new LocallyStoredSessionSink();
+			lookListener.RegisterSessionSink(new GhostVRSessionSink(ghostVRConnector));
+			lookListener.RegisterSessionSink(locallyStoredSessions);
 		}
 
-        LookListener lookListener;
+        public LookListener lookListener;
+		public GhostVRConnector ghostVRConnector;
+		public LocallyStoredSessionSink locallyStoredSessions;
 
-        ~Logic()
+		~Logic()
 		{
 			try
 			{
@@ -197,41 +197,45 @@ namespace PlayerUI
             });
 		}
 
-		private void ConfigureSettingsActions()
-		{
-			settings.InstallPlugins = () =>
-			{
-				settings.BrowserPluginQuestionShown = false;
-				CheckForBrowsers();
-			};
 
-			settings.ResetInstallId = () =>
+		#region actions in the settings window
+	
+		private void SettingsInstallPlugins()
+		{
+			settings.BrowserPluginQuestionShown = false;
+			CheckForBrowsers();
+		}
+
+
+		private void SettingsResetInstallId()
+		{
+			var result = System.Windows.Forms.MessageBox.Show("Do you really want to reset installation ID?", "Installation ID", System.Windows.Forms.MessageBoxButtons.YesNo);
+			if (result == System.Windows.Forms.DialogResult.Yes)
 			{
-				var result = System.Windows.Forms.MessageBox.Show("Do you really want to reset installation ID?", "Installation ID", System.Windows.Forms.MessageBoxButtons.YesNo);
-				if(result ==  System.Windows.Forms.DialogResult.Yes)
+				settings.InstallId = Guid.NewGuid();
+				settings.Save();
+				System.Windows.Forms.Application.Restart();
+				System.Windows.Application.Current.Shutdown();
+			}
+		}
+
+
+		private void SettingsResetConfiguration()
+		{
+			var result = System.Windows.Forms.MessageBox.Show("Reset configuration to default?", "Configuration", System.Windows.Forms.MessageBoxButtons.YesNo);
+			if (result == System.Windows.Forms.DialogResult.Yes)
+			{
+				try
 				{
-					settings.InstallId = Guid.NewGuid();
-					settings.Save();
+					System.IO.File.Delete(settings.SettingsFile);
 					System.Windows.Forms.Application.Restart();
 					System.Windows.Application.Current.Shutdown();
 				}
-			};
-
-			settings.ResetConfiguration = () =>
-			{
-				var result = System.Windows.Forms.MessageBox.Show("Reset configuration to default?", "Configuration", System.Windows.Forms.MessageBoxButtons.YesNo);
-				if (result ==  System.Windows.Forms.DialogResult.Yes)
-				{
-					try
-					{
-						System.IO.File.Delete(settings.SettingsFile);
-						System.Windows.Forms.Application.Restart();
-						System.Windows.Application.Current.Shutdown();
-					}
-					catch (Exception exc) { }					
-				}
-			};
+				catch (Exception exc) { Logger.Error(exc, "Error resetting configuration"); }
+			}
 		}
+#endregion
+
 
 		public void CheckForBrowsers()
 		{

@@ -1,4 +1,4 @@
-﻿using PlayerUI.Statistics;
+﻿using PlayerUI.VideoAnalytics;
 using SharpDX.Direct3D11;
 using System;
 using System.Threading;
