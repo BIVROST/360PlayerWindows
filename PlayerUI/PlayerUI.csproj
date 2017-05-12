@@ -350,10 +350,6 @@
     </Compile>
     <Compile Include="ConfigUI\StringConfigItemViewModel.cs" />
     <Compile Include="DialogHelper.cs" />
-    <Compile Include="DummyWindowView.xaml.cs">
-      <DependentUpon>DummyWindowView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="DummyWindowViewModel.cs" />
     <Compile Include="EulaLibsView.xaml.cs">
       <DependentUpon>EulaLibsView.xaml</DependentUpon>
     </Compile>
@@ -362,10 +358,6 @@
       <DependentUpon>EULAView.xaml</DependentUpon>
     </Compile>
     <Compile Include="EULAViewModel.cs" />
-    <Compile Include="EventShellView.xaml.cs">
-      <DependentUpon>EventShellView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="EventShellViewModel.cs" />
     <Compile Include="FadeMenuBase.cs" />
     <Compile Include="HeadsetMenuView.xaml.cs">
       <DependentUpon>HeadsetMenuView.xaml</DependentUpon>
@@ -410,7 +402,7 @@
       <DependentUpon>NotificationView.xaml</DependentUpon>
     </Compile>
     <Compile Include="NotificationViewModel.cs" />
-    <Compile Include="Oculus\EyeTexture.cs" />
+    <Compile Include="VR\Oculus\EyeTexture.cs" />
     <Compile Include="ServiceResultResolver.xaml.cs">
       <DependentUpon>ServiceResultResolver.xaml</DependentUpon>
     </Compile>
@@ -419,10 +411,10 @@
     <Compile Include="VideoAnalytics\ISessionSink.cs" />
     <Compile Include="VideoAnalytics\LookListener.cs" />
     <Compile Include="VideoAnalytics\ILookProvider.cs" />
-    <Compile Include="Oculus\OculusPlayback.cs" />
-    <Compile Include="OpenVR\OpenVRExtensions.cs" />
-    <Compile Include="OpenVR\OpenVRPlayback.cs" />
-    <Compile Include="OpenVR\openvr_api.cs" />
+    <Compile Include="VR\Oculus\OculusPlayback.cs" />
+    <Compile Include="VR\OpenVR\OpenVRExtensions.cs" />
+    <Compile Include="VR\OpenVR\OpenVRPlayback.cs" />
+    <Compile Include="VR\OpenVR\openvr_api.cs" />
     <Compile Include="VideoAnalytics\GhostVR\GhostVRSessionSink.xaml.cs">
       <DependentUpon>GhostVRSessionSink.xaml</DependentUpon>
     </Compile>
@@ -437,23 +429,14 @@
     <Compile Include="Tools\ActionQueue.cs" />
     <Compile Include="VR\Headset.cs" />
     <Compile Include="VR\VRUI.cs" />
-    <Compile Include="Oculus\OculusUIDebug.cs" />
+    <Compile Include="VR\Oculus\OculusUIDebug.cs" />
     <Compile Include="SharpDXHelpers.cs" />
-    <Compile Include="OSVRKit\OSVRPlayback.cs" />
-    <Compile Include="Settings.cs" />
-    <Compile Include="SettingsWindowView.xaml.cs">
-      <DependentUpon>SettingsWindowView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="SettingsWindowViewModel.cs" />
+    <Compile Include="VR\OSVRKit\OSVRPlayback.cs" />
     <Compile Include="ShellViewModelRemote.cs" />
     <Compile Include="ShellViewModelUIBehaviours.cs" />
     <Compile Include="VideoAnalytics\LookHistory.cs" />
     <Compile Include="Streaming\PornhubParser.cs" />
     <Compile Include="Streaming\VrideoParser.cs" />
-    <Compile Include="TestWindowView.xaml.cs">
-      <DependentUpon>TestWindowView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="TestWindowViewModel.cs" />
     <Compile Include="Tools\CustomExtensions.cs" />
     <Compile Include="Tools\DeviceSelectionTool.cs" />
     <Compile Include="Tools\GraphicTools.cs" />
@@ -525,19 +508,11 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="DummyWindowView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="EulaLibsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="EULAView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="EventShellView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -573,19 +548,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="SettingsWindowView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="ShellView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="VideoAnalytics\GhostVR\GhostVRSessionSink.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="TestWindowView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

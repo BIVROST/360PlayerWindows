@@ -253,22 +253,6 @@
                     SharpDX.RawInput.Device.RegisterDevice(SharpDX.Multimedia.UsagePage.Generic, SharpDX.Multimedia.UsageId.GenericMouse, SharpDX.RawInput.DeviceFlags.None, dev.Handle);
                 Console.WriteLine($"Scene::Attach DX device: {dev.DeviceName} :: {dev.DeviceType}");
             });
-
-			//useOSVR = Logic.Instance.settings.UserOSVRTracking;
-			//if(useOSVR)
-			//{
-			//	OSVR.ClientKit.ClientContext.PreloadNativeLibraries();
-			//	context = new OSVR.ClientKit.ClientContext("com.bivrost360.desktopplayer");
-			//	displayConfig = context.GetDisplayConfig();
-			//	for (int retry = 0; retry < 5; retry++)
-			//		if (displayConfig == null)
-			//			displayConfig = context.GetDisplayConfig();
-			//	if (displayConfig == null) return;
-			//	do
-			//	{
-			//		context.update();
-			//	} while (!displayConfig.CheckDisplayStartup());
-			//}
 		}
 
 		//public void SetLook(System.Tuple<float, float,float> euler)

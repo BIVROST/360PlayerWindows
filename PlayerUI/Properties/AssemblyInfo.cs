@@ -7,12 +7,12 @@ using System.Windows;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Bivrost 360Player")]
-[assembly: AssemblyDescription("Bivrost 360Player - Virtual Reality Movie Player")]
+[assembly: AssemblyTitle("BIVROST 360Player")]
+[assembly: AssemblyDescription("BIVROST 360Player - Virtual Reality Movie Player")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("BIVROST Sp z o.o.")]
-[assembly: AssemblyProduct("Bivrost 360Player")]
-[assembly: AssemblyCopyright("Copyright ©  2016")]
+[assembly: AssemblyProduct("BIVROST 360Player")]
+[assembly: AssemblyCopyright("Copyright ©  2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

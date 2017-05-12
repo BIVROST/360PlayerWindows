@@ -73,13 +73,6 @@ namespace PlayerUI
 		public Guid InstallId { get; set; } = Guid.Empty;
 
 
-		public bool EventMode { get; set; } = false;		
-		public string EventModeSingleFile { get; set; } = "";		
-		public bool EventModeAutoPlay { get; set; } = true;
-		public bool EventModePauseAtStartup { get; set; } = true;
-		public string EventModeBackgroundColor { get; set; } = "000000";
-		public bool EventModeLoop { get; set; } = true;
-
 		public string AutoPlayFile { get; set; } = "";
 		public bool AutoPlay { get; set; } = true;
 		public bool AutoLoad { get; set; } = true;
@@ -175,6 +168,8 @@ namespace PlayerUI
 		[SettingsAdvancedProperty("Disable UI", ConfigItemType.Bool, requiredFeatures = FeaturesEnum.isDebug)]
 		public bool DisableUI { get; set; } = false;
 
+
+		// Space navigator
         [SettingsAdvancedProperty("Space Navigator: invert pitch", ConfigItemType.Bool)]
         public bool SpaceNavigatorInvertPitch { get; set; } = false;
         [SettingsAdvancedProperty("Space Navigator: shortcut keys active", ConfigItemType.Bool)]

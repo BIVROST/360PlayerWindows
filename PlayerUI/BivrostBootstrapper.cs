@@ -100,14 +100,7 @@ namespace PlayerUI
 						ShellViewModel.FileFromArgs = args[args.Length - 1];
 				}
 				
-				if (Logic.Instance.settings.EventMode)
-				{
-					DisplayRootViewFor<EventShellViewModel>();
-				}
-				else
-				{
-					DisplayRootViewFor<ShellViewModel>();
-				}
+				DisplayRootViewFor<ShellViewModel>();
 				
 			}
 			else
