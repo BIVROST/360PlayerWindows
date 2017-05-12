@@ -3,7 +3,7 @@
 INSTALLATION_ID="$(uuidgen)"
 ACCESS_TOKEN="$(uuidgen)"
 GHOSTVR="http://dev.ghostvr.io/api/v1/"
-GHOSTVR="http://localhost:3000/api/v1/"
+# GHOSTVR="http://localhost:3000/api/v1/"
 
 curl() {
 	(>&2 echo "DEBUG CURL:" "$@")

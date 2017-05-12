@@ -143,11 +143,6 @@ namespace PlayerUI.VideoAnalytics
 		{
 			var client = new RestClient(GhostVREndpoint);
 			var request = new RestRequest(endpoint, Method.POST);
-			if (endpoint == "verify_player_token" && GhostVREndpoint == "http://dev.ghostvr.io/api/v1/")
-			{
-				request = new RestRequest(endpoint, Method.GET);
-				Log("Temporary hack: verify_player_token is GET");
-			}
 			if(Token.HasValue)
 				request.AddHeader("Authorization", "Bearer " + Token.Value);
 			arguments(request);
