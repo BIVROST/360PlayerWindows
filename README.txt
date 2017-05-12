@@ -1,12 +1,7 @@
 Bivrost 360Player development hints
 ===================================
 
-1. OSVR dlls missing (ClientKit project)
-
-Install https://github.com/OSVR/Managed-OSVR to ../Managed-OSVR (relative to bivrost-player-windows project dir)
-
-Build Managed-OSVR
-
+1. git submodule update for Managed-OSVR/ClientKit
 
 2. Net framework 3.5 missing (windows 10)
 

@@ -1,0 +1,3 @@
+[submodule "Managed-OSVR"]
+	path = Managed-OSVR
+	url = https://github.com/OSVR/Managed-OSVR.git
