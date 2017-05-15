@@ -416,7 +416,7 @@ namespace PlayerUI
 					//if (CurrentMode == VideoMode.Autodetect)
 					//	CurrentMode = DetectFromFileName(_fileName);
 
-					Bivrost.Log.Logger.Info("VIDEO STEREO MODE: " + CurrentMode);
+					Bivrost.Log.LoggerManager.Info("VIDEO STEREO MODE: " + CurrentMode);
 
 					if (CurrentMode != VideoMode.Mono && CurrentMode != VideoMode.Autodetect)
 						_stereoVideo = true;

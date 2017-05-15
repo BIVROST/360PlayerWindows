@@ -327,17 +327,17 @@ namespace PlayerUI.Oculus
                                 Vector3 forward = Vector3.Transform(Vector3.ForwardRH, lookRotation);
                                 Vector3 up = Vector3.Transform(Vector3.Up, lookRotation);
 
-                                Logger.Publish("oculus.forward", forward.ToString("0.00"));
-                                Logger.Publish("oculus.up", up.ToString("0.00"));
-                                Logger.Publish("oculus.lookAt", lookAt.ToString("0.00"));
-                                Logger.Publish("oculus.lookUp", lookUp.ToString("0.00"));
-                                Logger.Publish("oculus.vr_quat", lookRotation);
+                                LoggerManager.Publish("oculus.forward", forward.ToString("0.00"));
+                                LoggerManager.Publish("oculus.up", up.ToString("0.00"));
+                                LoggerManager.Publish("oculus.lookAt", lookAt.ToString("0.00"));
+                                LoggerManager.Publish("oculus.lookUp", lookUp.ToString("0.00"));
+                                LoggerManager.Publish("oculus.vr_quat", lookRotation);
 
 
                                 //ProvideLook(lookPosition, lookRotation, OculusFOV);
                                 //ProvideLook(new Vector3(lookRotation.X, lookRotation.Y, lookRotation.Z), lookRotation, lookRotation.W);
                                 ProvideLook(lookPosition, lookRotation, OculusFOV);
-								Logger.Publish("q.sent", lookRotation);
+								LoggerManager.Publish("q.sent", lookRotation);
 							}
 
 							// reset UI position every frame if it is not visible

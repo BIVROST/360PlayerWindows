@@ -196,7 +196,7 @@ namespace ChanibaL
 			};
 		}
 
-		public Action<T> ValidOnlyInThisState<T>(Action<T> wrapped, bool withAutoUpdate = false)
+		public Action<T> ValidOnlyInThisState<T>(Action<T> wrapped, bool immidiate = false)
 		{
 			var tick = Ticks;
 			return (arg1) =>
@@ -204,15 +204,15 @@ namespace ChanibaL
 				if (tick != Ticks)
 					return;
 				wrapped(arg1);
-				if (withAutoUpdate)
+				if (immidiate)
 					Update(0);
 			};
 		}
 
-		public Action StateSwitcherValidOnlyInThisState(State nextState, bool withAutoUpdate = true)
+		public Action StateSwitcherValidOnlyInThisState(State nextState, bool immidiate = true)
         {
             return ValidOnlyInThisState(() => {
-                if (withAutoUpdate)
+                if (immidiate)
                     SwitchStateExternalImmidiate(nextState);
                 else
                     SwitchStateExternalDelayed(nextState);

@@ -77,10 +77,10 @@ namespace PlayerUI.VideoAnalytics
             double yaw01 = yaw / (2 * Math.PI) + 0.5;
             double pitch01 = pitch / Math.PI + 0.5;
             TrackData(t, yaw01, pitch01, fov);
-            Bivrost.Log.Logger.Publish("history.yaw", yaw * 180f / Math.PI);
-            Bivrost.Log.Logger.Publish("history.pitch", pitch * 180f / Math.PI);
-            Bivrost.Log.Logger.Publish("history.yaw01", yaw01);
-            Bivrost.Log.Logger.Publish("history.pitch01", pitch01);
+            Bivrost.Log.LoggerManager.Publish("history.yaw", yaw * 180f / Math.PI);
+            Bivrost.Log.LoggerManager.Publish("history.pitch", pitch * 180f / Math.PI);
+            Bivrost.Log.LoggerManager.Publish("history.yaw01", yaw01);
+            Bivrost.Log.LoggerManager.Publish("history.pitch01", pitch01);
         }
 
         void TrackData(float t, double yaw01, double pitch01, byte fov)

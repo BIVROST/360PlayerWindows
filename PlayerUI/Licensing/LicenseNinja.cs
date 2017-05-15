@@ -4,7 +4,7 @@ using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using Logger = Bivrost.Log.Logger;
+using LoggerManager = Bivrost.Log.LoggerManager;
 
 namespace Bivrost
 {
@@ -107,7 +107,7 @@ namespace Bivrost
 			string token = Guid.NewGuid().ToString();
 			string hash = SHA1(token + product + udid + key);
 
-			Logger.Info("LicenseNinja: requesting license");
+			LoggerManager.Info("LicenseNinja: requesting license");
 			string www;
 			try
 			{
@@ -127,7 +127,7 @@ namespace Bivrost
 					www = await result.Content.ReadAsStringAsync();
 					if (!result.IsSuccessStatusCode)
 						throw new NoLicenseServerConnectionException("bad status code");
-					Logger.Info($"LicenseNinja: received {www}");
+					LoggerManager.Info($"LicenseNinja: received {www}");
 				}
 			}
 			catch(Exception e)
@@ -160,7 +160,7 @@ namespace Bivrost
 							hashSource = $"{time}{token}{product}{grant}{key}";
 						}
 
-						Logger.Info($"License: version {version}");
+						LoggerManager.Info($"License: version {version}");
 
 						string hashLocal = SHA1(hashSource);
 						if (hashReceived != hashLocal)

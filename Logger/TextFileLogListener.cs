@@ -28,15 +28,15 @@ namespace Bivrost.Log
 
 			LogFile = logDirectory + string.Format("{2}-{0}-{1}.txt", version, now, logPrefix);
 
-			Logger.Info("Log file: " + LogFile);
+			LoggerManager.Info("Log file: " + LogFile);
 			fp = new FileStream(LogFile, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
 			encoding = new UTF8Encoding(false);
 		}
 
 
-		public void Write(Logger.LogElement entry)
+		public void Write(LoggerManager.LogElement entry)
 		{
-			byte[] buf = encoding.GetBytes($"[{entry.type}] {entry.time} at {entry.path}\r\n\r\n{entry.msg.Trim().Replace("\r\n", "\r\n\t")}\r\n");
+			byte[] buf = encoding.GetBytes($"[{entry.Type} {entry.Tag}] {entry.Time} at {entry.Path}\r\n\r\n{entry.Message.Trim().Replace("\r\n", "\r\n\t")}\r\n");
 			lock (LogFile)
 			{
 				fp.Write(buf, 0, buf.Length);

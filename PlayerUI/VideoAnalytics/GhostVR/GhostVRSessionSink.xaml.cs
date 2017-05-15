@@ -1,8 +1,8 @@
-﻿using Bivrost.Log;
-using Caliburn.Micro;
+﻿using Caliburn.Micro;
 using System.Runtime.InteropServices;
 using System.Security.Permissions;
 using System.Windows;
+using Bivrost.Log;
 
 namespace PlayerUI.VideoAnalytics
 {
@@ -11,6 +11,7 @@ namespace PlayerUI.VideoAnalytics
 	/// </summary>
 	public partial class SendStatistics : Window
 	{
+		private readonly Logger logger;
 
 		[PermissionSet(SecurityAction.Demand, Name = "FullTrust")]
 		[ComVisible(true)]
@@ -43,6 +44,7 @@ namespace PlayerUI.VideoAnalytics
 
 		protected SendStatistics(Session session, GhostVRConnector ghostVRConnector)
 		{
+			logger = ghostVRConnector.logger;
 			InitializeComponent();
 			close.Click += (s, e) => Close();
 			cancel.Click += (s, e) => Close();
@@ -84,14 +86,14 @@ namespace PlayerUI.VideoAnalytics
 
 		private void Helper_OnCompleted()
 		{
-			Logger.Info("GhostVR form said it was completed");
+			logger.Info("form said it was completed");
 			Close();
 		}
 
 
 		private void Helper_OnCanceled()
 		{
-			Logger.Info("GhostVR form said it was canceled");
+			logger.Info("form said it was canceled");
 			Close();
 		}
 
@@ -100,6 +102,9 @@ namespace PlayerUI.VideoAnalytics
 
 	public class GhostVRSessionSink : ISessionSink {
 		private GhostVRConnector ghostVRConnector;
+
+		internal Bivrost.Log.Logger Logger { get { return ghostVRConnector.logger; } }
+
 
 		public GhostVRSessionSink(GhostVRConnector ghostVRConnector)
 		{
@@ -115,7 +120,7 @@ namespace PlayerUI.VideoAnalytics
 		{
 			get
 			{
-				Logger.Info($"[GhostVR] session sink will be used = {Logic.Instance.settings.GhostVREnabled && Logic.Instance.ghostVRConnector.IsConnected}");
+				Logger.Info($"session sink will be used = {Logic.Instance.settings.GhostVREnabled && Logic.Instance.ghostVRConnector.IsConnected}");
 				return Logic.Instance.settings.GhostVREnabled && Logic.Instance.ghostVRConnector.IsConnected;
 			}
 		}

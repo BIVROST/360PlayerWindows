@@ -157,7 +157,7 @@ namespace PlayerUI
 							else if (fieldval is string)
 								field.SetValue(null, val);
 							else
-								Logger.Error($"Unsupported feature field type: {field.GetType()} on key {name}");
+								LoggerManager.Error($"Unsupported feature field type: {field.GetType()} on key {name}");
 							grant.Remove(name);
 						}
 					}
@@ -166,7 +166,7 @@ namespace PlayerUI
 
 			foreach (var kvp in grant)
 			{
-				Logger.Error(kvp.Value != null ? $"Unknown feature granted: {kvp.Key} = {kvp.Value}" : $"Unknown feature granted: {kvp.Key} (no value)");
+				LoggerManager.Error(kvp.Value != null ? $"Unknown feature granted: {kvp.Key} = {kvp.Value}" : $"Unknown feature granted: {kvp.Key} (no value)");
 			}
 		}
 

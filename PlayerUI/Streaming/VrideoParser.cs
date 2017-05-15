@@ -74,7 +74,7 @@ namespace PlayerUI.Streaming
 					switch((string)q)
 					{
 						case "480p":
-							Logger.Info("Ignoring very low quality: " + (string)q);
+							LoggerManager.Info("Ignoring very low quality: " + (string)q);
 							continue;
 
 						case "720p":
@@ -94,7 +94,7 @@ namespace PlayerUI.Streaming
 							break;
 
 						default:
-							Logger.Error("unknown quality: " + q);
+							LoggerManager.Error("unknown quality: " + q);
 							continue;
 					}
 
@@ -110,7 +110,7 @@ namespace PlayerUI.Streaming
 					};
 					if (video.url == null)
 					{
-                        Logger.Error("no video url?");
+                        LoggerManager.Error("no video url?");
 					}
 					else
 						result.videoStreams.Add(video);

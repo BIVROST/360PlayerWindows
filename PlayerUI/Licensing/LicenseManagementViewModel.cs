@@ -20,7 +20,7 @@ namespace PlayerUI
 		{
 			if (inLicenseVerification)
 			{
-				Logger.Info("License: currently waiting for license verification, ignored duplicate request.");
+				LoggerManager.Info("License: currently waiting for license verification, ignored duplicate request.");
 				return;
 			}
 
@@ -129,7 +129,7 @@ namespace PlayerUI
 			Logic.Instance.settings.LicenseCode = null;
 			Logic.Instance.settings.Save();
 
-			Logger.Info("License information cleared");
+			LoggerManager.Info("License information cleared");
 
 			LicenseSetBasicFeatures();
 		}
@@ -150,7 +150,7 @@ namespace PlayerUI
 			// store new license code
 			if (Logic.Instance.settings.LicenseCode != licenseCode)
 			{
-				Logger.Info($"New license code: {licenseCode}, license: {license}");
+				LoggerManager.Info($"New license code: {licenseCode}, license: {license}");
 				Logic.Instance.settings.LicenseCode = licenseCode;
 				Logic.Instance.settings.Save();
 			}
@@ -205,7 +205,7 @@ namespace PlayerUI
 			// no license and it's not required
 			if(!Features.RequireLicense && string.IsNullOrEmpty(newLicense))
 			{
-				Logger.Info("No license set nor required, using basic feature set.");
+				LoggerManager.Info("No license set nor required, using basic feature set.");
 				LicenseSetBasicFeatures();
 				return;
 			}
@@ -220,7 +220,7 @@ namespace PlayerUI
 					var settings = Logic.Instance.settings;
 					inLicenseVerification = true;
 					LicenseNinja.License license = await LicenseNinja.Verify(Logic.productCode, newLicense, settings.InstallId.ToString());
-					Logger.Info("License: license verified");
+					LoggerManager.Info("License: license verified");
 					if(dialogWasOrIsOpen)
 						Logic.Notify("License verified"); 
 					Execute.OnUIThread(() =>
@@ -230,12 +230,12 @@ namespace PlayerUI
 				}
 				catch (LicenseNinja.TimeEndedException ex)
 				{
-					Logger.Error(ex, $"License: license timed out");
+					LoggerManager.Error(ex, $"License: license timed out");
 					Execute.OnUIThread(() => OpenLicenseChange(LicenseChangeReason.licenseEnded, newLicense));
 				}
 				catch (LicenseNinja.LicenseDeniedException ex)
 				{
-					Logger.Error(ex, $"License: license denied");
+					LoggerManager.Error(ex, $"License: license denied");
 					var reason = string.IsNullOrEmpty(newLicense)
 						?LicenseChangeReason.licenseRequired
 						:LicenseChangeReason.licenseUnknown;
@@ -243,12 +243,12 @@ namespace PlayerUI
 				}
 				catch (LicenseNinja.NoLicenseServerConnectionException ex)
 				{
-					Logger.Error(ex, $"License: no connection to license server");
+					LoggerManager.Error(ex, $"License: no connection to license server");
 					Execute.OnUIThread(() => OpenLicenseServerUnreachable(newLicense));
 				}
 				catch (LicenseNinja.LicenseException ex)
 				{
-					Logger.Error(ex, $"License: other error");
+					LoggerManager.Error(ex, $"License: other error");
 					Execute.OnUIThread(() => OpenLicenseServerUnreachable(newLicense));
 				}
 				finally

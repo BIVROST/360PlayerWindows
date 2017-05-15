@@ -2,13 +2,9 @@
 using Fleck;
 using PlayerUI.VideoAnalytics;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
-using System.Linq;
-using System.Net.WebSockets;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using Logger = Bivrost.Log.Logger;
@@ -46,6 +42,9 @@ namespace PlayerUI
 		public const string productCode = "360player-windows";
 
 
+		private Logger logger = new Logger("logic");
+
+
 		// Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\BivrostPlayer";
 		public static string LocalDataDirectory = "";
 
@@ -65,17 +64,6 @@ namespace PlayerUI
 		protected Logic()
 		{
 			Instance = this;
-
-			Application.Current.DispatcherUnhandledException += (sender, e) =>
-			{
-				Logger.Fatal(e.Exception, "unhandled application exception");
-			};
-
-			AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
-			{
-				Logger.Fatal(e.ExceptionObject as Exception, "unhandled application domain exception");
-			};
-
 
 			// bind buttons in settings window
 			settings = new Settings();
@@ -104,6 +92,8 @@ namespace PlayerUI
 
 			Task.Factory.StartNew(() =>
 			{
+				Logger wsLogger = new Logger("websocket");
+
 				webSocketServer = new WebSocketServer("ws://127.0.0.1:24876"); // PORT "BIVRO" 24876
 				//var cert = Certificate.CreateSelfSignCertificatePfx(null, DateTime.Now, DateTime.Now.AddYears(2));
 				//var x509 = new System.Security.Cryptography.X509Certificates.X509Certificate2(cert);
@@ -116,9 +106,9 @@ namespace PlayerUI
 					{
 						socket.OnOpen = () =>
 						{
-							Logger.Info("WebSocket server open");
+							wsLogger.Info("WebSocket server open");
 						};
-						socket.OnClose = () => Logger.Info("WebSocket server close");
+						socket.OnClose = () => wsLogger.Info("WebSocket server close");
 						socket.OnMessage = message =>
 						{
 							switch (message)
@@ -231,7 +221,7 @@ namespace PlayerUI
 					System.Windows.Forms.Application.Restart();
 					System.Windows.Application.Current.Shutdown();
 				}
-				catch (Exception exc) { Logger.Error(exc, "Error resetting configuration"); }
+				catch (Exception exc) { logger.Error(exc, "Error resetting configuration"); }
 			}
 		}
 #endregion
@@ -311,28 +301,31 @@ namespace PlayerUI
 
 
 
-    
 
 
-        /// <summary>
-        /// Display a notification visible as a popup
-        /// Does nothing if ShellViewMovel.NotificationCenter is not yet set up.
-        /// </summary>
-        /// <param name="msg">the message</param>
-        /// <param name="memberName">(automatically added) source code trace information</param>
-        /// <param name="sourceFilePath">(automatically added) source code trace information</param>
-        /// <param name="sourceLineNumber">(automatically added) source code trace information</param>
-        public static void Notify(
+		#region notifications
+
+		private static Logger notificationLogger = new Logger("notification");
+
+		/// <summary>
+		/// Display a notification visible as a popup
+		/// Does nothing if ShellViewMovel.NotificationCenter is not yet set up.
+		/// </summary>
+		/// <param name="msg">the message</param>
+		/// <param name="memberName">(automatically added) source code trace information</param>
+		/// <param name="sourceFilePath">(automatically added) source code trace information</param>
+		/// <param name="sourceLineNumber">(automatically added) source code trace information</param>
+		public static void Notify(
             string msg,
             [System.Runtime.CompilerServices.CallerMemberName] string memberName = "",
             [System.Runtime.CompilerServices.CallerFilePath] string sourceFilePath = "",
             [System.Runtime.CompilerServices.CallerLineNumber] int sourceLineNumber = 0
         )
         {
-            Logger.Info($"Notification: {msg}", memberName, sourceFilePath, sourceLineNumber);
+			notificationLogger.Info($"{msg}", memberName, sourceFilePath, sourceLineNumber);
             Caliburn.Micro.Execute.OnUIThreadAsync(() => ShellViewModel.Instance?.NotificationCenter?.PushNotification(new NotificationViewModel(msg)));
         }
-
+		#endregion
 
 
 	}

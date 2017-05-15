@@ -17,7 +17,6 @@ namespace Bivrost.Log
 			{
 				default:
 				case LogType.info:
-				case LogType.notification:
 					return EventLogEntryType.Information;
 				case LogType.error:
 					return EventLogEntryType.Warning;
@@ -49,9 +48,9 @@ namespace Bivrost.Log
 		}
 
 
-		public void Write(Logger.LogElement entry)
+		public void Write(LoggerManager.LogElement entry)
 		{
-			EventLog.WriteEntry(sSource, entry.type + ": " + entry.msg, ToEventLogEntryType(entry.type));
+			EventLog.WriteEntry(sSource, $"{entry.Type} {entry.Tag}: {entry.Message}", ToEventLogEntryType(entry.Type));
 		}
 
 	}

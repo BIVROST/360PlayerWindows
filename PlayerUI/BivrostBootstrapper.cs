@@ -2,7 +2,6 @@
 using Microsoft.Win32;
 using PlayerUI.Tools;
 using System;
-using System.Collections.Generic;
 using System.Deployment.Application;
 using System.IO;
 using System.Linq;
@@ -12,7 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using Logger = Bivrost.Log.Logger;
+using Bivrost.Log;
 
 namespace PlayerUI
 {
@@ -22,6 +21,7 @@ namespace PlayerUI
 		// Single instance lock
 		static Mutex mutex = new Mutex(true, "{41F397A7-D196-4C6F-B75A-616069D45DAD}");
 		bool ownMutex = false;
+		private static Logger logger;
 
 		[DllImport("kernel32", SetLastError = true, CharSet = CharSet.Ansi)]
 		private static extern IntPtr LoadLibrary([MarshalAs(UnmanagedType.LPStr)]string lpFileName);
@@ -32,11 +32,21 @@ namespace PlayerUI
 		}
 
 
+
 		protected override void OnStartup(object sender, System.Windows.StartupEventArgs e)
 		{
+
 			//AddPathPatch();
 
+			logger = new Logger("bootstrap");
+
+			Application.Current.DispatcherUnhandledException += (_s, _e) => logger.Fatal(_e.Exception, "unhandled application exception");
+			AppDomain.CurrentDomain.UnhandledException += (_s, _e) => logger.Fatal(_e.ExceptionObject as Exception, "unhandled application domain exception");
+
 			Logic.Prepare();
+
+			LoggerManager.RegisterListener(new TextFileLogListener(Logic.LocalDataDirectory));
+			LoggerManager.RegisterListener(new TraceLogListener(false));
 
 			System.Windows.Forms.Application.EnableVisualStyles();
 
@@ -59,9 +69,6 @@ namespace PlayerUI
                     Logic.LocalDataDirectory = Path.GetDirectoryName(path) + Path.DirectorySeparatorChar;
 				}
 			}
-
-			Logger.RegisterListener(new Bivrost.Log.TextFileLogListener(Logic.LocalDataDirectory));
-			Logger.RegisterListener(new Bivrost.Log.TraceLogListener(false));
 
 
 			string[] args = Environment.GetCommandLineArgs();
@@ -358,7 +365,7 @@ namespace PlayerUI
 				{
 					StringBuilder sbname = new StringBuilder(256);
 					NativeMethods.GetClassName(in1, sbname, 256);
-					Logger.Info("Found Bivrost player window with class: " + sbname);
+					logger.Info("Found Bivrost player window with class: " + sbname);
 					playerPointer = in1;
 				}
 				return true;

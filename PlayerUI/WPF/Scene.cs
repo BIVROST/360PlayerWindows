@@ -90,11 +90,11 @@
         }
 
 
-        internal void HeadsetEnabled(Headset headset) { headset.ProvideLook += Headset_ProvideLook; Logger.Publish("headset", headset.DescribeType); }
+        internal void HeadsetEnabled(Headset headset) { headset.ProvideLook += Headset_ProvideLook; LoggerManager.Publish("headset", headset.DescribeType); }
 
-		private void Headset_ProvideLook(Vector3 pos, Quaternion rot, float fov) { headsetLookRotation = rot; Logger.Publish("q.recv", rot); }
+		private void Headset_ProvideLook(Vector3 pos, Quaternion rot, float fov) { headsetLookRotation = rot; LoggerManager.Publish("q.recv", rot); }
 
-		internal void HeadsetDisabled(Headset headset) { headset.ProvideLook -= Headset_ProvideLook; Logger.Publish("headset", null); }
+		internal void HeadsetDisabled(Headset headset) { headset.ProvideLook -= Headset_ProvideLook; LoggerManager.Publish("headset", null); }
 		#endregion
 
 
@@ -372,9 +372,9 @@
 
 			//Console.WriteLine($"SCENE: up: {lookUp:00.00}|{Vector3.Transform(Vector3.Up, currentRotationQuaternion):00.00} at: {lookAt:00.00}|{Vector3.Transform(Vector3.ForwardRH, currentRotationQuaternion):00.00}");
 
-			Logger.Publish("scene.forward", lookAt.ToString("0.00"));
-			Logger.Publish("scene.up", lookUp.ToString("0.00"));
-			Logger.Publish("scene.vr_quat", headsetLookRotation);
+			LoggerManager.Publish("scene.forward", lookAt.ToString("0.00"));
+			LoggerManager.Publish("scene.up", lookUp.ToString("0.00"));
+			LoggerManager.Publish("scene.vr_quat", headsetLookRotation);
 
 
 			//Quaternion q = new Quaternion(headsetLookRotation.X, headsetLookRotation.Y, headsetLookRotation.Z, headsetLookRotation.W);

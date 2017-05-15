@@ -19,8 +19,39 @@
 					<RowDefinition />
 					<RowDefinition Height="Auto" />
 				</Grid.RowDefinitions>
-				<ScrollViewer Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Name="ScrollViewer">
-					<TextBox Name="Contents" IsReadOnly="True" TextWrapping="Wrap" />
+				<ScrollViewer Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Name="ScrollViewer" HorizontalScrollBarVisibility="Disabled">
+					<Grid>
+						<ItemsControl x:Name="List_Log">
+							<ItemsControl.ItemTemplate>
+								<DataTemplate>
+									<Grid Margin="4" Background="{Binding Type, Mode=OneTime, Converter={local:LogTypeToColorConverter}}">
+										<Grid.ColumnDefinitions>
+											<ColumnDefinition Width="100" />
+											<ColumnDefinition Width="*" />
+										</Grid.ColumnDefinitions>
+										<Grid.RowDefinitions>
+											<RowDefinition />
+											<RowDefinition />
+										</Grid.RowDefinitions>
+										<TextBlock Text="{Binding Tag, Mode=OneWay}" TextWrapping="NoWrap" Grid.Column="0" Grid.Row="1" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+										<TextBlock Text="{Binding Path, Mode=OneWay}" TextWrapping="NoWrap" Grid.Column="1" Grid.Row="0">
+											<TextBlock.LayoutTransform>
+												<ScaleTransform ScaleX="0.8" ScaleY="0.8" />
+											</TextBlock.LayoutTransform>
+										</TextBlock>
+
+										<TextBlock Text="{Binding Time, StringFormat=yyyy-MM-dd HH:mm:ss, Mode=OneWay}" Grid.Column="0" Grid.Row="0">
+											<TextBlock.LayoutTransform>
+												<ScaleTransform ScaleX="0.9" ScaleY="0.9" />
+											</TextBlock.LayoutTransform>
+										</TextBlock>
+										
+										<TextBlock Text="{Binding Message, Mode=OneWay}" TextWrapping="WrapWithOverflow" Grid.Column="1" Grid.Row="1"/>
+									</Grid>
+								</DataTemplate>
+							</ItemsControl.ItemTemplate>
+						</ItemsControl>
+					</Grid>
 				</ScrollViewer>
 				<CheckBox Unchecked="UpdateFollow" Checked="UpdateFollow" Grid.Row="1" Grid.Column="0" Content="follow output" VerticalAlignment="Center" Margin="4" IsChecked="True" Name="Follow"/>
 				<Button Click="Clear" Content="clear" Grid.Column="1" Grid.Row="1" VerticalAlignment="Center" Margin="4"/>

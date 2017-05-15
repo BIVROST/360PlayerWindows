@@ -8,7 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Animation;
-using Logger = Bivrost.Log.Logger;
+using LoggerManager = Bivrost.Log.LoggerManager;
 
 
 namespace PlayerUI
@@ -174,13 +174,13 @@ namespace PlayerUI
 
 					dropFilesPanelDashAnimation.RepeatBehavior = RepeatBehavior.Forever;
 					dropFilesPanelDashAnimation.Begin(shellView.DropFilesRect, true);
-					Logger.Info("Begin storyboard");
+					LoggerManager.Info("Begin storyboard");
 				}
 				else
 				{
 					if (dropFilesPanelDashAnimation.GetCurrentState(shellView.DropFilesRect) == ClockState.Stopped)
 					{
-						Logger.Info("Begin storyboard again");
+						LoggerManager.Info("Begin storyboard again");
 						dropFilesPanelDashAnimation.Begin(shellView.DropFilesRect, true);
 					}
 				}
@@ -190,7 +190,7 @@ namespace PlayerUI
 				if (dropFilesPanelDashAnimation != null)
 				{
 					dropFilesPanelDashAnimation.Stop(shellView.DropFilesRect);
-					Logger.Info("Stop storyboard");
+					LoggerManager.Info("Stop storyboard");
 				}
 			}
 		}
@@ -263,7 +263,7 @@ namespace PlayerUI
 
         public void DisableTabPress(object sender, object e)
 		{ 			
-			Logger.Info("tabstop");
+			LoggerManager.Info("tabstop");
 		}
 
 		public void ChangeFov(System.Windows.Input.MouseWheelEventArgs wheelEventArgs)

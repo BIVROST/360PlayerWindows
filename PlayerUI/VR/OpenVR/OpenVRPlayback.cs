@@ -285,8 +285,8 @@ namespace PlayerUI.OpenVR
                             //fixedLookRotation = new Quaternion(1, 0, 0, 0) * fixedLookRotation;
                             //fixedLookRotation = new Quaternion(0, 0, 1, 0) * fixedLookRotation;
 
-                            Logger.Publish("openvr.forward", fixedLookAt);
-                            Logger.Publish("openvr.up", fixedLookUp);
+                            LoggerManager.Publish("openvr.forward", fixedLookAt);
+                            LoggerManager.Publish("openvr.up", fixedLookUp);
 
 
                             // TODO: normalize
@@ -341,9 +341,9 @@ namespace PlayerUI.OpenVR
 					);
 
 					if (errorLeft != EVRCompositorError.None)
-						Logger.Error("VR Compositor failure (left): " + errorLeft);
+						LoggerManager.Error("VR Compositor failure (left): " + errorLeft);
 					if (errorRight != EVRCompositorError.None)
-                        Logger.Error("VR Compositor failure (right): " + errorRight);
+                        LoggerManager.Error("VR Compositor failure (right): " + errorRight);
 				};
 
 				Valve.VR.OpenVR.Shutdown();

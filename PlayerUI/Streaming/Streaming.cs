@@ -4,7 +4,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using RestSharp;
 using System.Linq;
-using Logger = Bivrost.Log.Logger;
+using LoggerManager = Bivrost.Log.LoggerManager;
 using System.Text.RegularExpressions;
 using System.IO;
 
@@ -260,7 +260,7 @@ namespace PlayerUI.Streaming
 			request.AddHeader("Accept", "text/html");
 			IRestResponse response = client.Execute(request);
 
-			Logger.Info("HTTP request: " + uri);
+			LoggerManager.Info("HTTP request: " + uri);
 
 			if ((int)response.StatusCode < 200 || (int)response.StatusCode >= 400)
 				throw new StreamNetworkFailure("Status "+response.StatusCode, uri);
@@ -306,7 +306,7 @@ namespace PlayerUI.Streaming
 
 				case "":
 				default:
-					Logger.Info($"GuessContainerFromExtension(${path}) - did not understand extension \"${extension}\", guessing mp4");
+					LoggerManager.Info($"GuessContainerFromExtension(${path}) - did not understand extension \"${extension}\", guessing mp4");
 					goto case ".mp4";
 			}
 		}

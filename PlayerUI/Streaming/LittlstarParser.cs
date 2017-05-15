@@ -174,7 +174,7 @@ namespace PlayerUI.Streaming
                         break;
 
                     default:
-						Logger.Info($"littlstar unknown version: {kvp.Name} ({(string)kvp.Value})");
+						LoggerManager.Info($"littlstar unknown version: {kvp.Name} ({(string)kvp.Value})");
                         break;
 				}
 			}

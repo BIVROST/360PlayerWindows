@@ -26,7 +26,7 @@ namespace PlayerUI
 				RecentsFormat2 rf2 = new RecentsFormat2();
 				rf2.AddRange(rf1.ConvertAll(uri => 
 				{
-					Logger.Info("Upgrading recents from v1");
+					LoggerManager.Info("Upgrading recents from v1");
 					string title = Path.GetFileName(uri);
 					if (string.IsNullOrWhiteSpace(title))
 						title = uri;
@@ -61,7 +61,7 @@ namespace PlayerUI
 				File.WriteAllText(recentConfig, JsonConvert.SerializeObject(recentFiles), Encoding.UTF8);
 			}
 			catch (Exception exc) {
-				Logger.Error("Recents save: " + exc.Message);
+				LoggerManager.Error("Recents save: " + exc.Message);
 			}
 		}
 
@@ -92,12 +92,12 @@ namespace PlayerUI
 				}
 				else
 				{
-					Logger.Info("Creating new recents file");
+					LoggerManager.Info("Creating new recents file");
 					recentFiles = new RecentsFormat2();
 				}
 			}
 			catch (Exception exc) {
-				Logger.Error(exc, "Recents error");
+				LoggerManager.Error(exc, "Recents error");
 			}
 		}
 

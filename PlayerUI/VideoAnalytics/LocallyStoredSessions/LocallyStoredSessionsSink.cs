@@ -15,7 +15,7 @@ namespace PlayerUI.VideoAnalytics
 			{
 				Logic.Instance.settings.LocallyStoredSessionsDirectory = value;
 				Logic.Instance.settings.Save();
-				Logger.Info($"[LocallyStoredSessions]: changed destination folder to {DestinationDirectory}");
+				LoggerManager.Info($"[LocallyStoredSessions]: changed destination folder to {DestinationDirectory}");
 			}
 		}
 
@@ -34,7 +34,7 @@ namespace PlayerUI.VideoAnalytics
 				dest,
 				session.ToJson()
 			);
-			Logger.Info($"[LocallyStoredSessions]: saved a session to {dest}");
+			LoggerManager.Info($"[LocallyStoredSessions]: saved a session to {dest}");
 		}
 	}
 }

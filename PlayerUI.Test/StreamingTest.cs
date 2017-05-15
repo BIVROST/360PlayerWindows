@@ -36,7 +36,7 @@ namespace PlayerUI.Test
         {
             foreach (var uri in CorrectUris)
             {
-                Bivrost.Log.Logger.Info("parsing " + uri + "...");
+                Bivrost.Log.LoggerManager.Info("parsing " + uri + "...");
                 parser.Parse(uri);
             }
         }

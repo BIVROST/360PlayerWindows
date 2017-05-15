@@ -21,7 +21,7 @@ using Bivrost;
 using System.Text.RegularExpressions;
 using SharpDX.Direct3D11;
 using SharpDX.XInput;
-using Logger = Bivrost.Log.Logger;
+using LoggerManager = Bivrost.Log.LoggerManager;
 
 
 namespace PlayerUI
@@ -346,7 +346,7 @@ namespace PlayerUI
 			//string clipboardText = Clipboard.GetText();
 			string clipboardText = wmText;
 
-			Logger.Info($"Clipboard: ${clipboardText}");
+			LoggerManager.Info($"Clipboard: ${clipboardText}");
 
 			OpenURI(clipboardText);
 		}
@@ -369,7 +369,7 @@ namespace PlayerUI
 
 			if (!string.IsNullOrWhiteSpace(FileFromArgs))
 			{
-				Logger.Info($"Opening URI from command line arguments: {FileFromArgs}");
+				LoggerManager.Info($"Opening URI from command line arguments: {FileFromArgs}");
 				OpenURI(FileFromArgs);
 			}
 
@@ -420,7 +420,7 @@ namespace PlayerUI
 
 		private void Log(string message)
 		{
-			Logger.Info($"[Remote] message");
+			LoggerManager.Info($"[Remote] message");
 		}
 
 
@@ -712,7 +712,7 @@ namespace PlayerUI
 						}
 						catch (Exception e)
 						{
-							Logger.Error("Headset detection exception (OpenVR): " + e);
+							LoggerManager.Error("Headset detection exception (OpenVR): " + e);
 						}
 						Logic.Notify("OpenVR not detected.");
 						ShellViewModel.SendEvent("headsetError", "openvr");
@@ -790,7 +790,7 @@ namespace PlayerUI
 			string uri = OpenUrlViewModel.GetURI();
 			if(uri == null)
 			{
-				Logger.Info("User cancelled OpenURI window.");
+				LoggerManager.Info("User cancelled OpenURI window.");
 				return;
 			}
 			OpenURI(uri);
@@ -802,7 +802,7 @@ namespace PlayerUI
 			SelectedFileTitle = "";
 
 			Streaming.ServiceResult result = ServiceResultResolver.DialogProcessURIBlocking(uri, ShellViewModel.Instance.playerWindow);
-			Logger.Info($"OpenURI: Parsed '{uri}' to {result}");
+			LoggerManager.Info($"OpenURI: Parsed '{uri}' to {result}");
 
 			if (result == null)
 			{
@@ -950,7 +950,7 @@ namespace PlayerUI
 				lv.Show();
 			}
 			else
-				Logger.Info("Refused to open a second log viewer.");
+				LoggerManager.Info("Refused to open a second log viewer.");
 		}
 
 		public void FileDropped(DragEventArgs e)
@@ -1010,14 +1010,14 @@ namespace PlayerUI
 
 		public void Stop()
 		{
-			Logger.Info("FILE ENDED");
+			LoggerManager.Info("FILE ENDED");
 			if (Fullscreen) if (!Logic.Instance.settings.DoNotExitFullscreenOnStop) ToggleFullscreen(true);
 			//space press hack
 			Execute.OnUIThread(() => shellView.VideoProgressBar.Focus());
 			ShowBars();
 			ShowStartupUI();
 
-			Logger.Info("STOP STOP STOP");
+			LoggerManager.Info("STOP STOP STOP");
 
 			this.DXCanvas.Scene = null;
 
@@ -1329,7 +1329,7 @@ namespace PlayerUI
 			if (Logic.Instance.settings.HeadsetUsage == headset)
 				return;
 
-            Logger.Info($"Set headset: {headset} (menu option)");
+            LoggerManager.Info($"Set headset: {headset} (menu option)");
             Logic.Instance.settings.HeadsetUsage = headset;
             Logic.Instance.settings.Save();
 

@@ -1,4 +1,4 @@
-﻿using static Bivrost.Log.Logger;
+﻿using static Bivrost.Log.LoggerManager;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

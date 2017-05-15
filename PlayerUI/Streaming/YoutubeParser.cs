@@ -260,7 +260,7 @@ namespace PlayerUI.Streaming
                 catch(Exception e) when (!(e is StreamException))
                 {
 					//throw new StreamParsingFailed("Failed to parse youtube-dl downloaded youtube metadata", e);
-					Logger.Error("Failed to parse some of youtube-dl downloaded metadata:\n"+format.ToString()+"\n\n"+e);
+					LoggerManager.Error("Failed to parse some of youtube-dl downloaded metadata:\n"+format.ToString()+"\n\n"+e);
                 }
 
             }
@@ -321,19 +321,19 @@ namespace PlayerUI.Streaming
                     string ytdl = dataFoler + "youtube-dl.exe";
                     if (File.Exists(ytdl))
                         File.Delete(ytdl);
-                    Logger.Info("youtube-dl update success");
+                    LoggerManager.Info("youtube-dl update success");
                     File.WriteAllBytes(ytdl, response.RawBytes);
                     latestDownloadedVersion = null;
                     //IsYoutubeUpToDate();
                 }
                 else
                 {
-                    Logger.Error("youtube-dl update failed");
+                    LoggerManager.Error("youtube-dl update failed");
                 }
             }
             catch (Exception exc)
             {
-                Logger.Error(exc, "youtube-dl update failed");
+                LoggerManager.Error(exc, "youtube-dl update failed");
             };
         }
 
@@ -342,7 +342,7 @@ namespace PlayerUI.Streaming
         {
             try
             {
-                Logger.Info("Executing youtube-dl with arguments: " + arguments);
+                LoggerManager.Info("Executing youtube-dl with arguments: " + arguments);
                 string dataFoler = Logic.LocalDataDirectory; //Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
                                                              //if (!Directory.Exists(dataFoler + "\\BivrostPlayer"))
                                                              //	Directory.CreateDirectory(dataFoler + "\\BivrostPlayer");
@@ -370,10 +370,10 @@ namespace PlayerUI.Streaming
                 process.WaitForExit();
                 exitCode = process.ExitCode;
 
-                Logger.Info("Youtube-dl exit code: " + exitCode);
+                LoggerManager.Info("Youtube-dl exit code: " + exitCode);
 
                 if(!string.IsNullOrWhiteSpace(error.ToString()))
-                    Logger.Error("Youtube-dl errors: " + error.ToString());
+                    LoggerManager.Error("Youtube-dl errors: " + error.ToString());
 
                 return output.ToString().Trim();
 

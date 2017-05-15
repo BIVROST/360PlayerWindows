@@ -16,17 +16,17 @@ namespace Bivrost.Log
 			this.messageOnly = messageOnly;
 		}
 
-		public void Write(Logger.LogElement entry)
+		public void Write(LoggerManager.LogElement entry)
 		{
 			if (messageOnly)
 			{
-				Trace.WriteLine(entry.msg);
+				Trace.WriteLine(entry.Message);
 			}
 			else
 			{
-				Trace.WriteLine($"{entry.time} at {entry.path} {entry.type.ToString()}");
+				Trace.WriteLine($"{entry.Time} at {entry.Path} {entry.Type.ToString()} {entry.Tag}");
 				Trace.Indent();
-				Trace.WriteLine(entry.msg);
+				Trace.WriteLine(entry.Message);
 				Trace.Unindent();
 				Trace.WriteLine("");
 			}

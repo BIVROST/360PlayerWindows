@@ -27,7 +27,7 @@ namespace PlayerUI
 				}
 				catch (Exception ex)
 				{
-					Logger.Error(ex, "Update check failed");
+					LoggerManager.Error(ex, "Update check failed");
 					return false;
 				}
 
@@ -56,7 +56,7 @@ namespace PlayerUI
 					}
 					catch (DeploymentDownloadException dde)
 					{
-						Logger.Error(dde, "Update deployement failed");
+						LoggerManager.Error(dde, "Update deployement failed");
 						if (OnUpdateFail != null) {
 							OnUpdateFail();
 							OnUpdateFail = null;

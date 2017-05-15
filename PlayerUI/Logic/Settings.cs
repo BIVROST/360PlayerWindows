@@ -43,7 +43,7 @@ namespace PlayerUI
 			}
 			else
 			{
-				Logger.Info("InstallId == " + InstallId);
+				LoggerManager.Info("InstallId == " + InstallId);
 			}
 
 		}

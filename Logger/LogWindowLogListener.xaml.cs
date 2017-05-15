@@ -5,6 +5,8 @@ using System.Windows.Controls;
 using System.Linq;
 using System.Windows.Threading;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Windows.Media;
 
 namespace Bivrost.Log
 {
@@ -35,13 +37,17 @@ namespace Bivrost.Log
 			Closing += (s,e) => dispatcherTimer.Stop();
 
 			UpdatePublishedValues(null, null);
-			List_Published.ItemsSource = Logger.published;
+			//List_Published.ItemsSource = LoggerManager.published;
+
+			List_Log.ItemsSource = Entries;
+			System.Windows.Data.BindingOperations.EnableCollectionSynchronization(Entries, entriesSyncLock);
+
 		}
 
 
 		private void UpdatePublishedValues(object sender, EventArgs e)
 		{
-			var list = Logger.published.ToList();
+			var list = LoggerManager.published.ToList();
 			list.Sort((a, b) => a.Key.CompareTo(b.Key));
 			List_Published.ItemsSource = list;
 		}
@@ -63,24 +69,31 @@ namespace Bivrost.Log
 		{
 			Instance = this;
 			base.OnInitialized(e);
-			Logger.RegisterListener(this);
+			LoggerManager.RegisterListener(this);
 		}
 
 
 		protected override void OnClosing(CancelEventArgs e)
 		{
-			Logger.UnregisterListener(this);
+			LoggerManager.UnregisterListener(this);
 			base.OnClosing(e);
 			Instance = null;
 		}
 
-		public void Write(Logger.LogElement entry)
+		//public List<LoggerManager.LogElement> Entries { get; private set; } = new List<LoggerManager.LogElement>();
+		public ObservableCollection<LoggerManager.LogElement> Entries { get; private set; } = new ObservableCollection<LoggerManager.LogElement>();
+		public object entriesSyncLock = new object();
+
+		public void Write(LoggerManager.LogElement entry)
 		{
-			Contents.Dispatcher.Invoke( () =>
+			List_Log.Dispatcher.Invoke( () =>
 			{
-				Contents.Text += $"[{entry.type}] {entry.time}\r\n{entry.msg}\r\n\r\n{entry.path}\r\n\r\n";
-				if (follow)
-					ScrollViewer.ScrollToEnd();
+				//Contents.Text += $"[{entry.type} {entry.tag}] {entry.time}\r\n{entry.msg}\r\n\r\n{entry.path}\r\n\r\n";
+				lock(entriesSyncLock)
+					Entries.Add(entry);
+				//if (follow)
+				//	List_Log.scr
+				//	ScrollViewer.ScrollToEnd();
 			});
 		}
 
@@ -91,15 +104,41 @@ namespace Bivrost.Log
 
 		private void Clear(object sender, RoutedEventArgs e)
 		{
-			Contents.Clear();
+			lock(entriesSyncLock)
+				Entries.Clear();
 		}
 
 
 		private void OpenTxt(object sender, RoutedEventArgs e)
 		{
-			string f = (Logger.listeners.First(lw => lw is TextFileLogListener) as TextFileLogListener).LogFile;
+			string f = (LoggerManager.listeners.First(lw => lw is TextFileLogListener) as TextFileLogListener).LogFile;
 			System.Diagnostics.Process.Start(f);
 		}
+	}
+
+
+	public class LogTypeToColorConverter : System.Windows.Markup.MarkupExtension, System.Windows.Data.IValueConverter
+	{
+		public override object ProvideValue(IServiceProvider serviceProvider)
+		{
+			return this;
+		}
+
+		public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+		{
+			switch ((LogType)value) {
+			case LogType.error:
+				return new SolidColorBrush(Color.FromArgb(32, 255, 255, 0));
+			case LogType.fatal:
+				return new SolidColorBrush(Color.FromArgb(32, 255, 0, 0));
+			}
+			return new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
+		}
+
+		public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+		{
+			return null;
+		}   
 	}
 
 }

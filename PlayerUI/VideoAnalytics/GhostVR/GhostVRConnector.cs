@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using ChanibaL;
 using RestSharp;
-using Bivrost.Log;
 using Newtonsoft.Json;
 using System.Threading;
 
@@ -27,7 +26,7 @@ namespace PlayerUI.VideoAnalytics
 					return;
 				_status = value;
 				StatusChanged?.Invoke(status);
-				Log($"Connection status changed to {value}");
+				logger.Info($"Connection status changed to {value}");
 			}
 		}
 
@@ -45,7 +44,7 @@ namespace PlayerUI.VideoAnalytics
 				if (Guid.TryParse(strtoken, out token))
 					return token;
 
-				Logger.Error("[GhostVR] cannot parse token from settings, removed");
+				logger.Error("[GhostVR] cannot parse token from settings, removed");
 				return null;
 			}
 			set
@@ -70,16 +69,8 @@ namespace PlayerUI.VideoAnalytics
 
 		public bool IsConnected { get { return status == ConnectionStatus.connected; } }
 
-		private void Log(string v)
-		{
-			Logger.Info("[GhostVR] " + v);
-		}
+		internal Bivrost.Log.Logger logger = new Bivrost.Log.Logger("GhostVR");
 
-
-		private void Log(string tag, ApiResponseError errorResponse)
-		{
-			Log(tag + " error: " + errorResponse);
-		}
 
 
 		#region GhostVR API
@@ -146,7 +137,7 @@ namespace PlayerUI.VideoAnalytics
 			if(Token.HasValue)
 				request.AddHeader("Authorization", "Bearer " + Token.Value);
 			arguments(request);
-			Log($"API request: {endpoint} {request} token={(Token.HasValue ? Token.Value.ToString() : "(none)")}");
+			logger.Info($"API request: {endpoint} {request} token={(Token.HasValue ? Token.Value.ToString() : "(none)")}");
 
 			client.ExecuteAsync(request, (response, request_) =>
 			{
@@ -154,7 +145,7 @@ namespace PlayerUI.VideoAnalytics
 				{
 					if (response.ErrorException != null)
 					{
-						Log("Cannot connect to GhostVR API: " + response.ErrorMessage);
+						logger.Error("Cannot connect to GhostVR API: " + response.ErrorMessage);
 						onError("Cannot connect to GhostVR API: " + response.ErrorMessage);
 						potentialAuthError = true;
 						return;
@@ -164,20 +155,20 @@ namespace PlayerUI.VideoAnalytics
 					if (apiResponse.status == ApiResponse.ApiStatus.success)
 					{
 						ApiResponseSuccess<T> apiResponseSuccess = JsonConvert.DeserializeObject<ApiResponseSuccess<T>>(response.Content);
-						Log("ApiRequest success: " + endpoint);
+						logger.Info("ApiRequest success: " + endpoint);
 						onSuccess(apiResponseSuccess.data);
 					}
 					else
 					{
 						ApiResponseError apiResponseError = JsonConvert.DeserializeObject<ApiResponseError>(response.Content);
-						Log($"ApiRequest error: {endpoint}, {apiResponseError.status} {apiResponseError.message} ({apiResponseError.code})");
+						logger.Error($"ApiRequest error: {endpoint}, {apiResponseError.status} {apiResponseError.message} ({apiResponseError.code})");
 						onError($"{apiResponseError.status} {apiResponseError.message} ({apiResponseError.code})");
 						potentialAuthError = true;
 					}
 				}
 				catch (Exception e)
 				{
-					Log("ApiRequest parse error:" + endpoint + e);
+					logger.Error("ApiRequest parse error:" + endpoint + e);
 					onError("an exception occurred: " + e);
 					potentialAuthError = true;
 				}
@@ -214,7 +205,7 @@ namespace PlayerUI.VideoAnalytics
 				+ "?access_token=" + Token.ToString()
 				+ "&installation_id=" + Logic.Instance.settings.InstallId
 				+ "&" + PlayerDetails.Current.AsQsFormat;
-			Log($"Opening URI in browser: {uri}...");
+			logger.Info($"Opening URI in browser: {uri}...");
 			System.Diagnostics.Process.Start(uri);
 		}
 
@@ -241,15 +232,15 @@ namespace PlayerUI.VideoAnalytics
 					switch (response.verification_status)
 					{
 						case TokenStatus.ok:
-							Log("VerifyToken OK");
+							logger.Info("VerifyToken OK");
 							onSuccess(response);
 							break;
 						case TokenStatus.pending:
-							Log("VerifyToken pending");
+							logger.Info("VerifyToken pending");
 							onPending();
 							break;
 						case TokenStatus.rejected:
-							Log("VerifyToken rejected");
+							logger.Info("VerifyToken rejected");
 							onRejection();
 							break;
 					}
@@ -266,7 +257,7 @@ namespace PlayerUI.VideoAnalytics
 			var client = new RestClient(GhostVREndpoint);
 			var request = new RestRequest("discard_player_token", Method.POST);
 			request.AddParameter("access_token", Token, ParameterType.GetOrPost);
-			client.ExecuteAsync(request, (response, req) => { Log("DiscardToken: " + response.StatusCode); });
+			client.ExecuteAsync(request, (response, req) => { logger.Info("DiscardToken: " + response.StatusCode); });
 		}
 
 
@@ -285,7 +276,7 @@ namespace PlayerUI.VideoAnalytics
 				r => r.AddParameter("application/json; charset=UTF-8", session.ToJson(), ParameterType.RequestBody),
 				success => 
 				{
-					Log("VideoSession sent");
+					logger.Info("VideoSession sent");
 					var uri = new UriBuilder(success.follow_up);
 					//if (uri.Query == "?" || uri.Query == "")
 					//	uri.Query = $"access_token={token}";
@@ -305,7 +296,7 @@ namespace PlayerUI.VideoAnalytics
 
 		public GhostVRConnector()
         {
-			sm = new StateMachine(StateInit, (msg, warn) => { if (warn) Logger.Error(msg); else Logger.Info(msg); });
+			sm = new StateMachine(StateInit, (msg, warn) => { if (warn) logger.Error(msg); else logger.Info(msg); });
 			System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
 			sw.Start();
 			periodicUpdater = new Thread(() =>
@@ -362,10 +353,10 @@ namespace PlayerUI.VideoAnalytics
             {
                 status = ConnectionStatus.pending;
 				VerifyPlayerToken(
-					sm.ValidOnlyInThisState<VerifyTokenResponse>(vtr => sm.SwitchState(StateVerified(vtr))),
+					sm.ValidOnlyInThisState<VerifyTokenResponse>(vtr => sm.SwitchStateExternalImmidiate(StateVerified(vtr))),
 					sm.StateSwitcherValidOnlyInThisState(StatePendingWait),
 					sm.StateSwitcherValidOnlyInThisState(StateConnectingFailed),
-					sm.ValidOnlyInThisState<string>(vtr => sm.SwitchState(StatePendingWait))
+					sm.ValidOnlyInThisState<string>(vtr => sm.SwitchStateExternalImmidiate(StatePendingWait))
 				);
 				cancelTrigger = sm.StateSwitcherValidOnlyInThisState(StateCancelPending);
 			}
@@ -378,10 +369,10 @@ namespace PlayerUI.VideoAnalytics
 			{
 				status = ConnectionStatus.pending;
 				VerifyPlayerToken(
-					sm.ValidOnlyInThisState<VerifyTokenResponse>(vtr => sm.SwitchState(StateVerified(vtr))),
+					sm.ValidOnlyInThisState<VerifyTokenResponse>(vtr => sm.SwitchStateExternalImmidiate(StateVerified(vtr))),
 					sm.StateSwitcherValidOnlyInThisState(StateConnectingFailed),
 					sm.StateSwitcherValidOnlyInThisState(StateConnectingFailed),
-					sm.ValidOnlyInThisState<string>(vtr => sm.SwitchState(StateConnectingFailed))
+					sm.ValidOnlyInThisState<string>(vtr => sm.SwitchStateExternalImmidiate(StateConnectingFailed))
 				);
 				cancelTrigger = sm.StateSwitcherValidOnlyInThisState(StateCancelPending);
 			}
@@ -454,12 +445,10 @@ namespace PlayerUI.VideoAnalytics
 			if(sm.EnterState)
 			{
 				VerifyPlayerToken(
-					sm.ValidOnlyInThisState<VerifyTokenResponse>(verifyApiResponse => {
-						sm.SwitchState(StateConnected);
-					}),
+					sm.ValidOnlyInThisState<VerifyTokenResponse>(verifyApiResponse => sm.SwitchStateExternalImmidiate(StateConnected)),
 					sm.StateSwitcherValidOnlyInThisState(StateDisconnect),
 					sm.StateSwitcherValidOnlyInThisState(StateDisconnect),
-					sm.ValidOnlyInThisState<string>(err => sm.SwitchState(StateVerificationAgainFailed))
+					sm.ValidOnlyInThisState<string>(err => sm.SwitchStateExternalImmidiate(StateVerificationAgainFailed))
 				);
 				disconnectTrigger = sm.StateSwitcherValidOnlyInThisState(StateDisconnect);
 			}
