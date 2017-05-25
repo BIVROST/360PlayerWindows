@@ -6,10 +6,10 @@
         xmlns:local="clr-namespace:Bivrost.Log"
         mc:Ignorable="d"
 		x:Name="LogWindowObject"
-        Title="360Player Log" Height="600" Width="400"
+        Title="360Player Log" Height="600" Width="400" MinWidth="300"
 		DataContext="{Binding RelativeSource={RelativeSource Self}}">
 
-	<TabControl x:Name="Tabs">
+	<TabControl>
 		<TabItem Header="Event log">
 
 			<DockPanel>
@@ -75,8 +75,8 @@
 
 		</TabItem>
 
-		<TabItem Header="Published values" x:Name="Tab_Published" IsSelected="True">
-			<ListView x:Name="List_Published" ItemsSource="{Binding ElementName=LogWindowObject, Path=Published}">
+		<TabItem Header="Published values">
+			<ListView ItemsSource="{Binding Path=Published}">
 				<ListView.View>
 					<GridView>
 						<GridView.Columns>

@@ -16,6 +16,10 @@ namespace PlayerUI
 
     public class Settings
 	{
+
+		static Logger log = new Logger("Settings");
+
+
 #region settings management
 		private string _settingsFile = "";
 		[JsonIgnore]
@@ -39,12 +43,10 @@ namespace PlayerUI
 			if (InstallId == Guid.Empty)
 			{
 				InstallId = Guid.NewGuid();
+				log.Info("Regenerated InstallId");
 				Save();
 			}
-			else
-			{
-				LoggerManager.Info("InstallId == " + InstallId);
-			}
+			log.Info("InstallId == " + InstallId);
 
 		}
 

@@ -10,6 +10,9 @@ namespace PlayerUI
 {
 	public class Recents
 	{
+		private static Logger log = new Logger("Recents");
+
+
 		public class RecentsFormat1 : List<string> { }
 
 		public class RecentsFormat2 : List<RecentsFormat2.RecentElement>
@@ -26,7 +29,7 @@ namespace PlayerUI
 				RecentsFormat2 rf2 = new RecentsFormat2();
 				rf2.AddRange(rf1.ConvertAll(uri => 
 				{
-					LoggerManager.Info("Upgrading recents from v1");
+					log.Info("Upgrading recents from v1");
 					string title = Path.GetFileName(uri);
 					if (string.IsNullOrWhiteSpace(title))
 						title = uri;
@@ -61,7 +64,7 @@ namespace PlayerUI
 				File.WriteAllText(recentConfig, JsonConvert.SerializeObject(recentFiles), Encoding.UTF8);
 			}
 			catch (Exception exc) {
-				LoggerManager.Error("Recents save: " + exc.Message);
+				log.Error("Recents save: " + exc.Message);
 			}
 		}
 
@@ -92,12 +95,12 @@ namespace PlayerUI
 				}
 				else
 				{
-					LoggerManager.Info("Creating new recents file");
+					log.Info("Creating new recents file");
 					recentFiles = new RecentsFormat2();
 				}
 			}
 			catch (Exception exc) {
-				LoggerManager.Error(exc, "Recents error");
+				log.Error(exc, "Recents error");
 			}
 		}
 

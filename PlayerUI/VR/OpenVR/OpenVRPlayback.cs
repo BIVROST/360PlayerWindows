@@ -21,6 +21,9 @@ namespace PlayerUI.OpenVR
 {
 	class OpenVRPlayback : Headset
 	{
+		private static Logger log = new Logger("OpenVR");
+
+
 
 		[DllImport("kernel32", SetLastError = true, CharSet = CharSet.Ansi)]
 		private static extern IntPtr LoadLibrary([MarshalAs(UnmanagedType.LPStr)]string lpFileName);
@@ -341,9 +344,9 @@ namespace PlayerUI.OpenVR
 					);
 
 					if (errorLeft != EVRCompositorError.None)
-						LoggerManager.Error("VR Compositor failure (left): " + errorLeft);
+						log.Error("VR Compositor failure (left): " + errorLeft);
 					if (errorRight != EVRCompositorError.None)
-                        LoggerManager.Error("VR Compositor failure (right): " + errorRight);
+                        log.Error("VR Compositor failure (right): " + errorRight);
 				};
 
 				Valve.VR.OpenVR.Shutdown();

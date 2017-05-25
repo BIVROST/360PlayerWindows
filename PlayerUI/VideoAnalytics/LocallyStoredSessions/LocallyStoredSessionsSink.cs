@@ -5,6 +5,9 @@ namespace PlayerUI.VideoAnalytics
 {
 	public class LocallyStoredSessionSink : ISessionSink
 	{
+		private static Logger log = new Logger("Locally stored sessions");
+		
+
 		public string DestinationDirectory {
 			get {
 				return !string.IsNullOrWhiteSpace(Logic.Instance.settings.LocallyStoredSessionsDirectory)
@@ -15,7 +18,7 @@ namespace PlayerUI.VideoAnalytics
 			{
 				Logic.Instance.settings.LocallyStoredSessionsDirectory = value;
 				Logic.Instance.settings.Save();
-				LoggerManager.Info($"[LocallyStoredSessions]: changed destination folder to {DestinationDirectory}");
+				log.Info($"changed destination folder to {DestinationDirectory}");
 			}
 		}
 
@@ -34,7 +37,7 @@ namespace PlayerUI.VideoAnalytics
 				dest,
 				session.ToJson()
 			);
-			LoggerManager.Info($"[LocallyStoredSessions]: saved a session to {dest}");
+			log.Info($"saved a session to {dest}");
 		}
 	}
 }

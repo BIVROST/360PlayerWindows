@@ -16,6 +16,8 @@ namespace PlayerUI.OSVRKit
 {
 	public class OSVRPlayback : Headset
 	{
+		private static Logger log = new Logger("OSVR");
+
 
 		bool _preloaded = false;
 		int _selectedOutput = 0;
@@ -220,7 +222,7 @@ namespace PlayerUI.OSVRKit
 
 				if (Features.IsDebug)
 				{
-					LoggerManager.Info("OSVR: available screens: " + string.Join("\n", dxgiDevice.Adapter.Outputs.ToList().ConvertAll(o => o.Description.DeviceName)));
+					log.Info("OSVR: available screens: " + string.Join("\n", dxgiDevice.Adapter.Outputs.ToList().ConvertAll(o => o.Description.DeviceName)));
 				}
 
 				if (Logic.Instance.settings.OSVRScreen == ScreenSelection.Autodetect)
@@ -234,7 +236,7 @@ namespace PlayerUI.OSVRKit
 						var b = o.Description.DesktopBounds;
 						if (b.Width == 1920 && b.Height == 1080)
 						{
-							LoggerManager.Info("OSVR: found a 1920x1080 candidate for a HDK 1.4");
+							log.Info("OSVR: found a 1920x1080 candidate for a HDK 1.4");
 							output = o;
 						}
 					}
@@ -245,13 +247,13 @@ namespace PlayerUI.OSVRKit
 						var b = o.Description.DesktopBounds;
 						if (b.Width == 2160 && b.Height == 1200)
 						{
-							LoggerManager.Info("OSVR: found a 2160x1200 candidate for a HDK 2.0");
+							log.Info("OSVR: found a 2160x1200 candidate for a HDK 2.0");
 							output = o;
 						}
 					}
 
 					bounds = output.Description.DesktopBounds;
-					LoggerManager.Info($"OSVR: guessed output ({bounds})");
+					log.Info($"OSVR: guessed output ({bounds})");
 				}
 				else
 				{
@@ -259,7 +261,7 @@ namespace PlayerUI.OSVRKit
 					if (osvrScreen >= dxgiDevice.Adapter.Outputs.Length)
 						osvrScreen = dxgiDevice.Adapter.Outputs.Length - 1;
 					bounds = dxgiDevice.Adapter.Outputs[osvrScreen].Description.DesktopBounds;
-					LoggerManager.Info($"OSVR: selected output #{osvrScreen} ({bounds})");
+					log.Info($"OSVR: selected output #{osvrScreen} ({bounds})");
 				}
 
 				form.DesktopBounds = new System.Drawing.Rectangle(bounds.X, bounds.Y, bounds.Width, bounds.Height);

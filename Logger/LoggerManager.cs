@@ -25,7 +25,7 @@ namespace Bivrost.Log
 
 	public static class LoggerManager
 	{
-		static private Logger logger = new Logger("log-manager");
+		static internal Logger log = new Logger("Logger");
 
 
 		/// <summary>
@@ -116,7 +116,7 @@ namespace Bivrost.Log
 			foreach (var entry in history)
 				lw.Write(entry);
 
-			logger.Info("Registered log writer: " + lw);
+			log.Info("Registered log writer: " + lw);
 		}
 
 
@@ -124,7 +124,7 @@ namespace Bivrost.Log
         {
             lock (listeners)
                 listeners.Remove(lw);
-			logger.Info("Unregistered log writer: " + lw);
+			log.Info("Unregistered log writer: " + lw);
         }
 
 
@@ -133,7 +133,7 @@ namespace Bivrost.Log
 			lock (listeners)
 			{
 				int removedCount = listeners.RemoveWhere(predicate);
-				logger.Info($"Unregistered {removedCount} log writer");
+				log.Info($"Unregistered {removedCount} log writer");
 			}
         }
 

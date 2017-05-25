@@ -1,18 +1,14 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Linq;
-using System.Windows.Threading;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows.Media;
 using System.Globalization;
-using Bivrost.Log;
 using System.Windows.Input;
 using System.Collections.Specialized;
 using System.Collections;
-using System.Collections.Concurrent;
+using System.Windows.Threading;
 
 namespace Bivrost.Log
 {
@@ -50,97 +46,107 @@ namespace Bivrost.Log
 
 
 	/// <summary>
+	/// Wrapper for any IEnumerable collection providing INotifyCollectionChanged for MVVM
+	/// Usage: wrap an collection in this object and when it has been modified, fire the NotifyCollectionChanged method
+	/// that notifies the view of the change. It will trigger a NotifyCollectionChangedEventArgs of Reset type
+	/// </summary>
+	public class ObservableCollectionWrapper : INotifyCollectionChanged, IEnumerable
+	{
+		private IEnumerable collection;
+		private Dispatcher dispatcher;
+
+		public ObservableCollectionWrapper(IEnumerable collection)
+		{
+			this.collection = collection;
+		}
+
+		public ObservableCollectionWrapper(IEnumerable collection, Dispatcher dispatcher) : this(collection)
+		{
+			this.dispatcher = dispatcher;
+		}
+
+		public void NotifyCollectionChanged()
+		{
+			var ev = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset, null);
+			if (dispatcher == null)
+				CollectionChanged?.Invoke(this, ev);
+			else
+				dispatcher.InvokeAsync(() => CollectionChanged?.Invoke(this, ev));
+		}
+
+		public IEnumerator GetEnumerator()
+		{
+			return collection.GetEnumerator();
+		}
+
+		public event NotifyCollectionChangedEventHandler CollectionChanged;
+	}
+
+
+	/// <summary>
 	/// Interaction logic for LogWindow.xaml
 	/// </summary>
 	partial class LogWindow : Window, LogListener
 	{
-		static LogWindow Instance;
-		//private DispatcherTimer dispatcherTimer;
+
+		internal static Logger log = new Logger("Log Window");
 
 
 		public LogWindow()
 		{
-			ClearLogCommand = new RelayCommand(p => ClearLog());
-			OpenTxtCommand = new RelayCommand(p => OpenTxt());
+			Published = new ObservableCollectionWrapper(LoggerManager.published, Dispatcher);
+			LoggerManager.PublishedListUpdated += d => Published.NotifyCollectionChanged();
 
-			SizeChanged += (s, e) => LoggerManager.Publish("size", e.NewSize);
+			Initialized += (s, e) =>
+			{
+				Instance = this;
+				LoggerManager.RegisterListener(this);
+			};
 
-			Published = new ObservableConcurrentDictionary(LoggerManager.published);
-			LoggerManager.PublishedListUpdated += d => Published.OnNotifyCollectionChanged();
+			Closing += (s, e) =>
+			{
+				LoggerManager.UnregisterListener(this);
+				Instance = null;
+			};
 
 			InitializeComponent();
+
+#if DEBUG
+			// debug published property
+			SizeChanged += (s, e) => LoggerManager.Publish("log window size", e.NewSize);
+#endif
+
 		}
 
 
-		public class ObservableConcurrentDictionary : INotifyCollectionChanged, IEnumerable
-		{
-			private ConcurrentDictionary<string, object> dict;
-
-			public ObservableConcurrentDictionary(ConcurrentDictionary<string, object> dict)
-			{
-				this.dict = dict;
-			}
-
-			public void OnNotifyCollectionChanged()
-			{
-				CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset, null));
-			}
-
-			public IEnumerator GetEnumerator()
-			{
-				return ((IEnumerable)dict).GetEnumerator();
-			}
-
-			public event NotifyCollectionChangedEventHandler CollectionChanged;
-		}
+		private static LogWindow Instance;
 
 
-		public ObservableConcurrentDictionary Published { get; }
-		//public ObservableCollection<KeyValuePair<string,object>> Published { get; }
-		object publishedSyncLock = new object();
-
-		//private void UpdatePublishedValues(object sender, EventArgs e)
-		//{
-		//	var list = LoggerManager.published.ToList();
-		//	list.Sort((a, b) => a.Key.CompareTo(b.Key));
-		//	List_Published.ItemsSource = list;
-		//}
-
-		public static bool IsDisplaying
-		{
-			get { return Instance != null; }
-		}
-
-
-		public static void CloseLogWindowIfOpened()
+		public static void CloseIfOpened()
 		{
 			if (Instance != null)
 				Instance.Close();
 		}
 
 
-		protected override void OnInitialized(EventArgs e)
+		public static void OpenIfClosed()
 		{
-			Instance = this;
-			base.OnInitialized(e);
-			LoggerManager.RegisterListener(this);
+			if (Instance != null)
+			{
+				log.Info("Refused to open a second log viewer.");
+			}
+			else
+			{
+				Window lv = new LogWindow();
+				lv.Show();
+			}
 		}
 
-
-		protected override void OnClosing(CancelEventArgs e)
-		{
-			LoggerManager.UnregisterListener(this);
-			base.OnClosing(e);
-			Instance = null;
-		}
-
-		//public List<LoggerManager.LogElement> Entries { get; private set; } = new List<LoggerManager.LogElement>();
 
 		public void Write(LoggerManager.LogElement entry)
 		{
 			List_Log.Dispatcher.Invoke(() =>
 		    {
-				//Contents.Text += $"[{entry.type} {entry.tag}] {entry.time}\r\n{entry.msg}\r\n\r\n{entry.path}\r\n\r\n";
 				lock (entriesSyncLock)
 				   Entries.Add(entry);
 				if (FollowLog)
@@ -148,25 +154,63 @@ namespace Bivrost.Log
 		    });
 		}
 
+
+		public ObservableCollectionWrapper Published { get; }
+
+
 		public ObservableCollection<LoggerManager.LogElement> Entries { get; private set; } = new ObservableCollection<LoggerManager.LogElement>();
 		private object entriesSyncLock = new object();
+
+
 		public bool FollowLog { get; set; } = true;
-		public RelayCommand ClearLogCommand { get; }
-		public RelayCommand OpenTxtCommand { get; }
 
 
-		private void ClearLog()
+		private RelayCommand _clearLogCommand;
+		public RelayCommand ClearLogCommand
 		{
-			lock (entriesSyncLock)
-				Entries.Clear();
+			get
+			{
+				if (_clearLogCommand == null)
+					_clearLogCommand = new RelayCommand(
+						(p) =>
+						{
+							lock (entriesSyncLock)
+								Entries.Clear();
+							log.Info("Log has been cleared");
+						}
+					);
+				return _clearLogCommand;
+			}
 		}
+		
 
-
-		private void OpenTxt()
+		private RelayCommand _openTxtCommand;
+		public RelayCommand OpenTxtCommand
 		{
-			string f = (LoggerManager.listeners.First(lw => lw is TextFileLogListener) as TextFileLogListener).LogFile;
-			if(f != null)
-				System.Diagnostics.Process.Start(f);
+			get
+			{
+				if (_openTxtCommand == null)
+				{
+					Func<TextFileLogListener> getTextFileLogListener = () => LoggerManager.listeners.FirstOrDefault(lw => lw is TextFileLogListener) as TextFileLogListener;
+
+					_openTxtCommand = new RelayCommand(
+						(p) =>
+						{
+							var tfll = getTextFileLogListener();
+							if (tfll == null)
+							{
+								log.Error("No TextFileLogListener available");
+							}
+							else
+							{
+								System.Diagnostics.Process.Start(tfll.LogFile);
+							}
+						},
+						(p) => getTextFileLogListener() != null
+					);
+				}
+				return _openTxtCommand;
+			}
 		}
 	}
 

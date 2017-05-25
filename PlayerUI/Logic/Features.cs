@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Bivrost;
 using Bivrost.Log;
+using Bivrost.LicenseNinja;
 
 namespace PlayerUI
 {
@@ -44,6 +45,9 @@ namespace PlayerUI
 	/// </summary>
 	public static class Features
 	{
+		private static Logger log = new Logger("Features");
+
+
 		internal static FeaturesEnum AsEnum
 		{
 			get
@@ -76,7 +80,7 @@ namespace PlayerUI
 		public static event Action ListUpdated;
 
 
-		public static bool IsDebug =
+		public const bool IsDebug =
 #if DEBUG
 			true;
 #else
@@ -87,7 +91,7 @@ namespace PlayerUI
 		/// <summary>
 		/// This build is a canary build
 		/// </summary>
-		public static bool IsCanary =
+		public const bool IsCanary =
 #if CANARY
 			true;
 #else
@@ -157,7 +161,7 @@ namespace PlayerUI
 							else if (fieldval is string)
 								field.SetValue(null, val);
 							else
-								LoggerManager.Error($"Unsupported feature field type: {field.GetType()} on key {name}");
+								log.Error($"Unsupported feature field type: {field.GetType()} on key {name}");
 							grant.Remove(name);
 						}
 					}
@@ -166,12 +170,13 @@ namespace PlayerUI
 
 			foreach (var kvp in grant)
 			{
-				LoggerManager.Error(kvp.Value != null ? $"Unknown feature granted: {kvp.Key} = {kvp.Value}" : $"Unknown feature granted: {kvp.Key} (no value)");
+				log.Error(kvp.Value != null ? $"Unknown feature granted: {kvp.Key} = {kvp.Value}" : $"Unknown feature granted: {kvp.Key} (no value)");
 			}
 		}
 
 		internal static void TriggerListUpdated()
 		{
+			log.Info("Updated list of features: " + AsEnum);
 			ListUpdated?.Invoke();
 		}
 	}

@@ -944,13 +944,7 @@ namespace PlayerUI
 
 		public void OpenLogViewer()
 		{
-			if (!Bivrost.Log.LogWindow.IsDisplaying)
-			{
-				Window lv = new Bivrost.Log.LogWindow();
-				lv.Show();
-			}
-			else
-				LoggerManager.Info("Refused to open a second log viewer.");
+			Bivrost.Log.LogWindow.OpenIfClosed();
 		}
 
 		public void FileDropped(DragEventArgs e)

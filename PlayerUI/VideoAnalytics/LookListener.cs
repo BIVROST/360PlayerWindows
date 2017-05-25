@@ -1,5 +1,4 @@
-﻿using static Bivrost.Log.LoggerManager;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using PlayerUI.Streaming;
@@ -8,6 +7,8 @@ namespace PlayerUI.VideoAnalytics
 {
 	public class LookListener: IDisposable
     {
+
+		private static Bivrost.Log.Logger log = new Bivrost.Log.Logger("VideoAnalytics");
 
         double _lastMediaTime = 0;
         Stopwatch _mediaTimeDelta = new Stopwatch();
@@ -49,7 +50,7 @@ namespace PlayerUI.VideoAnalytics
 
         private void ShellViewModel_OnInstantiated(ShellViewModel shellViewModel)
         {
-            Info("history: ShellViewModel instantiated");
+            log.Info("ShellViewModel instantiated");
             ShellViewModel.OnInstantiated -= ShellViewModel_OnInstantiated;
             shellViewModel.HeadsetEnable += HandleHeadsetEnable;
             shellViewModel.HeadsetDisable += HandleHeadsetDisable;
@@ -57,7 +58,7 @@ namespace PlayerUI.VideoAnalytics
 
         private void MediaDecoder_OnInstantiated(MediaDecoder instance)
         {
-            Info("history: media decoder instantiated");
+            log.Info("Media decoder instantiated");
             MediaDecoder.OnInstantiated -= MediaDecoder_OnInstantiated;
             instance.OnTimeUpdate += HandleTimeUpdate;
             instance.OnPlay += HandlePlay;
@@ -68,7 +69,7 @@ namespace PlayerUI.VideoAnalytics
         private void HandleStop()
         {
             // session end
-            Info("ended history session " + filename);
+            log.Info("Ended history session " + filename);
             if (history == null)
                 return;
 			Session session = new Session(filename, startTime, DateTime.Now, history, lookProvider, serviceResult);
@@ -82,7 +83,7 @@ namespace PlayerUI.VideoAnalytics
         private void HandlePlay()
         {
             history = new LookHistory(10, MediaDecoder.Instance.Duration);
-            Info("new history session: " + MediaDecoder.Instance.FileName);
+            log.Info("New session: " + MediaDecoder.Instance.FileName);
             filename = MediaDecoder.Instance.FileName;
             serviceResult = ShellViewModel.Instance.SelectedServiceResult;
             startTime = DateTime.Now;

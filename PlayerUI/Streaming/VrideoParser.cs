@@ -8,6 +8,8 @@ namespace PlayerUI.Streaming
 
 	public class VrideoParser : ServiceParser
 	{
+		private static Logger log = new Logger("VrideoParser");
+
         public override string ServiceName
         {
             get { return "VRideo"; }
@@ -74,7 +76,7 @@ namespace PlayerUI.Streaming
 					switch((string)q)
 					{
 						case "480p":
-							LoggerManager.Info("Ignoring very low quality: " + (string)q);
+							log.Info("Ignoring very low quality: " + (string)q);
 							continue;
 
 						case "720p":
@@ -94,7 +96,7 @@ namespace PlayerUI.Streaming
 							break;
 
 						default:
-							LoggerManager.Error("unknown quality: " + q);
+							log.Error("unknown quality: " + q);
 							continue;
 					}
 
@@ -110,7 +112,7 @@ namespace PlayerUI.Streaming
 					};
 					if (video.url == null)
 					{
-                        LoggerManager.Error("no video url?");
+                        log.Error("no video url?");
 					}
 					else
 						result.videoStreams.Add(video);

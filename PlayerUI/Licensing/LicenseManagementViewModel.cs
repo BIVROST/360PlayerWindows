@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System;
 using PlayerUI.Licensing;
 using System.Windows;
+using Bivrost.LicenseNinja;
 
 namespace PlayerUI
 {

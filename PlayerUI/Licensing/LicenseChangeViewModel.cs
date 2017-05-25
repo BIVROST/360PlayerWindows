@@ -6,7 +6,6 @@ namespace PlayerUI.Licensing
 {
 	public class LicenseChangeViewModel : PropertyChangedBase
 	{
-
 		private string _licenseCode = "";
 		public string LicenseCode
 		{
@@ -16,7 +15,6 @@ namespace PlayerUI.Licensing
 			}
 			set
 			{
-				Console.WriteLine("licenseCode " + value);
 				_licenseCode = value;
 				NotifyOfPropertyChange(() => LicenseCode);
 				//NotifyOfPropertyChange(() => CanValidate);
@@ -67,7 +65,7 @@ namespace PlayerUI.Licensing
 						return "A license number is required to use this product.";
 
 					default:
-						LoggerManager.Error("Unknown license change reason: " + reason);
+						Bivrost.LicenseNinja.LicenseNinja.log.Error("Unknown license change reason: " + reason);
 						goto case LicenseManagementViewModel.LicenseChangeReason.explicitChange;
 				}
 			}

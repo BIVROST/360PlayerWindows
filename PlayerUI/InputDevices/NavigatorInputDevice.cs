@@ -86,9 +86,10 @@ namespace PlayerUI.InputDevices
 			catch (DllNotFoundException)
             {
                 connex = null;
-            } catch(_3DxException e)
+            }
+			catch (_3DxException e)
 			{
-				log.Error($"Could not connect: {e.Message}");
+				log.Error($"Could not connect (installed but not connected?): {e.Message}");
 				connex = null;
 			}
         }

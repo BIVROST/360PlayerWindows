@@ -11,6 +11,8 @@ namespace PlayerUI.Streaming
 
 	public class LittlstarParser : ServiceParser
 	{
+		private static Logger log = new Logger("LittlstarParser");
+
         public override string ServiceName
         {
             get { return "Littlstar"; }
@@ -174,7 +176,7 @@ namespace PlayerUI.Streaming
                         break;
 
                     default:
-						LoggerManager.Info($"littlstar unknown version: {kvp.Name} ({(string)kvp.Value})");
+						log.Info($"littlstar unknown version: {kvp.Name} ({(string)kvp.Value})");
                         break;
 				}
 			}

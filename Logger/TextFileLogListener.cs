@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Reflection;
 using System.Text;
 
 namespace Bivrost.Log
@@ -28,7 +27,7 @@ namespace Bivrost.Log
 
 			LogFile = logDirectory + string.Format("{2}-{0}-{1}.txt", version, now, logPrefix);
 
-			LoggerManager.Info("Log file: " + LogFile);
+			LoggerManager.log.Info("Log file: " + LogFile);
 			fp = new FileStream(LogFile, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
 			encoding = new UTF8Encoding(false);
 		}

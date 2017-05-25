@@ -10,6 +10,9 @@ namespace PlayerUI
 	/// </summary>
 	public partial class ServiceResultResolver : Window
 	{
+		private static Logger log = new Logger("ServiceResultResolver");
+
+
 		protected ServiceResultResolver(Window owner)
 		{
 			Owner = owner;
@@ -28,7 +31,7 @@ namespace PlayerUI
                 //result = StreamingFactory.Instance.GetStreamingInfo(uri);
                 result = ProcessURI(uri);
                 if (closed)
-					LoggerManager.Info($"Streaming result resolving was cancelled before completion. Uri={uri}.");
+					log.Info($"Streaming result resolving was cancelled before completion. Uri={uri}.");
 				else
 					window.Dispatcher.Invoke(() => window.Close());
 			});
@@ -64,22 +67,22 @@ namespace PlayerUI
 			}
 			catch (Streaming.StreamNotSupported exc)
 			{
-				LoggerManager.Error(exc, "Streaming: video not supported: " + uri);
+				log.Error(exc, "Streaming: video not supported: " + uri);
 				Logic.Notify("Video not yet supported.");
 			}
 			catch (Streaming.StreamParsingFailed exc)
 			{
-				LoggerManager.Error(exc, "Streaming: Parsing failed. Unable to open the video: " + uri);
+				log.Error(exc, "Streaming: Parsing failed. Unable to open the video: " + uri);
 				Logic.Notify("Parsing failed. Unable to open the video.");
 			}
 			catch (Streaming.StreamNetworkFailure exc)
 			{
-				LoggerManager.Error(exc, "Streaming: Network/file failure. Unable to open the video: " + uri);
+				log.Error(exc, "Streaming: Network/file failure. Unable to open the video: " + uri);
 				Logic.Notify("This file is currently unavailable.");
 			}
 			catch (System.Exception exc)
 			{
-				LoggerManager.Error(exc, "Streaming: media not supported: " + uri);
+				log.Error(exc, "Streaming: media not supported: " + uri);
 				Logic.Notify("Media not supported.");
 			}
 

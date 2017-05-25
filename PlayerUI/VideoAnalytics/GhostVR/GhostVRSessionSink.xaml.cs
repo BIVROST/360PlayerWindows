@@ -78,7 +78,9 @@ namespace PlayerUI.VideoAnalytics
 			Execute.OnUIThreadAsync(() =>
 			{
 				var ss = new SendStatistics(session, ghostVRConnector);
-				ss.Owner = ShellViewModel.Instance.shellView;
+				// fix: when main window is closed, but another window is still active, app would not turn off without this
+				if (ShellViewModel.Instance.shellView.IsActive)	
+					ss.Owner = ShellViewModel.Instance.shellView;
 				ss.ShowDialog();
 			});
 		}
