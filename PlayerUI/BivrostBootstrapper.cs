@@ -36,6 +36,7 @@ namespace PlayerUI
 		protected override void OnStartup(object sender, System.Windows.StartupEventArgs e)
 		{
 
+			Application.ShutdownMode = ShutdownMode.OnMainWindowClose;
 			//AddPathPatch();
 
 			logger = new Logger("bootstrap");
