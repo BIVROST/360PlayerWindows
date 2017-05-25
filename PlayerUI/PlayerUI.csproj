@@ -402,6 +402,7 @@
       <DependentUpon>NotificationView.xaml</DependentUpon>
     </Compile>
     <Compile Include="NotificationViewModel.cs" />
+    <Compile Include="Tools\OneWayTypedConverter.cs" />
     <Compile Include="VR\Oculus\EyeTexture.cs" />
     <Compile Include="ServiceResultResolver.xaml.cs">
       <DependentUpon>ServiceResultResolver.xaml</DependentUpon>

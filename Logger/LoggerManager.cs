@@ -251,8 +251,10 @@ namespace Bivrost.Log
 
 
 		internal static ConcurrentDictionary<string, object> published = new ConcurrentDictionary<string, object>();
+		internal static event Action<ConcurrentDictionary<string, object>> PublishedListUpdated;
 		public static void Publish(string key, object value) {
 			published[key] = value;
+			PublishedListUpdated?.Invoke(published);
 		}
 
 
@@ -260,6 +262,7 @@ namespace Bivrost.Log
 		{
 			object _unused;
 			published.TryRemove(key, out _unused);
+			PublishedListUpdated?.Invoke(published);
 		}
 
 	}

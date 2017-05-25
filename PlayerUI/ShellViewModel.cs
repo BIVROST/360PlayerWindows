@@ -181,7 +181,7 @@ namespace PlayerUI
 			VideoLength = "00:00:00";
 
 			NotificationCenter = new NotificationCenterViewModel();
-
+			
 			_mediaDecoder = new MediaDecoder();
 			_mediaDecoder.Loop = Loop;
 
@@ -944,9 +944,9 @@ namespace PlayerUI
 
 		public void OpenLogViewer()
 		{
-			if (!Bivrost.Log.LogWindowLogListener.IsDisplaying)
+			if (!Bivrost.Log.LogWindow.IsDisplaying)
 			{
-				Window lv = new Bivrost.Log.LogWindowLogListener();
+				Window lv = new Bivrost.Log.LogWindow();
 				lv.Show();
 			}
 			else

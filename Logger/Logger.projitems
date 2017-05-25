@@ -11,15 +11,16 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Logger.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)LoggerManager.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)LogWindowLogListener.xaml.cs">
-      <DependentUpon>LogWindowLogListener.xaml</DependentUpon>
+    <Compile Include="$(MSBuildThisFileDirectory)LogWindow.xaml.cs">
+      <DependentUpon>LogWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)LogWindowLogListener.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TextFileLogListener.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TraceLogListener.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)WindowsEventLogListener.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Page Include="$(MSBuildThisFileDirectory)LogWindowLogListener.xaml">
+    <Page Include="$(MSBuildThisFileDirectory)LogWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

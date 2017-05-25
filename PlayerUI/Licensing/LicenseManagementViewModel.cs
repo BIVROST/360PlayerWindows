@@ -16,11 +16,14 @@ namespace PlayerUI
 	public class LicenseManagementViewModel : Screen
 	{
 
+
+		private Logger log = new Logger("LicenseNinja");
+
 		public LicenseManagementViewModel(bool changeKey, System.Action onCommit)
 		{
 			if (inLicenseVerification)
 			{
-				LoggerManager.Info("License: currently waiting for license verification, ignored duplicate request.");
+				log.Info("Currently waiting for license verification, ignored duplicate request.");
 				return;
 			}
 
@@ -129,7 +132,7 @@ namespace PlayerUI
 			Logic.Instance.settings.LicenseCode = null;
 			Logic.Instance.settings.Save();
 
-			LoggerManager.Info("License information cleared");
+			log.Info("License information cleared");
 
 			LicenseSetBasicFeatures();
 		}
@@ -150,7 +153,7 @@ namespace PlayerUI
 			// store new license code
 			if (Logic.Instance.settings.LicenseCode != licenseCode)
 			{
-				LoggerManager.Info($"New license code: {licenseCode}, license: {license}");
+				log.Info($"New license code: {licenseCode}, license: {license}");
 				Logic.Instance.settings.LicenseCode = licenseCode;
 				Logic.Instance.settings.Save();
 			}
@@ -205,7 +208,7 @@ namespace PlayerUI
 			// no license and it's not required
 			if(!Features.RequireLicense && string.IsNullOrEmpty(newLicense))
 			{
-				LoggerManager.Info("No license set nor required, using basic feature set.");
+				log.Info("No license set nor required, using basic feature set.");
 				LicenseSetBasicFeatures();
 				return;
 			}
@@ -220,7 +223,7 @@ namespace PlayerUI
 					var settings = Logic.Instance.settings;
 					inLicenseVerification = true;
 					LicenseNinja.License license = await LicenseNinja.Verify(Logic.productCode, newLicense, settings.InstallId.ToString());
-					LoggerManager.Info("License: license verified");
+					log.Info("License verified");
 					if(dialogWasOrIsOpen)
 						Logic.Notify("License verified"); 
 					Execute.OnUIThread(() =>
@@ -230,12 +233,12 @@ namespace PlayerUI
 				}
 				catch (LicenseNinja.TimeEndedException ex)
 				{
-					LoggerManager.Error(ex, $"License: license timed out");
+					log.Error(ex, $"License timed out");
 					Execute.OnUIThread(() => OpenLicenseChange(LicenseChangeReason.licenseEnded, newLicense));
 				}
 				catch (LicenseNinja.LicenseDeniedException ex)
 				{
-					LoggerManager.Error(ex, $"License: license denied");
+					log.Error(ex, $"License denied");
 					var reason = string.IsNullOrEmpty(newLicense)
 						?LicenseChangeReason.licenseRequired
 						:LicenseChangeReason.licenseUnknown;
@@ -243,12 +246,12 @@ namespace PlayerUI
 				}
 				catch (LicenseNinja.NoLicenseServerConnectionException ex)
 				{
-					LoggerManager.Error(ex, $"License: no connection to license server");
+					log.Error(ex, $"No connection to license server: {ex}");
 					Execute.OnUIThread(() => OpenLicenseServerUnreachable(newLicense));
 				}
 				catch (LicenseNinja.LicenseException ex)
 				{
-					LoggerManager.Error(ex, $"License: other error");
+					log.Error(ex, "Other error");
 					Execute.OnUIThread(() => OpenLicenseServerUnreachable(newLicense));
 				}
 				finally

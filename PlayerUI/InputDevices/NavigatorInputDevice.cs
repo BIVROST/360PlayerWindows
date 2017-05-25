@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Bivrost.Log;
 
 namespace PlayerUI.InputDevices
 {
@@ -15,6 +16,8 @@ namespace PlayerUI.InputDevices
         public bool rightPressed;
 
         static _3DconnexionDevice connex;
+
+		private static Logger log = new Logger("3dConnexion Navigator");
 
         public override bool Active
         {
@@ -78,11 +81,16 @@ namespace PlayerUI.InputDevices
                 connex.UiMode = false;
                 connex.ResetAllButtonBindings();
                 connex.LEDs = 10;
-            }
-            catch (DllNotFoundException)
+				log.Info($"Device initiated");
+			}
+			catch (DllNotFoundException)
             {
                 connex = null;
-            }
+            } catch(_3DxException e)
+			{
+				log.Error($"Could not connect: {e.Message}");
+				connex = null;
+			}
         }
 
         internal static void WndProc(int msg, IntPtr wParam, IntPtr lParam)
