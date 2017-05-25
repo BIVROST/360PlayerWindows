@@ -186,7 +186,7 @@
 					<MenuItem IsCheckable="True" IsChecked="{Binding ProjectionIsCubeFacebook}" Header="Cubemap (Facebook)" />
 					<MenuItem IsCheckable="True" IsChecked="{Binding ProjectionIsDome}" Header="Equirectangular 180 (Dome)" />
 				</MenuItem>
-				<MenuItem Header="Analitics"  Visibility="{Binding AnaliticsMenuActive, Mode=OneWay, Converter={StaticResource BoolToVis}, FallbackValue=Hidden}">
+				<MenuItem Header="Analitics"  Visibility="{Binding AnaliticsMenuActive, Mode=OneWay, Converter={StaticResource BoolToVis}, FallbackValue=Hidden}" DataContext="{Binding AnaliticsMenu}">
 					<MenuItem Header="About analytics" cal:Message.Attach="[Event Click] = [Action AnalyticsAbout]" />
 
 					<Separator Visibility="{Binding GhostVRAvailable, Mode=OneWay, Converter={StaticResource BoolToVis}, FallbackValue=Hidden}" />

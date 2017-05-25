@@ -145,7 +145,7 @@ namespace Bivrost.Log
 
 		public void Write(LoggerManager.LogElement entry)
 		{
-			List_Log.Dispatcher.Invoke(() =>
+			List_Log.Dispatcher.InvokeAsync(() =>
 		    {
 				lock (entriesSyncLock)
 				   Entries.Add(entry);
@@ -165,8 +165,8 @@ namespace Bivrost.Log
 		public bool FollowLog { get; set; } = true;
 
 
-		private RelayCommand _clearLogCommand;
-		public RelayCommand ClearLogCommand
+		private ICommand _clearLogCommand;
+		public ICommand ClearLogCommand
 		{
 			get
 			{
@@ -184,8 +184,8 @@ namespace Bivrost.Log
 		}
 		
 
-		private RelayCommand _openTxtCommand;
-		public RelayCommand OpenTxtCommand
+		private ICommand _openTxtCommand;
+		public ICommand OpenTxtCommand
 		{
 			get
 			{
