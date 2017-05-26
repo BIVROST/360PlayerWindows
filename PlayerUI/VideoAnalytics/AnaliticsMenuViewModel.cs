@@ -1,6 +1,8 @@
-﻿using Caliburn.Micro;
+﻿using Bivrost.Log;
+using Caliburn.Micro;
 using System;
 using System.Windows;
+using System.Windows.Input;
 
 namespace PlayerUI.VideoAnalytics
 {
@@ -9,33 +11,31 @@ namespace PlayerUI.VideoAnalytics
 
 		public AnaliticsMenuViewModel()
 		{
-			Features.ListUpdated += () =>
-			{
-				NotifyOfPropertyChange(nameof(AnaliticsMenuActive));
-				NotifyOfPropertyChange(nameof(LocalSessionsAvailable));
-				NotifyOfPropertyChange(nameof(GhostVRAvailable));
-				NotifyOfPropertyChange(nameof(GhostVRAvailableAndConnected));
-				NotifyOfPropertyChange(nameof(GhostVRAvailableAndDisconnected));
-				NotifyOfPropertyChange(nameof(GhostVRAvailableAndPending));
-				NotifyOfPropertyChange(nameof(GhostVREnabled));
-				NotifyOfPropertyChange(nameof(GhostVRLabel));
-			};
+			Features.ListUpdated += () => Execute.OnUIThreadAsync(UpdateAllProperties);
+			ghostVRConnector.StatusChanged += status => Execute.OnUIThreadAsync(UpdateAllProperties);
+		}
 
-			ghostVRConnector.StatusChanged += (status) =>
-			{
-				NotifyOfPropertyChange(nameof(GhostVRAvailable));
-				NotifyOfPropertyChange(nameof(GhostVRAvailableAndConnected));
-				NotifyOfPropertyChange(nameof(GhostVRAvailableAndDisconnected));
-				NotifyOfPropertyChange(nameof(GhostVRAvailableAndPending));
-				NotifyOfPropertyChange(nameof(GhostVREnabled));
-				NotifyOfPropertyChange(nameof(GhostVRLabel));
-			};
+
+		private void UpdateAllProperties()
+		{
+			NotifyOfPropertyChange(nameof(AnaliticsMenuActive));
+			NotifyOfPropertyChange(nameof(LocalSessionsAvailable));
+
+			NotifyOfPropertyChange(nameof(GhostVRAvailable));
+			NotifyOfPropertyChange(nameof(GhostVRAvailableAndConnected));
+			NotifyOfPropertyChange(nameof(GhostVRAvailableAndDisconnected));
+			NotifyOfPropertyChange(nameof(GhostVRAvailableAndPending));
+			NotifyOfPropertyChange(nameof(GhostVREnabled));
+			NotifyOfPropertyChange(nameof(GhostVRLabel));
+
+			// update commands
+			CommandManager.InvalidateRequerySuggested();
 		}
 
 
 		public bool AnaliticsMenuActive { get { return LocalSessionsAvailable || GhostVRAvailable; } }
 
-		public void AnalyticsAbout()
+		public void AboutAnalytics()
 		{
 			MessageBox.Show("This feature is not yet publically available.\r\nPlease contact support for details");
 		}
@@ -48,7 +48,7 @@ namespace PlayerUI.VideoAnalytics
 			set { Logic.Instance.settings.LocallyStoredSessions = value; }
 		}
 
-		public void LocalSessionsSetDirectory()
+		void LocalSessionsSetDirectory()
 		{
 			VideoAnalytics.LocallyStoredSessionSink lss = Logic.Instance.locallyStoredSessions;
 			using (var dialog = new System.Windows.Forms.FolderBrowserDialog() { Description = "Select directory to store local sessions", SelectedPath = lss.DestinationDirectory })
@@ -61,7 +61,7 @@ namespace PlayerUI.VideoAnalytics
 			}
 		}
 
-		private VideoAnalytics.GhostVRConnector ghostVRConnector { get { return Logic.Instance.ghostVRConnector; } }
+		private static GhostVRConnector ghostVRConnector { get { return Logic.Instance.ghostVRConnector; } }
 		public bool GhostVRAvailable { get { return Features.GhostVR; } }
 		public bool GhostVRAvailableAndDisconnected { get { return GhostVRAvailable && ghostVRConnector.status == GhostVRConnector.ConnectionStatus.disconnected; } }
 		public bool GhostVRAvailableAndConnected { get { return GhostVRAvailable && ghostVRConnector.status == GhostVRConnector.ConnectionStatus.connected; } }
@@ -89,9 +89,17 @@ namespace PlayerUI.VideoAnalytics
 				}
 			}
 		}
+		
 
-		public void GhostVRConnect() { ghostVRConnector.Connect(); }
-		public void GhostVRCancel() { ghostVRConnector.Cancel(); }
-		public void GhostVRDisconnect() { ghostVRConnector.Disconnect(); }
+		public RelayCommand CommandAboutAnalitics => new RelayCommand(_ => AboutAnalytics(), _ => AnaliticsMenuActive);
+
+		public RelayCommand CommandGhostVRDisconnect => new RelayCommand(_ => ghostVRConnector.Disconnect(), _ => GhostVRAvailableAndConnected);
+
+		public RelayCommand CommandGhostVRConnect => new RelayCommand(_ => ghostVRConnector.Connect(), _ => GhostVRAvailableAndDisconnected);
+
+		public RelayCommand CommandGhostVRCancel => new RelayCommand(_ => ghostVRConnector.Cancel(), _ => GhostVRAvailableAndPending);
+
+		public RelayCommand CommandLocalSessionsSetDirectory => new RelayCommand(_ => LocalSessionsSetDirectory(), _ => LocalSessionsAvailable);
+
 	}
 }

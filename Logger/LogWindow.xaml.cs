@@ -29,6 +29,7 @@ namespace Bivrost.Log
 				throw new ArgumentNullException("execute");
 			_execute = execute; _canExecute = canExecute;
 		}
+
 		#endregion // Constructors 
 		#region ICommand Members 
 		public bool CanExecute(object parameter)
