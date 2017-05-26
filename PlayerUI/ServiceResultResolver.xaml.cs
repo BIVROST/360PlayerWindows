@@ -33,7 +33,7 @@ namespace PlayerUI
                 if (closed)
 					log.Info($"Streaming result resolving was cancelled before completion. Uri={uri}.");
 				else
-					window.Dispatcher.Invoke(() => window.Close());
+					window.Dispatcher.InvokeAsync(() => window.Close());
 			});
 
 			window.ShowDialog();

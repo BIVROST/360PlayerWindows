@@ -11,9 +11,14 @@ namespace PlayerUI.VideoAnalytics
 		{
 			Features.ListUpdated += () =>
 			{
+				NotifyOfPropertyChange(nameof(AnaliticsMenuActive));
 				NotifyOfPropertyChange(nameof(LocalSessionsAvailable));
 				NotifyOfPropertyChange(nameof(GhostVRAvailable));
-				NotifyOfPropertyChange(nameof(AnaliticsMenuActive));
+				NotifyOfPropertyChange(nameof(GhostVRAvailableAndConnected));
+				NotifyOfPropertyChange(nameof(GhostVRAvailableAndDisconnected));
+				NotifyOfPropertyChange(nameof(GhostVRAvailableAndPending));
+				NotifyOfPropertyChange(nameof(GhostVREnabled));
+				NotifyOfPropertyChange(nameof(GhostVRLabel));
 			};
 
 			ghostVRConnector.StatusChanged += (status) =>
@@ -58,9 +63,9 @@ namespace PlayerUI.VideoAnalytics
 
 		private VideoAnalytics.GhostVRConnector ghostVRConnector { get { return Logic.Instance.ghostVRConnector; } }
 		public bool GhostVRAvailable { get { return Features.GhostVR; } }
-		public bool GhostVRAvailableAndDisconnected { get { return GhostVRAvailable && ghostVRConnector.status == VideoAnalytics.GhostVRConnector.ConnectionStatus.disconnected; } }
-		public bool GhostVRAvailableAndConnected { get { return GhostVRAvailable && ghostVRConnector.status == VideoAnalytics.GhostVRConnector.ConnectionStatus.connected; } }
-		public bool GhostVRAvailableAndPending { get { return GhostVRAvailable && ghostVRConnector.status == VideoAnalytics.GhostVRConnector.ConnectionStatus.pending; } }
+		public bool GhostVRAvailableAndDisconnected { get { return GhostVRAvailable && ghostVRConnector.status == GhostVRConnector.ConnectionStatus.disconnected; } }
+		public bool GhostVRAvailableAndConnected { get { return GhostVRAvailable && ghostVRConnector.status == GhostVRConnector.ConnectionStatus.connected; } }
+		public bool GhostVRAvailableAndPending { get { return GhostVRAvailable && ghostVRConnector.status == GhostVRConnector.ConnectionStatus.pending; } }
 
 		public bool GhostVREnabled
 		{
