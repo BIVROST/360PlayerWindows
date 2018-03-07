@@ -483,16 +483,19 @@
                     float vPitch = navigatorInput.vPitch;
                     MoveDelta(velocity * vYaw * deltaTime, velocity * vPitch * deltaTime, 1, 4);
 
-                    if (Logic.Instance.settings.SpaceNavigatorKeysActive)
-                    {
 
+					if (Logic.Instance.settings.SpaceNavigatorKeysAndZoomActive)
+                    {
                         if (navigatorInput.leftPressed)
                             ShellViewModel.Instance.PlayPause();
 
                         if (navigatorInput.rightPressed)
                             ShellViewModel.Instance.Rewind();
-                    }
-                }
+
+						float zoom = navigatorInput.vPush;
+						ChangeFov(75 * zoom * deltaTime); // 1 second full push will change fov by 75 degrees 
+					}
+				}
             }
 
             // TODO: fixme - in one place

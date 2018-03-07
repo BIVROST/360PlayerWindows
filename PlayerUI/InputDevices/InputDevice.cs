@@ -13,9 +13,10 @@ namespace PlayerUI.InputDevices
 
         //public abstract SharpDX.Quaternion velocity { get; }
 
-        public float vYaw;
-        public float vPitch;
-        public float vRoll;
+        public float vYaw = 0;
+        public float vPitch = 0;
+        public float vRoll = 0;
+		public float vPush = 0;
 
 
         public abstract void Update(float deltaTime);
@@ -23,7 +24,7 @@ namespace PlayerUI.InputDevices
         public abstract bool Active { get; }
 
         public void Reset() {
-            vYaw = vPitch = vRoll = 0;
+            vYaw = vPitch = vRoll = vPush = 0;
         }
     }
 

@@ -63,6 +63,9 @@ namespace PlayerUI.InputDevices
             vYaw = e.RY / 2048f;
             vPitch = -e.RX / 2048f;
             vRoll = -e.RZ / 2048f;
+
+			vPush = e.TY / 2048f;
+
             if (Logic.Instance.settings.SpaceNavigatorInvertPitch)
                 vPitch = -vPitch;
         }

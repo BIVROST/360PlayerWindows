@@ -13,3 +13,5 @@ Restart Visual Studio
 
 3. Space Navigator 3d Connexion:
 http://www.3dconnexion.pl/service/drivers.html
+
+4. If Visual Studio works slow, it might help to disable Tools -> Options -> Debugging -> General -> Enable UI Debugging Tools for XAML
