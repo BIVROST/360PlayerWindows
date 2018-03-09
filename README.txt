@@ -15,3 +15,5 @@ Restart Visual Studio
 http://www.3dconnexion.pl/service/drivers.html
 
 4. If Visual Studio works slow, it might help to disable Tools -> Options -> Debugging -> General -> Enable UI Debugging Tools for XAML
+
+5. Unit tests dont work? Test -> Test settings -> Default processor architecture -> x64

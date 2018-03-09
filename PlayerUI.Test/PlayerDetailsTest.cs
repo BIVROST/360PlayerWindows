@@ -20,10 +20,10 @@ namespace PlayerUI.Test
         {
             var pd = new PlayerUI.VideoAnalytics.GhostVRConnector.PlayerDetails()
             {
-                //licenseType = Statistics.GhostVRConnector.PlayerDetails.LicenseType.debug,
-                version = "0.0.0.0"
+				licenseType = VideoAnalytics.GhostVRConnector.PlayerDetails.LicenseType.development,
+				version = "0.0.0.0"
             };
-            Assert.AreEqual(pd.AsQsFormat, "player%5Bname%5D=BIVROST%20360Player&player%5Bversion%5D=0.0.0.0");
+            Assert.AreEqual(pd.AsQsFormat, "player%5Bname%5D=BIVROST%20360Player&player%5Bversion%5D=0.0.0.0&player%5Blicense_type%5D=development");
         }
         
 

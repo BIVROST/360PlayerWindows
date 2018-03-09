@@ -22,7 +22,7 @@ namespace Bivrost.Log
 #if DEBUG
 				version = "DEBUG";
 #else
-				version = "v" + Assembly.GetEntryAssembly().GetName().Version.ToString();
+				version = "v" + System.Reflection.Assembly.GetEntryAssembly().GetName().Version.ToString();
 #endif
 
 			LogFile = logDirectory + string.Format("{2}-{0}-{1}.txt", version, now, logPrefix);
