@@ -1,8 +1,8 @@
 ﻿using Caliburn.Micro;
-using PlayerUI.ConfigUI;
-using PlayerUI;
-using PlayerUI.Tools;
-using PlayerUI.WPF;
+using Bivrost.Bivrost360Player.ConfigUI;
+using Bivrost.Bivrost360Player;
+using Bivrost.Bivrost360Player.Tools;
+using Bivrost.Bivrost360Player.WPF;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -22,9 +22,9 @@ using System.Text.RegularExpressions;
 using SharpDX.Direct3D11;
 using SharpDX.XInput;
 using LoggerManager = Bivrost.Log.LoggerManager;
+using Bivrost.AnalyticsForVR;
 
-
-namespace PlayerUI
+namespace Bivrost.Bivrost360Player
 {
 	public partial class ShellViewModel : Screen
 	{
@@ -1413,7 +1413,7 @@ namespace PlayerUI
 
 
 
-		public VideoAnalytics.AnaliticsMenuViewModel AnaliticsMenu { get; } = new VideoAnalytics.AnaliticsMenuViewModel();
+		public AnaliticsMenuViewModel AnaliticsMenu { get; } = new AnaliticsMenuViewModel();
 		#endregion
 
 	}

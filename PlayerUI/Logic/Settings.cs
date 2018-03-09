@@ -5,10 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.IO;
-using PlayerUI.ConfigUI;
+using Bivrost.Bivrost360Player.ConfigUI;
 using Bivrost.Log;
 
-namespace PlayerUI
+namespace Bivrost.Bivrost360Player
 {
 
 

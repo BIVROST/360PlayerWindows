@@ -12,7 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-namespace PlayerUI.ConfigUI
+namespace Bivrost.Bivrost360Player.ConfigUI
 {
 	/// <summary>
 	/// Interaction logic for ConfigurationView.xaml

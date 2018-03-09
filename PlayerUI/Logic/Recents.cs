@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 
-namespace PlayerUI
+namespace Bivrost.Bivrost360Player
 {
 	public class Recents
 	{

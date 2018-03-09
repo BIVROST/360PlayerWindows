@@ -1,4 +1,4 @@
-﻿using PlayerUI.ConfigUI;
+﻿using Bivrost.Bivrost360Player.ConfigUI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,9 +6,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Bivrost;
 using Bivrost.Log;
-using Bivrost.LicenseNinja;
+using Bivrost.Licensing;
 
-namespace PlayerUI
+namespace Bivrost.Bivrost360Player
 {
 	/// <summary>
 	/// Features in enum form, required for serialized attributes in SettingsPropertyAttribute,

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interop;
 
-namespace PlayerUI.Tools
+namespace Bivrost.Bivrost360Player.Tools
 {
 	static class IconHelper
 	{

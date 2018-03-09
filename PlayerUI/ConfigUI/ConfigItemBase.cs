@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PlayerUI.ConfigUI
+namespace Bivrost.Bivrost360Player.ConfigUI
 {
 	public class ConfigItemBase<T> : PropertyChangedBase, IConfigItemBase
 	{

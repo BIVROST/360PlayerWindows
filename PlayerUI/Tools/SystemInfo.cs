@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Management;
 
-namespace PlayerUI.Tools
+namespace Bivrost.Bivrost360Player.Tools
 {
 	class SystemInfo
 	{

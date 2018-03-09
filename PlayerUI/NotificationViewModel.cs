@@ -10,7 +10,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
 
-namespace PlayerUI
+namespace Bivrost.Bivrost360Player
 {
 	public class NotificationViewModel : Screen
 	{

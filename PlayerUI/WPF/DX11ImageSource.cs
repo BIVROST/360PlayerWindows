@@ -42,7 +42,7 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 * THE SOFTWARE.
 */
-namespace PlayerUI
+namespace Bivrost.Bivrost360Player
 {
     using System;
     using System.Runtime.InteropServices;

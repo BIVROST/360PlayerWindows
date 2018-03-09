@@ -1,7 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading.Tasks;
 
-namespace PlayerUI.Test
+namespace Bivrost.Bivrost360Player.Test
 {
 	[TestClass]
 	public class HTTPTest

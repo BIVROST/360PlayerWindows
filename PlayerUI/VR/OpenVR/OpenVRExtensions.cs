@@ -4,7 +4,7 @@ using System;
 
 
 
-namespace PlayerUI.OpenVR
+namespace Bivrost.Bivrost360Player.OpenVR
 {
 	/// <summary>
 	/// Utility class derived from OpenVR's unity integration

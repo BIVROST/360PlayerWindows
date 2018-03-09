@@ -1,6 +1,6 @@
 ﻿using Caliburn.Micro;
 using Microsoft.Win32;
-using PlayerUI.Tools;
+using Bivrost.Bivrost360Player.Tools;
 using System;
 using System.Deployment.Application;
 using System.IO;
@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using Bivrost.Log;
 
-namespace PlayerUI
+namespace Bivrost.Bivrost360Player
 {
 	public class BivrostBootstrapper : BootstrapperBase
 	{

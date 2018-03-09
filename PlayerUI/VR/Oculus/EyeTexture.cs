@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PlayerUI.Oculus
+namespace Bivrost.Bivrost360Player.Oculus
 {
 	/// <summary>
 	/// Contains all the fields used by each eye.

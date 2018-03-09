@@ -1,9 +1,9 @@
-﻿using PlayerUI.Tools;
+﻿using Bivrost.Bivrost360Player.Tools;
 using System.Collections;
 using System.Windows;
 using System.Windows.Input;
 
-namespace PlayerUI.InputDevices
+namespace Bivrost.Bivrost360Player.InputDevices
 {
     public class KeyboardInputDevice : InputDevice
     {

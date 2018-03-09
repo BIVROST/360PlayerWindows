@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PlayerUI.Streaming
+namespace Bivrost.Bivrost360Player.Streaming
 {
 
 	public class LocalFileParser : ServiceParser

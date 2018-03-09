@@ -1,4 +1,4 @@
-﻿namespace PlayerUI
+﻿namespace Bivrost.Bivrost360Player
 {
     internal interface IConfigurableScene
     {

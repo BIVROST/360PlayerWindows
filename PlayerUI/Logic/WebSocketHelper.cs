@@ -5,7 +5,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PlayerUI
+namespace Bivrost.Bivrost360Player
 {
 	public class WebSocketHelper
 	{

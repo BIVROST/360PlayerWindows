@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PlayerUI.WPF
+namespace Bivrost.Bivrost360Player.WPF
 {
 	public static class MediaDecoderHelper
 	{

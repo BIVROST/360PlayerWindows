@@ -12,12 +12,12 @@ using Valve.VR;
 using System.Runtime.InteropServices;
 using System.IO;
 using System.Collections.Generic;
-using PlayerUI.Tools;
+using Bivrost.Bivrost360Player.Tools;
 using System.Diagnostics;
 using System.ComponentModel;
 using Bivrost.Log;
 
-namespace PlayerUI.OpenVR
+namespace Bivrost.Bivrost360Player.OpenVR
 {
 	class OpenVRPlayback : Headset
 	{

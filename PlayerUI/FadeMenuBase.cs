@@ -11,7 +11,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
 
-namespace PlayerUI
+namespace Bivrost.Bivrost360Player
 {
 	public abstract class FadeMenuBase : Screen
 	{

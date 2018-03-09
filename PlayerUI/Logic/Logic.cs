@@ -1,6 +1,6 @@
 ﻿using BivrostAnalytics;
 using Fleck;
-using PlayerUI.VideoAnalytics;
+using Bivrost.AnalyticsForVR;
 using System;
 using System.ComponentModel;
 using System.IO;
@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using Logger = Bivrost.Log.Logger;
 
-namespace PlayerUI
+namespace Bivrost.Bivrost360Player
 {
 	public enum HeadsetMode
 	{

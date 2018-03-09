@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Animation;
 
-namespace PlayerUI.WPF
+namespace Bivrost.Bivrost360Player.WPF
 {
 	internal class GridLengthAnimation : AnimationTimeline
 	{

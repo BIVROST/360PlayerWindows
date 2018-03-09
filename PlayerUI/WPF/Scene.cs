@@ -1,4 +1,4 @@
-﻿namespace PlayerUI
+﻿namespace Bivrost.Bivrost360Player
 {
 	using System;
 	using SharpDX;
@@ -12,7 +12,6 @@
 	using System.Linq;
 	using System.Collections.Generic;
 	using SharpDX.XInput;
-	using VideoAnalytics;
 	using Bivrost.Log;
 	using Bivrost;
 

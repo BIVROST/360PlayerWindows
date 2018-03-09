@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PlayerUI.Tools
+namespace Bivrost.Bivrost360Player.Tools
 {
 	public class GraphicTools
 	{

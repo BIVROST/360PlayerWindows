@@ -4,7 +4,7 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Markup;
 
-namespace PlayerUI
+namespace Bivrost.Bivrost360Player
 {
 
 	/// <summary>

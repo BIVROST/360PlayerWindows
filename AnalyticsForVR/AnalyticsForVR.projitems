@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>6924d465-079c-490e-b9eb-e96bfd2f3bfb</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Bivrost.AnalyticsForVR</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)AnaliticsMenu.xaml.cs">
+      <DependentUpon>AnaliticsMenu.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)AnaliticsMenuViewModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GhostVR\GhostVRConnector.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GhostVR\GhostVRSessionSink.xaml.cs">
+      <DependentUpon>GhostVRSessionSink.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)ILookProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ISessionSink.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LocallyStoredSessions\LocallyStoredSessionsSink.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LookHistory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LookListener.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Session.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)StateMachine.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="$(MSBuildThisFileDirectory)AnaliticsMenu.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)GhostVR\GhostVRSessionSink.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+</Project>

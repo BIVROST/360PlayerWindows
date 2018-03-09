@@ -4,7 +4,7 @@
 
 using System;
 
-namespace PlayerUI.InputDevices
+namespace Bivrost.Bivrost360Player.InputDevices
 {
     abstract public class InputDevice
     {

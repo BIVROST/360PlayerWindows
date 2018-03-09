@@ -15,7 +15,7 @@ using Bivrost.Log;
 
 
 
-namespace PlayerUI.Streaming
+namespace Bivrost.Bivrost360Player.Streaming
 {
 	//public enum VideoQuality
 	//{

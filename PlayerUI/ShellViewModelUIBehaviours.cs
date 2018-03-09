@@ -1,5 +1,5 @@
 ﻿using Caliburn.Micro;
-using PlayerUI.WPF;
+using Bivrost.Bivrost360Player.WPF;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +11,7 @@ using System.Windows.Media.Animation;
 using LoggerManager = Bivrost.Log.LoggerManager;
 
 
-namespace PlayerUI
+namespace Bivrost.Bivrost360Player
 {
 	public partial class ShellViewModel
 	{

@@ -1,8 +1,8 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using PlayerUI.Streaming;
+using Bivrost.Bivrost360Player.Streaming;
 
-namespace PlayerUI.Test
+namespace Bivrost.Bivrost360Player.Test
 {
     [TestClass]
     public class YoutubeTest : StreamingTest<YoutubeParser>

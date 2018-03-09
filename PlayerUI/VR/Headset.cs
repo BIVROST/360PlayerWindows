@@ -1,11 +1,11 @@
-﻿using PlayerUI.VideoAnalytics;
+﻿using Bivrost.AnalyticsForVR;
 using SharpDX.Direct3D11;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpDX;
 
-namespace PlayerUI
+namespace Bivrost.Bivrost360Player
 {
 
 	public class HeadsetError : Exception

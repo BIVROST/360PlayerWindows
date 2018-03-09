@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace PlayerUI.ConfigUI
+namespace Bivrost.Bivrost360Player.ConfigUI
 {
 	public class PathConfigItemViewModel : ConfigItemBase<string>
 	{

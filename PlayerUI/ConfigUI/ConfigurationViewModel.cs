@@ -1,5 +1,5 @@
 ﻿using Caliburn.Micro;
-using PlayerUI.Tools;
+using Bivrost.Bivrost360Player.Tools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PlayerUI.ConfigUI
+namespace Bivrost.Bivrost360Player.ConfigUI
 {
 	public class ConfigurationViewModel : Screen
 	{

@@ -1,7 +1,7 @@
 ﻿using System;
 
 
-namespace PlayerUI.ConfigUI
+namespace Bivrost.Bivrost360Player.ConfigUI
 {
 	public class SettingsPropertyAttribute : Attribute
 	{

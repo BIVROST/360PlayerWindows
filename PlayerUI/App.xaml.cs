@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace PlayerUI
+namespace Bivrost.Bivrost360Player
 {
 	/// <summary>
 	/// Interaction logic for App.xaml

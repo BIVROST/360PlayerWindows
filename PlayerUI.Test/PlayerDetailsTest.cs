@@ -1,7 +1,8 @@
 ﻿using System;
+using Bivrost.AnalyticsForVR;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace PlayerUI.Test
+namespace Bivrost.Bivrost360Player.Test
 {
     [TestClass]
     public class PlayerDetailsTest
@@ -9,7 +10,7 @@ namespace PlayerUI.Test
         [TestMethod]
         public void TestPlayerDetailsCurrentWorks()
         {
-            var pd = PlayerUI.VideoAnalytics.GhostVRConnector.PlayerDetails.Current;
+            var pd = Bivrost.AnalyticsForVR.GhostVRConnector.PlayerDetails.Current;
             Assert.AreEqual(pd.name, "BIVROST 360Player");
 
         }
@@ -18,9 +19,9 @@ namespace PlayerUI.Test
         [TestMethod]
         public void TestPlayerDetailsQsWorks()
         {
-            var pd = new PlayerUI.VideoAnalytics.GhostVRConnector.PlayerDetails()
+            var pd = new GhostVRConnector.PlayerDetails()
             {
-				licenseType = VideoAnalytics.GhostVRConnector.PlayerDetails.LicenseType.development,
+				licenseType = GhostVRConnector.PlayerDetails.LicenseType.development,
 				version = "0.0.0.0"
             };
             Assert.AreEqual(pd.AsQsFormat, "player%5Bname%5D=BIVROST%20360Player&player%5Bversion%5D=0.0.0.0&player%5Blicense_type%5D=development");

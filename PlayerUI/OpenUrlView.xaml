@@ -1,4 +1,4 @@
-﻿<Window x:Class="PlayerUI.OpenUrlView"
+﻿<Window x:Class="Bivrost.Bivrost360Player.OpenUrlView"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 		xmlns:cal="http://www.caliburnproject.org"

@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using Buffer = SharpDX.Direct3D11.Buffer;
 using Device = SharpDX.Direct3D11.Device;
 
-namespace PlayerUI.Oculus
+namespace Bivrost.Bivrost360Player.Oculus
 {
 	public class OculusUIDebug
 	{

@@ -11,7 +11,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace PlayerUI.Streaming
+namespace Bivrost.Bivrost360Player.Streaming
 {
     public class YoutubeParser : ServiceParser
     {

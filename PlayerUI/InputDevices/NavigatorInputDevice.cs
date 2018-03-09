@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Bivrost.Log;
 
-namespace PlayerUI.InputDevices
+namespace Bivrost.Bivrost360Player.InputDevices
 {
     public class NavigatorInputDevice : InputDevice, IDisposable
     {

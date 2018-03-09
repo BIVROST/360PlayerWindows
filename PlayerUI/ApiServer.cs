@@ -18,7 +18,7 @@ using System.Collections.Concurrent;
 ///  - Nancy.Hosting.Self
 ///  - JSON.net
 /// </summary>
-namespace PlayerUI
+namespace Bivrost.Bivrost360Player
 {
     public class ApiServer
 		: NancyModule

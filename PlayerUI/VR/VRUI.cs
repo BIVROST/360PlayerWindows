@@ -4,9 +4,9 @@ using SharpDX.DXGI;
 using System;
 using Device = SharpDX.Direct3D11.Device;
 using DX2D = SharpDX.Direct2D1;
-using PlayerUI.Tools;
+using Bivrost.Bivrost360Player.Tools;
 
-namespace PlayerUI
+namespace Bivrost.Bivrost360Player
 {
 	public class VRUI : IDisposable
 	{

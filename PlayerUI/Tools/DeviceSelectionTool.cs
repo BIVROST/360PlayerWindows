@@ -7,7 +7,7 @@ using SharpDX;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 
-namespace PlayerUI.Tools
+namespace Bivrost.Bivrost360Player.Tools
 {
     public class DeviceSelectionTool
     {

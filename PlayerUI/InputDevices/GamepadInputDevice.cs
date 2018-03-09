@@ -1,8 +1,8 @@
 ﻿using Bivrost.Log;
-using PlayerUI.Tools;
+using Bivrost.Bivrost360Player.Tools;
 using SharpDX.XInput;
 
-namespace PlayerUI.InputDevices
+namespace Bivrost.Bivrost360Player.InputDevices
 {
     public class GamepadInputDevice : InputDevice
     {

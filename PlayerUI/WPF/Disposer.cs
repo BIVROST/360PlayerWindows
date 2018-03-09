@@ -19,7 +19,7 @@
 // THE SOFTWARE.
 using System;
 
-namespace PlayerUI
+namespace Bivrost.Bivrost360Player
 {
     public static class Disposer
     {

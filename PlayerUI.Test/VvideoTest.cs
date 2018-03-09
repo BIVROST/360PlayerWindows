@@ -1,9 +1,9 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading.Tasks;
-using PlayerUI.Streaming;
+using Bivrost.Bivrost360Player.Streaming;
 
-namespace PlayerUI.Test
+namespace Bivrost.Bivrost360Player.Test
 {
 	[TestClass]
 	public class VrideoTest

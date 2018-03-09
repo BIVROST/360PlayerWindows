@@ -1,4 +1,4 @@
-﻿namespace PlayerUI
+﻿namespace Bivrost.Bivrost360Player
 {
     using System;
     using System.ComponentModel;
@@ -11,7 +11,7 @@
     using SharpDX.DXGI;
     using Device = SharpDX.Direct3D11.Device;
     using SharpDX.Direct3D;
-    using PlayerUI.WPF;
+    using Bivrost.Bivrost360Player.WPF;
     using System.Threading;
     using System.Collections.Generic;
     using System.Collections.Concurrent;

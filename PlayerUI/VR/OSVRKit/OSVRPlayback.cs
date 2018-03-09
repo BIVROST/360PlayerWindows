@@ -6,13 +6,13 @@ using System;
 using System.Threading;
 using System.Windows.Forms;
 using Device = SharpDX.Direct3D11.Device;
-using PlayerUI.Tools;
+using Bivrost.Bivrost360Player.Tools;
 using SharpDX.Windows;
 using SharpDX.Direct3D;
 using Bivrost.Log;
 using System.Linq;
 
-namespace PlayerUI.OSVRKit
+namespace Bivrost.Bivrost360Player.OSVRKit
 {
 	public class OSVRPlayback : Headset
 	{

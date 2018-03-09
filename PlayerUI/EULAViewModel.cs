@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PlayerUI
+namespace Bivrost.Bivrost360Player
 {
 	public class EULAViewModel : Screen
 	{

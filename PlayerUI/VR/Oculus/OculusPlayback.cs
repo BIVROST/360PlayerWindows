@@ -8,11 +8,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Device = SharpDX.Direct3D11.Device;
-using PlayerUI.Tools;
-using PlayerUI.VideoAnalytics;
+using Bivrost.Bivrost360Player.Tools;
+using Bivrost.AnalyticsForVR;
 using Bivrost.Log;
 
-namespace PlayerUI.Oculus
+namespace Bivrost.Bivrost360Player.Oculus
 {
 	public class OculusPlayback : Headset
 	{

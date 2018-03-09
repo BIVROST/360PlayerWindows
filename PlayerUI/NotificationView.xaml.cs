@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace PlayerUI
+namespace Bivrost.Bivrost360Player
 {
 	/// <summary>
 	/// Interaction logic for NotificationView.xaml

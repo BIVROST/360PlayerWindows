@@ -1,8 +1,8 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using PlayerUI.Streaming;
+using Bivrost.Bivrost360Player.Streaming;
 using System;
 
-namespace PlayerUI.Test
+namespace Bivrost.Bivrost360Player.Test
 {
 
 	[TestClass]

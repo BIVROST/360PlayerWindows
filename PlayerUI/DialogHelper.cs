@@ -5,7 +5,7 @@ using System.Text;
 using Caliburn.Micro;
 //using Editor.ViewModels.Tools;
 
-namespace PlayerUI
+namespace Bivrost.Bivrost360Player
 {
 	public class DialogHelper
 	{

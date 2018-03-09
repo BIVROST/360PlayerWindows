@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PlayerUI.WPF
+namespace Bivrost.Bivrost360Player.WPF
 {
 	[System.Security.SuppressUnmanagedCodeSecurity()]
 	public class NativeApiWrapper

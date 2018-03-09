@@ -2,7 +2,7 @@
 using System;
 using System.Text.RegularExpressions;
 
-namespace PlayerUI.Streaming
+namespace Bivrost.Bivrost360Player.Streaming
 {
 	public class PornhubParser : ServiceParser
 	{

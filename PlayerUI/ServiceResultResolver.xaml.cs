@@ -1,9 +1,9 @@
 ﻿using Bivrost.Log;
-using PlayerUI.Streaming;
+using Bivrost.Bivrost360Player.Streaming;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace PlayerUI
+namespace Bivrost.Bivrost360Player
 {
 	/// <summary>
 	/// Interaction logic for OpenUrlView.xaml
