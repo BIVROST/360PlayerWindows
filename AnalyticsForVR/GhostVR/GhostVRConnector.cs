@@ -86,6 +86,7 @@ namespace Bivrost.AnalyticsForVR
 
 			static public PlayerDetails Current {
                 get {
+					#pragma warning disable 0162 // code dependant on typedefs
 					//**@license_type@:enum(development, pro, normal) - grupa licencji z której pochodzi player.
 					LicenseType licenseType;
 					if (Features.IsDebug || Features.IsCanary)
@@ -94,6 +95,7 @@ namespace Bivrost.AnalyticsForVR
 						licenseType = LicenseType.pro;
 					else
 						licenseType = LicenseType.normal;
+					#pragma warning restore
 					return new PlayerDetails()
                     {
                         version = PublishInfo.ApplicationIdentity?.Version?.ToString(),
@@ -180,6 +182,8 @@ namespace Bivrost.AnalyticsForVR
 		enum TokenStatus { pending, ok, rejected };
 
 
+		// this are JSON serialized classes with a structure passed on from the server
+		#pragma warning disable 0649
 		class ApiResponse
 		{
 			public enum ApiStatus { success, error, fail }
@@ -199,6 +203,7 @@ namespace Bivrost.AnalyticsForVR
 		{
 			public T data;
 		}
+		#pragma warning restore
 
 
 		void AuthorizePlayerInBrowser()
@@ -212,11 +217,14 @@ namespace Bivrost.AnalyticsForVR
 		}
 
 
+		// this is a JSON serialized class with a structure passed on from the server
+		#pragma warning disable 0649
 		class VerifyTokenResponse : ApiResponse
 		{
 			public string team_name;
 			public TokenStatus verification_status;
 		}
+		#pragma warning restore
 
 
 		void VerifyPlayerToken(Action<VerifyTokenResponse> onSuccess, Action onPending, Action onRejection, Action<string> onError)
@@ -264,12 +272,13 @@ namespace Bivrost.AnalyticsForVR
 
 
 
-
-
+		// this is a JSON serialized class with a structure passed on from the server
+		#pragma warning disable 0649
 		class VideoSessionResponse : ApiResponse
 		{
 			public string follow_up;
 		}
+		#pragma warning restore
 
 		public void VideoSession(Session session, Action<string> onSuccess, Action<string> onFailure)
 		{

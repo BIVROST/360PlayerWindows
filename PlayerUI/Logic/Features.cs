@@ -52,6 +52,7 @@ namespace Bivrost.Bivrost360Player
 		{
 			get
 			{
+				#pragma warning disable 0162	// conditional-compiled dependant
 				FeaturesEnum fe = new FeaturesEnum();
 				if (IsDebug)
 				{
@@ -71,7 +72,7 @@ namespace Bivrost.Bivrost360Player
 					fe |= FeaturesEnum.requireLicense;
 				if (RemoteEnabled)
 					fe |= FeaturesEnum.remote;
-
+				#pragma warning restore
 				return fe;
 			}
 		}
