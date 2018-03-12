@@ -83,7 +83,7 @@ namespace Bivrost.Bivrost360Player
 		public bool StartInFullScreen { get; set; } = false;
 
 		[SettingsProperty("Default VR headset mode", ConfigItemType.Enum)]
-		public HeadsetMode HeadsetUsage { get; set; } = HeadsetMode.Auto;
+		public HeadsetMode HeadsetUsage { get; set; } = HeadsetMode.Disable;
 
 		[SettingsProperty("OSVR screen number", ConfigItemType.Enum)]
 		public ScreenSelection OSVRScreen { get; set; } = ScreenSelection.Autodetect;

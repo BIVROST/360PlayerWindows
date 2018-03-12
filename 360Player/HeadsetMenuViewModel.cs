@@ -10,7 +10,6 @@ namespace Bivrost.Bivrost360Player
 	{
 		public event Action OnRift = delegate { };
 		public event Action OnOSVR = delegate { };
-		public event Action OnAuto = delegate { };
 		public event Action OnDisable = delegate { };
 		public event Action OnVive = delegate { };
 
@@ -24,12 +23,6 @@ namespace Bivrost.Bivrost360Player
 		{
 			this.Hide(0.25f);
 			OnOSVR();
-		}
-
-		public void SelectAuto()
-        {
-			this.Hide(0.25f);
-			OnAuto();
 		}
 
         public void SelectOff()

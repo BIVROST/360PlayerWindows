@@ -196,7 +196,6 @@
                     <MenuItem Header="Recenter Headset" cal:Message.Attach="[Event Click] = [Action RecenterHeadset]" InputGestureText="R"/>
                     -->
                     <Separator />
-                    <MenuItem IsCheckable="True" IsChecked="{Binding HeadsetIsAuto}"  Header="Autodetect VR Headset" />
                     <MenuItem IsCheckable="True" IsChecked="{Binding HeadsetIsOculus}" Header="Oculus Rift (DK2/CV1)" />
                     <MenuItem IsCheckable="True" IsChecked="{Binding HeadsetIsOpenVR}" Header="OpenVR (SteamVR, HTC Vive)" />
                     <MenuItem IsCheckable="True" IsChecked="{Binding HeadsetIsOSVR}" Header="OSVR" />

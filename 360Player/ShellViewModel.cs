@@ -333,7 +333,6 @@ namespace Bivrost.Bivrost360Player
 			};
 
 			HeadsetMenu = new HeadsetMenuViewModel();
-			HeadsetMenu.OnAuto += () => HeadsetIsAuto = true;
 			HeadsetMenu.OnRift += () => HeadsetIsOculus = true;
 			HeadsetMenu.OnOSVR += () => HeadsetIsOSVR = true;
 			HeadsetMenu.OnVive += () => HeadsetIsOpenVR = true;
@@ -470,7 +469,7 @@ namespace Bivrost.Bivrost360Player
 
 		private void Log(string message)
 		{
-			LoggerManager.Info($"[Remote] message");
+			LoggerManager.Info($"[Remote] {message}");
 		}
 
 
@@ -722,7 +721,7 @@ namespace Bivrost.Bivrost360Player
 
 					headsets.ForEach(h => h.Reset());
 
-					if (this.SettingHeadsetUsage == HeadsetMode.Auto || this.SettingHeadsetUsage == HeadsetMode.Oculus)
+					if (SettingHeadsetUsage == HeadsetMode.Oculus)
 					{
 						if (oculusPlayback.IsPresent())
 						{
@@ -742,7 +741,7 @@ namespace Bivrost.Bivrost360Player
 						Logic.Instance.stats.TrackEvent("Application events", "Headset", "Oculus Rift");
 					}
 
-					if (this.SettingHeadsetUsage == HeadsetMode.Auto || this.SettingHeadsetUsage == HeadsetMode.OpenVR)
+					if (SettingHeadsetUsage == HeadsetMode.OpenVR)
 					{
 						try
 						{
@@ -769,7 +768,7 @@ namespace Bivrost.Bivrost360Player
 						Logic.Instance.stats.TrackEvent("Application events", "Headset", "OpenVR");
 					}
 
-					if (this.SettingHeadsetUsage == HeadsetMode.Auto || this.SettingHeadsetUsage == HeadsetMode.OSVR)
+					if (SettingHeadsetUsage == HeadsetMode.OSVR)
 					{
 						if (osvrPlayback.IsPresent())
 						{
@@ -1379,14 +1378,12 @@ namespace Bivrost.Bivrost360Player
 
 			switch(headset)
 			{
-				case HeadsetMode.Auto: Logic.Notify("Automatic headset detection selected."); break;
 				case HeadsetMode.Oculus: Logic.Notify("Oculus Rift playback selected."); break;
 				case HeadsetMode.OSVR: Logic.Notify("OSVR playback selected."); break;
 				case HeadsetMode.OpenVR: Logic.Notify("OpenVR (SteamVR) playback selected."); break;
 				case HeadsetMode.Disable: Logic.Notify("Headset playback disabled."); break;
 			}
 
-			NotifyOfPropertyChange(() => HeadsetIsAuto);
             NotifyOfPropertyChange(() => HeadsetIsOculus);
             NotifyOfPropertyChange(() => HeadsetIsOpenVR);
             NotifyOfPropertyChange(() => HeadsetIsOSVR);
@@ -1394,10 +1391,6 @@ namespace Bivrost.Bivrost360Player
         }
 
 
-        public bool HeadsetIsAuto {
-            get { return Logic.Instance.settings.HeadsetUsage == HeadsetMode.Auto; }
-            set { if (value) SetHeadset(HeadsetMode.Auto); }
-        }
         public bool HeadsetIsOculus {
             get { return Logic.Instance.settings.HeadsetUsage == HeadsetMode.Oculus; }
             set { if (value) SetHeadset(HeadsetMode.Oculus); }

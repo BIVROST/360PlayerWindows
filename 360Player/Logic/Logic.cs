@@ -13,8 +13,6 @@ namespace Bivrost.Bivrost360Player
 {
 	public enum HeadsetMode
 	{
-		Auto,
-
 		OSVR,
 
         [Description("Oculus Rift (DK2, CV1)")]
