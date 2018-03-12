@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27130.2036
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "360Player", "PlayerUI\360Player.csproj", "{E14FBC2B-B29D-4428-8052-52292EB22C1D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "360Player", "360Player\360Player.csproj", "{E14FBC2B-B29D-4428-8052-52292EB22C1D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{D9ECBE5F-BC60-40DA-9633-C5E46AF90F90}"
 	ProjectSection(SolutionItems) = preProject
@@ -14,7 +14,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{D9ECBE
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BivrostAnalytics", "BivrostAnalytics\BivrostAnalytics.csproj", "{30C06AE1-7390-488D-BD15-8EE43EC76308}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "360Player.Test", "PlayerUI.Test\360Player.Test.csproj", "{8E17510D-5841-4934-88E9-8C24C0694877}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "360Player.Test", "360Player.Test\360Player.Test.csproj", "{8E17510D-5841-4934-88E9-8C24C0694877}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlayerRemote", "PlayerRemote\PlayerRemote.csproj", "{0928D8CC-913B-43EA-AFF5-D889DEBBFC7E}"
 EndProject
@@ -26,15 +26,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientKit", "Managed-OSVR\C
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "AnalyticsForVR", "AnalyticsForVR\AnalyticsForVR.shproj", "{6924D465-079C-490E-B9EB-E96BFD2F3BFB}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Licensing", "LicenseNinja\Licensing.shproj", "{975A8FDA-18B3-4B93-A18D-42716D7B62C2}"
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Licensing", "Licensing\Licensing.shproj", "{975A8FDA-18B3-4B93-A18D-42716D7B62C2}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Logger\Logger.projitems*{42ccaf01-b1d7-4960-a466-4097f9c22fb4}*SharedItemsImports = 13
 		AnalyticsForVR\AnalyticsForVR.projitems*{6924d465-079c-490e-b9eb-e96bfd2f3bfb}*SharedItemsImports = 13
-		LicenseNinja\LicenseNinja.projitems*{975a8fda-18b3-4b93-a18d-42716d7b62c2}*SharedItemsImports = 13
+		Licensing\Licensing.projitems*{975a8fda-18b3-4b93-a18d-42716d7b62c2}*SharedItemsImports = 13
 		AnalyticsForVR\AnalyticsForVR.projitems*{e14fbc2b-b29d-4428-8052-52292eb22c1d}*SharedItemsImports = 4
-		LicenseNinja\LicenseNinja.projitems*{e14fbc2b-b29d-4428-8052-52292eb22c1d}*SharedItemsImports = 4
+		Licensing\Licensing.projitems*{e14fbc2b-b29d-4428-8052-52292eb22c1d}*SharedItemsImports = 4
 		Logger\Logger.projitems*{e14fbc2b-b29d-4428-8052-52292eb22c1d}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

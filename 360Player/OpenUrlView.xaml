@@ -1,0 +1,23 @@
+﻿<Window x:Class="Bivrost.Bivrost360Player.OpenUrlView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:cal="http://www.caliburnproject.org"
+        Title="Open Url" Height="80" Width="650" WindowStyle="ToolWindow" WindowStartupLocation="CenterOwner" ResizeMode="NoResize" ShowInTaskbar="False">
+    <Grid FocusManager.FocusedElement="{Binding ElementName=Url}">
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="40" />
+			<ColumnDefinition Width="*" />
+			<ColumnDefinition Width="80" />
+		</Grid.ColumnDefinitions>
+		
+		<TextBlock Text="URL:" Grid.Column="0" VerticalAlignment="Center" Margin="5"/>
+		<TextBox x:Name="Url"  Text="{Binding Url, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" VerticalAlignment="Center" Margin="5" VerticalContentAlignment="Center" Height="28" 
+				 cal:Message.Attach="[Shortcut Enter] = [Action Open]" />
+		<Button x:Name="Open" Content="Open" Grid.Column="2" VerticalAlignment="Center" Margin="5" Height="28"/>
+
+        <Grid Grid.ColumnSpan="3" Background="White" Visibility="Collapsed" x:Name="progressBar">
+			<ProgressBar Margin="8,8" IsIndeterminate="True"/>
+		</Grid>
+		
+    </Grid>
+</Window>

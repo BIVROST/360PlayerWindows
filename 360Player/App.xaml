@@ -1,0 +1,15 @@
+﻿<Application x:Class="Bivrost.Bivrost360Player.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:local="clr-namespace:Bivrost.Bivrost360Player">
+    <Application.Resources>
+		<ResourceDictionary>
+			<ResourceDictionary.MergedDictionaries>
+				<ResourceDictionary>
+					<local:BivrostBootstrapper x:Key="bootstrapper" />
+				</ResourceDictionary>
+				<ResourceDictionary Source="/Theme/Generic.xaml" />					
+			</ResourceDictionary.MergedDictionaries>
+		</ResourceDictionary>
+	</Application.Resources>
+</Application>

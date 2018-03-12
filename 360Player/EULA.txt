@@ -1,0 +1,67 @@
+﻿Licence for Non-Commercial
+Use of Bivrost Desktop
+rev. as of 2015-11-25
+
+Section 1
+For the purposes of this licence, the following terms are defined as follows:
+1) Bivrost Desktop – computer software created by the Bivrost Developer, used for displaying panoramic videos; Bivrost Desktop offers features and specifications listed in its Documentation; to be operational, Bivrost Desktop requires third-party software listed in the Documentation, specifically: an operating system, drivers and libraries;
+2) Documentation – a description of operation, hardware and software requirements, intended use and features of Bivrost Desktop, provided together with Bivrost Desktop or contained on Bivrost’s Website;
+3) Client – a natural person engaged in no economic activity, or consumer; the term ‘Client’ shall exclude legal persons and entities without legal personality, granted legal capacity under the provisions of separate law;
+4) Non-Commercial Use – utilizing the software for private purposes, unrelated to any registered or unregistered economic activity; Non-Commercial Use must not bring any direct or indirect income;
+5) Licence – the licence for Bivrost Desktop;
+6) Bivrost’s Website – an Internet service run by the Bivrost Developer, currently hosted at: www.bivrost360.com; the Bivrost Developer reserves the right to change the URL address of the website, notifying its users by means of leaving an appropriate notice under the previous address at least one month in advance;
+7) Bivrost Developer – BIVROST Sp. z o.o. with sit in Warsaw, Wlodzimierza Perzynskiego 20/22, 01-883, registered at the XIII Commercial Division of the District Court for the capital city of Warsaw, under KRS number 0000584360,with the paid in capital in the amount PLN 50 000, with its NIP number 118-211-45-71, Regon number 362940085.
+
+Section 2
+Pursuant to the provisions of the Licence and the Law on Copyright and Related Rights (JoL No. 24, Item 83 as amended), the Bivrost Developer grants the Client, free of charge, with a non-exclusive, indefinite and irrevocable licence for the use of Bivrost Desktop. The Licence shall be granted as soon as it is accepted by the Client.
+
+Section 3
+The Bivrost Developer declares to be the developer of Bivrost Desktop and owner of all economic rights to the computer software in question. To dispel possible doubts, the Bivrost Developer points out that Bivrost Desktop is distributed together with third-party libraries, listed in Section 8 herein and necessary for proper operation of Bivrost Desktop, that are subject to separate licences permitting the Client to use and distribute these libraries according to terms and conditions specified therein.
+
+Section 4
+1. Under this Licence, the Client is entitled to use Bivrost Desktop for non-commercial purposes in accordance with its intended use and within the following scope of activities:
+	1) keeping Bivrost Desktop in computer storage owned by the Client;
+	2) creating backup copies for the Client’s own purposes, while making the simultaneous use of the backup copy impossible;
+	3) utilizing Bivrost Desktop (including its entry, display, application, transfer and storage) by the Client himself, within the scope defined by its intended use. 
+2. The scope of the Licence covers:
+	1) entire world;
+	2) indefinite time;
+	3) unlimited number of computers running Bivrost Desktop, providing all such computers are owned by the Client.
+3. Without written consent from the Bivrost Developer, the Client shall not:
+	1) use Bivrost Desktop for purposes other than non-commercial;
+	2) make Bivrost Desktop available to third parties in its entirety or in parts, specifically make it downloadable via the Internet;
+	3) store Bivrost Desktop on computers that are not owned by the Client;
+	4) modify Bivrost Desktop in a way that falls outside of permitted configuration specified in the Documentation;
+	5) create any Bivrost Desktop-based derivative products;
+	6) apply Bivrost Desktop or its part within another computer software, regardless of its form;
+	7) sublicense third parties or transfer rights granted and duties imposed under this Licence to third parties.
+
+Section 5
+The Client is entitled to create backup copies of Bivrost Desktop for his own purposes. Each backup copy shall be kept safe to avoid its loss or damage, to protect it from unauthorized access as well as to make it unavailable as long as it is not needed. The copy stored shall be properly marked to indicate the entity holding the copyrights.
+
+Section 6
+1. It is prohibited to execute the right to utilize Bivrost Desktop beyond the scope granted by this Licence, unless such execution is allowed under mandatory provisions of law.
+2. The Client shall immediately notify the Bivrost Developer of actual or suspected misuse of Bivrost Desktop copies obtained by the Client under this Licence.
+3. The Bivrost Developer may want to control whether Bivrost Desktop is utilized by Clients in accordance with its intended use and the provisions of this Licence.
+
+Section 7
+1. No warranty for Bivrost Desktop is granted.
+2. The Bivrost Developer shall be held harmless from liability for any damage, direct or indirect, incurred by the Client or third parties as a result of the use of Bivrost Desktop, except for damage incurred through the fault of the Bivrost Developer. Specifically, the Bivrost Developer assumes no liability for possible loss of profits.
+3. This clause shall be without prejudice to liabilities imposed on the Bivrost Developer by applicable regulations, specifically the laws on consumer rights protection. 
+
+Section 8
+To be fully operational, Bivrost Desktop requires the following libraries distributed under the following licences:
+1) Caliburn Micro 3.0.0 – MIT licence published at: https://raw.githubusercontent.com/Caliburn-Micro/Caliburn.Micro/master/License.txt
+2) Fleck 0.13.0.57 – MIT licence published at: http://opensource.org/licenses/mit-license.php
+3) HtmlAgilityPack 1.4.9 – MSPL license published at: http://opensource.org/licenses/mit-license.php
+4) Newtonsoft.Json 7.0.1 – MIT license published at: https://raw.githubusercontent.com/JamesNK/Newtonsoft.Json/master/LICENSE.md
+5) RestSharp 105.2.3 – Apache License 2.0 license published at: https://github.com/restsharp/RestSharp/blob/master/LICENSE.txt
+6) SharpDX 2.6.3 – MIT license published at: http://sharpdx.org/License.txt
+7) SharpVectors 1.0 – BSD license published at: http://sharpvectors.codeplex.com/license
+8) ManagedOSVR – Apache License 2.0 license published at: http://www.apache.org/licenses/LICENSE-2.0
+
+Section 9
+1. This Licence rescinds and replaces all previous agreements made by the parties hereto.
+2. Any amendments to this Licence must be made in writing, otherwise being null and void. The Bivrost Developer may make Bivrost Desktop available under different licences or amend the provisions of the Licence for agreements entered into in the future.
+3. This Licence shall be governed by Polish law.
+4. Any disputes arising from this Licence shall be adjudicated in the court of venue for the Bivrost Developer, unless mandatory provisions of law provide otherwise.

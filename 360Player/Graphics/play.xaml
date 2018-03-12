@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--This file is NOT compatible with Silverlight-->
+<Viewbox xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Stretch="Uniform">
+  <Canvas Name="Layer_1" Width="612" Height="792" Canvas.Left="0" Canvas.Top="0">
+    <Canvas.RenderTransform>
+      <TranslateTransform X="0" Y="0"/>
+    </Canvas.RenderTransform>
+    <Canvas.Resources/>
+    <!--Unknown tag: metadata-->
+    <!--Unknown tag: sodipodi:namedview-->
+    <Canvas Name="g3342">
+      <Canvas.RenderTransform>
+        <TranslateTransform X="-29.574076" Y="-45.485594"/>
+      </Canvas.RenderTransform>
+      <Path xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Name="path3344" Fill="#FFFFFFFF">
+        <Path.Data>
+          <PathGeometry Figures="M 305.602 371 C 291.461 371 280 382.461 280 396.602 c 0 14.137 11.461 25.598 25.602 25.598 14.136 0 25.597 -11.461 25.597 -25.598 0 -14.141 -11.461 -25.602 -25.597 -25.602 l 0 0 z m 0 49.603 c -13.258 0 -24 -10.747 -24 -24.001 0 -13.257 10.742 -24 24 -24 13.253 0 24 10.742 24 24 0 13.253 -10.747 24.001 -24 24.001 l 0 0 z m 0 0" FillRule="NonZero"/>
+        </Path.Data>
+      </Path>
+      <Path xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Name="path3346" Fill="#FFFFFFFF">
+        <Path.Data>
+          <PathGeometry Figures="m 312.887 395.273 -9.598 -6.39 c -0.492 -0.328 -1.125 -0.36 -1.644 -0.082 -0.52 0.277 -0.844 0.82 -0.844 1.41 l 0 12.785 c 0 0.59 0.324 1.129 0.844 1.406 0.519 0.278 1.152 0.25 1.644 -0.078 l 9.598 -6.39 c 0.445 -0.298 0.715 -0.798 0.715 -1.333 0 -0.535 -0.27 -1.031 -0.715 -1.328 l 0 0 z m -1.848 2.465 -7.512 4.629 c -0.402 0.266 -1.129 0.281 -1.129 0.281 l 0 -12.171 c 0 0 0.727 -0.036 1.129 0.23 l 7.512 4.957 c 0.367 0.242 0.586 0.547 0.586 0.984 0 0.437 -0.219 0.848 -0.586 1.09 l 0 0 z m 0 0" FillRule="NonZero"/>
+        </Path.Data>
+      </Path>
+    </Canvas>
+  </Canvas>
+</Viewbox>
