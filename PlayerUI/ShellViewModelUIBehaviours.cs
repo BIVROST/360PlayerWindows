@@ -254,11 +254,11 @@ namespace Bivrost.Bivrost360Player
             System.Diagnostics.Process.Start("http://download.bivrost360.com/player-desktop");
 #endif
         }
-
+		
 
 		public void OpenLicenseManagement()
 		{
-			Licensing.LicenseManagement.OpenLicenseManagement(null);
+			licensingConnector.OpenLicenseManagement();
 		}
 
         public void DisableTabPress(object sender, object e)

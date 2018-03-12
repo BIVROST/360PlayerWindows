@@ -1,5 +1,4 @@
-﻿using Bivrost.Bivrost360Player;
-using Bivrost.Log;
+﻿using Bivrost.Log;
 using Caliburn.Micro;
 using System;
 
@@ -8,6 +7,8 @@ namespace Bivrost.Licensing
 	public class LicenseChangeViewModel : PropertyChangedBase
 	{
 		private string _licenseCode = "";
+		private readonly LicensingConnector.IContext context;
+
 		public string LicenseCode
 		{
 			get
@@ -25,8 +26,9 @@ namespace Bivrost.Licensing
 		private LicenseManagementViewModel.LicenseChangeReason reason;
 
 
-		public LicenseChangeViewModel(LicenseManagementViewModel.LicenseChangeReason reason, string oldLicense, Action<string> openLicenseVerify, System.Action licenseClear)
+		public LicenseChangeViewModel(LicensingConnector.IContext context, LicenseManagementViewModel.LicenseChangeReason reason, string oldLicense, Action<string> openLicenseVerify, System.Action licenseClear)
 		{
+			this.context = context;
 			this.LicenseCode = oldLicense;
 			this.reason = reason;
 			this.validateCallback = openLicenseVerify;
@@ -77,7 +79,7 @@ namespace Bivrost.Licensing
 		{
 			get
 			{
-				return Features.RequireLicense
+				return context.RequireLicense
 					? System.Windows.Visibility.Hidden
 					: System.Windows.Visibility.Visible;
 			}

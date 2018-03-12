@@ -12,7 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-namespace Bivrost.Bivrost360Player
+namespace Bivrost.Licensing
 {
 	/// <summary>
 	/// Interaction logic for LicenseManagementView.xaml

@@ -23,6 +23,7 @@ using SharpDX.Direct3D11;
 using SharpDX.XInput;
 using LoggerManager = Bivrost.Log.LoggerManager;
 using Bivrost.AnalyticsForVR;
+using Bivrost.Licensing;
 
 namespace Bivrost.Bivrost360Player
 {
@@ -157,6 +158,57 @@ namespace Bivrost.Bivrost360Player
         public event Action<Headset> HeadsetDisable;
         public event Action<Headset> HeadsetEnable;
         List<Headset> headsets;
+
+
+
+		public class LicensingContext : LicensingConnector.IContext
+		{
+			public string LicenseCode
+			{
+				get { return Logic.Instance.settings.LicenseCode; }
+				set
+				{
+					Logic.Instance.settings.LicenseCode = value;
+					Logic.Instance.settings.Save();
+				}
+			}
+
+
+			public bool RequireLicense { get { return Features.RequireLicense; } }
+
+
+			public string InstallId { get { return Logic.Instance.settings.InstallId.ToString(); } }
+
+
+			public string ProductCode { get { return Logic.productCode; } }
+
+
+			public void QuitApplication()
+			{
+				ShellViewModel.Instance.Quit();
+			}
+
+
+			public void LicenseUpdated(LicenseNinja.License license)
+			{
+				if (license == null)
+					Features.SetBasicFeatures();
+				else
+					Features.SetFromLicense(license);
+				Features.TriggerListUpdated();
+			}
+
+
+			public void LicenseVerified()
+			{
+				Logic.Notify("License verified");
+			}
+
+		}
+
+
+
+		LicensingConnector licensingConnector = new LicensingConnector(new LicensingContext());
 
 		public ShellViewModel()
 		{
@@ -401,7 +453,7 @@ namespace Bivrost.Bivrost360Player
 			}
 
 			Features.ListUpdated += LicenseUpdated;
-			Licensing.LicenseManagement.LicenseCheck(null);
+			licensingConnector.LicenseCheck();
 
 			InputDevices.NavigatorInputDevice.TryInit(windowHandle);
 		}

@@ -6,7 +6,7 @@
     <SharedGUID>975a8fda-18b3-4b93-a18d-42716d7b62c2</SharedGUID>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
-    <Import_RootNamespace>LicenseNinja</Import_RootNamespace>
+    <Import_RootNamespace>Bivrost.Licensing</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <Page Include="$(MSBuildThisFileDirectory)LicenseChangeView.xaml">
@@ -27,11 +27,11 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)LicensingConnector.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)LicenseChangeView.xaml.cs">
       <DependentUpon>LicenseChangeView.xaml</DependentUpon>
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)LicenseChangeViewModel.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)LicenseManagement.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)LicenseManagementView.xaml.cs">
       <DependentUpon>LicenseManagementView.xaml</DependentUpon>
     </Compile>

@@ -1,5 +1,4 @@
-﻿using Bivrost.Bivrost360Player;
-using Bivrost.Log;
+﻿using Bivrost.Log;
 using Caliburn.Micro;
 using System.Threading.Tasks;
 using System;
@@ -18,8 +17,10 @@ namespace Bivrost.Licensing
 
 		private Logger log = new Logger("LicenseNinja");
 
-		public LicenseManagementViewModel(bool changeKey, System.Action onCommit)
+		public LicenseManagementViewModel(LicensingConnector.IContext context, bool changeKey)
 		{
+			this.context = context;
+
 			if (inLicenseVerification)
 			{
 				log.Info("Currently waiting for license verification, ignored duplicate request.");
@@ -27,8 +28,7 @@ namespace Bivrost.Licensing
 			}
 
 			DisplayName = "Enter valid license key";
-			string currentLicense = Logic.Instance.settings.LicenseCode;
-			this.onCommit = onCommit;
+			string currentLicense = context.LicenseCode;
 			if (changeKey)
 			{
 				allowClose = true;
@@ -37,9 +37,6 @@ namespace Bivrost.Licensing
 			else
 				LicenseVerify(currentLicense);	// tries to verify the license, in the background unless an error occurs
 		}
-
-		private System.Action onCommit;
-
 
 
 
@@ -94,7 +91,7 @@ namespace Bivrost.Licensing
 		}
 		void OpenLicenseChange(LicenseChangeReason reason, string oldLicense)
 		{
-			WindowContent = new LicenseChangeViewModel(reason, oldLicense, OpenLicenseVerify, LicenseClear);
+			WindowContent = new LicenseChangeViewModel(context, reason, oldLicense, OpenLicenseVerify, LicenseClear);
 			DialogOpenIfNotOpenedYet();
 		}
 
@@ -111,6 +108,7 @@ namespace Bivrost.Licensing
 		void OpenLicenseServerUnreachable(string license)
 		{
 			WindowContent = new LicenseServerUnreachableViewModel(
+				context,
 				() =>
 				{
 					if (ConfirmUseBasicFeatures())
@@ -128,8 +126,7 @@ namespace Bivrost.Licensing
 		/// </summary>
 		void LicenseClear()
 		{
-			Logic.Instance.settings.LicenseCode = null;
-			Logic.Instance.settings.Save();
+			context.LicenseCode = null;
 
 			log.Info("License information cleared");
 
@@ -150,11 +147,10 @@ namespace Bivrost.Licensing
 		void LicenseStore(string licenseCode, LicenseNinja.License license)
 		{
 			// store new license code
-			if (Logic.Instance.settings.LicenseCode != licenseCode)
+			if (context.LicenseCode != licenseCode)
 			{
 				log.Info($"New license code: {licenseCode}, license: {license}");
-				Logic.Instance.settings.LicenseCode = licenseCode;
-				Logic.Instance.settings.Save();
+				context.LicenseCode = licenseCode;
 			}
 
 			// continue to LicenseCommit
@@ -169,28 +165,27 @@ namespace Bivrost.Licensing
 		/// <param name="license">object with features to be granted from licensing server</param>
 		void LicenseCommit(LicenseNinja.License license)
 		{
-			if (license == null && Features.RequireLicense)
+			if (license == null && context.RequireLicense)
 			{
+				// this should not be reached with the user flow, probably a logic bug
 				throw new Exception("Set basic features cannot work with a required license");
 			}
-			else if (license == null || license.grant == null)
+
+			if (license == null || license.grant == null)
 			{
-				Features.SetBasicFeatures();
+				context.LicenseUpdated(null);
 			}
 			else
 			{
-				Features.SetFromLicense(license);
+				context.LicenseUpdated(license);
 			}
 
 			DialogCloseIfOpen();
-
-			onCommit?.Invoke();
-
-			Features.TriggerListUpdated();
 		}
 
 
 		private bool inLicenseVerification = false;
+		private readonly LicensingConnector.IContext context;
 
 
 		/// <summary>
@@ -205,7 +200,7 @@ namespace Bivrost.Licensing
 		private void LicenseVerify(string newLicense)
 		{
 			// no license and it's not required
-			if(!Features.RequireLicense && string.IsNullOrEmpty(newLicense))
+			if(!context.RequireLicense && string.IsNullOrEmpty(newLicense))
 			{
 				log.Info("No license set nor required, using basic feature set.");
 				LicenseSetBasicFeatures();
@@ -219,12 +214,11 @@ namespace Bivrost.Licensing
 
 				try
 				{
-					var settings = Logic.Instance.settings;
 					inLicenseVerification = true;
-					LicenseNinja.License license = await LicenseNinja.Verify(Logic.productCode, newLicense, settings.InstallId.ToString());
+					LicenseNinja.License license = await LicenseNinja.Verify(context.ProductCode, newLicense, context.InstallId);
 					log.Info("License verified");
 					if(dialogWasOrIsOpen)
-						Logic.Notify("License verified"); 
+						context.LicenseVerified(); 
 					Execute.OnUIThread(() =>
 					{
 						LicenseStore(newLicense, license);
@@ -282,7 +276,7 @@ namespace Bivrost.Licensing
 
 		private void QuitApplication()
 		{
-			ShellViewModel.Instance.Quit();
+			context.QuitApplication();
 		}
 
 
@@ -317,7 +311,7 @@ namespace Bivrost.Licensing
 				return;
 			}
 
-			if (Features.RequireLicense)
+			if (context.RequireLicense)
 			{
 				if (ConfirmQuitBecauseOfLicense())
 				{
