@@ -403,8 +403,8 @@
     <Compile Include="VR\Oculus\OculusUIDebug.cs" />
     <Compile Include="SharpDXHelpers.cs" />
     <Compile Include="VR\OSVRKit\OSVRPlayback.cs" />
-    <Compile Include="ShellViewModelRemote.cs" />
-    <Compile Include="ShellViewModelUIBehaviours.cs" />
+    <Compile Include="ShellViewModel_Remote.cs" />
+    <Compile Include="ShellViewModel_UIBehaviours.cs" />
     <Compile Include="Streaming\PornhubParser.cs" />
     <Compile Include="Streaming\VrideoParser.cs" />
     <Compile Include="Tools\CustomExtensions.cs" />

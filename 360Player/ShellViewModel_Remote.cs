@@ -1,4 +1,5 @@
-﻿using Caliburn.Micro;
+﻿using Bivrost.Log;
+using Caliburn.Micro;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -13,14 +14,18 @@ namespace Bivrost.Bivrost360Player
     {
         private static bool IsRemoteControlEnabled = false;
 
+
+		Logger remoteLogger = new Logger("remote");
+
+
         private void EnableRemoteControl()
         {
 			Task.Factory.StartNew((System.Action)(() =>
             {
 				remoteControl = ApiServer.InitNancy(apiServer =>
                     {
-						Log("got unity init, device_id=" + ApiServer.device_id + " movies=[\n" + string.Join(",\n", ApiServer.movies) + "]");
-						Log("init complete");
+						remoteLogger.Info("got unity init, device_id=" + ApiServer.device_id + " movies=[\n" + string.Join(",\n", ApiServer.movies) + "]");
+						remoteLogger.Info("init complete");
                     }
                 );
 
@@ -28,11 +33,11 @@ namespace Bivrost.Bivrost360Player
 
 				ApiServer.OnBackPressed += () =>
                 {
-					Log("[remote] back pressed");
+					remoteLogger.Info("back pressed");
                 };
 
 				ApiServer.OnStateChange += (state) => {
-					Log("[remote] state changed: " + state);
+					remoteLogger.Info("state changed: " + state);
 
                     switch (state)
                     {
@@ -77,7 +82,7 @@ namespace Bivrost.Bivrost360Player
 
 				ApiServer.OnConfirmPlay += (path) =>
                 {
-					Log("[remote] path = " + path);
+					remoteLogger.Info("path = " + path);
                     string remoteFile = path.Split('/').Last();
                     if (File.Exists(Logic.Instance.settings.RemoteControlMovieDirectory + Path.DirectorySeparatorChar + remoteFile))
                     {
@@ -119,7 +124,7 @@ namespace Bivrost.Bivrost360Player
 
 
 				ApiServer.OnInfo += (msg) => {
-					Log("[remote] msg = " + msg);
+					remoteLogger.Info("[remote] msg = " + msg);
                 };
 
 				#endregion
@@ -129,7 +134,7 @@ namespace Bivrost.Bivrost360Player
 
 				ApiServer.CommandLoadHandler = (movie, autoplay) =>
                 {
-					Log("[remote] path = " + movie);
+					remoteLogger.Info("[remote] path = " + movie);
                     string remoteFile = movie.Contains('/') ? movie.Split('/').Last() : movie;
                     if (File.Exists(Logic.Instance.settings.RemoteControlMovieDirectory + Path.DirectorySeparatorChar + remoteFile))
                     {
@@ -262,14 +267,16 @@ namespace Bivrost.Bivrost360Player
 
         }
 
-        public static void SendEvent(string name, object eventParameter = null)
-        {
-            if(IsRemoteControlEnabled)
-            {
-                string arg = JsonConvert.SerializeObject(eventParameter);
-                ApiServer.AddOutgoingEvent(name, arg);
-            }
-        }
+
+
+		private static void RemoteControlSendEvent(string name, object eventParameter = null)
+		{
+			if (IsRemoteControlEnabled)
+			{
+				string arg = JsonConvert.SerializeObject(eventParameter);
+				ApiServer.AddOutgoingEvent(name, arg);
+			}
+		}
 
         //Player events:
         //- movie loaded
