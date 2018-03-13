@@ -17,3 +17,16 @@ http://www.3dconnexion.pl/service/drivers.html
 4. If Visual Studio works slow, it might help to disable Tools -> Options -> Debugging -> General -> Enable UI Debugging Tools for XAML
 
 5. Unit tests dont work? Test -> Test settings -> Default processor architecture -> x64
+
+
+6. Oculus dll not found? Add to path: C:\Program Files\Oculus\Support\oculus-runtime (some old dev installation issue?)
+
+
+
+
+Requirements:
+Windows 8, 8.1 or 10
+64 bit?
+
+
+

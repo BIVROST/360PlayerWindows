@@ -203,10 +203,6 @@
       <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="OculusWrap, Version=1.6.0.2, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>.\OculusWrap.dll</HintPath>
-    </Reference>
     <Reference Include="PresentationFramework.Aero">
       <Private>True</Private>
     </Reference>
@@ -385,6 +381,7 @@
       <DependentUpon>NotificationView.xaml</DependentUpon>
     </Compile>
     <Compile Include="NotificationViewModel.cs" />
+    <Compile Include="ShellViewModel_Headsets.cs" />
     <Compile Include="Tools\OneWayTypedConverter.cs" />
     <Compile Include="VR\Oculus\EyeTexture.cs" />
     <Compile Include="ServiceResultResolver.xaml.cs">
@@ -803,7 +800,6 @@
     <Content Include="Graphics\stop.svg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <None Include="OculusWrap.dll" />
     <Content Include="Graphics\fileassoc.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -884,6 +880,10 @@
     <ProjectReference Include="..\Managed-OSVR\ClientKit\ClientKit.csproj">
       <Project>{9ab9f53d-1f42-4045-8dfc-9d389d44bb35}</Project>
       <Name>ClientKit</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\OculusWrap\OculusWrap.csproj">
+      <Project>{737a81a8-553c-49a9-8f17-5adf691a56b2}</Project>
+      <Name>OculusWrap</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />
