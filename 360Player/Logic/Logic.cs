@@ -65,7 +65,6 @@ namespace Bivrost.Bivrost360Player
 
 			// bind buttons in settings window
 			settings = new Settings();
-			settings.InstallPlugins = SettingsInstallPlugins;
 			settings.ResetInstallId = SettingsResetInstallId;
 			settings.ResetConfiguration = SettingsResetConfiguration;
 
@@ -187,12 +186,6 @@ namespace Bivrost.Bivrost360Player
 
 
 		#region actions in the settings window
-	
-		private void SettingsInstallPlugins()
-		{
-			settings.BrowserPluginQuestionShown = false;
-			BrowserPluginManagement.CheckForBrowsers();
-		}
 
 
 		private void SettingsResetInstallId()

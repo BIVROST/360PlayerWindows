@@ -51,7 +51,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
@@ -371,6 +371,7 @@
     <Compile Include="Logic\ProtocolHandler.cs" />
     <Compile Include="Logic\Recents.cs" />
     <Compile Include="Logic\Settings.cs" />
+    <Compile Include="Logic\Settings_BrowserPluginManagement.cs" />
     <Compile Include="Logic\Updater.cs" />
     <Compile Include="Logic\WebSocketHelper.cs" />
     <Compile Include="NotificationCenterView.xaml.cs">

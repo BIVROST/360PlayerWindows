@@ -395,7 +395,9 @@ namespace Bivrost.Bivrost360Player
 
 
 			Logic.Instance.CheckForUpdate();
+#if FEATURE_BROWSER_PLUGINS
 			BrowserPluginManagement.CheckForBrowsers();
+#endif
 			Logic.Instance.stats.TrackScreen("Start screen");
 			Logic.Instance.stats.TrackEvent("Application events", "Init", "Player launched");
 

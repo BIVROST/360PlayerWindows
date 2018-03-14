@@ -1,4 +1,6 @@
-﻿using Microsoft.Win32;
+﻿#if FEATURE_BROWSER_PLUGINS
+
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -259,3 +261,5 @@ namespace Bivrost.Bivrost360Player
         }
     }
 }
+
+#endif

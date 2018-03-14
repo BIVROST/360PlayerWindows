@@ -14,7 +14,7 @@ namespace Bivrost.Bivrost360Player
 
  
 
-    public class Settings
+    public partial class Settings
 	{
 
 		static Logger log = new Logger("Settings");
@@ -70,8 +70,6 @@ namespace Bivrost.Bivrost360Player
 #endregion
 
 
-		public bool BrowserPluginQuestionShown { get; set; } = false;
-		public bool BrowserPluginAccepted { get; set; } = false;
 		public Guid InstallId { get; set; } = Guid.Empty;
 
 
@@ -98,10 +96,6 @@ namespace Bivrost.Bivrost360Player
 		[JsonIgnore]
 		[SettingsAdvancedProperty("Reset player configuration", ConfigItemType.Action, Caption = "Reset")]
 		public System.Action ResetConfiguration { get; set; }
-
-		[JsonIgnore]
-		[SettingsProperty("Install browsers plugins", ConfigItemType.Action, Caption = "Install plugins")]
-		public System.Action InstallPlugins { get; set; }
 
 		[SettingsAdvancedProperty("User headset tracking in window", ConfigItemType.Bool)]
 		public bool UserHeadsetTracking { get; set; } = false;
