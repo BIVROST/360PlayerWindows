@@ -413,8 +413,9 @@
             const float velocity = 90f; // deg per second
             keyboardInput.Update(deltaTime);
             gamepadInput.Update(deltaTime);
+			navigatorInput.Update(deltaTime);
 
-            if (HasFocus)
+			if (HasFocus)
 			{
                 if (keyboardInput.Active)
                 {
@@ -497,8 +498,12 @@
 				}
             }
 
-            // TODO: fixme - in one place
-            navigatorInput.Update(deltaTime);
+
+			// Little planet makes sense only in sphere and dome projections
+			if (littlePlanet && !new[] { MediaDecoder.ProjectionMode.Sphere, MediaDecoder.ProjectionMode.Dome }.Contains(projectionMode))
+			{
+				RectlinearProjection();
+			}
 
 
             //if (!textureReleased)
@@ -533,6 +538,7 @@
 			{
 				primitive?.Dispose();
 				primitive = GraphicTools.CreateGeometry(projectionMode, graphicsDevice);
+				this.projectionMode = projectionMode;
 				// TODO: stereoscopy
 			});
 		}
