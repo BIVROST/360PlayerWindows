@@ -191,7 +191,7 @@ namespace Bivrost.Bivrost360Player
 		private void SettingsInstallPlugins()
 		{
 			settings.BrowserPluginQuestionShown = false;
-			CheckForBrowsers();
+			BrowserPluginManagement.CheckForBrowsers();
 		}
 
 
@@ -224,70 +224,6 @@ namespace Bivrost.Bivrost360Player
 		}
 #endregion
 
-
-		public void CheckForBrowsers()
-		{
-			if (string.IsNullOrWhiteSpace(Logic.LocalDataDirectory)) return;
-
-			if (!settings.BrowserPluginQuestionShown)
-			{
-				
-
-				Task.Factory.StartNew(() =>
-				{
-					var result = System.Windows.Forms.MessageBox.Show("Install browser integration extensions?", "Browser addons", System.Windows.Forms.MessageBoxButtons.YesNoCancel);
-
-					if (result == System.Windows.Forms.DialogResult.Yes)
-					{
-					
-						try {
-							if (BrowserPluginManagement.CheckFirefox())
-							{
-								BrowserPluginManagement.InstallFirefoxPlugin();
-							}
-						}
-						catch (Exception exc) { }
-
-						try
-						{
-							if (BrowserPluginManagement.CheckChrome())
-							{
-								BrowserPluginManagement.InstallChromePlugin();
-							}
-						}
-						catch (Exception exc) {  }
-
-						settings.BrowserPluginAccepted = true;
-						settings.BrowserPluginQuestionShown = true;
-						
-						settings.Save();
-						
-					}
-					else if (result == System.Windows.Forms.DialogResult.No)
-					{
-						settings.BrowserPluginQuestionShown = true;
-						settings.Save();
-					}
-				});
-			}
-			else
-			{
-				Task.Factory.StartNew(() =>
-				{
-					if (settings.BrowserPluginAccepted)
-					{
-						if (BrowserPluginManagement.CheckFirefox())
-						{
-							BrowserPluginManagement.InstallFirefoxPlugin();
-						}
-						if (BrowserPluginManagement.CheckChrome())
-						{
-							BrowserPluginManagement.InstallChromePlugin();
-						}
-					}
-				});
-			}				
-		}
 
         internal void ValidateSettings()
         {

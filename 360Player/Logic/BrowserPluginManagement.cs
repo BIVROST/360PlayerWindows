@@ -10,12 +10,79 @@ using System.Threading.Tasks;
 
 namespace Bivrost.Bivrost360Player
 {
-    public class BrowserPluginManagement
+    public static class BrowserPluginManagement
     {
         public static string chromePath = "";
         public static string firefoxPath = "";
 
-        public static bool CheckFirefox()
+		public static void CheckForBrowsers()
+		{
+			var settings = Logic.Instance.settings;
+
+			if (string.IsNullOrWhiteSpace(Logic.LocalDataDirectory)) return;
+
+			if (!settings.BrowserPluginQuestionShown)
+			{
+
+
+				Task.Factory.StartNew(() =>
+				{
+					var result = System.Windows.Forms.MessageBox.Show("Install browser integration extensions?", "Browser addons", System.Windows.Forms.MessageBoxButtons.YesNoCancel);
+
+					if (result == System.Windows.Forms.DialogResult.Yes)
+					{
+
+						try
+						{
+							if (CheckFirefox())
+							{
+								InstallFirefoxPlugin();
+							}
+						}
+						catch (Exception exc) { }
+
+						try
+						{
+							if (CheckChrome())
+							{
+								InstallChromePlugin();
+							}
+						}
+						catch (Exception exc) { }
+
+						settings.BrowserPluginAccepted = true;
+						settings.BrowserPluginQuestionShown = true;
+
+						settings.Save();
+
+					}
+					else if (result == System.Windows.Forms.DialogResult.No)
+					{
+						settings.BrowserPluginQuestionShown = true;
+						settings.Save();
+					}
+				});
+			}
+			else
+			{
+				Task.Factory.StartNew(() =>
+				{
+					if (settings.BrowserPluginAccepted)
+					{
+						if (CheckFirefox())
+						{
+							InstallFirefoxPlugin();
+						}
+						if (CheckChrome())
+						{
+							InstallChromePlugin();
+						}
+					}
+				});
+			}
+		}
+
+		public static bool CheckFirefox()
         {
             return CheckForApp("firefox.exe", out firefoxPath);
         }
