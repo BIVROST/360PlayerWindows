@@ -293,7 +293,7 @@ namespace Bivrost.Bivrost360Player.OpenVR
 
 
                             // TODO: normalize
-                            ProvideLook(fixedLookPosition, fixedLookRotation, lookFov);
+                            ProvideLook?.Invoke(fixedLookPosition, fixedLookRotation, lookFov);
 						}
 
                         // reset UI position every frame if it is not visible

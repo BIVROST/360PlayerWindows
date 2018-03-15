@@ -71,6 +71,8 @@ namespace Bivrost.Bivrost360Player
 		{
 			Logger log = new Logger("ResetVR");
 
+			CurrentHeadset?.Stop();
+
 			CurrentHeadset = null;
 
 			while (headsets.Any(h => h.Lock))
@@ -194,6 +196,8 @@ namespace Bivrost.Bivrost360Player
 			NotifyOfPropertyChange(() => HeadsetIsOpenVR);
 			NotifyOfPropertyChange(() => HeadsetIsOSVR);
 			NotifyOfPropertyChange(() => HeadsetIsDisable);
+
+			ResetVR();
 		}
 
 

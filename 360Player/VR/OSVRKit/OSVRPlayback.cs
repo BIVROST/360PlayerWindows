@@ -412,7 +412,7 @@ namespace Bivrost.Bivrost360Player.OSVRKit
                             if (eye == 0)
                             {
                                 lookRotation.Invert();
-                                ProvideLook(lookPosition, lookRotation, OSVRFOV);
+                                ProvideLook?.Invoke(lookPosition, lookRotation, OSVRFOV);
                             }
 
                             vrui.Draw(movieTitle, currentTime, duration);
