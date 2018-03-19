@@ -28,9 +28,9 @@ namespace Bivrost.Bivrost360Player.Streaming
             if (uri == null)
                 return false;
             return
-                Regex.IsMatch(uri, @"^(https?://)?(www.youtube.com/watch|youtube.com/watch)/?(.+&|[?])?v=[a-zA-Z0-9-]+($|&.*|#.*)", RegexOptions.IgnoreCase)
+                Regex.IsMatch(uri, @"^(https?://)?(www.youtube.com/watch|youtube.com/watch)/?(.+&|[?])?v=[a-zA-Z0-9_-]+($|&.*|#.*)", RegexOptions.IgnoreCase)
                 ||
-                Regex.IsMatch(uri, @"^(https?://)?youtu.be/[a-zA-Z0-9-]+($|&.*|#.*)", RegexOptions.IgnoreCase);
+                Regex.IsMatch(uri, @"^(https?://)?youtu.be/[a-zA-Z0-9_-]+($|&.*|#.*)", RegexOptions.IgnoreCase);
         }
 
 
@@ -41,14 +41,10 @@ namespace Bivrost.Bivrost360Player.Streaming
                                                             //	Directory.CreateDirectory(dataFoler + "\\BivrostPlayer");
             string ytdl = dataFoler + "youtube-dl.exe";
 
-            if (!File.Exists(ytdl))
+            if (!File.Exists(ytdl) || !IsYoutubeUpToDate())
             {
-                YoutubeUpdate();
-            }
-            else if (!IsYoutubeUpToDate())
-            {
-                YoutubeUpdate();
-            }
+				if (!YoutubeUpdate()) throw new StreamNotSupported("Youtube-dl update failed or declined.");
+			}
 
             int code;
             string jsonStr = YoutubeDL("--ignore-config --no-playlist --no-call-home --dump-json \"" + uri.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"", out code);
@@ -299,24 +295,57 @@ namespace Bivrost.Bivrost360Player.Streaming
                 }
             }
 
+			logger.Info("Latest online version: " + latestOnlineVersion);
+
             if (!string.IsNullOrWhiteSpace(latestOnlineVersion) && string.IsNullOrEmpty(latestDownloadedVersion))
             {
                 int code;
                 string version = YoutubeDL("--version", out code);
-                if (version == latestOnlineVersion) return true;
+				if(!string.IsNullOrEmpty(version))
+					latestDownloadedVersion = version;
             }
 
-            return false;
+			logger.Info("Latest downloaded version: " + latestDownloadedVersion);
+
+			return latestOnlineVersion == latestDownloadedVersion;
         }
 
 
-        private void YoutubeUpdate()
+		Logger logger = new Logger("youtube-parser");
+        private bool YoutubeUpdate()
         {
-            try
-            {
-                string dataFoler = Logic.LocalDataDirectory;
+			var confirm = System.Windows.Application.Current.Dispatcher.Invoke(() =>
+			{
+				var decision = System.Windows.MessageBox.Show(
+					System.Windows.Application.Current.MainWindow,
+					"A third-party application youtube-dl " +
+					"needs to be downloaded from the internet" +
+					"and run for this feature to work.\n\n" +
+					"Do you want to continue?",
 
-                RestClient client = new RestClient("https://yt-dl.org/latest/youtube-dl.exe");
+					"Youtube-dl update",
+					System.Windows.MessageBoxButton.OKCancel,
+
+					System.Windows.MessageBoxImage.Warning,
+					System.Windows.MessageBoxResult.Cancel
+				);
+				return decision == System.Windows.MessageBoxResult.OK;
+			});
+
+			if(!confirm)
+			{
+				logger.Error("Youtube-dl download declined.");
+				return false;
+			}
+			logger.Info("Youtube-dl download approved.");
+
+			try
+			{
+                string dataFoler = Logic.LocalDataDirectory;
+				// disable SSL3, because github/s3 will break
+				System.Net.ServicePointManager.SecurityProtocol &= ~System.Net.SecurityProtocolType.Ssl3;
+
+				RestClient client = new RestClient("https://yt-dl.org/latest/youtube-dl.exe") { FollowRedirects = true, MaxRedirects = 10 };
                 IRestRequest request = new RestRequest();
                 IRestResponse response = client.Execute(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
@@ -328,16 +357,19 @@ namespace Bivrost.Bivrost360Player.Streaming
                     File.WriteAllBytes(ytdl, response.RawBytes);
                     latestDownloadedVersion = null;
                     //IsYoutubeUpToDate();
+					return true;
                 }
                 else
                 {
-                    log.Error("youtube-dl update failed");
+                    log.Error($"youtube-dl update failed: {response.StatusCode} {response}");
                 }
             }
             catch (Exception exc)
             {
                 log.Error(exc, "youtube-dl update failed");
             };
+
+			return false;
         }
 
 
