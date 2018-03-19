@@ -408,7 +408,6 @@
     <Compile Include="RemoteControl\ShellViewModel_Remote.cs" />
     <Compile Include="ShellViewModel_UIBehaviours.cs" />
     <Compile Include="Streaming\PornhubParser.cs" />
-    <Compile Include="Streaming\VrideoParser.cs" />
     <Compile Include="Tools\CustomExtensions.cs" />
     <Compile Include="Tools\DeviceSelectionTool.cs" />
     <Compile Include="Tools\GraphicTools.cs" />

@@ -206,7 +206,6 @@ namespace Bivrost.Bivrost360Player.Streaming
 
 		protected ServiceParser[] parsers = new ServiceParser[] {
 			new BivrostProtocolParser(),
-			new VrideoParser(),
 			new PornhubParser(),
 			new LittlstarParser(),
             new YoutubeParser(),
