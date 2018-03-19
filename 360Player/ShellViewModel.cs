@@ -106,9 +106,6 @@ namespace Bivrost.Bivrost360Player
 		private bool _ready = false;
 
 		Window playerWindow;
-		Nancy.Hosting.Self.NancyHost remoteControl;
-		float remoteTime = 0;
-
 		private AutoResetEvent waitForPlaybackReady = new AutoResetEvent(false);
 		private ManualResetEvent waitForPlaybackStop = new ManualResetEvent(false);
 
@@ -403,9 +400,10 @@ namespace Bivrost.Bivrost360Player
 
 			//LegacyTest();
 
-
+#if FEATURE_REMOTE_CONTROL
 			if (Logic.Instance.settings.EnableRemoteControl)
 				EnableRemoteControl();
+#endif
 			if (Logic.Instance.settings.UseBlackBackground)
 				shellView.mainGrid.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Black);
 			if (Logic.Instance.settings.DisableUI)
@@ -435,7 +433,9 @@ namespace Bivrost.Bivrost360Player
 		// Generic utility that receives events from the application and forwards them to whatever is interested
 		public static void SendEvent(string name, object eventParameter = null)
 		{
+#if FEATURE_REMOTE_CONTROL
 			RemoteControlSendEvent(name, eventParameter);
+#endif
 		}
 
 
@@ -828,7 +828,7 @@ namespace Bivrost.Bivrost360Player
 		}
 
 
-		#region recents
+#region recents
 
 		/// <summary>
 		/// Updates the File->(recent files) menu, binding the action to it and
@@ -850,7 +850,7 @@ namespace Bivrost.Bivrost360Player
 
 
 
-		#endregion
+#endregion
 
 
 		public void OpenAbout()
@@ -1005,14 +1005,10 @@ namespace Bivrost.Bivrost360Player
 
 		public void Quit()
 		{
-			if (remoteControl != null)
-			{
-				remoteControl.Stop();
-			}
-			if (IsRemoteControlEnabled)
-			{
-				ShellViewModel.SendEvent("quit");
-			}
+#if FEATURE_REMOTE_CONTROL
+			remoteControl?.Stop();
+#endif
+			SendEvent("quit");
 
 			//STATS
 			TryClose();
@@ -1031,7 +1027,7 @@ namespace Bivrost.Bivrost360Player
 		}
 
 
-		#region mouse events
+#region mouse events
 		private Point _mouseDownPoint;
 		private bool _drag = false;
 		private IInputElement _element;
@@ -1105,10 +1101,10 @@ namespace Bivrost.Bivrost360Player
 				_element.MouseMove -= MouseMove;
 			}
 		}
-		#endregion
+#endregion
 
 
-		#region fullscreen
+#region fullscreen
 		private bool _fullscreen = false;
 		public bool Fullscreen
 		{
@@ -1154,7 +1150,7 @@ namespace Bivrost.Bivrost360Player
 		{
 			if (Fullscreen) ToggleFullscreen(true);
 		}
-		#endregion
+#endregion
 
 
 
@@ -1235,7 +1231,7 @@ namespace Bivrost.Bivrost360Player
 
 
  
-		#region menu options: projection
+#region menu options: projection
 		protected void SetProjection(MediaDecoder.ProjectionMode? projection)
 		{
 			HACK_Projection = projection;
@@ -1278,23 +1274,23 @@ namespace Bivrost.Bivrost360Player
 			get { return HACK_Projection.HasValue && HACK_Projection == MediaDecoder.ProjectionMode.Dome; }
 			set { if (value) SetProjection(MediaDecoder.ProjectionMode.Dome); }
 		}
-		#endregion
+#endregion
 
 
 
-		#region menu options: analitics
+#region menu options: analitics
 
 
 
 		public AnaliticsMenuViewModel AnaliticsMenu { get; } = new AnaliticsMenuViewModel();
-		#endregion
+#endregion
 
 	}
 
-	#region recents menu helpers
+#region recents menu helpers
 	public class ObjectToTypeConverter : System.Windows.Data.IValueConverter
 	{
-		#region IValueConverter Members
+#region IValueConverter Members
 
 		public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
 		{
@@ -1309,7 +1305,7 @@ namespace Bivrost.Bivrost360Player
 			throw new NotImplementedException();
 		}
 
-		#endregion
+#endregion
 	}
 
 	public class RecentsItem
@@ -1354,6 +1350,6 @@ namespace Bivrost.Bivrost360Player
 		}
 
 	}
-	#endregion
+#endregion
 
 }

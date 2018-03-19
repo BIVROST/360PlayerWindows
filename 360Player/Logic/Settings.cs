@@ -138,22 +138,6 @@ namespace Bivrost.Bivrost360Player
 		public string LicenseCode = "";
 
 
-		//Remote control settings
-		[SettingsAdvancedProperty("Enable http remote control (requires restart)", ConfigItemType.Bool, requiredFeatures = FeaturesEnum.remote)]
-		public bool EnableRemoteControl
-		{
-			get { return _enableRemoteControl && Features.RemoteEnabled; }
-			set { _enableRemoteControl = value; }
-		}
-		[JsonIgnore]
-		bool _enableRemoteControl = false;
-
-
-		[SettingsAdvancedProperty("Movie directory for remote control playback", ConfigItemType.Path, requiredFeatures = FeaturesEnum.remote)]
-		public string RemoteControlMovieDirectory { get; set; } = "";
-
-
-
 		// Debug features
 		[SettingsAdvancedProperty("Use black background in player window", ConfigItemType.Bool, requiredFeatures = FeaturesEnum.isDebug)]
 		public bool UseBlackBackground { get; set; } = false;
@@ -171,5 +155,14 @@ namespace Bivrost.Bivrost360Player
         [SettingsAdvancedProperty("Space Navigator: shortcut keys and push to zoom active", ConfigItemType.Bool)]
         public bool SpaceNavigatorKeysAndZoomActive { get; internal set; } = true;
     }
+
+
+	[AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
+	internal abstract class SettingVerificationAttribute : Attribute
+	{
+		public SettingVerificationAttribute() { }
+		public abstract void Normalize();
+		public abstract bool Valid { get; }
+	}
 
 }

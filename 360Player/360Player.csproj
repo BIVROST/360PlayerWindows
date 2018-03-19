@@ -317,7 +317,7 @@
       <DependentUpon>AboutView.xaml</DependentUpon>
     </Compile>
     <Compile Include="AboutViewModel.cs" />
-    <Compile Include="ApiServer.cs" />
+    <Compile Include="RemoteControl\ApiServer.cs" />
     <Compile Include="BivrostBootstrapper.cs" />
     <Compile Include="ConfigUI\BoolConfigItemView.xaml.cs">
       <DependentUpon>BoolConfigItemView.xaml</DependentUpon>
@@ -382,6 +382,7 @@
       <DependentUpon>NotificationView.xaml</DependentUpon>
     </Compile>
     <Compile Include="NotificationViewModel.cs" />
+    <Compile Include="RemoteControl\Settings_RemoteControl.cs" />
     <Compile Include="ShellViewModel_Headsets.cs" />
     <Compile Include="Tools\OneWayTypedConverter.cs" />
     <Compile Include="VR\Oculus\EyeTexture.cs" />
@@ -404,7 +405,7 @@
     <Compile Include="VR\Oculus\OculusUIDebug.cs" />
     <Compile Include="SharpDXHelpers.cs" />
     <Compile Include="VR\OSVRKit\OSVRPlayback.cs" />
-    <Compile Include="ShellViewModel_Remote.cs" />
+    <Compile Include="RemoteControl\ShellViewModel_Remote.cs" />
     <Compile Include="ShellViewModel_UIBehaviours.cs" />
     <Compile Include="Streaming\PornhubParser.cs" />
     <Compile Include="Streaming\VrideoParser.cs" />

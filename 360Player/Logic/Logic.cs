@@ -220,11 +220,15 @@ namespace Bivrost.Bivrost360Player
 
         internal void ValidateSettings()
         {
-            if (!Directory.Exists(Logic.Instance.settings.RemoteControlMovieDirectory)){
-                Logic.Instance.settings.RemoteControlMovieDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyVideos);
-                Logic.Instance.settings.Save();
-            }
-        }
+			foreach (SettingVerificationAttribute attr in typeof(Settings).GetCustomAttributes(false))
+			{
+				attr.Normalize();
+			}
+			foreach (SettingVerificationAttribute attr in typeof(Settings).GetCustomAttributes(false))
+			{
+				if (!attr.Valid) logger.Error($"Settings not valid? {attr.GetType().Name}");
+			}
+		}
 
 
 
