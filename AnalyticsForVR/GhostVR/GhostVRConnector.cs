@@ -308,6 +308,8 @@ namespace Bivrost.AnalyticsForVR
 		public GhostVRConnector()
         {
 			sm = new StateMachine(StateInit, (msg, warn) => { if (warn) logger.Error(msg); else logger.Info(msg); });
+			sm.Update(0);
+
 			System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
 			sw.Start();
 			periodicUpdater = new Thread(() =>
@@ -326,7 +328,6 @@ namespace Bivrost.AnalyticsForVR
 				}
 			}) { Name = "GhostVR SM periodic updater", IsBackground = true };
 			periodicUpdater.Start();
-			sm.Update(0);
         }
 
 
