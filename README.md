@@ -12,7 +12,11 @@ Key features
 
 * 360 videos in up to 8K resolution
 * 3D (stereoscopic) movie playback
-* VR Headsets support: Oculus Rift DK2, Oculus Rift CV1, HTC Vive, OSVR HDK 1.4, OSVR HDK 2.0
+* VR Headsets support
+  * Oculus: Oculus Rift DK2, Oculus Rift CV1
+  * OpenVR: HTC Vive
+  * OSVR: OSVR HDK 1.4, HDK 2.0
+  * Windows Mixed Reality
 * Hardware accelerated video decoding and rendering
 * High performance, low latency playback
 * Compatible with Windows 8, 8.1 and 10
@@ -29,12 +33,76 @@ Requirements
 * Windows 8
 * Microsoft .NET 4.5
 
+
 ### Suggested configuration for 4K playback
 * Dual Core 3rd generation i5 CPU or better
 * 2GB of RAM
 * DX11 compatible Nvidia/AMD discrete graphics (GCN for AMD or Kepler for Nvidia)
 * 1920x1080 screen resolution
 * Windows 8.1 / Windows 10
+
+
+
+Supported files and internet services
+-------------------------------------
+* Local and remote mp4 with H264 or H265/HEVC encoding.
+* HLS streams
+
+
+Using the player
+================
+
+Keyboard shortcuts
+------------------
+
+Available all the time:
+
+* **Control + O**: open a file
+* **Control + U**: open an URL from the internet
+* **Control + Q**: quit 360Player
+* **Control + P**: settings
+* **F1**: help
+
+Available only when movie is playing:
+
+* **Control+S**: stop
+* **Control+R**: rewind
+* **Space**: play/pause
+* **L**: enable little planet projection (only on equirectangular and dome)
+* **N**: disable little planet projection
+* **Control + 0**: reset zoom
+* **T**: enable/disable user headset tracking
+
+
+Gamepad control
+---------------
+
+XBox or compatible gamepad is supported.
+
+* **A**: play/pause
+* **Y**: rewind
+* **d-pad left/right**: seek backwards/forwards by 5 seconds
+* **d-pad up/down**: volume up/down
+* **analog left or right**: look around (both sticks works the same)
+
+
+3dconnexion SpaceMouse/SpaceNavigator
+-------------------------------------
+
+The 3D mice made by 3dconnexion are also supported. 
+[Official drivers for the device](http://www.3dconnexion.pl/service/drivers.html
+) must be installed.
+
+* **Tilt up/down**: look up/down (this can be inverted in the settings)
+* **Tilt left/right**: look left/right
+* **Rotate clockwise/counter-clockwise**: look left/right
+
+Enabled only when advanced control is enabled in settings:
+
+* **Left button**: play/pause
+* **Right button**: rewind
+* **Push up/down**: zoom
+
 
 
 Support & contact information
