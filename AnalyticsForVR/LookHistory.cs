@@ -97,7 +97,7 @@ namespace Bivrost.AnalyticsForVR
                 }
                 
                 // no space for element - need to resize
-                else if (data.Count <= idx)
+                else if (idx >= data.Count)
                 { 
                     if (idx > data.Capacity)
                         data.Capacity = idx + 1;
