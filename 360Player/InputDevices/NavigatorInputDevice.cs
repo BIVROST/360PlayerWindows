@@ -24,7 +24,7 @@ namespace Bivrost.Bivrost360Player.InputDevices
             get { return connex != null; }
         }
 
-        public override void Update(float deltaTime)
+        public override void LateUpdate(float deltaTime)
         {
             leftPressed = rightPressed = false;
         }

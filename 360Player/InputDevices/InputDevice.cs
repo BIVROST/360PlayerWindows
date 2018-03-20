@@ -19,9 +19,10 @@ namespace Bivrost.Bivrost360Player.InputDevices
 		public float vPush = 0;
 
 
-        public abstract void Update(float deltaTime);
+		public virtual void Update(float deltaTime) { }
+		public virtual void LateUpdate(float deltaTime) { }
 
-        public abstract bool Active { get; }
+		public abstract bool Active { get; }
 
         public void Reset() {
             vYaw = vPitch = vRoll = vPush = 0;

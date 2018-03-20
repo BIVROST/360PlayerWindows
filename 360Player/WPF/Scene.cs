@@ -178,6 +178,16 @@
         //	textureReleased = true;
         //}
 
+		InputDevices.InputDevice[] AllInputDevices {  get
+			{
+				return new InputDevices.InputDevice[]
+				{
+					keyboardInput,
+					gamepadInput,
+					navigatorInput
+				};
+			}
+		}
         InputDevices.KeyboardInputDevice keyboardInput;
         InputDevices.GamepadInputDevice gamepadInput;
         InputDevices.NavigatorInputDevice navigatorInput;
@@ -411,9 +421,13 @@
 
 
             const float velocity = 90f; // deg per second
-            keyboardInput.Update(deltaTime);
-            gamepadInput.Update(deltaTime);
-			navigatorInput.Update(deltaTime);
+			const float fovVelocity = 75; // 1 second full push will change fov by 75 degrees 
+
+			foreach (var id in AllInputDevices)
+			{
+				id.Update(deltaTime);
+			}
+
 
 			if (HasFocus)
 			{
@@ -431,21 +445,16 @@
                         SettingsVrLookEnabled = !SettingsVrLookEnabled;
                     }
 
-                    if (projectionMode == MediaDecoder.ProjectionMode.Sphere)
+                    if (keyboardInput.KeyPressed(Key.L))
                     {
-                        if (keyboardInput.KeyPressed(Key.L))
-                        {
-                            //littlePlanet = true;
-                            StereographicProjection();
-                            targetFov = DEFAULT_LITTLE_FOV;
+                        StereographicProjection();
+                        targetFov = DEFAULT_LITTLE_FOV;
+                    }
 
-                        }
-                        if (keyboardInput.KeyPressed(Key.N))
-                        {
-                            //littlePlanet = false;
-                            RectlinearProjection();
-                            targetFov = DEFAULT_FOV;
-                        }
+                    if (keyboardInput.KeyPressed(Key.N))
+                    {
+                        RectlinearProjection();
+                        targetFov = DEFAULT_FOV;
                     }
                 }
                 
@@ -493,14 +502,21 @@
                             ShellViewModel.Instance.Rewind();
 
 						float zoom = navigatorInput.vPush;
-						ChangeFov(75 * zoom * deltaTime); // 1 second full push will change fov by 75 degrees 
+						ChangeFov(fovVelocity * zoom * deltaTime);
 					}
 				}
             }
 
+			foreach (var id in AllInputDevices)
+			{
+				id.LateUpdate(deltaTime);
+			}
+
+
 
 			// Little planet makes sense only in sphere and dome projections
-			if (littlePlanet && !new[] { MediaDecoder.ProjectionMode.Sphere, MediaDecoder.ProjectionMode.Dome }.Contains(projectionMode))
+			var littlePlanetProjections = new[] { MediaDecoder.ProjectionMode.Sphere, MediaDecoder.ProjectionMode.Dome };
+			if (littlePlanet && !littlePlanetProjections.Contains(projectionMode))
 			{
 				RectlinearProjection();
 			}
