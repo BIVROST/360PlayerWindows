@@ -31,7 +31,7 @@ namespace Bivrost.Bivrost360Player.Streaming
 	//}
 
 	public enum VideoCodec { h264, h265, vp8, vp9, other }
-	public enum VideoContainer { mp4, webm, avi, wmv, flv, ogg, _3gp, hls }
+	[Flags] public enum VideoContainer { mp4 = 1, webm = 2, avi = 4, wmv = 8, flv = 16, ogg = 32, _3gp = 64, hls = 128 }
 	public enum AudioCodec { aac, mp3, opus, other }
 	public enum AudioContainer { webm, m4a, mp3, in_video }
 
@@ -173,7 +173,7 @@ namespace Bivrost.Bivrost360Player.Streaming
 		{
             VideoStream best = videoStreams
                 .Where(vs => vs.hasAudio || mayNotHaveAudio)
-                .Where(vs => vs.container == containerType)
+                .Where(vs => (vs.container & containerType) != 0)
                 .OrderByDescending(vs => vs.quality)
                 .FirstOrDefault();
             if (best == null)

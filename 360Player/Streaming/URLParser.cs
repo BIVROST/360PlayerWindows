@@ -26,27 +26,7 @@ namespace Bivrost.Bivrost360Player.Streaming
 			// TODO: check media type
 
 			// TODO: if html, try to parse it?
-
 			// TODO: search for bivrost-360webplayer tags
-
-			//RestClient client = new RestClient(uri);
-			//IRestRequest request = new RestRequest(Method.HEAD);
-			//request.AddHeader("Accept", "text/html");
-			//IRestResponse response = client.Execute(request);
-			//if (response.StatusCode != System.Net.HttpStatusCode.OK)
-			//{
-			//    if (view != null)
-			//        Execute.OnUIThreadAsync(() =>
-			//        {
-			//            Valid = false;
-			//            TryClose();
-			//        });
-			//    return;
-
-			//}
-
-			if (!File.Exists(uri))
-				throw new StreamNetworkFailure("File not available", uri);
 
 			return new ServiceResult(uri, ServiceName, URIToMediaId(uri))
             {

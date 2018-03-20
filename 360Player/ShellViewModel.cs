@@ -731,7 +731,7 @@ namespace Bivrost.Bivrost360Player
 			{
 				ResetPlayback();
 
-				SelectedFileName = result.BestQualityVideoStream(Streaming.VideoContainer.mp4).url;
+				SelectedFileName = result.BestQualityVideoStream(Streaming.VideoContainer.mp4 | Streaming.VideoContainer.hls).url;
                 SelectedServiceResult = result;
 
 				IsFileSelected = true;
