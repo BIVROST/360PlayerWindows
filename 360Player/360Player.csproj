@@ -393,7 +393,6 @@
     <Compile Include="VR\OpenVR\OpenVRExtensions.cs" />
     <Compile Include="VR\OpenVR\OpenVRPlayback.cs" />
     <Compile Include="VR\OpenVR\openvr_api.cs" />
-    <Compile Include="Streaming\FacebookParser.cs" />
     <Compile Include="Streaming\LittlstarParser.cs" />
     <Compile Include="Streaming\LocalFileParser.cs" />
     <Compile Include="Streaming\BivrostProtocolParser.cs" />
