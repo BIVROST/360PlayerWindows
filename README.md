@@ -27,10 +27,10 @@ Requirements
 
 ### Minimum requirements
 * Dual Core CPU (dual core Intel Celeron N2xx or better)
-* 1GB or RAM
+* 1GB of RAM
 * Intel HD 3000 graphic card or better with DX10 support
 * 1366x768 screen resolution
-* Windows 8
+* Windows 8.1
 * Microsoft .NET 4.5
 
 
@@ -39,7 +39,7 @@ Requirements
 * 2GB of RAM
 * DX11 compatible Nvidia/AMD discrete graphics (GCN for AMD or Kepler for Nvidia)
 * 1920x1080 screen resolution
-* Windows 8.1 / Windows 10
+* Windows 10
 
 
 

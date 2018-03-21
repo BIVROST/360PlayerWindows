@@ -26,8 +26,23 @@ namespace Bivrost.Bivrost360Player
 		[DllImport("kernel32", SetLastError = true, CharSet = CharSet.Ansi)]
 		private static extern IntPtr LoadLibrary([MarshalAs(UnmanagedType.LPStr)]string lpFileName);
 
+
+		private bool IsWindowsTooOld()
+		{
+			var ver = System.Environment.OSVersion;
+			if (ver.Platform != PlatformID.Win32NT) return true; // Not windows NT (98/Me/95?)
+			if (ver.Version.Major < 6) return false;
+			if (ver.Version.Major == 6 && ver.Version.Minor < 3) return false; // Vista, 2008, 7 or 8
+			return false;
+		}
+
+
 		public BivrostBootstrapper()
 		{
+			if (IsWindowsTooOld())
+			{
+				MessageBox.Show($"Windows Version '{Environment.OSVersion.VersionString}' in not supported by BIVROST 360Player. Please upgrade.", "Out of date Windows warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+			}
 			Initialize();
 		}
 
