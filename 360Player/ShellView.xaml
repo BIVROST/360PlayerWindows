@@ -180,6 +180,8 @@
                     <MenuItem Header="Little planet (stereographic) projection" InputGestureText="L"  cal:Message.Attach="[Event Click] = [Action LittlePlanetProjection]" />
                     <Separator />
                     <MenuItem Header="Reset zoom (fov)" InputGestureText="Ctrl+0" cal:Message.Attach="[Event Click] = [Action ResetFov]" />
+                    <MenuItem Header="Zoom in" InputGestureText="+" cal:Message.Attach="[Event Click] = [Action ZoomIn]" />
+                    <MenuItem Header="Zoom out" InputGestureText="-" cal:Message.Attach="[Event Click] = [Action ZoomOut]" />
                     <MenuItem IsCheckable="True" IsChecked="{Binding UserHeadsetTracking}" Header="User headset tracking in window" InputGestureText="Ctrl+T" />
                     <Separator />
 					<MenuItem IsCheckable="True" IsChecked="{Binding ProjectionIsAuto}" Header="Automatic projection" />

@@ -268,15 +268,26 @@ namespace Bivrost.Bivrost360Player
 
 		public void ChangeFov(System.Windows.Input.MouseWheelEventArgs wheelEventArgs)
 		{
-			if(IsPlaying)
+			ChangeFovDeg(Math.Sign(wheelEventArgs.Delta) * -5f);
+		}
+
+		// Caliburn/WPF bindings don't support function overload?
+		public void ChangeFovDeg(float deg)
+		{
+			if (IsPlaying)
 			{
 				if (this.DXCanvas.Scene != null)
 				{
 					Scene scene = ((Scene)this.DXCanvas.Scene);
-					scene.ChangeFov(Math.Sign(wheelEventArgs.Delta) * -5f);
+					scene.ChangeFov(deg);
 				}
 			}
 		}
+
+		// Using arguments changed -10 to 0?
+		public void ZoomIn() { ChangeFovDeg(-10); }
+		public void ZoomOut() { ChangeFovDeg(10); }
+
 
 		public void ResetFov()
 		{
