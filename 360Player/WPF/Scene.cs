@@ -56,13 +56,13 @@
 		private Quaternion targetRotationQuaternion;
 		private Quaternion currentRotationQuaternion;
 		private float lerpSpeed = 3f;
-		private float targetFov = 72f;
-		private float currentFov = 72f;
+		private float targetFov = DEFAULT_FOV;
+		private float currentFov = DEFAULT_FOV;
 		private bool littlePlanet = false;
 		private float currentOffset = 0f;
         
 		private const float MIN_FOV = 40f;		
-		private const float DEFAULT_FOV = 90f;
+		private const float DEFAULT_FOV = 72f;
 		private const float DEFAULT_LITTLE_FOV = 120f;
 		private const float MAX_FOV = 150f;
         

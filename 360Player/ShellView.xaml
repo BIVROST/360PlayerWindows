@@ -230,7 +230,7 @@
                       [Event MouseWheel] = [Action ChangeFov($eventArgs)]; 
                       [Shortcut Control+NumPad0] = [Action ResetFov];
 					  [Shortcut Control+D0] = [Action ResetFov]" />
-        <!-- for shortcuts, see also UpdateInput() from Scene.cs -->
+        <!-- For more shortcuts, see also UpdateInput() from Scene.cs -->
 
         <Grid Grid.Row="1" Grid.RowSpan="2">
             <Grid Background="#99000000" Height="32" VerticalAlignment="Top" x:Name="TopBar">
