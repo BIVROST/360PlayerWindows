@@ -114,13 +114,13 @@ namespace Bivrost.Bivrost360Player.InputDevices
 
             float dvYaw = 0;
             float dvPitch = 0;
-            if (KeyDown(Key.Left))
+            if (KeyDown(Key.Left) || KeyDown(Key.A))
                 dvYaw += 1;
-            if (KeyDown(Key.Right))
+            if (KeyDown(Key.Right) || KeyDown(Key.D))
                 dvYaw -= 1;
-            if (KeyDown(Key.Up))
+            if (KeyDown(Key.Up) || KeyDown(Key.W))
                 dvPitch += 1;
-            if (KeyDown(Key.Down))
+            if (KeyDown(Key.Down) || KeyDown(Key.S))
                 dvPitch -= 1;
             vPitch = vPitch.LerpInPlace(dvPitch, deltaTime * 4);
             vYaw = vYaw.LerpInPlace(dvYaw, deltaTime * 4);

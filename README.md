@@ -47,6 +47,8 @@ Supported files and internet services
 -------------------------------------
 * Local and remote mp4 with H264 or H265/HEVC encoding.
 * HLS streams
+* Littlstar streams
+* Pornhub streams
 
 
 Using the player
@@ -70,9 +72,10 @@ Available only when movie is playing:
 * **Space**: play/pause
 * **L**: enable little planet projection (only on equirectangular and dome)
 * **N**: disable little planet projection
+* **T**: enable/disable user headset tracking (look in the direction the headset is looking)
+* **Arrow keys or AWSD**: look around
+* **+/-**: zoom in and out
 * **Control + 0**: reset zoom
-* **T**: enable/disable user headset tracking
-
 
 Gamepad control
 ---------------
@@ -90,8 +93,7 @@ XBox or compatible gamepad is supported.
 -------------------------------------
 
 The 3D mice made by 3dconnexion are also supported. 
-[Official drivers for the device](http://www.3dconnexion.pl/service/drivers.html
-) must be installed.
+[Official drivers for the device](http://www.3dconnexion.pl/service/drivers.html) must be installed.
 
 * **Tilt up/down**: look up/down (this can be inverted in the settings)
 * **Tilt left/right**: look left/right

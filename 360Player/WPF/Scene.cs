@@ -178,16 +178,6 @@
         //	textureReleased = true;
         //}
 
-		InputDevices.InputDevice[] AllInputDevices {  get
-			{
-				return new InputDevices.InputDevice[]
-				{
-					keyboardInput,
-					gamepadInput,
-					navigatorInput
-				};
-			}
-		}
         InputDevices.KeyboardInputDevice keyboardInput;
         InputDevices.GamepadInputDevice gamepadInput;
         InputDevices.NavigatorInputDevice navigatorInput;
@@ -336,14 +326,22 @@
 
 		public void StereographicProjection()
 		{
+			if (littlePlanet) return;
+
 			littlePlanet = true;
-            ShellViewModel.SendEvent("projectionChanged", "stereographic");
+			targetFov = DEFAULT_LITTLE_FOV;
+
+			ShellViewModel.SendEvent("projectionChanged", "stereographic");
 		}
 
 		public void RectlinearProjection()
 		{
+			if (!littlePlanet) return;
+
 			littlePlanet = false;
-            ShellViewModel.SendEvent("projectionChanged", "gnomic");
+			targetFov = DEFAULT_FOV;
+
+			ShellViewModel.SendEvent("projectionChanged", "gnomic");
         }
 
         void IScene.Update(TimeSpan sceneTime)
@@ -406,6 +404,117 @@
 		}
 
 
+		void UpdateInput()
+		{
+			var allInputDevices = new InputDevices.InputDevice[]
+			{
+				keyboardInput,
+				gamepadInput,
+				navigatorInput
+			};
+
+			const float velocity = 90f; // deg per second
+			const float fovVelocity = 75; // 1 second full push will change fov by 75 degrees 
+
+			foreach (var id in allInputDevices)
+			{
+				id.Update(deltaTime);
+			}
+
+
+			if (HasFocus)
+			{
+				if (keyboardInput.Active)
+				{
+					MoveDelta(velocity * keyboardInput.vYaw * deltaTime, velocity * keyboardInput.vPitch * deltaTime, 1, 4);
+
+					//if (keyboardInput.KeyPressed(Key.Z))
+					//	ResetFov();
+
+					if (keyboardInput.KeyPressed(Key.T))
+					{
+						SettingsVrLookEnabled = !SettingsVrLookEnabled;
+					}
+
+					if (keyboardInput.KeyPressed(Key.L))
+					{
+						StereographicProjection();
+					}
+
+					if (keyboardInput.KeyPressed(Key.N))
+					{
+						RectlinearProjection();
+					}
+
+					if (keyboardInput.KeyPressed(Key.OemOpenBrackets))
+						ShellViewModel.Instance.SeekRelative(-5);
+
+					if (keyboardInput.KeyPressed(Key.OemCloseBrackets))
+						ShellViewModel.Instance.SeekRelative(5);
+
+					if (keyboardInput.KeyDown(Key.OemMinus) || keyboardInput.KeyDown(Key.Subtract))
+						ChangeFov(fovVelocity * deltaTime);
+
+					if (keyboardInput.KeyDown(Key.OemPlus) || keyboardInput.KeyDown(Key.Add) )
+						ChangeFov(-fovVelocity * deltaTime);
+				}
+
+
+
+				if (gamepadInput.Active)
+				{
+					MoveDelta(velocity * gamepadInput.vYaw * deltaTime, velocity * gamepadInput.vPitch * deltaTime, 1, 4);
+
+					if (gamepadInput.ButtonPressed(GamepadButtonFlags.A))
+						ShellViewModel.Instance.PlayPause();
+
+					if (gamepadInput.ButtonPressed(GamepadButtonFlags.Y))
+						ShellViewModel.Instance.Rewind();
+
+					if (gamepadInput.ButtonPressed(GamepadButtonFlags.DPadLeft))
+						ShellViewModel.Instance.SeekRelative(-5);
+
+					if (gamepadInput.ButtonPressed(GamepadButtonFlags.DPadRight))
+						ShellViewModel.Instance.SeekRelative(5);
+
+					if (gamepadInput.ButtonPressed(GamepadButtonFlags.DPadUp))
+						Caliburn.Micro.Execute.OnUIThreadAsync(() => ShellViewModel.Instance.VolumeRocker.Volume += 0.1);
+
+					if (gamepadInput.ButtonPressed(GamepadButtonFlags.DPadDown))
+						Caliburn.Micro.Execute.OnUIThreadAsync(() => ShellViewModel.Instance.VolumeRocker.Volume -= 0.1);
+				}
+
+
+				if (navigatorInput.Active)
+				{
+					float vYaw = navigatorInput.vRoll + navigatorInput.vYaw;
+					if (vYaw < -1) vYaw = -1;
+					if (vYaw > 1) vYaw = 1;
+					float vPitch = navigatorInput.vPitch;
+					MoveDelta(velocity * vYaw * deltaTime, velocity * vPitch * deltaTime, 1, 4);
+
+
+					if (Logic.Instance.settings.SpaceNavigatorKeysAndZoomActive)
+					{
+						if (navigatorInput.leftPressed)
+							ShellViewModel.Instance.PlayPause();
+
+						if (navigatorInput.rightPressed)
+							ShellViewModel.Instance.Rewind();
+
+						float zoom = navigatorInput.vPush;
+						ChangeFov(fovVelocity * zoom * deltaTime);
+					}
+				}
+			}
+
+			foreach (var id in allInputDevices)
+			{
+				id.LateUpdate(deltaTime);
+			}
+		}
+
+
 
 		void IScene.Render()
         {
@@ -419,100 +528,7 @@
 			currentFov = currentFov.LerpInPlace(targetFov, 5f * deltaTime);
 			projectionMatrix = Matrix.PerspectiveFovRH((float)(currentFov * Math.PI / 180f), (float)16f / 9f, 0.0001f, 50.0f);
 
-
-            const float velocity = 90f; // deg per second
-			const float fovVelocity = 75; // 1 second full push will change fov by 75 degrees 
-
-			foreach (var id in AllInputDevices)
-			{
-				id.Update(deltaTime);
-			}
-
-
-			if (HasFocus)
-			{
-                if (keyboardInput.Active)
-                {
-                    MoveDelta(velocity * keyboardInput.vYaw * deltaTime, velocity * keyboardInput.vPitch * deltaTime, 1, 4);
-
-                    if (keyboardInput.KeyPressed(Key.Z))
-                    {
-                        ResetFov();
-                    }
-
-                    if (keyboardInput.KeyPressed(Key.T))
-                    {
-                        SettingsVrLookEnabled = !SettingsVrLookEnabled;
-                    }
-
-                    if (keyboardInput.KeyPressed(Key.L))
-                    {
-                        StereographicProjection();
-                        targetFov = DEFAULT_LITTLE_FOV;
-                    }
-
-                    if (keyboardInput.KeyPressed(Key.N))
-                    {
-                        RectlinearProjection();
-                        targetFov = DEFAULT_FOV;
-                    }
-                }
-                
-
-
-                if(gamepadInput.Active)
-                {
-                    MoveDelta(velocity * gamepadInput.vYaw * deltaTime, velocity * gamepadInput.vPitch * deltaTime, 1, 4);
-
-                    if (gamepadInput.ButtonPressed(GamepadButtonFlags.A))
-                        ShellViewModel.Instance.PlayPause();
-
-                    if (gamepadInput.ButtonPressed(GamepadButtonFlags.Y))
-                        ShellViewModel.Instance.Rewind();
-
-                    if (gamepadInput.ButtonPressed(GamepadButtonFlags.DPadLeft))
-                        ShellViewModel.Instance.SeekRelative(-5);
-
-                    if (gamepadInput.ButtonPressed(GamepadButtonFlags.DPadRight))
-                        ShellViewModel.Instance.SeekRelative(5);
-
-                    if (gamepadInput.ButtonPressed(GamepadButtonFlags.DPadUp))
-                        Caliburn.Micro.Execute.OnUIThreadAsync(() => ShellViewModel.Instance.VolumeRocker.Volume += 0.1);
-
-                    if (gamepadInput.ButtonPressed(GamepadButtonFlags.DPadDown))
-                        Caliburn.Micro.Execute.OnUIThreadAsync(() => ShellViewModel.Instance.VolumeRocker.Volume -= 0.1);
-                }
-
-
-                if(navigatorInput.Active)
-                {
-                    float vYaw = navigatorInput.vRoll + navigatorInput.vYaw;
-                    if (vYaw < -1) vYaw = -1;
-                    if (vYaw > 1) vYaw = 1;
-                    float vPitch = navigatorInput.vPitch;
-                    MoveDelta(velocity * vYaw * deltaTime, velocity * vPitch * deltaTime, 1, 4);
-
-
-					if (Logic.Instance.settings.SpaceNavigatorKeysAndZoomActive)
-                    {
-                        if (navigatorInput.leftPressed)
-                            ShellViewModel.Instance.PlayPause();
-
-                        if (navigatorInput.rightPressed)
-                            ShellViewModel.Instance.Rewind();
-
-						float zoom = navigatorInput.vPush;
-						ChangeFov(fovVelocity * zoom * deltaTime);
-					}
-				}
-            }
-
-			foreach (var id in AllInputDevices)
-			{
-				id.LateUpdate(deltaTime);
-			}
-
-
+			UpdateInput();
 
 			// Little planet makes sense only in sphere and dome projections
 			var littlePlanetProjections = new[] { MediaDecoder.ProjectionMode.Sphere, MediaDecoder.ProjectionMode.Dome };
