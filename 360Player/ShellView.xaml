@@ -180,7 +180,8 @@
                     <MenuItem Header="Little planet (stereographic) projection" InputGestureText="L"  cal:Message.Attach="[Event Click] = [Action LittlePlanetProjection]" />
                     <Separator />
                     <MenuItem Header="Reset zoom (fov)" InputGestureText="Ctrl+0" cal:Message.Attach="[Event Click] = [Action ResetFov]" />
-					<Separator />
+                    <MenuItem IsCheckable="True" IsChecked="{Binding UserHeadsetTracking}" Header="User headset tracking in window" InputGestureText="Ctrl+T" />
+                    <Separator />
 					<MenuItem IsCheckable="True" IsChecked="{Binding ProjectionIsAuto}" Header="Automatic projection" />
 					<MenuItem IsCheckable="True" IsChecked="{Binding ProjectionIsEquirectangular}" Header="Equirectangular" />
 					<!-- TODO: cubemap types -->
@@ -191,7 +192,7 @@
 					DataContext="{Binding AnaliticsMenu}"
 					/>
 				<MenuItem Header="Options">
-                    <MenuItem Header="Settings" cal:Message.Attach="[Event Click] = [Action OpenSettings]" InputGestureText="Ctrl+P"/>
+                    <MenuItem Header="Settings" cal:Message.Attach="[Event Click] = [Action OpenSettings]" InputGestureText="Ctrl+,"/>
                     <!--
                     <MenuItem Header="Recenter Headset" cal:Message.Attach="[Event Click] = [Action RecenterHeadset]" InputGestureText="R"/>
                     -->
@@ -216,10 +217,20 @@
 
 
         <ui:DPFCanvas x:Name="Canvas1" Stretch="UniformToFill" Grid.Row="1" Grid.RowSpan="3" HorizontalAlignment="Center" VerticalAlignment="Center"
-					  cal:Message.Attach="[Shortcut Control+O] = [Action OpenFile]; [Shortcut Control+Q] = [Action Quit]; [Shortcut Control+S] = [Action Stop]; [Shortcut Control+R] = [Action Rewind];  [Shortcut Space] = [Action PlayPause]; 
-					  [Shortcut F11] = [Action ToggleFullscreen('true')]; [Shortcut Escape] = [Action EscapeFullscreen]; [Event MouseWheel] = [Action ChangeFov($eventArgs)]; [Shortcut Control+NumPad0] = [Action ResetFov];
-					  [Shortcut Control+D0] = [Action ResetFov]; [Shortcut Control+D] = [Action StopAndVisualize]" />
-
+					  cal:Message.Attach="
+                      [Shortcut Control+O] = [Action OpenFile]; 
+                      [Shortcut Control+Q] = [Action Quit]; 
+                      [Shortcut Control+S] = [Action Stop]; 
+                      [Shortcut Control+R] = [Action Rewind];  
+                      [Shortcut Control+OemComma] = [Action OpenSettings];
+                      [Shortcut Control+T] = [Action ToggleUserHeadsetTracking];
+                      [Shortcut Space] = [Action PlayPause]; 
+					  [Shortcut F11] = [Action ToggleFullscreen('true')]; 
+                      [Shortcut Escape] = [Action EscapeFullscreen]; 
+                      [Event MouseWheel] = [Action ChangeFov($eventArgs)]; 
+                      [Shortcut Control+NumPad0] = [Action ResetFov];
+					  [Shortcut Control+D0] = [Action ResetFov]" />
+        <!-- for shortcuts, see also UpdateInput() from Scene.cs -->
 
         <Grid Grid.Row="1" Grid.RowSpan="2">
             <Grid Background="#99000000" Height="32" VerticalAlignment="Top" x:Name="TopBar">

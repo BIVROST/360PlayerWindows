@@ -62,19 +62,22 @@ Available all the time:
 * **Control + O**: open a file
 * **Control + U**: open an URL from the internet
 * **Control + Q**: quit 360Player
-* **Control + P**: settings
+* **Control + ,**: settings
 * **F1**: help
+* **F11 or doubleclick movie**: toggle fullscreen
+* **Escape**: exit fullscreen
+
 
 Available only when movie is playing:
 
-* **Control+S**: stop
-* **Control+R**: rewind
-* **Space**: play/pause
+* **Control + S**: stop
+* **Control + R**: rewind
+* **Space or click movie**: play/pause
 * **L**: enable little planet projection (only on equirectangular and dome)
 * **N**: disable little planet projection
-* **T**: enable/disable user headset tracking (look in the direction the headset is looking)
+* **Control + T**: enable/disable user headset tracking (look in the direction the headset is looking)
 * **Arrow keys or AWSD**: look around
-* **+/-**: zoom in and out
+* **+/- or mouse wheel**: zoom in and out
 * **Control + 0**: reset zoom
 
 Gamepad control

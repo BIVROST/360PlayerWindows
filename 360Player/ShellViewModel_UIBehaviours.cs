@@ -341,17 +341,6 @@ namespace Bivrost.Bivrost360Player
 			Execute.OnUIThreadAsync(() => NotifyOfPropertyChange(() => DebugText));
 		}
 
-        public void StopAndVisualize()
-        {
-            //if(this.DXCanvas.Scene != null)
-            //{
-            //    this.DXCanvas.Scene.
-            //}
-            //Stop();
-            
-            //System.Diagnostics.Process.Start("http://bivrost360.com/heatmap-viewer/");   
-        }
-
 		public void NormalProjection()
 		{
 			if (this.DXCanvas.Scene != null)

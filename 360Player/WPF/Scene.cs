@@ -406,6 +406,8 @@
 
 		void UpdateInput()
 		{
+			// For more shortcuts see also: ShellView.xaml DPFCanvas1's cal:Message.Attach
+
 			var allInputDevices = new InputDevices.InputDevice[]
 			{
 				keyboardInput,
@@ -427,14 +429,6 @@
 				if (keyboardInput.Active)
 				{
 					MoveDelta(velocity * keyboardInput.vYaw * deltaTime, velocity * keyboardInput.vPitch * deltaTime, 1, 4);
-
-					//if (keyboardInput.KeyPressed(Key.Z))
-					//	ResetFov();
-
-					if (keyboardInput.KeyPressed(Key.T))
-					{
-						SettingsVrLookEnabled = !SettingsVrLookEnabled;
-					}
 
 					if (keyboardInput.KeyPressed(Key.L))
 					{

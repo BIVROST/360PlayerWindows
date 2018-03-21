@@ -223,5 +223,22 @@ namespace Bivrost.Bivrost360Player
 		}
 		#endregion
 
+
+
+		public bool UserHeadsetTracking
+		{
+			get { return Logic.Instance.settings.UserHeadsetTracking; }
+			set
+			{
+				if (Logic.Instance.settings.UserHeadsetTracking == value) return;
+				Logic.Instance.settings.UserHeadsetTracking = value;
+				NotifyOfPropertyChange(nameof(UserHeadsetTracking));
+			}
+		}
+
+		public void ToggleUserHeadsetTracking()
+		{
+			UserHeadsetTracking = !UserHeadsetTracking;
+		}
 	}
 }
