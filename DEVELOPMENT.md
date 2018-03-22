@@ -15,8 +15,8 @@ Quick start
 5. Run the *360Player* project. 
 
 
-Troubleshooting
----------------
+Development troubleshooting
+---------------------------
 
 
 A few common problems during development and quick fixes for them
@@ -87,6 +87,20 @@ Projects imported from other sources:
 
 
 
+Integration - the `bivrost` protocol
+------------------------------------
+
+TODO
+
+
+
+File naming scheme - stereoscopy auto detection
+-----------------------------------------------
+
+TODO
+
+
+
 Features that have been disabled
 --------------------------------
 
@@ -94,7 +108,7 @@ In the course of development of 360Player for Windows, some features have been c
 This is a list of these features and reasons why they are no more in the default build.
 
 
-### Watching video from YouTube (removed feature)
+### Watching video from YouTube (disabled feature)
 At some point, YouTube stopped serving high definition video in a format that could be easily integrated. 
 Currently YT serves 720p video that can be still watched using the old mechanics, and 720p VR is not worth watching.   
 The 720p support is still enabled, but is no longer advertised.  
@@ -112,7 +126,7 @@ Facebook had a special cubemap format. The format itself is still implemented.
 Facebook support has been finally removed in the git commit tagged "facebook-removed".
 
 
-### Remote Control (removed feature)
+### Remote Control (disabled feature)
 At some point the player had a non-published feature with forwarding movie and head position from GearVR to be mirrored on the player.
 The feature is hidden behind conditional compilation symbol `FEATURE_REMOTE_CONTROL` and also requires `Features.remote` to be enabled.
 
@@ -122,7 +136,7 @@ The Remote Control was just a one time test and is not of production quality.
 There are plans to make a proper feature of this in the future.
 
 
-### Browser plugins (removed feature)
+### Browser plugins (disabled feature)
 For some time the 360Player for Windows asked to install browser plugins to the locally installed Firefox and Chrome browsers.
 
 The plugins have been adding an "Open in 360Player" button on the corner of 360 videos on sites:
@@ -156,3 +170,16 @@ Please note that the server side is no more available.
 Removed in tagged commit `open-in-native-removed`.
 
 (open-in-native)
+
+
+### Licenses from external server (disabled feature)
+
+Before moving into R&D access, 360Player for Windows build have had their features restricted by an external license server.
+Now, no server is queried and basic features are enabled by default without asking.
+
+The licensing feature is now hidden behind conditional compilation symbol `FEATURE_LICENSE_NINJA`.
+
+
+### Canary builds
+
+

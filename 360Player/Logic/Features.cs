@@ -1,12 +1,6 @@
-﻿using Bivrost.Bivrost360Player.ConfigUI;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Bivrost;
 using Bivrost.Log;
-using Bivrost.Licensing;
 
 namespace Bivrost.Bivrost360Player
 {
@@ -102,8 +96,12 @@ namespace Bivrost.Bivrost360Player
 		/// <summary>
 		/// The build requires an active license from LicenseNinja
 		/// </summary>
+		#if FEATURE_LICENSE_NINJA
 		public static bool RequireLicense = IsCanary;
-
+		#else
+		public static bool RequireLicense = false;	//< don't require license when it cannot be granted
+		#endif
+		
 		/// <summary>
 		/// Online heatmap analytics gathering and sending is enabled
 		/// Also requires conditional compile variable FEATURE_GHOSTVR
@@ -141,10 +139,8 @@ namespace Bivrost.Bivrost360Player
 			Commercial = false;
 		}
 
-		internal static void SetFromLicense(LicenseNinja.License license)
+		internal static void SetGrants(Dictionary<string, string> grants)
 		{
-			Dictionary<string, string> grant = license.GrantAsDictionary;
-
 			foreach (var field in typeof(Features).GetFields())
 			{
 				var fieldval = field.GetValue(null);
@@ -153,9 +149,9 @@ namespace Bivrost.Bivrost360Player
 					if (attr is FeatureGrantedFromLicenseAttribute)
 					{
 						string name = ((FeatureGrantedFromLicenseAttribute)attr).name;
-						if (grant.ContainsKey(name))
+						if (grants.ContainsKey(name))
 						{
-							string val = grant[name];
+							string val = grants[name];
 							if (fieldval is bool)
 								field.SetValue(null, val == "true" || string.IsNullOrEmpty(val));
 							else if (fieldval is int)
@@ -164,13 +160,13 @@ namespace Bivrost.Bivrost360Player
 								field.SetValue(null, val);
 							else
 								log.Error($"Unsupported feature field type: {field.GetType()} on key {name}");
-							grant.Remove(name);
+							grants.Remove(name);
 						}
 					}
 				}
 			}
 
-			foreach (var kvp in grant)
+			foreach (var kvp in grants)
 			{
 				log.Error(kvp.Value != null ? $"Unknown feature granted: {kvp.Key} = {kvp.Value}" : $"Unknown feature granted: {kvp.Key} (no value)");
 			}

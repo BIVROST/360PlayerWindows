@@ -246,19 +246,31 @@ namespace Bivrost.Bivrost360Player
 
         public void OpenBuyPage()
 		{
-			if (Fullscreen) ToggleFullscreen(true);
-            //System.Diagnostics.Process.Start("mailto:contact@bivrost360.com?subject=Licence%20purchase");
-#if DEBUG
-            System.Diagnostics.Process.Start("http://download.bivrost360.com/player-desktop/canary");
-#else
-            System.Diagnostics.Process.Start("http://download.bivrost360.com/player-desktop");
-#endif
-        }
+			var confirm = Application.Current.Dispatcher.Invoke(() =>
+			{
+				var decision = MessageBox.Show(
+					Application.Current.MainWindow,
+					"To gain full access to the 360Player's features and get a commercial license, " +
+					"join the BIVROST R&D Program at http://bivrost360.com." +
+					"\n\nIf you have bought a copy of 360Player before and your license is still " +
+					"valid, please contact support: support@bivrost360.com.",
+					"360Player for Windows licensing",
+					MessageBoxButton.OK,
+					MessageBoxImage.Asterisk,
+					MessageBoxResult.OK
+				);
+				return decision == MessageBoxResult.OK;
+			});
+		}
 		
 
 		public void OpenLicenseManagement()
 		{
+#if FEATURE_LICENSE_NINJA
 			licensingConnector.OpenLicenseManagement();
+#else
+			OpenBuyPage();
+#endif
 		}
 
         public void DisableTabPress(object sender, object e)

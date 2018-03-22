@@ -304,6 +304,7 @@
       <DependentUpon>AboutView.xaml</DependentUpon>
     </Compile>
     <Compile Include="AboutViewModel.cs" />
+    <Compile Include="Logic\LicensingContext.cs" />
     <Compile Include="RemoteControl\ApiServer.cs" />
     <Compile Include="BivrostBootstrapper.cs" />
     <Compile Include="ConfigUI\BoolConfigItemView.xaml.cs">

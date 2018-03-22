@@ -23,7 +23,6 @@ using SharpDX.Direct3D11;
 using SharpDX.XInput;
 using LoggerManager = Bivrost.Log.LoggerManager;
 using Bivrost.AnalyticsForVR;
-using Bivrost.Licensing;
 using Bivrost.Log;
 
 namespace Bivrost.Bivrost360Player
@@ -131,55 +130,10 @@ namespace Bivrost.Bivrost360Player
 
 		public NotificationCenterViewModel NotificationCenter { get; set; }
 
-
-		public class LicensingContext : LicensingConnector.IContext
-		{
-			public string LicenseCode
-			{
-				get { return Logic.Instance.settings.LicenseCode; }
-				set
-				{
-					Logic.Instance.settings.LicenseCode = value;
-					Logic.Instance.settings.Save();
-				}
-			}
-
-
-			public bool RequireLicense { get { return Features.RequireLicense; } }
-
-
-			public string InstallId { get { return Logic.Instance.settings.InstallId.ToString(); } }
-
-
-			public string ProductCode { get { return Logic.productCode; } }
-
-
-			public void QuitApplication()
-			{
-				ShellViewModel.Instance.Quit();
-			}
-
-
-			public void LicenseUpdated(LicenseNinja.License license)
-			{
-				if (license == null)
-					Features.SetBasicFeatures();
-				else
-					Features.SetFromLicense(license);
-				Features.TriggerListUpdated();
-			}
-
-
-			public void LicenseVerified()
-			{
-				Logic.Notify("License verified");
-			}
-
-		}
-
-
-
-		LicensingConnector licensingConnector = new LicensingConnector(new LicensingContext());
+#if FEATURE_LICENSE_NINJA
+		Bivrost.Licensing.LicensingConnector licensingConnector = 
+			new Bivrost.Licensing.LicensingConnector(new LicensingContext());
+#endif
 
 		public ShellViewModel()
 		{
@@ -415,7 +369,12 @@ namespace Bivrost.Bivrost360Player
 			}
 
 			Features.ListUpdated += LicenseUpdated;
+#if FEATURE_LICENSE_NINJA
 			licensingConnector.LicenseCheck();
+#else
+			// set hardcoded basic no-license-required features
+			Features.SetBasicFeatures();
+#endif
 
 			InputDevices.NavigatorInputDevice.TryInit(windowHandle);
 		}
@@ -731,7 +690,8 @@ namespace Bivrost.Bivrost360Player
 			{
 				ResetPlayback();
 
-				SelectedFileName = result.BestQualityVideoStream(Streaming.VideoContainer.mp4 | Streaming.VideoContainer.hls).url;
+				SelectedFileName = result.BestQualityVideoStream(
+					Streaming.VideoContainer.mp4 | Streaming.VideoContainer.hls | Streaming.VideoContainer.avi | Streaming.VideoContainer.wmv).url;
                 SelectedServiceResult = result;
 
 				IsFileSelected = true;

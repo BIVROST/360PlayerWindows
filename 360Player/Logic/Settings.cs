@@ -135,8 +135,10 @@ namespace Bivrost.Bivrost360Player
 		public string LocallyStoredSessionsDirectory { get; set; } = null;
 
 
+#if FEATURE_LICENSE_NINJA
 		//License settings
 		public string LicenseCode = "";
+#endif
 
 
 		// Debug features
