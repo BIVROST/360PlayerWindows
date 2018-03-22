@@ -1,5 +1,4 @@
 ﻿using BivrostAnalytics;
-using Fleck;
 using Bivrost.AnalyticsForVR;
 using System;
 using System.ComponentModel;
@@ -54,7 +53,6 @@ namespace Bivrost.Bivrost360Player
 		}
 
 		public Settings settings;
-		private WebSocketServer webSocketServer;
 		public Tracker stats;
 
 		public event Action OnUpdateAvailable = delegate { };
@@ -87,62 +85,6 @@ namespace Bivrost.Bivrost360Player
 
 			ProtocolHandler.RegisterProtocol();
 
-			Task.Factory.StartNew(() =>
-			{
-				Logger wsLogger = new Logger("websocket");
-
-				webSocketServer = new WebSocketServer("ws://127.0.0.1:24876"); // PORT "BIVRO" 24876
-				//var cert = Certificate.CreateSelfSignCertificatePfx(null, DateTime.Now, DateTime.Now.AddYears(2));
-				//var x509 = new System.Security.Cryptography.X509Certificates.X509Certificate2(cert);
-				//webSocketServer.Certificate = x509;
-				//webSocketServer.EnabledSslProtocols = System.Security.Authentication.SslProtocols.Default;
-				webSocketServer.SupportedSubProtocols = new string[] { "bivrost" };
-                try
-				{
-					webSocketServer.Start(socket =>
-					{
-						socket.OnOpen = () =>
-						{
-							wsLogger.Info("WebSocket server open");
-						};
-						socket.OnClose = () => wsLogger.Info("WebSocket server close");
-						socket.OnMessage = message =>
-						{
-							switch (message)
-							{
-								case "version":
-									var assembly = System.Reflection.Assembly.GetExecutingAssembly().GetName();
-									string Version = "";
-									try
-									{
-										if (Tools.PublishInfo.ApplicationIdentity != null)
-											Version = Tools.PublishInfo.ApplicationIdentity.Version.ToString();
-									}
-									catch (Exception) { }
-									if (string.IsNullOrWhiteSpace(Version))
-									{
-										if (Assembly.GetExecutingAssembly() != null)
-											Version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-										else
-											Version = "( not supported )";
-									}
-
-
-									socket.Send(assembly.Name + ";" + Version);
-									break;
-
-								default:
-									socket.Send(message);
-									break;
-							};
-						};
-					});
-				}
-				catch (Exception) {
-					;
-				}
-			});
-
             lookListener = new LookListener();
 			ghostVRConnector = new GhostVRConnector();
 			locallyStoredSessions = new LocallyStoredSessionSink();
@@ -155,13 +97,7 @@ namespace Bivrost.Bivrost360Player
 		public LocallyStoredSessionSink locallyStoredSessions;
 
 		~Logic()
-		{
-			try
-			{
-				webSocketServer.Dispose();
-			}
-			catch (Exception) { }
-            
+		{         
             lookListener?.Dispose();
 		}
 
