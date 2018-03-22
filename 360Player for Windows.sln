@@ -30,14 +30,18 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Licensing", "Licensing\Lice
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OculusWrap", "OculusWrap\OculusWrap.csproj", "{737A81A8-553C-49A9-8F17-5ADF691A56B2}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "MOTD", "MOTD\MOTD.shproj", "{C5D3DBFE-02A6-420B-A41E-F474DD573F6A}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Logger\Logger.projitems*{42ccaf01-b1d7-4960-a466-4097f9c22fb4}*SharedItemsImports = 13
 		AnalyticsForVR\AnalyticsForVR.projitems*{6924d465-079c-490e-b9eb-e96bfd2f3bfb}*SharedItemsImports = 13
 		Licensing\Licensing.projitems*{975a8fda-18b3-4b93-a18d-42716d7b62c2}*SharedItemsImports = 13
+		MOTD\MOTD.projitems*{c5d3dbfe-02a6-420b-a41e-f474dd573f6a}*SharedItemsImports = 13
 		AnalyticsForVR\AnalyticsForVR.projitems*{e14fbc2b-b29d-4428-8052-52292eb22c1d}*SharedItemsImports = 4
 		Licensing\Licensing.projitems*{e14fbc2b-b29d-4428-8052-52292eb22c1d}*SharedItemsImports = 4
 		Logger\Logger.projitems*{e14fbc2b-b29d-4428-8052-52292eb22c1d}*SharedItemsImports = 4
+		MOTD\MOTD.projitems*{e14fbc2b-b29d-4428-8052-52292eb22c1d}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

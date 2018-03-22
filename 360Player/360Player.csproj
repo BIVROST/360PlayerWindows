@@ -878,6 +878,7 @@
   <Import Project="..\Logger\Logger.projitems" Label="Shared" />
   <Import Project="..\AnalyticsForVR\AnalyticsForVR.projitems" Label="Shared" />
   <Import Project="..\Licensing\Licensing.projitems" Label="Shared" />
+  <Import Project="..\MOTD\MOTD.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
