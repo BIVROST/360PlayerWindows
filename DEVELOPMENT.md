@@ -122,13 +122,30 @@ The Remote Control was just a one time test and is not of production quality.
 There are plans to make a proper feature of this in the future.
 
 
-### Browser plugins
-`FEATURE_BROWSER_PLUGINS`
+### Browser plugins (removed feature)
+For some time the 360Player for Windows asked to install browser plugins to the locally installed Firefox and Chrome browsers.
 
-### GhostVR
+The plugins have been adding an "Open in 360Player" button on the corner of 360 videos on sites:
+* Youtube
+* Facebook
+* Vrideo
+* Littlstar
+* Pornhub
+
+The plugin also added a class to the `body ` element when the domain was `bivrost360.com`. This class was used for feature detection from the `360WebPlayer`'s open-in-native functionality.
+
+This feature has been disabled as the plugins are not kept up to date.
+
+To enable the 360Player part of installing the plugins, use the conditional compilation flag `FEATURE_BROWSER_PLUGINS`. 
+
+The source of the plugins is located in a git repository bundle `360Player/BrowserPlugins/browser-plugins-20160418T1309160200-1496ba5.gitbundle`.
 
 
-### ClickOnce
+### GhostVR (removed feature)
+
+GhostVR was one of the AnalyticsForVR session-sink providers. 
+It since has been disabled.
 
 
-### 360WebPlayer integration
+### 360WebPlayer integration (removed feature)
+(open-in-native)

@@ -363,7 +363,7 @@
     <Compile Include="InputDevices\InputDevice.cs" />
     <Compile Include="InputDevices\KeyboardInputDevice.cs" />
     <Compile Include="InputDevices\NavigatorInputDevice.cs" />
-    <Compile Include="Logic\BrowserPluginManagement.cs" />
+    <Compile Include="BrowserPlugins\BrowserPluginManagement.cs" />
     <Compile Include="Logic\Certificate.cs" />
     <Compile Include="Logic\Features.cs" />
     <Compile Include="Logic\Logic.cs" />
@@ -371,7 +371,7 @@
     <Compile Include="Logic\ProtocolHandler.cs" />
     <Compile Include="Logic\Recents.cs" />
     <Compile Include="Logic\Settings.cs" />
-    <Compile Include="Logic\Settings_BrowserPluginManagement.cs" />
+    <Compile Include="BrowserPlugins\Settings_BrowserPluginManagement.cs" />
     <Compile Include="Logic\Updater.cs" />
     <Compile Include="Logic\WebSocketHelper.cs" />
     <Compile Include="NotificationCenterView.xaml.cs">
