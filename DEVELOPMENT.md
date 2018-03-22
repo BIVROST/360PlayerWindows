@@ -5,47 +5,73 @@ Quick start
 -----------
 
 1. Download the latest Visual Studio with .NET desktop development enabled.
-2. Checkout this repository using git clone with the URL 
-
+2. Checkout this repository using git clone with the URL:
+   ```bash
+   git clone git@gitlab.com:BIVROST/360PlayerWindows.git --recursive
+   ```
+3. Open the solution by doubleclicking `360Player for Windows.sln`.
+4. Restore NuGet packages:
+   Right click on the *360Player for Windows* solution in the Solution Explorer and choose *Restore NuGet Packages*.
+5. Run the *360Player* project. 
 
 
 Troubleshooting
 ---------------
 
-1. git submodule update for Managed-OSVR/ClientKit
 
-2. Net framework 3.5 missing (windows 10)
-
-https://answers.microsoft.com/en-us/insider/forum/insider_wintp-insider_install/how-to-instal-net-framework-35-on-windows-10/450b3ba6-4d19-45ae-840e-78519f36d7a4?auth=1
-
-Restart Visual Studio
+A few common problems during development and quick fixes for them
 
 
+### The type or namespace name 'OSVR' could not be found (...)
 
-3. Space Navigator 3d Connexion:
-http://www.3dconnexion.pl/service/drivers.html
+You forgot to check out submodules:
 
-4. If Visual Studio works slow, it might help to disable Tools -> Options -> Debugging -> General -> Enable UI Debugging Tools for XAML
+```bash
+# on an already cloned repository:
+git submodule init
+git submodule update
 
-5. Unit tests dont work? Test -> Test settings -> Default processor architecture -> x64
-
-
-6. Oculus dll not found? Add to path: C:\Program Files\Oculus\Support\oculus-runtime (some old dev installation issue?)
-
-
-
-
-Requirements
-------------
-
-Windows 8 (?), 8.1 or 10
+# or when cloning:
+git clone git@gitlab.com:BIVROST/360PlayerWindows.git --recursive
+```
 
 
+### Net framework 3.5 missing (windows 10)
+
+You need to manually [install .NET 3.5][net-35].
+And then restart Visual Studio.
+
+[net-35]: https://answers.microsoft.com/en-us/insider/forum/insider_wintp-insider_install/how-to-instal-net-framework-35-on-windows-10/450b3ba6-4d19-45ae-840e-78519f36d7a4?auth=1
+
+
+### Space Navigator 3dconnexion doesn't work
+
+Did you install [the drivers][3dconnexion]?
+[3dconnexion]: http://www.3dconnexion.pl/service/drivers.html
+
+
+### Visual Studio works slow
+
+It might help to disable *Tools -> Options -> Debugging -> General -> Enable UI Debugging Tools for XAML*.
+
+
+### Unit tests dont work
+
+Change *Test -> Test settings -> Default processor architecture* to *x64*.
+
+
+### Oculus DLL `LibOVRRT64_1.dll ` not found?
+
+Add to path: `C:\Program Files\Oculus\Support\oculus-runtime`.
+This is probably some legacy installation issue.
+Issue was not found on new installations.
 
 
 
+Projects in the solution
+-------------------------
 
-Projects in the solution:
+Developed with the player:
 * 360Player - main project
 * 360Player.Test - unit tests for the project (mostly streaming sources)
 * AnalyticsForVR - implementation of BIVROST AnalyticsForVR client for WPF
@@ -67,25 +93,26 @@ Features that have been disabled
 In the course of development of 360Player for Windows, some features have been created but ultimately removed or hidden.
 This is a list of these features and reasons why they are no more in the default build.
 
-### Watching video from YouTube
+
+### Watching video from YouTube (removed feature)
 At some point, YouTube stopped serving high definition video in a format that could be easily integrated. 
 Currently YT serves 720p video that can be still watched using the old mechanics, and 720p VR is not worth watching.   
 The 720p support is still enabled, but is no longer advertised.  
 Known issue: does not detect 360 video, will happily play everything as equirectangular.
 
 
-### Watching video from VRideo
+### Watching video from Vrideo (removed feature)
 The platform shut down at the end of 2016 and the content is no more available.
-VRideo support has been finally removed in the git commit tagged "vrideo-removed".
+Vrideo support has been finally removed in the git commit tagged "vrideo-removed".
 
 
-### Watching video from Facebook
+### Watching video from Facebook (removed feature)
 Worked at some point, but we stopped keeping up with constant changes to how Facebook serves video.  
 Facebook had a special cubemap format. The format itself is still implemented.
 Facebook support has been finally removed in the git commit tagged "facebook-removed".
 
 
-### Remote Control
+### Remote Control (removed feature)
 At some point the player had a non-published feature with forwarding movie and head position from GearVR to be mirrored on the player.
 The feature is hidden behind conditional compilation symbol `FEATURE_REMOTE_CONTROL` and also requires `Features.remote` to be enabled.
 

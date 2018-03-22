@@ -3,7 +3,10 @@ BIVROST 360Player for Windows
 
 The easiest way to watch 360-videos using a VR headset!
 
-The 360Player by BIVROST is a video player for immersive spherical videos. The desktop application for Windows lets you play virtual reality videos on your PC using a VR headset. It supports all versions of Oculus Rift, HTC Vive and OSVR headsets.  
+![Screenshot of BIVROST 360Player](Docs/360Player-movie.png)
+
+The 360Player by BIVROST is a video player for immersive spherical videos. The desktop application for Windows lets you play virtual reality videos on your PC using a VR headset. It supports all versions of Oculus Rift, HTC Vive, OSVR and Windows Mixed Reality headsets.
+
 Download the player to experience videos in smoothly way and high performance. Watch videos up to 4K and enjoy the finest resolution at 360 degrees.
 
 
@@ -15,11 +18,11 @@ Key features
 * VR Headsets support
   * Oculus: Oculus Rift DK2, Oculus Rift CV1
   * OpenVR: HTC Vive
-  * OSVR: OSVR HDK 1.4, HDK 2.0
-  * Windows Mixed Reality
+  * OSVR: OSVR HDK 1.4, OSVR HDK 2.0
+  * Windows Mixed Reality (with SteamVR plugin)
 * Hardware accelerated video decoding and rendering
 * High performance, low latency playback
-* Compatible with Windows 8, 8.1 and 10
+* Compatible with Windows 8.1 and 10
 
 
 Requirements
@@ -53,6 +56,12 @@ Supported files and internet services
 
 Using the player
 ================
+
+To use 360Player for Windows open a file or an URL address from the internet using *File → Open File*, *File → Open URL* or the buttons at the center of the player when no movie is playing.
+
+You can also drag and drop a movie on the player or right click on a movie and select "Open in 360Player".
+
+![Right click menu on a mp4 file](Docs/Rightclick-menu.png)
 
 Keyboard shortcuts
 ------------------
@@ -124,17 +133,35 @@ You need to run the player with Nvidia graphic card. See here for instruction. T
 Oculus Rift is still under development. Check if you have newest version of Oculus PC Runtime. In some cases you need to reconnect Rift or restart your PC to make it work again. This problem considers not only the player but other applications connecting to Oculus Services.
 
 ### I'm getting "File not supported" trying to play video.
-Bivrost Player supports playback of video files and codecs based on Microsoft Media Foundation. Popular file formats compatible with Player: mp4, avi, mov. Popular codecs: h.264, h.263, Windows Media Video. Matroska is not currently supported. Complete list is available on MSDN.  
+Bivrost Player supports playback of video files and codecs based on Microsoft Media Foundation. Popular file formats compatible with Player: mp4, avi, mov. Popular codecs: h.264, h.263, Windows Media Video. Matroska is not currently supported. Complete list is available on [MSDN][msdn-file-formats].  
  However, not all formats and resolutions are supported on all systems. It depends on your configuration and Windows version. The greatest variety is on Windows 10.
 
-### Do I need Oculus Rift camera connected?
+[msdn-file-formats]: https://msdn.microsoft.com/pl-pl/library/windows/desktop/dd757927(v=vs.85).aspx
+
+### Do I need the Oculus Rift camera to be connected?
 Positional tracker (camera) is not needed but is recommended. It helps re-position Oculus when playback is started to always look forward in VR. Without position tracking headset gyroscope may drift in time and make movies start looking at wrong direction.
 
-### Is VR headset required?
-No. Headsets are supported but not required, You can watch movies using your computer's screen and look around with a mouse.
+### Is a VR headset required?
+No. Headsets are supported but not required, You can watch movies using your computer's screen and look around with a mouse or another device.
 
 ### 360Player won't run on Windows N and Windows KN
-You have to install Media Feature Pack for correct Windows version: Windows 8 (KB2703761), Windows 8.1 (KB2929699), Windows 10 (KB3010081) or Windows 10 1511 (KB3099229).
+You have to install Media Feature Pack for correct Windows version: Windows 8 ([KB2703761][KB2703761]), Windows 8.1 ([KB2929699][KB2929699]), Windows 10 ([KB3010081][KB3010081]) or Windows 10 1511 ([KB3099229][KB3099229]).
+
+[KB2703761]: https://support.microsoft.com/en-us/kb/2703761
+[KB2929699]: https://support.microsoft.com/en-us/kb/2929699
+[KB3010081]: https://support.microsoft.com/en-us/kb/3010081
+[KB3099229]: https://support.microsoft.com/en-us/kb/3099229
 
 ### Problems with installation? 
-SmartScreen may prevent you from running the setup * application. Press "run anyway". If you do not see the button, press "more info" * first. It might also help to run the classical installer. Windows 8 or newer is * required, will not work on XP, Vista or 7.
+SmartScreen may prevent you from running the setup application. 
+Press "run anyway". 
+
+If you do not see the button, press "more info" first. 
+It might also help to run the classical installer. 
+Windows 8.1 or newer is required, will not work on XP, Vista, 7 or 8.
+
+
+Changelog
+=========
+
+The BIVROST 360Player has been in development since 2015, the major improvements are listed in [the changelog](CHANGELOG.md).
