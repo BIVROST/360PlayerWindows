@@ -106,6 +106,7 @@ namespace Bivrost.Bivrost360Player
 
 		/// <summary>
 		/// Online heatmap analytics gathering and sending is enabled
+		/// Also requires conditional compile variable FEATURE_GHOSTVR
 		/// </summary>
 		[FeatureGrantedFromLicense("ghostvr")]
 		public static bool GhostVR = false;

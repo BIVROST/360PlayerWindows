@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if FEATURE_GHOSTVR
+
+using System;
 using Bivrost.AnalyticsForVR;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -30,3 +32,5 @@ namespace Bivrost.Bivrost360Player.Test
 
     }
 }
+
+#endif

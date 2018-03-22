@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if FEATURE_GHOSTVR
+using System;
 using System.Collections.Generic;
 using ChanibaL;
 using RestSharp;
@@ -492,3 +493,4 @@ namespace Bivrost.AnalyticsForVR
 		#endregion
 	}
 }
+#endif

@@ -86,14 +86,20 @@ namespace Bivrost.Bivrost360Player
 			ProtocolHandler.RegisterProtocol();
 
             lookListener = new LookListener();
-			ghostVRConnector = new GhostVRConnector();
+
 			locallyStoredSessions = new LocallyStoredSessionSink();
-			lookListener.RegisterSessionSink(new GhostVRSessionSink(ghostVRConnector));
 			lookListener.RegisterSessionSink(locallyStoredSessions);
+
+#if FEATURE_GHOSTVR
+			ghostVRConnector = new GhostVRConnector();
+			lookListener.RegisterSessionSink(new GhostVRSessionSink(ghostVRConnector));
+#endif
 		}
 
         public LookListener lookListener;
+#if FEATURE_GHOSTVR
 		public GhostVRConnector ghostVRConnector;
+#endif
 		public LocallyStoredSessionSink locallyStoredSessions;
 
 		~Logic()
@@ -121,7 +127,7 @@ namespace Bivrost.Bivrost360Player
 		}
 
 
-		#region actions in the settings window
+#region actions in the settings window
 
 
 		private void SettingsResetInstallId()
@@ -170,7 +176,7 @@ namespace Bivrost.Bivrost360Player
 
 
 
-		#region notifications
+#region notifications
 
 		private static Logger notificationLogger = new Logger("notification");
 
@@ -192,7 +198,7 @@ namespace Bivrost.Bivrost360Player
 			notificationLogger.Info($"{msg}", memberName, sourceFilePath, sourceLineNumber);
             Caliburn.Micro.Execute.OnUIThreadAsync(() => ShellViewModel.Instance?.NotificationCenter?.PushNotification(new NotificationViewModel(msg)));
         }
-		#endregion
+#endregion
 
 
 	}

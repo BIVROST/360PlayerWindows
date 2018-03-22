@@ -14,7 +14,9 @@ namespace Bivrost.AnalyticsForVR
 		public AnaliticsMenuViewModel()
 		{
 			Features.ListUpdated += () => Execute.OnUIThreadAsync(UpdateAllProperties);
+#if FEATURE_GHOSTVR
 			ghostVRConnector.StatusChanged += status => Execute.OnUIThreadAsync(UpdateAllProperties);
+#endif
 		}
 
 
@@ -63,6 +65,13 @@ namespace Bivrost.AnalyticsForVR
 			}
 		}
 
+
+		public RelayCommand CommandAboutAnalitics => new RelayCommand(_ => AboutAnalytics(), _ => AnaliticsMenuActive);
+
+		public RelayCommand CommandLocalSessionsSetDirectory => new RelayCommand(_ => LocalSessionsSetDirectory(), _ => LocalSessionsAvailable);
+
+
+#if FEATURE_GHOSTVR
 		private static GhostVRConnector ghostVRConnector { get { return Logic.Instance.ghostVRConnector; } }
 		public bool GhostVRAvailable { get { return Features.GhostVR; } }
 		public bool GhostVRAvailableAndDisconnected { get { return GhostVRAvailable && ghostVRConnector.status == GhostVRConnector.ConnectionStatus.disconnected; } }
@@ -91,17 +100,40 @@ namespace Bivrost.AnalyticsForVR
 				}
 			}
 		}
-		
 
-		public RelayCommand CommandAboutAnalitics => new RelayCommand(_ => AboutAnalytics(), _ => AnaliticsMenuActive);
+		public RelayCommand CommandGhostVRDisconnect => new RelayCommand(
+			_ => ghostVRConnector.Disconnect(),
+			_ => GhostVRAvailableAndConnected
+		);
 
-		public RelayCommand CommandGhostVRDisconnect => new RelayCommand(_ => ghostVRConnector.Disconnect(), _ => GhostVRAvailableAndConnected);
+		public RelayCommand CommandGhostVRConnect => new RelayCommand(
+			_ => ghostVRConnector.Connect(), 
+			_ => GhostVRAvailableAndDisconnected
+		);
 
-		public RelayCommand CommandGhostVRConnect => new RelayCommand(_ => ghostVRConnector.Connect(), _ => GhostVRAvailableAndDisconnected);
+		public RelayCommand CommandGhostVRCancel => new RelayCommand(
+			_ => ghostVRConnector.Cancel(),
+			_ => GhostVRAvailableAndPending
+		);
+#else
+		public bool GhostVRAvailable { get { return false; } }
+		public bool GhostVRAvailableAndDisconnected { get { return false; } }
+		public bool GhostVRAvailableAndConnected { get { return false; } }
+		public bool GhostVRAvailableAndPending { get { return false; } }
 
-		public RelayCommand CommandGhostVRCancel => new RelayCommand(_ => ghostVRConnector.Cancel(), _ => GhostVRAvailableAndPending);
+		public bool GhostVREnabled
+		{
+			get { return false; }
+			set { ; }
+		}
 
-		public RelayCommand CommandLocalSessionsSetDirectory => new RelayCommand(_ => LocalSessionsSetDirectory(), _ => LocalSessionsAvailable);
+		public string GhostVRLabel { get { return "GhostVR is disabled"; } }
+
+		public RelayCommand CommandGhostVRDisconnect => new RelayCommand(_ => { }, _ => false);
+		public RelayCommand CommandGhostVRConnect => new RelayCommand(_ => { }, _ => false);
+		public RelayCommand CommandGhostVRCancel => new RelayCommand(_ => { }, _ => false);
+#endif
+
 
 	}
 }

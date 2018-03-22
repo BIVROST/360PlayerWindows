@@ -101,7 +101,7 @@ namespace Bivrost.Bivrost360Player
 		public bool UserHeadsetTracking { get; set; } = false;
 
 
-
+#if FEATURE_GHOST_VR
 		//GhostVR and locally stored sessions
 		[SettingsAdvancedProperty("Enable GhostVR analytics", ConfigItemType.Bool, requiredFeatures = FeaturesEnum.ghostVR)]
 		public bool GhostVREnabled
@@ -119,6 +119,7 @@ namespace Bivrost.Bivrost360Player
 
 		[SettingsAdvancedProperty("GhostVR API endpoint override", ConfigItemType.String, requiredFeatures = FeaturesEnum.ghostVR | FeaturesEnum.isDebugOrCanary)]
 		public string GhostVREndpointOverride { get; set; } = "http://dev.ghostvr.io/api/v1/";
+#endif
 
 
 		[SettingsAdvancedProperty("Local video analytics sessions enabled", ConfigItemType.Bool, requiredFeatures = FeaturesEnum.locallyStoredSessions)]

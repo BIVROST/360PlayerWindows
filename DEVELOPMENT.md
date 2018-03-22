@@ -141,11 +141,18 @@ To enable the 360Player part of installing the plugins, use the conditional comp
 The source of the plugins is located in a git repository bundle `360Player/BrowserPlugins/browser-plugins-20160418T1309160200-1496ba5.gitbundle`.
 
 
-### GhostVR (removed feature)
+### GhostVR (disabled feature)
 
 GhostVR was one of the AnalyticsForVR session-sink providers. 
 It since has been disabled.
 
+To enable the player side, `FEATURE_GHOSTVR` conditional compilation symbol must be added to *360Player*, *AnalyticsForVR* and optionally *360Player.Test* projects in the solution.
+There is also a license feature `GhostVR` to be granted.
+
+Please note that the server side is no more available.
+
 
 ### 360WebPlayer integration (removed feature)
+Removed in tagged commit `open-in-native-removed`.
+
 (open-in-native)

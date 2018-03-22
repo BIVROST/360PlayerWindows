@@ -1,4 +1,5 @@
-﻿using Caliburn.Micro;
+﻿#if FEATURE_GHOSTVR
+using Caliburn.Micro;
 using System.Runtime.InteropServices;
 using System.Security.Permissions;
 using System.Windows;
@@ -129,3 +130,4 @@ namespace Bivrost.AnalyticsForVR
 		}
 	}
 }
+#endif
