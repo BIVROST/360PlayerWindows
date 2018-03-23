@@ -23,11 +23,11 @@ namespace Bivrost.Bivrost360Player
 		private System.Action _userAction = null;
 		private bool _isAction = false;
 
-		public NotificationViewModel(string message, string url = "", float timeout = 5f)
+		public NotificationViewModel(string message, string url = "", float timeout = 5f, string linkLabel = "read more")
 		{
 			Message = message;
 			Url = url;
-			ActionLabel = "read more";
+			ActionLabel = linkLabel;
 			this._timeout = timeout;
 			this._currentTime = _timeout;
 

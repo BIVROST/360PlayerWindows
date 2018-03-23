@@ -189,15 +189,40 @@ namespace Bivrost.Bivrost360Player
 		/// <param name="sourceFilePath">(automatically added) source code trace information</param>
 		/// <param name="sourceLineNumber">(automatically added) source code trace information</param>
 		public static void Notify(
-            string msg,
-            [System.Runtime.CompilerServices.CallerMemberName] string memberName = "",
-            [System.Runtime.CompilerServices.CallerFilePath] string sourceFilePath = "",
-            [System.Runtime.CompilerServices.CallerLineNumber] int sourceLineNumber = 0
-        )
-        {
+			string msg,
+			[System.Runtime.CompilerServices.CallerMemberName] string memberName = "",
+			[System.Runtime.CompilerServices.CallerFilePath] string sourceFilePath = "",
+			[System.Runtime.CompilerServices.CallerLineNumber] int sourceLineNumber = 0
+		)
+		{
 			notificationLogger.Info($"{msg}", memberName, sourceFilePath, sourceLineNumber);
-            Caliburn.Micro.Execute.OnUIThreadAsync(() => ShellViewModel.Instance?.NotificationCenter?.PushNotification(new NotificationViewModel(msg)));
-        }
+			Caliburn.Micro.Execute.OnUIThreadAsync(() => ShellViewModel.Instance?.NotificationCenter?.PushNotification(new NotificationViewModel(msg)));
+		}
+		/// <summary>
+		/// Display a notification visible as a popup with a link
+		/// Does nothing if ShellViewMovel.NotificationCenter is not yet set up.
+		/// </summary>
+		/// <param name="msg">the message</param>
+		/// <param name="uri">url of a link</param>
+		/// <param name="linkLabel">title of a link</param>
+		/// <param name="memberName">(automatically added) source code trace information</param>
+		/// <param name="sourceFilePath">(automatically added) source code trace information</param>
+		/// <param name="sourceLineNumber">(automatically added) source code trace information</param>
+		public static void NotifyWithLink(
+			string msg,
+			string uri,
+			string linkLabel,
+			[System.Runtime.CompilerServices.CallerMemberName] string memberName = "",
+			[System.Runtime.CompilerServices.CallerFilePath] string sourceFilePath = "",
+			[System.Runtime.CompilerServices.CallerLineNumber] int sourceLineNumber = 0
+		)
+		{
+			notificationLogger.Info($"{msg}, {linkLabel}->{uri}", memberName, sourceFilePath, sourceLineNumber);
+			var notification = new NotificationViewModel(msg, () => System.Diagnostics.Process.Start(uri), linkLabel);
+			Caliburn.Micro.Execute.OnUIThreadAsync(
+				() => ShellViewModel.Instance?.NotificationCenter?.PushNotification(notification)
+			);
+		}
 #endregion
 
 
