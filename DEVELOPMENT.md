@@ -101,8 +101,8 @@ TODO
 
 
 
-Features that have been disabled
---------------------------------
+Features that have been disabled or removed
+-------------------------------------------
 
 In the course of development of 360Player for Windows, some features have been created but ultimately removed or hidden.
 This is a list of these features and reasons why they are no more in the default build.
@@ -180,6 +180,7 @@ Now, no server is queried and basic features are enabled by default without aski
 The licensing feature is now hidden behind conditional compilation symbol `FEATURE_LICENSE_NINJA`.
 
 
-### Canary builds
+### Canary builds (removed distribution channel)
 
-
+This was an alpha channel for tha player that was blocked by special license tokens. 
+The last canary build has been released long ago and was not up to date.
