@@ -7,7 +7,7 @@ Module for retrieving release updates and important messages from a remote serve
 skinparam monochrome reverse
 skinparam backgroundColor transparent
 
-"360Player" -> "MOTD Server": send GET HTTP request with product name, current version and installId
+"360Player" -> "MOTD Server": send HTTP request with app details
 "MOTD Server" --> "360Player": json with an action
 
 alt type=none
@@ -30,7 +30,7 @@ else type=popup
 
 else an error occured with the MOTD server
 
-... nothing happens ...
+... nothing happens, error is logged ...
 
 end
 ```
@@ -45,11 +45,11 @@ Main communication endpoint, the only one that the client uses.
 
 ### Parameters
 
-* GET param `product`:string  
+* POST param `product`:string  
   The product name, example: `360Player`.
-* GET param `installId`:string  
+* POST param `installId`:string  
   Unique identificator of this installation, example: `13bf5143-c542-4126-91db-60ded9f74926`
-* GET param `version`:string  
+* POST param `version`:string  
   The version of the product, used for informing about changes (displaying changelog).  
   Format of the version string is `([0-9]+)(.([0-9]+))*` (example. `1.0.0.123`).  
   Version numbers are compared starting from the first element, that is `1.0` is the same as `1.0.0.0`, and `2.0` is before `2.0.0.1`.  
@@ -81,7 +81,7 @@ Most of the time, MOTD server will not return anything. This should be the case 
 
 A notification in the corner (a toast).
 
-The pair of values `link` and `url` are optional (they can both be absent or both be set, not just one). If both are set, then a link will appear after the text of the notification. If only one is set, it is ignored.
+The pair of values `link` and `uri` are optional (they can both be absent or both be set, not just one). If both are set, then a link will appear after the text of the notification. If only one is set, it is ignored.
 
 ```json
 {
@@ -89,14 +89,15 @@ The pair of values `link` and `url` are optional (they can both be absent or bot
 	"type": "notification",
 	"text": "the text of the notification",
 	"link": "optional: title of the link at the end of the notification",
-	"url": "http://example.com/the/link/for/url#optional"
+	"uri": "http://example.com/the/link/for/url#optional"
 }
 ```
 
 Additional fields returned:
 * `text`:string - Text that will be displayed as plain text.
 * `link`:string (optional) - Text that will be displayed as the link title.
-* `url`:string (optional) - The address that will be opened when the link is opened. 
+* `uri`:string (optional) - The address that will be opened when the link is opened. 
+  This is a full URI, not just an URL, so this doesn't have to be a HTTP/HTTPS protocol
 
 
 #### A HTML popup (`popup`)

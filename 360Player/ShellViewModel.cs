@@ -24,6 +24,7 @@ using SharpDX.XInput;
 using LoggerManager = Bivrost.Log.LoggerManager;
 using Bivrost.AnalyticsForVR;
 using Bivrost.Log;
+using Bivrost.MOTD;
 
 namespace Bivrost.Bivrost360Player
 {
@@ -377,7 +378,37 @@ namespace Bivrost.Bivrost360Player
 #endif
 
 			InputDevices.NavigatorInputDevice.TryInit(windowHandle);
+
+			motd = new MOTDClient("http://localhost/8888/v1/", new MOTDBridge());
+			motd.RequestMOTD();
 		}
+
+		private class MOTDBridge : IMOTDBridge
+		{
+			public string InstallId => Logic.Instance.settings.InstallId.ToString();
+
+			public string Version => PublishInfo.ApplicationIdentity?.Version.ToString();
+
+			public string Product => Logic.productCode;
+
+			public void DisplayNotification(string text)
+			{
+				Logic.Notify(text);
+			}
+
+			public void DisplayNotification(string text, string link, string url)
+			{
+				throw new NotImplementedException();
+			}
+
+			public void DisplayPopup(string title, string url, int width = 600, int height = 400)
+			{
+				throw new NotImplementedException();
+			}
+		}
+
+
+		MOTDClient motd;
 
 
 		void LicenseUpdated()
