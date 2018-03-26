@@ -4,6 +4,7 @@ using Newtonsoft.Json.Linq;
 using RestSharp;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,6 +23,16 @@ namespace Bivrost.MOTD
 
 		void DisplayNotification(string text);
 		void DisplayNotification(string text, string link, string url);
+
+		/// <summary>
+		/// You can use the generic one:
+		/// var popup = new MOTDPopup(title, url, width, height);
+		/// popup.Show();
+		/// </summary>
+		/// <param name="title">Title of popup</param>
+		/// <param name="url">Url to load</param>
+		/// <param name="width">Width in pixels, with decoration</param>
+		/// <param name="height">Height in pixels, with decoration</param>
 		void DisplayPopup(string title, string url, int width = 600, int height = 400);
 	}
 
@@ -49,22 +60,41 @@ namespace Bivrost.MOTD
 
 		public abstract class ApiResponse
 		{
-			[JsonProperty("motd-server-version")]
+			[JsonProperty("motd-server-version", Required = Required.Always)]
 			public string motdServerVersion;
 
 			public enum Type { error, none, notification, popup };
 
-			[JsonProperty("type")]
+			[JsonProperty("type", Required = Required.Always)]
 			public Type type;
+
+			internal abstract void Execute(IMOTDBridge app);
 		}
 
 
-		public class ApiResponseNone : ApiResponse { }
+		public class ApiResponseNone : ApiResponse
+		{
+			internal override void Execute(IMOTDBridge app)
+			{
+				logger.Info("The server has nothing interesting to say.");
+			}
+		}
+
+		public class ApiResponseError : ApiResponse
+		{
+			[JsonProperty("message", Required = Required.Always)]
+			public string text;
+
+			internal override void Execute(IMOTDBridge app)
+			{
+				logger.Error("The server has returned an error: " + text);
+			}
+		}
 
 
 		public class ApiResponseNotification : ApiResponse
 		{
-			[JsonProperty("text")]
+			[JsonProperty("text", Required = Required.Always)]
 			public string text;
 
 			[JsonProperty("link")]
@@ -75,22 +105,37 @@ namespace Bivrost.MOTD
 
 			public bool HasLink => !(string.IsNullOrEmpty(link) || string.IsNullOrEmpty(uri));
 
+			internal override void Execute(IMOTDBridge app)
+			{
+				logger.Info($"Got a notification the server, hasLink={HasLink}");
+
+				if (HasLink)
+					app.DisplayNotification(text, link, uri);
+				else
+					app.DisplayNotification(text);
+			}
 		}
 
 
 		public class ApiResponsePopup : ApiResponse
 		{
-			[JsonProperty("title")]
+			[JsonProperty("title", Required = Required.Always)]
 			public string title;
 
-			[JsonProperty("url")]
+			[JsonProperty("url", Required = Required.Always)]
 			public string url;
 
-			[JsonProperty("width")]
+			[JsonProperty("width", Required = Required.Default)]
 			public int width = 600;
 
-			[JsonProperty("height")]
+			[JsonProperty("height", Required = Required.Default)]
 			public int height = 400;
+
+			internal override void Execute(IMOTDBridge app)
+			{
+				logger.Info("Got a popup from the server");
+				app.DisplayPopup(title, url, width, height);
+			}
 		}
 
 
@@ -112,6 +157,8 @@ namespace Bivrost.MOTD
 						return jo.ToObject<ApiResponseNotification>(serializer);
 					case nameof(ApiResponse.Type.popup):
 						return jo.ToObject<ApiResponsePopup>(serializer);
+					case nameof(ApiResponse.Type.error):
+						return jo.ToObject<ApiResponseError>(serializer);
 					default:
 						throw new Exception("Could not deserialize");
 				}
@@ -129,13 +176,6 @@ namespace Bivrost.MOTD
 		}
 
 
-		void ErrorOccured(string e)
-		{
-			logger.Error(e);
-			;
-		}
-
-
 		public ApiResponse ParseResponse(string json)
 		{
 			ApiResponse message = JsonConvert.DeserializeObject<ApiResponse>(
@@ -148,55 +188,29 @@ namespace Bivrost.MOTD
 
 		public void RequestMOTD()
 		{
-			logger.Info($"Requesting for {app.Product} v.{app.Version} id={app.InstallId}");
+			logger.Info($"Requesting for {app.Product} version={app.Version??"(development)"} id={app.InstallId}");
 
 			var client = new RestClient(serverUri);
 			var request = new RestRequest(Method.POST);
+			request.AddParameter("installId", app.InstallId, ParameterType.GetOrPost);
+			request.AddParameter("product", app.Product, ParameterType.GetOrPost);
+			request.AddParameter("version", app.Version, ParameterType.GetOrPost);
 
 			client.ExecuteAsync(request, (response, request_) =>
 			{
 				if (response.ErrorException != null)
 				{
-					ErrorOccured(response.ErrorException.ToString());
+					logger.Error(response.ErrorException.Message);
 					return;
 				}
 
 				string json = response.Content;
 				var responseObject = ParseResponse(json);
 
-				Execute(responseObject);
+				responseObject.Execute(app);
 			});
 		}
 
-
-		void Execute(ApiResponse r)
-		{
-			throw new NotSupportedException("No overload found for response of type "+r.GetType());
-		}
-
-
-		void Execute(ApiResponseNone r)
-		{
-			logger.Info("Got nothing interesting from the server");
-		}
-
-
-		void Execute(ApiResponseNotification r)
-		{
-			logger.Info($"Got a notification the server, hasLink={r.HasLink}");
-
-			if (r.HasLink)
-				app.DisplayNotification(r.text, r.link, r.uri);
-			else
-				app.DisplayNotification(r.text);
-		}
-
-
-		void Execute(ApiResponsePopup r)
-		{
-			logger.Info("Got a popup from the server");
-			app.DisplayPopup(r.title, r.url, r.width, r.height);
-		}
 
 		#endregion
 
