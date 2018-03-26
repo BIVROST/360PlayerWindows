@@ -133,7 +133,7 @@ You need to run the player with Nvidia graphic card. See here for instruction. T
 Oculus Rift is still under development. Check if you have newest version of Oculus PC Runtime. In some cases you need to reconnect Rift or restart your PC to make it work again. This problem considers not only the player but other applications connecting to Oculus Services.
 
 ### I'm getting "File not supported" trying to play video.
-Bivrost Player supports playback of video files and codecs based on Microsoft Media Foundation. Popular file formats compatible with Player: mp4, avi, mov. Popular codecs: h.264, h.263, Windows Media Video. Matroska is not currently supported. Complete list is available on [MSDN][msdn-file-formats].  
+Bivrost Player supports playback of video files and codecs based on Microsoft Media Foundation. Popular file formats compatible with Player: mp4, avi, mov. Popular codecs: H.263, H.264, H.265/HEVC Windows Media Video. Matroska is not currently supported. Complete list is available on [MSDN][msdn-file-formats].  
  However, not all formats and resolutions are supported on all systems. It depends on your configuration and Windows version. The greatest variety is on Windows 10.
 
 [msdn-file-formats]: https://msdn.microsoft.com/pl-pl/library/windows/desktop/dd757927(v=vs.85).aspx

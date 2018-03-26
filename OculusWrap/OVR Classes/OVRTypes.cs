@@ -193,7 +193,23 @@ namespace OculusWrap
 			/// <summary>
 			/// These bits are writable by user code.
 			/// </summary>
-			WritableBits	= 0x00ffffff
+			WritableBits	= 0x00ffffff,
+
+			/// <summary>
+			/// This client will not be visible in the HMD.
+			/// </summary>
+			Invisible = 0x00000010,
+
+			/// <summary>
+			/// This client will alternate between VR and 2D rendering.
+			/// </summary>
+			MixedRendering = 0x00000020,
+
+			/// <summary>
+			/// This client is aware of ovrSessionStatus focus states (e.g.
+			/// </summary>
+			/// <see cref="https://developer.oculus.com/reference/libovr/1.19/structovr_session_status/"/>
+			FocusAware = 0x00000040
 		}
 
 		/// <summary>
