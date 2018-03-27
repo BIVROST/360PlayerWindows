@@ -8,11 +8,11 @@ Tested on:
 * Runtime 0.6.1197-g8796762
 
 1.	Download and install the OSVR Runtime for Windows (http://access.osvr.com/binary/osvr-runtime-installer)
-2.	Right click desktop, choose "Display Settings", select the OSVR screen (probably 1080x1920 portrait), click on "Advanced display settings" and change resolution to "1920x1080 (Recommended)". Finally press "Apply" and close the window.
+2.	Right click on desktop, choose "Display Settings", select the OSVR screen (probably 1080x1920 portrait), click on "Advanced display settings" and change resolution to "1920x1080 (Recommended)". Finally press "Apply" and close the window.
 3.	Run the OSVR: Start menu -> All programs -> OSVR -> OSVR Server
-4.	Run the BIVROST 360Player, select a movie. Video on the OSVR should be visible in a few seconds.
+4.	Run the BIVROST 360Player, select a movie. The video should be visible on the OSVR in a few seconds.
 
-If you have OSVR already installed you have to run it in extended mode (disable direct mode).
+If OSVR is already installed you have to run it in extended mode (disable direct mode).
 To do it, run: Start menu -> All programs -> OSVR -> Disable direct mode.
 
 
@@ -28,15 +28,16 @@ Available solutions:
 #.	Restart your computer
 
 		
-**Video upside down, half frame visible on top, other on bottom or similar distortions**
+**Video is upside down, half frame visible on top, other on bottom or similar distortions**
 
 Try other screen orientations of OSVR in windows Display Settings
 
 	
-**No display on OSVR headset, but video is playing in the 360Player window**  
+**No display on OSVR headset, but the video is playing in the 360Player window**  
 Available solutions:
 
-#.	Disconnect power and USB from the OSVR Belt Box, wait a few seconds and connect it again.
+#.	Disconnect power and the USB from the OSVR Belt Box, wait a few seconds and connect it again.
 #.	Run: Start menu -> All programs -> OSVR -> Disable direct mode
 #.	Restart your computer
 
+dupa x dupa
