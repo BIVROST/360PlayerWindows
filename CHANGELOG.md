@@ -6,7 +6,7 @@ UI improvements and fixes, stability fixes.
 Details:
 - Added internal notification center
 - Better error handling
-- Stability fixes: fixed a crash while opening a file after srcnotsupported error
+- Stability fixes: fixed a crash while opening a file after `srcnotsupported` error
 - Added license windows
 - Removed DX11 feature level requirement for testing
 
@@ -202,7 +202,7 @@ Details:
 
 
 ### 2018-03-15 c873b2b / 1.0.0.197
-Combined fix of a year of bug reports, source code cleanup
+Combined fix of a year of bug reports, source code cleanup  
 Details:
 - Licensing: refactored licensing as a module independent from 360Player
 - AnalyticsForVR: refactored heatmaps as a module independent from 360Player
@@ -220,8 +220,8 @@ Details:
 - Updated documentation
 
 
-### 2018-03-26 todotodotodotodo / 1.0.0.198
-Fixed Oculus not properly turning off, fixed HLS not working, documentation update, some minor bugfixes and removal of not used features.
+### 2018-03-26 9e7d5f3 / 1.0.0.198
+Fixed Oculus not properly turning off, fixed HLS not working, documentation update, some minor bugfixes and removal of not used features.  
 Details:
 - Fixed the issue with Oculus playback not properly turning off (fix #650)
 - Added displaying the changelog when an update is available (MOTD)
@@ -255,3 +255,4 @@ Details:
 - GhostVR: race condition fixed (fix where you cannot run an update while update is running)
 - Remote implementation moved behind conditional compilation (FEATURE_REMOTE_CONTROL)
 - Option to change the headset while running
+- Added an after-upgrade notice

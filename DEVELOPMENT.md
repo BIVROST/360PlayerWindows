@@ -168,10 +168,10 @@ Please note that the server is no longer available.
 
 ### 360WebPlayer two-way integration (removed feature)
 The 360WebPlayer had a button that allowed the user to run the content in this native player. 
-This was done using the `bivrost:` protocol and a local websocket server run by the player.
-The websockets server's only duty was to inform a popup window that the link has been successfully opened and the popup window can be closed. 
+This was done using `bivrost:` protocol and a local websocket server run by the player.
+The websockets server's only duty was to inform a popup window that the link has been successfully opened and that the popup window can be closed. 
 The response functionality has been removed.
-360Player for Windows can still run content via the `bivrost:` protocol and 360WebPlayer still has the button and popup to do this, the only change is that the popup doesn't know the state of the 360Player.
+360Player for Windows can still run content via `bivrost:` protocol and 360WebPlayer still has the button and a popup to do this, the only change is that the popup no longer knows the state of the 360Player.
 
 Removed in tagged commit `open-in-native-removed`.
 

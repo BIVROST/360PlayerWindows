@@ -17,7 +17,7 @@ Key features
 * 3D (stereoscopic) movie playback
 * VR Headsets support
   * Oculus: Oculus Rift DK2, Oculus Rift CV1
-  * OpenVR: HTC Vive
+  * OpenVR (SteamVR): HTC Vive
   * OSVR: OSVR HDK 1.4, OSVR HDK 2.0
   * Windows Mixed Reality (with SteamVR plugin)
 * Hardware accelerated video decoding and rendering
@@ -68,37 +68,38 @@ Keyboard shortcuts
 
 Available all the time:
 
-* **Control + O**: open a file
-* **Control + U**: open an URL from the Internet
-* **Control + Q**: quit 360Player
-* **Control + ,**: settings
-* **F1**: help
-* **F11 or doubleclick movie**: toggle fullscreen
-* **Escape**: exit fullscreen
+* **`Control` + `O`**: open a file
+* **`Control` + `U`**: open an URL from the Internet
+* **`Control` + `Q`**: quit 360Player
+* **`Control` + `,`**: settings
+* **`F1`**: help
+* **`F11`** or **doubleclick movie**: toggle fullscreen
+* **`Escape`**: exit fullscreen
 
 
 Available only when movie is playing:
 
-* **Control + S**: stop
-* **Control + R**: rewind
-* **Space or click movie**: play/pause
-* **L**: enable little planet projection (only on equirectangular and dome)
-* **N**: disable little planet projection
-* **Control + T**: enable/disable user headset tracking (look in the direction the headset is looking)
-* **Arrow keys or AWSD**: look around
-* **+/- or mouse wheel**: zoom in and out
-* **Control + 0**: reset zoom
+* **`Control` + `S`**: stop
+* **`Control` + `R`**: rewind
+* **`Space`** or **click movie**: play/pause
+* **`L`**: enable little planet projection (only on equirectangular and dome)
+* **`N`**: disable little planet projection
+* **`Control` + `T`**: enable/disable user headset tracking (look in the direction the headset is looking)
+* **Arrow keys** or **`A` `W` `S` `D`**: look around
+* **`+`/`-`** or **mouse wheel**: zoom in and out
+* **`Control` + `0`**: reset zoom
+* **`[`** and **`]`**
 
 Gamepad control
 ---------------
 
 XBox or compatible gamepad is supported.
 
-* **A**: play/pause
-* **Y**: rewind
+* **`A`**: play/pause
+* **`Y`**: rewind
 * **d-pad left/right**: skip backwards/forwards by 5 seconds
 * **d-pad up/down**: volume up/down
-* **analog left or right**: look around (both sticks works the same)
+* **analog left** or **analog right**: look around (both sticks works the same)
 
 
 3dconnexion SpaceMouse/SpaceNavigator
@@ -129,28 +130,26 @@ This software is free and can be used only for noncommercial purposes. To purcha
 ### Why is the player crashing on Nvidia Optimus?
 You need to run the player with Nvidia graphic card. Click here for more instructions. There are some Optimus configurations that may not work properly. Feel free to write to support if you encountered one of them to help us make the player better.
 
-### Oculus Rift doesn't work. Playback is only visible on the Player window.
-Oculus Rift is still under development. Check if you have the newest version of Oculus PC Runtime. In some cases you need to reconnect the Rift or restart your PC to make it work again. This problem affects not only the player but also other applications connected to Oculus Services.
-
 ### I'm getting "File not supported" error when trying to play video.
-Bivrost Player supports playback of video files and codecs based on Microsoft Media Foundation. Popular file formats compatible with the Player: mp4, avi, mov. Popular codecs: H.263, H.264, H.265/HEVC, Windows Media Video. Matroska is not currently supported. Complete list of formats is available here [MSDN][msdn-file-formats].  
+BIVROST 360Player supports playback of video files and codecs based on Microsoft Media Foundation. Popular file formats compatible with the Player: mp4, avi, mov. Popular codecs: H.263, H.264, H.265/HEVC, Windows Media Video. Matroska is not currently supported. Complete list of formats is available here [MSDN][msdn-file-formats].  
  However, not all formats and resolutions are supported on all systems. It depends on your configuration and Windows version. The greatest variety is available on Windows 10.
 
 [msdn-file-formats]: https://msdn.microsoft.com/pl-pl/library/windows/desktop/dd757927(v=vs.85).aspx
 
-### Do I need the Oculus Rift camera to be connected?
-Positional tracker (camera) is not needed but it is recommended. It helps to re-position the Oculus when playback is set up to always look forward in VR. Without position tracking headset gyroscope may drift at times and cause the videos to start in a wrong position.
+### Do I need the Oculus Rift or OSVR camera to be connected?
+The positional tracker (camera) is not needed but it is recommended. It helps to re-position the headset when playback is set up to always look forward in VR. Without position tracking headset gyroscope may drift at times and cause the videos to start in a wrong position.
 
 ### Is a VR headset required?
 No. Headsets are supported but are not required, You can watch the videos using your computer's screen and look around with a mouse or another device.
 
 ### 360Player won't run on Windows N and Windows KN
-You have to install Media Feature Pack for correct Windows version: Windows 8 ([KB2703761][KB2703761]), Windows 8.1 ([KB2929699][KB2929699]), Windows 10 ([KB3010081][KB3010081]) or Windows 10 1511 ([KB3099229][KB3099229]).
+You have to install Media Feature Pack for correct Windows version: Windows 8.1 ([KB2929699][KB2929699]), Windows 10 ([KB3010081][KB3010081]) or Windows 10 1511 ([KB3099229][KB3099229]).  
+If your version is not listed, check [Microsoft's list of Media Feature Packs][media-feature-pack-list] for all applicable Windows versions.
 
-[KB2703761]: https://support.microsoft.com/en-us/kb/2703761
 [KB2929699]: https://support.microsoft.com/en-us/kb/2929699
 [KB3010081]: https://support.microsoft.com/en-us/kb/3010081
 [KB3099229]: https://support.microsoft.com/en-us/kb/3099229
+[media-feature-pack-list]: https://support.microsoft.com/en-us/help/3145500/media-feature-pack-list-for-windows-n-editions
 
 ### Problems with installation? 
 SmartScreen may prevent you from running the setup application. 
@@ -159,6 +158,20 @@ Press "run anyway".
 If you do not see the button, press "more info" first. 
 It might also help to run the classical installer. 
 Windows 8.1 or newer is required, will not work on XP, Vista, 7 or 8.
+
+
+### OSVR: Video is upside down, half frame visible on top, other on bottom or similar distortions
+
+Try other screen orientations of OSVR in Windows Display Settings
+
+
+### OSVR: No display on OSVR headset, but the video is playing in the 360Player window and OSVR is selected in the options
+
+360Player for Windows does not currently support OSVR in Direct Mode.
+Only the Extended mode is supported.
+
+Either switch OSVR to Extended mode or use install SteamVR and use OpenVR as the 360Player's headset type.
+
 
 
 Changelog
