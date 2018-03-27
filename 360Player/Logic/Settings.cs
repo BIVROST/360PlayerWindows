@@ -72,6 +72,8 @@ namespace Bivrost.Bivrost360Player
 
 		public Guid InstallId { get; set; } = Guid.Empty;
 
+		public string LastStoredPlayerVersion { get; set; } = "";
+
 
 		public string AutoPlayFile { get; set; } = "";
 		public bool AutoPlay { get; set; } = true;

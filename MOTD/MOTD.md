@@ -7,8 +7,18 @@ Module for retrieving release updates and important messages from a remote serve
 skinparam monochrome reverse
 skinparam backgroundColor transparent
 
-"360Player" -> "MOTD Server": send HTTP request with app details
-"MOTD Server" --> "360Player": json with an action
+participant "360Player" as app
+participant "MOTD Server" as motd
+participant "A website" as website
+
+
+note right of website
+This can also be an MOTD Server endpoint
+end note
+
+
+app -> motd: send HTTP request with app details
+motd --> app: json with an action
 
 alt type=none
 
@@ -17,16 +27,16 @@ else type=notification
 
 ... a toast is displayed with an optional link ...
 
-"360Player" -> "360Player": the user clicks on a link
-"360Player" ->  : link launched by a notification's url
+motd -> app: the user clicks on a link
+motd ->  : link launched by a notification's url
 
 else type=popup
 
 ... a popup with a website is displayed ....
 
-"360Player" -> "A website": embedded webpage in a popup
-"A website" -> "A website": additional resources are loaded
-"A website" -> "360Player": optionally, a callback might happen
+motd -> website: embedded webpage in a popup
+website -> website: additional resources are loaded
+website -> motd: optionally, a callback might happen
 
 else an error occured with communication to the MOTD server
 
@@ -43,7 +53,8 @@ end
 API reference
 -------------
 
-## Endpoint `https://tools.bivrost360.com/motd-server/?action=v1`
+## Endpoint `motd`
+URL: `https://tools.bivrost360.com/motd-server/?action=motd`
 
 Main communication endpoint, the only one that the client uses.
 
@@ -51,7 +62,7 @@ Main communication endpoint, the only one that the client uses.
 
 * POST param `product`:string  
   The product name, example: `360player-windows`.
-* POST param `installId`:string  
+* POST param `install-id`:string  
   Unique identificator of this installation, example: `13bf5143-c542-4126-91db-60ded9f74926`
 * POST param `version`:string  
   The version of the product, used for informing about changes (displaying changelog).  
@@ -62,11 +73,11 @@ Main communication endpoint, the only one that the client uses.
 Example request:
 
 ```bash
-curl --http1.1 -v                                             \
-     -Fproduct="360player-windows"                            \
-     -FinstallId="13bf5143-c542-4126-91db-60ded9f74926"       \
-     -Fversion="1.0.0.196"                                    \
-     "https://tools.bivrost360.com/motd-server/?action=v1"    ;
+curl --http1.1 -v                                               \
+     -Fproduct="360player-windows"                              \
+     -Finstall-id="13bf5143-c542-4126-91db-60ded9f74926"        \
+     -Fversion="1.0.0.196"                                      \
+     "https://tools.bivrost360.com/motd-server/?action=motd"    ;
 ```
 
 
@@ -150,6 +161,49 @@ Returned when the server has had an issue.
 	"message": "the message that will be logged",
 }
 ```
+
+
+## Endpoint `upgrade`
+URL: `https://tools.bivrost360.com/motd-server/?action=upgrade`
+
+Used to get a greeting message after an upgrade.
+
+Similar to the `motd` endpoint, differs in use and in supplying two versions instead of one.
+
+### Parameters
+
+* POST param `product`:string  
+  The product name, example: `360player-windows`.
+* POST param `install-id`:string  
+  Unique identificator of this installation, example: `13bf5143-c542-4126-91db-60ded9f74926`
+* POST param `version-previous`:string  
+  The version of the product, used for informing about changes (displaying changelog).  
+  Format of the version string is `([0-9]+)(.([0-9]+))*` (example. `1.0.0.123`).  
+  Version numbers are compared starting from the first element, that is `1.0` is the same as `1.0.0.0`, and `2.0` is before `2.0.0.1`.  
+  The `version-previous` can be also null when the version is not known (for example a development build).
+* POST param `version-current`:string  
+  The version of the product, used for informing about changes (displaying changelog).  
+  Format of the version string is `([0-9]+)(.([0-9]+))*` (example. `1.0.0.123`).  
+  Version numbers are compared starting from the first element, that is `1.0` is the same as `1.0.0.0`, and `2.0` is before `2.0.0.1`.  
+  The `version` can be also null when the version is not known (for example a development build).
+
+Version numbers in a request should differ.
+
+Example request:
+
+```bash
+curl --http1.1 -v                                                  \
+     -Fproduct="360player-windows"                                 \
+     -Finstall-id="13bf5143-c542-4126-91db-60ded9f74926"           \
+     -Fversion-current="1.0.0.196"                                 \
+     -Fversion-previous="1.0.0.194"                                \
+     "https://tools.bivrost360.com/motd-server/?action=upgrade"    ;
+```
+
+
+### Return values
+
+The same as in `motd`.
 
 
 

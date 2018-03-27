@@ -188,13 +188,42 @@ namespace Bivrost.MOTD
 
 		public void RequestMOTD()
 		{
-			logger.Info($"Requesting for {app.Product} version={app.Version??"(development)"} id={app.InstallId}");
+			logger.Info($"Requesting MOTD for {app.Product} version={app.Version??"(development)"} id={app.InstallId}");
 
-			var client = new RestClient(serverUri);
+			var client = new RestClient(serverUri + "motd");
 			var request = new RestRequest(Method.POST);
-			request.AddParameter("installId", app.InstallId, ParameterType.GetOrPost);
+			request.AddParameter("install-id", app.InstallId, ParameterType.GetOrPost);
 			request.AddParameter("product", app.Product, ParameterType.GetOrPost);
 			request.AddParameter("version", app.Version, ParameterType.GetOrPost);
+
+			client.ExecuteAsync(request, (response, request_) =>
+			{
+				if (response.ErrorException != null)
+				{
+					logger.Error(response.ErrorException.Message);
+					return;
+				}
+
+				string json = response.Content;
+				var responseObject = ParseResponse(json);
+
+				responseObject.Execute(app);
+			});
+		}
+
+
+		internal void RequestUpgradeNotice(string prevVersion)
+		{
+			string currentVersion = app.Version;
+
+			logger.Info($"Requesting update notice for {app.Product} version={prevVersion ?? "(development)"} -> {currentVersion ?? "(development)"} id={app.InstallId}");
+
+			var client = new RestClient(serverUri + "upgrade");
+			var request = new RestRequest(Method.POST);
+			request.AddParameter("install-id", app.InstallId, ParameterType.GetOrPost);
+			request.AddParameter("product", app.Product, ParameterType.GetOrPost);
+			request.AddParameter("version-previous", prevVersion, ParameterType.GetOrPost);
+			request.AddParameter("version-current", currentVersion, ParameterType.GetOrPost);
 
 			client.ExecuteAsync(request, (response, request_) =>
 			{

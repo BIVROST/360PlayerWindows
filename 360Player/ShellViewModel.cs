@@ -379,31 +379,20 @@ namespace Bivrost.Bivrost360Player
 
 			InputDevices.NavigatorInputDevice.TryInit(windowHandle);
 
-			motd = new MOTDClient("http://localhost:8888/?action=v1", new MOTDBridge());
-			motd.RequestMOTD();
-		}
+			var motdBridge = new MOTDBridge();
+			motd = new MOTDClient("https://tools.bivrost360.com/motd-server/?action=", motdBridge);
 
-		private class MOTDBridge : IMOTDBridge
-		{
-			public string InstallId => Logic.Instance.settings.InstallId.ToString();
-
-			public string Version => PublishInfo.ApplicationIdentity?.Version.ToString();
-
-			public string Product => Logic.productCode;
-
-			public void DisplayNotification(string text)
+			var currentVersion = motdBridge.Version;
+			var prevVersion = Logic.Instance.settings.LastStoredPlayerVersion;
+			if (currentVersion != prevVersion) //< first install or an update?
 			{
-				Logic.Notify(text);
+				motd.RequestUpgradeNotice(prevVersion);
+				Logic.Instance.settings.LastStoredPlayerVersion = currentVersion;
+				Logic.Instance.settings.Save();
 			}
-
-			public void DisplayNotification(string text, string link, string url)
+			else
 			{
-				Logic.NotifyWithLink(text, url, link);
-			}
-
-			public void DisplayPopup(string title, string url, int width = 600, int height = 400)
-			{
-				MOTDPopup.ShowPopup(title, url, width, height);
+				motd.RequestMOTD();
 			}
 		}
 
