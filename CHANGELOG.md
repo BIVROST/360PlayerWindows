@@ -91,7 +91,7 @@ Updates to Oculus SDK and OSVR integration.
 
 
 
-### 2016-05-02 e4ee3b9 / 10.0.0.179
+### 2016-05-02 e4ee3b9 / 1.0.0.179
 Pornhub streaming support. Added licensing. 
 Details:
 - Streaming unit tests
@@ -100,35 +100,15 @@ Details:
 - Licensing support, commercial version.
 
 
-### 2016-05-05 dff8a63 / 10.0.0.181
+### 2016-05-05 dff8a63 / 1.0.0.181
 Remote control update.  
 Details:
 - Remote control API example in separate project
 - Forwarding player events to remote control
 
 
-### 2016-07-07 0cde277 (not released as separate version)
-Updated Oculus SDK support, VRUI update.  
-Details:
-- VRUI enabled in OSVR and updated in Oculus.
-- Now working with Oculus CV1.
-- Merged some OSVR and Oculus integration
-
-
-### 2016-07-14 66c8447 (not released as separate version)
-OpenVR support  
-Details:
-- Now working With HTC Vive (SteamVR)
-
-
-### 2016-07-26 32a79ec (not released as separate version)
-SRGB colorspace  
-Details:
-- SRGB support on Desktop and all Headsets
-
-
-### 2016-08-07 af8be38 / 10.0.0.182
-Publish build of previous unreleased features.   
+### 2016-08-07 af8be38 / 1.0.0.182
+OpenVR support, publish build of previous unreleased features.   
 Details:
 - Fixed mailto links
 - Configuration options description
@@ -137,26 +117,21 @@ Details:
 - Cleanup of Oculus integration
 - Ambient light shader in Dome projection
 - Littlstar and Vrideo update
+- SRGB support on Desktop and all Headsets
+- Now working With HTC Vive (SteamVR)
+- VRUI enabled in OSVR and updated in Oculus.
+- Now working with Oculus CV1.
+- Merged some OSVR and Oculus integration
 
 
-### 2016-08-22 b078f26 / 10.0.0.183
+### 2016-08-22 b078f26 / 1.0.0.183
 Log window and fix of Youtube integration. 
 
 
-### 2016-09-07 dabd126 / 10.0.0.186
+### 2016-09-07 dabd126 / 1.0.0.186
 Performance fixes. Fixed occasional blinking.  
 Details:
 - Streaming services cleanup and fixes.
-
-
-### 2016-10-12 40bce58 (not released as separate version)
-VR-related fixes and internal updates  
-Details:
-- Heatmap protocol update
-- GhostVR integration
-- ILookProvider integration in headsets
-- Tabbed interface in log window
-- OpenVR and VRUI fixes
 
 
 ### 2016-11-24 dcb16ac / 1.0.0.188
@@ -167,6 +142,11 @@ Details:
 - Recents and OpenURI fixes
 - Licensing update with feature detection
 - New codesigning certificate
+- Heatmap protocol update
+- GhostVR integration
+- ILookProvider integration in headsets
+- Tabbed interface in log window
+- OpenVR and VRUI fixes
 
 
 ### 2016-12-15 c9b9d9a / 1.0.0.189
@@ -218,27 +198,61 @@ Details:
 Logger update and minor fixes  
 Details:
 - Moved Managed-OSVR to submodule
-- Logger reimplementation: added tags to Logger
+- Logger re-implementation: added tags to Logger
 - Proper closing of child windows when main window is closed
 
 
-### 2018-03-12 4702213 (not released as separate version)
-Large refactor and cleanup of source code  
+### 2018-03-15 c873b2b / 1.0.0.197
+Combined fix of a year of bug reports, source code cleanup
 Details:
 - Licensing: refactored licensing as a module independent from 360Player
 - AnalyticsForVR: refactored heatmaps as a module independent from 360Player
 - Fixed the namespace in the default project settings and resources (PlayerUI -> Bivrost360Player)
 - Renamed 360Player and Licensing project folders to match project names
 - Added zoom to space navigator, enable in options (fix #498)
-
-
-### CURRENT
 - Removed headset autodetection
-- Moved heatset initialization to separate function and started catching occulus exceptions
+- Moved headset initialization to separate function and started catching oculus exceptions
 - OculusWrap included in solution (fix #646)
 - Separated headset stuff from ShellViewModel; touched up remote and ui separation
 - Changed icon to the newer vr-viking one
-- Disabled littleplanet for cubemaps (fix #647)
+- Disabled little planet for cubemaps (fix #647)
 - Browser plugins: refactored functionality to separate files
-- Browser plugins: moved functionality behing conditional compile directive FEATURE_BROWSER_PLUGINS (fix #642)
+- Browser plugins: moved functionality behind conditional compile directive `FEATURE_BROWSER_PLUGINS` (fix #642)
 - Updated documentation
+
+
+### 2018-03-26 g5e408ca / 1.0.0.198
+Fixed Oculus not properly turning off, fixed HLS not working, documentation update, some minor bugfixes and removal of not used features.
+Details:
+- Fixed issue with Oculus playback not properly turning off (fix #650)
+- Added displaying the changelog when an update is available (MOTD)
+- Hidden licensing behind conditional compilation symbol `FEATURE_LICENSE_NINJA` (fix #666)
+- Buy page displays a popup about R&D instead of redirecting to the web page. (ref #667)
+- Hidden GhostVR behind conditional compilation symbol `FEATURE_GHOSTVR` (fix #658)
+- Removed open-in-native integration (fix #655)
+- Removed NuGet package: bouncy castle (crypto)
+- Removed NuGet package: fleck (websocket server)
+- Removed NuGet package: jint (javascript interpreter)
+- Browser plugins moved to separate directory, added plugin sources as gitbundle
+- Docs: screenshot at top of readme, player usage and Microsoft links fixed
+- Docs: development updated
+- Warning when Windows is not supported - that is older than 8.1 (fix #197)
+- Menu options to zoom in and out (ref #370)
+- Reset zoom resets to the same zoom that the scene starts with (fix #368)
+- Added headset user direction option in menu (fix #172, fix #495)
+- Fixed settings shortcut (fix #364)
+- Docs: updated keyboard shortcuts (ref #2)
+- Added zoom buttons (+/-) and alternate look around with AWSD (fix #305)
+- Added seeking with [ and ] (fix #201)
+- Added keyboard shortcuts to readme (fix #2)
+- Docs: documentation update - keyboard, gamepad and 3dconnexion control
+- AnalyticsForVR: fix for occasional loss of session data when streaming
+- Fix for not working buttons on 3dConnexion devices
+- Non-working HLS fix
+- Pornhub support updated (fix #371)
+- Removed facebook support (close #379, close #376)
+- Vrideo support removed, they're out of business for over a year (fix #469)
+- Youtube: fixed youtube-dl downloading - now asking (fix #374)
+- GhostVR: race condition fixed (fix for cannot run update while update is running)
+- Remote implementation moved behind conditional compilation (FEATURE_REMOTE_CONTROL)
+- Option to change the headset in runtime
