@@ -379,7 +379,7 @@ namespace Bivrost.Bivrost360Player
 
 			InputDevices.NavigatorInputDevice.TryInit(windowHandle);
 
-			motd = new MOTDClient("http://localhost/8888/v1/", new MOTDBridge());
+			motd = new MOTDClient("http://localhost:8888/?action=v1", new MOTDBridge());
 			motd.RequestMOTD();
 		}
 
@@ -398,12 +398,12 @@ namespace Bivrost.Bivrost360Player
 
 			public void DisplayNotification(string text, string link, string url)
 			{
-				throw new NotImplementedException();
+				Logic.NotifyWithLink(text, url, link);
 			}
 
 			public void DisplayPopup(string title, string url, int width = 600, int height = 400)
 			{
-				throw new NotImplementedException();
+				MOTDPopup.ShowPopup(title, url, width, height);
 			}
 		}
 

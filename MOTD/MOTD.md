@@ -28,7 +28,11 @@ else type=popup
 "A website" -> "A website": additional resources are loaded
 "A website" -> "360Player": optionally, a callback might happen
 
-else an error occured with the MOTD server
+else an error occured with communication to the MOTD server
+
+... nothing happens, error is logged ...
+
+else an error is reported by the MOTD server
 
 ... nothing happens, error is logged ...
 
@@ -39,14 +43,14 @@ end
 API reference
 -------------
 
-## Endpoint `https://tools.bivrost360.com/motd-server/v1/`
+## Endpoint `https://tools.bivrost360.com/motd-server/?action=v1`
 
 Main communication endpoint, the only one that the client uses.
 
 ### Parameters
 
 * POST param `product`:string  
-  The product name, example: `360Player`.
+  The product name, example: `360player-windows`.
 * POST param `installId`:string  
   Unique identificator of this installation, example: `13bf5143-c542-4126-91db-60ded9f74926`
 * POST param `version`:string  
@@ -54,6 +58,16 @@ Main communication endpoint, the only one that the client uses.
   Format of the version string is `([0-9]+)(.([0-9]+))*` (example. `1.0.0.123`).  
   Version numbers are compared starting from the first element, that is `1.0` is the same as `1.0.0.0`, and `2.0` is before `2.0.0.1`.  
   The `version` can be also null when the version is not known (for example a development build).
+
+Example request:
+
+```bash
+curl --http1.1 -v                                             \
+     -Fproduct="360player-windows"                            \
+     -FinstallId="13bf5143-c542-4126-91db-60ded9f74926"       \
+     -Fversion="1.0.0.196"                                    \
+     "https://tools.bivrost360.com/motd-server/?action=v1"    ;
+```
 
 
 ### Return value
@@ -123,6 +137,19 @@ Additional fields returned:
 * `height`:number (optional, default `400`) - The height of the window (with decoration).
 
 The embedded web view can bind additional Javascript callbacks to the main application. For example an update button or privileged UI actions.
+
+
+#### A server error (`error`)
+
+Returned when the server has had an issue.
+
+```json
+{
+	"motd-server-version": "1.0",
+	"type": "error",
+	"message": "the message that will be logged",
+}
+```
 
 
 

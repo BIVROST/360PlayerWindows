@@ -25,9 +25,6 @@ namespace Bivrost.Bivrost360Player.Oculus
 				return true;
 
 			using (Wrap oculus = new Wrap()) {
-				OVRTypes.InitParams initializationParameters = new OVRTypes.InitParams();
-				initializationParameters.Flags = OVRTypes.InitFlags.RequestVersion;
-
 				bool success = oculus.Initialize(initializationParameters);
 
 				if (!success)
@@ -45,10 +42,37 @@ namespace Bivrost.Bivrost360Player.Oculus
 
 		protected override float Gamma { get { return 2.2f; } }
 
-		SharpDX.Toolkit.Graphics.GeometricPrimitive primitive;
 
-		#region ILookProvider properties
-		public override event Action<Vector3, Quaternion, float> ProvideLook;
+		Logger logger = new Logger("Oculus");
+
+
+		SharpDX.Toolkit.Graphics.GeometricPrimitive primitive;
+		private OVRTypes.InitParams initializationParameters;
+		public OculusPlayback()
+		{
+			initializationParameters = new OVRTypes.InitParams()
+			{
+				LogCallback = (_, level, msg) => 
+				{
+					switch(level)
+					{
+						case OVRTypes.LogLevel.Info:
+						case OVRTypes.LogLevel.Debug:
+							logger.Info(msg);
+							break;
+
+						case OVRTypes.LogLevel.Error:
+							logger.Error(msg);
+							break;
+					}
+				}
+			};
+			initializationParameters.Flags |= OVRTypes.InitFlags.RequestVersion;
+			initializationParameters.Flags |= OVRTypes.InitFlags.MixedRendering;
+	}
+
+	#region ILookProvider properties
+	public override event Action<Vector3, Quaternion, float> ProvideLook;
 		public override string DescribeType { get { return "Oculus"; } }
 		#endregion
 
@@ -58,9 +82,6 @@ namespace Bivrost.Bivrost360Player.Oculus
 
 			using (Wrap oculus = new Wrap())
 			{
-				OVRTypes.InitParams initializationParameters = new OVRTypes.InitParams();
-				initializationParameters.Flags = OVRTypes.InitFlags.RequestVersion;
-
 				// Initialize the Oculus runtime.
 				if (!oculus.Initialize(initializationParameters))
 					throw new HeadsetError("Failed to initialize the Oculus runtime library.");
