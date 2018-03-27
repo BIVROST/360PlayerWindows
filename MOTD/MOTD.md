@@ -65,7 +65,7 @@ Main communication endpoint, the only one that the client uses.
 * POST param `install-id`:string  
   Unique identificator of this installation, example: `13bf5143-c542-4126-91db-60ded9f74926`
 * POST param `version`:string  
-  The version of the product, used for informing about changes (displaying changelog).  
+  The version of the product used for informing about changes (displaying changelog).  
   Format of the version string is `([0-9]+)(.([0-9]+))*` (example. `1.0.0.123`).  
   Version numbers are compared starting from the first element, that is `1.0` is the same as `1.0.0.0`, and `2.0` is before `2.0.0.1`.  
   The `version` can be also null when the version is not known (for example a development build).
@@ -88,7 +88,7 @@ All fields returned are required, unless marked as optional.
 
 Common fields returned:
 * `motd-server-version`:string - The version of the server, uses the `([0-9]+)(.([0-9]+))*` version format.
-* `type`:string - one of the below types below
+* `type`:string - one of the types below
 
 #### Nothing (`none`)
 
@@ -122,7 +122,7 @@ Additional fields returned:
 * `text`:string - Text that will be displayed as plain text.
 * `link`:string (optional) - Text that will be displayed as the link title.
 * `uri`:string (optional) - The address that will be opened when the link is opened. 
-  This is a full URI, not just an URL, so this doesn't have to be a HTTP/HTTPS protocol
+  This is a full URI, not just an URL, so it doesn't have to be a HTTP/HTTPS protocol
 
 
 #### A HTML popup (`popup`)
@@ -145,7 +145,7 @@ Additional fields returned:
 * `url`:string - The address that will be opened in the window.  
   It can be any HTTP or HTTPS URL from any domain.
 * `width`:number (optional, default `600`) - The width of the window (with decoration).
-* `height`:number (optional, default `400`) - The height of the window (with decoration.
+* `height`:number (optional, default `400`) - The height of the window (with decoration).
 
 The embedded web view can bind additional Javascript callbacks to the main application. For example an update button or privileged UI actions.
 
@@ -210,7 +210,7 @@ The same as in `motd`.
 Network issue behavior
 ----------------------
 
-HTTPS certificates are verified in case of API calls and will fail the request when having an issue.
+HTTPS certificates are verified in case of API calls and will fail the request when an issue occurs.
 
 When a network request to the MOTD server fails, it is ignored and logged.
 

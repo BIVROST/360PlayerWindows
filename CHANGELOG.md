@@ -6,7 +6,7 @@ UI improvements and fixes, stability fixes.
 Details:
 - Added internal notification center
 - Better error handling
-- Stability fixes: crash while opening file after srcnotsupported error
+- Stability fixes: fixed a crash while opening a file after srcnotsupported error
 - Added license windows
 - Removed DX11 feature level requirement for testing
 
@@ -14,9 +14,9 @@ Details:
 ### 2015-09-08 8e713523 / 1.0.0.52
 New features, auto updater UI.  
 Details:
-- Changed repeat button position
-- Enchanced notifications (actions, custom action label)
-- Added update notifications in player
+- Changed the repeat button position
+- Enhanced notifications (actions, custom action label)
+- Added update notifications in a player
 - Initial clickonce installer update API usage
 - Upcoming headsets support framework
 - Fixed "a task was canceled" exception during shutdown
@@ -31,7 +31,7 @@ Details:
     - Vrideo
     - LittlStar
     - plain video file url
-- Added "LittlePlanet" - stereographic projection for equirectangular movies (L/N keyboard shortcuts)
+- Added "LittlePlanet" - stereographic projection for equirectangular videos (L/N keyboard shortcuts)
 - Additional UI cleanup
 - Added several video playback modes
 - Minor stability fixes
@@ -40,8 +40,8 @@ Details:
 ### 2015-10-01 7dae49d9 / 1.0.0.62
 Statistical tools for video analysis. Bivrost protocol handling for web integration.  
 Details:
-- Added tracking heatmap
-- Player dependencies cleaned up
+- Added heatmap tracking 
+- Cleaned up player dependencies 
 - Added protocol bivrost: handling with websocket integration
 - UI update
 
@@ -73,17 +73,17 @@ New video streaming services integration. Bug fixes.
 Details:
 - New video streaming services parser
     - Integrated new vrideo parser and StreamingServices framework
-    - Added version information in "About" window
+    - Added version information in the "About" window
     - Added movie title support for vrideo
 - New system shell integration
-    - fixed: player files being copied to home directory
+    - fixed: player files being copied to a home directory
     - new: proper appref-ms registry hooks
     - new: clipboard replaced by wm_copydata for instance to instance communication
-- ClickOnce settings updated
+- Updated ClickOnce settings 
 
 
 ### 2016-02-05 6a8abf2 / 1.0.0.175
-Remote Control for player (enabled in Debug), new about window.
+Remote Control for player (enabled in Debug), new "About" window.
 
 
 ### 2016-03-11 1ccba3d / 1.0.0.178
@@ -103,17 +103,16 @@ Details:
 ### 2016-05-05 dff8a63 / 1.0.0.181
 Remote control update.  
 Details:
-- Remote control API example in separate project
+- Remote control API example in a separate project
 - Forwarding player events to remote control
 
-
 ### 2016-08-07 af8be38 / 1.0.0.182
-OpenVR support, publish build of previous unreleased features.   
+OpenVR support, published build of previous unreleased features.   
 Details:
 - Fixed mailto links
 - Configuration options description
-- Fixed TaB or SbS mode carying on to mono mode movies
-- URLS now visible in Recents menu
+- Fixed TaB or SbS mode carrying on to mono mode videos
+- URLs are  now visible in "Recents" menu
 - Cleanup of Oculus integration
 - Ambient light shader in Dome projection
 - Littlstar and Vrideo update
@@ -152,7 +151,7 @@ Details:
 ### 2016-12-15 c9b9d9a / 1.0.0.189
 Licensing fixes and other minor updates  
 Details:
-- Option to not provide license key in builds that do not need licenses
+- Option not to provide a license key in builds that do not need licenses
 - Fixed License Ninja certificate check
 - Added shortcut to stop
 - OSVR update
@@ -161,10 +160,10 @@ Details:
 ### 2016-12-16 488a4fc / 1.0.0.193
 Headset tracking and analytics fixes  
 Details:
-- Copying headset rotation only works when a headset is present
-- tracking headsets in google analytics
-- information if this is a canary build
-- license ninja doesn't fail when https certificate is invalid
+- Copying headset rotation (works only when a headset is present)
+- Headset tracking in google analytics
+- Information whether the build is a canary build
+- License ninja doesn't fail when https certificate is invalid
 
 
 ### 2017-03-24 0949eea / 1.0.0.196
@@ -178,14 +177,14 @@ Details:
 GhostVR integration  
 Details:
 - API connector support
-- displaying web forms after analytics have been sent
+- Displaying web forms after analytics have been sent
 
 
 ### 2017-05-12 d5b7fe4 (not released as separate version)
 Cleanup of legacy projects and code  
 Details:
 - Removed some old testing windows
-- moved HMD implementations to PlayerUI/VR directory
+- Moved HMD implementations to PlayerUI/VR directory
 - Removed project AnalyticsTester (empty)
 - Removed project BivrostInstaller (not used, unfinished)
 - Removed project BivrostWP (abandoned)
@@ -214,36 +213,36 @@ Details:
 - Moved headset initialization to separate function and started catching oculus exceptions
 - OculusWrap included in solution (fix #646)
 - Separated headset stuff from ShellViewModel; touched up remote and ui separation
-- Changed icon to the newer vr-viking one
+- Changed the icon for the newer vr-viking one
 - Disabled little planet for cubemaps (fix #647)
 - Browser plugins: refactored functionality to separate files
 - Browser plugins: moved functionality behind conditional compile directive `FEATURE_BROWSER_PLUGINS` (fix #642)
 - Updated documentation
 
 
-### 2018-03-26 g5e408ca / 1.0.0.198
+### 2018-03-26 todotodotodotodo / 1.0.0.198
 Fixed Oculus not properly turning off, fixed HLS not working, documentation update, some minor bugfixes and removal of not used features.
 Details:
-- Fixed issue with Oculus playback not properly turning off (fix #650)
+- Fixed the issue with Oculus playback not properly turning off (fix #650)
 - Added displaying the changelog when an update is available (MOTD)
-- Hidden licensing behind conditional compilation symbol `FEATURE_LICENSE_NINJA` (fix #666)
+- Hidden licensing behind conditional compilation symbol `FEATURE_LICENSE_NINJA` (fix #666) 
 - Buy page displays a popup about R&D instead of redirecting to the web page. (ref #667)
 - Hidden GhostVR behind conditional compilation symbol `FEATURE_GHOSTVR` (fix #658)
-- Removed open-in-native integration (fix #655)
-- Removed NuGet package: bouncy castle (crypto)
-- Removed NuGet package: fleck (websocket server)
+- Removed open-in-native integration (fix #655) 
+- Removed NuGet package: bouncy castle (crypto) 
+- Removed NuGet package: fleck (websocket server) 
 - Removed NuGet package: jint (javascript interpreter)
-- Browser plugins moved to separate directory, added plugin sources as gitbundle
-- Docs: screenshot at top of readme, player usage and Microsoft links fixed
+- Browser plugins moved to a separate directory, added plugin sources as gitbundle
+- Docs: screenshot at top of readme, player usage and Microsoft links fixed 
 - Docs: development updated
 - Warning when Windows is not supported - that is older than 8.1 (fix #197)
 - Menu options to zoom in and out (ref #370)
 - Reset zoom resets to the same zoom that the scene starts with (fix #368)
-- Added headset user direction option in menu (fix #172, fix #495)
-- Fixed settings shortcut (fix #364)
+- Added headset user direction option in menu (fix #172, fix #495) 
+- Fixed settings shortcut (fix #364) 
 - Docs: updated keyboard shortcuts (ref #2)
-- Added zoom buttons (+/-) and alternate look around with AWSD (fix #305)
-- Added seeking with [ and ] (fix #201)
+- Added zoom buttons (+/-) and alternate look around with AWSD (fix #305) 
+- Added seeking with [ and ] (fix #201) 
 - Added keyboard shortcuts to readme (fix #2)
 - Docs: documentation update - keyboard, gamepad and 3dconnexion control
 - AnalyticsForVR: fix for occasional loss of session data when streaming
@@ -253,6 +252,6 @@ Details:
 - Removed facebook support (close #379, close #376)
 - Vrideo support removed, they're out of business for over a year (fix #469)
 - Youtube: fixed youtube-dl downloading - now asking (fix #374)
-- GhostVR: race condition fixed (fix for cannot run update while update is running)
+- GhostVR: race condition fixed (fix where you cannot run an update while update is running)
 - Remote implementation moved behind conditional compilation (FEATURE_REMOTE_CONTROL)
-- Option to change the headset in runtime
+- Option to change the headset while running

@@ -19,12 +19,12 @@ Development troubleshooting
 ---------------------------
 
 
-A few common problems during development and quick fixes for them
+A few common problems that occured during the development with quick fixes
 
 
 ### The type or namespace name 'OSVR' could not be found (...)
 
-You forgot to check out submodules:
+You forgot to check out the submodules:
 
 ```bash
 # on an already cloned repository:
@@ -50,7 +50,7 @@ Did you install [the drivers][3dconnexion]?
 [3dconnexion]: http://www.3dconnexion.pl/service/drivers.html
 
 
-### Visual Studio works slow
+### Visual Studio works slowly
 
 It might help to disable *Tools -> Options -> Debugging -> General -> Enable UI Debugging Tools for XAML*.
 
@@ -76,7 +76,7 @@ Developed with the player:
 * 360Player.Test - unit tests for the project (mostly streaming sources)
 * AnalyticsForVR - implementation of BIVROST AnalyticsForVR client for WPF
 * BivrostAnalytics - Google Analytics plugin
-* Licensing - module that manages connection to the LicenseNinja license server
+* Licensing - module that manages the connection to the LicenseNinja license server
 * Logger - simple logging utility
 * PlayerRemote - example application for the remote feature of the player
 * MOTD - sub project dealing with detecting if any updates are available (and delivering other important messages on startup)
@@ -95,35 +95,33 @@ Integration - the `bivrost` protocol
 TODO
 
 
-
 File naming scheme - stereoscopy auto detection
 -----------------------------------------------
 
 TODO
 
 
-
 Features that have been disabled or removed
 -------------------------------------------
 
 In the course of development of 360Player for Windows, some features have been created but ultimately removed or hidden.
-This is a list of these features and reasons why they are no more in the default build.
+This is a list of those features with reasons why they are no longer in the default build.
 
 
-### Watching video from YouTube (disabled feature)
-At some point, YouTube stopped serving high definition video in a format that could be easily integrated. 
-Currently YT serves 720p video that can be still watched using the old mechanics, and 720p VR is not worth watching.   
+### Watching the video from YouTube (disabled feature)
+At some point, YouTube stopped serving high definition videos in a format that could be easily integrated. 
+Currently YT serves a 720p video that can be still watched using the old mechanics, and 720p VR is not worth watching.   
 The 720p support is still enabled, but is no longer advertised.  
 Known issue: does not detect 360 video, will happily play everything as equirectangular.
 
 
-### Watching video from Vrideo (removed feature)
-The platform shut down at the end of 2016 and the content is no more available.
+### Watching the video from Vrideo (removed feature)
+The platform shut down at the end of 2016 and the content is no longer available.
 Vrideo support has been finally removed in the git commit tagged "vrideo-removed".
 
 
-### Watching video from Facebook (removed feature)
-Worked at some point, but we stopped keeping up with constant changes to how Facebook serves video.  
+### Watching the video from Facebook (removed feature)
+Worked at some point, but we stopped keeping up with the constant changes to how Facebook served video.  
 Facebook had a special cubemap format. The format itself is still implemented.
 Facebook support has been finally removed in the git commit tagged "facebook-removed".
 
@@ -135,13 +133,13 @@ The feature is hidden behind conditional compilation symbol `FEATURE_REMOTE_CONT
 There is a test-server in the solution PlayerRemote.  
 
 The Remote Control was just a one time test and is not of production quality.
-There are plans to make a proper feature of this in the future.
+There are plans to make a proper feature in the future.
 
 
 ### Browser plugins (disabled feature)
 For some time the 360Player for Windows asked to install browser plugins to the locally installed Firefox and Chrome browsers.
 
-The plugins have been adding an "Open in 360Player" button on the corner of 360 videos on sites:
+The plugins added the "Open in 360Player" button on the corner of 360 videos on those sites:
 * Youtube
 * Facebook
 * Vrideo
@@ -160,12 +158,12 @@ The source of the plugins is located in a git repository bundle `360Player/Brows
 ### GhostVR (disabled feature)
 
 GhostVR was one of the AnalyticsForVR session-sink providers. 
-It since has been disabled.
+It has been disabled since.
 
 To enable the player side, `FEATURE_GHOSTVR` conditional compilation symbol must be added to *360Player*, *AnalyticsForVR* and optionally *360Player.Test* projects in the solution.
 There is also a license feature `GhostVR` to be granted.
 
-Please note that the server side is no more available.
+Please note that the server is no longer available.
 
 
 ### 360WebPlayer two-way integration (removed feature)
@@ -180,7 +178,7 @@ Removed in tagged commit `open-in-native-removed`.
 
 ### Licenses from external server (disabled feature)
 
-Before moving into R&D access, 360Player for Windows build have had their features restricted by an external license server.
+Before moving into the R&D access, 360Player for Windows build had its features restricted by an external license server.
 Now, no server is queried and basic features are enabled by default without asking.
 
 The licensing feature is now hidden behind conditional compilation symbol `FEATURE_LICENSE_NINJA`.
@@ -188,5 +186,5 @@ The licensing feature is now hidden behind conditional compilation symbol `FEATU
 
 ### Canary builds (removed distribution channel)
 
-This was an alpha channel for tha player that was blocked by special license tokens. 
-The last canary build has been released long ago and was not up to date.
+This was an alpha channel for the player that was blocked by special license tokens. 
+The last canary build has been released long ago and was not updated.

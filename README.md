@@ -5,9 +5,9 @@ The easiest way to watch 360-videos using a VR headset!
 
 ![Screenshot of BIVROST 360Player](Docs/360Player-movie.png)
 
-The 360Player by BIVROST is a video player for immersive spherical videos. The desktop application for Windows lets you play virtual reality videos on your PC using a VR headset. It supports all versions of Oculus Rift, HTC Vive, OSVR and Windows Mixed Reality headsets.
+The 360Player by BIVROST is a video player for immersive spherical videos. The desktop application for Windows allows you to play virtual reality videos on your PC using a VR headset. It supports all versions of Oculus Rift, HTC Vive, OSVR and Windows Mixed Reality headsets.
 
-Download the player to experience videos in smoothly way and high performance. Watch videos up to 4K and enjoy the finest resolution at 360 degrees.
+Download the player to experience videos in a smooth way and with high performance. Watch videos up to 4K and enjoy the finest resolution at 360 degrees.
 
 
 Key features
@@ -57,9 +57,9 @@ Supported files and internet services
 Using the player
 ================
 
-To use 360Player for Windows open a file or an URL address from the internet using *File → Open File*, *File → Open URL* or the buttons at the center of the player when no movie is playing.
+To use the 360Player for Windows open a file or an URL address from the Internet using *File → Open File*, *File → Open URL* or the buttons at the center of the player when no movie is playing.
 
-You can also drag and drop a movie on the player or right click on a movie and select "Open in 360Player".
+You can also drag and drop a movie onto the player or right click on a movie and select "Open in 360Player".
 
 ![Right click menu on a mp4 file](Docs/Rightclick-menu.png)
 
@@ -69,7 +69,7 @@ Keyboard shortcuts
 Available all the time:
 
 * **Control + O**: open a file
-* **Control + U**: open an URL from the internet
+* **Control + U**: open an URL from the Internet
 * **Control + Q**: quit 360Player
 * **Control + ,**: settings
 * **F1**: help
@@ -96,7 +96,7 @@ XBox or compatible gamepad is supported.
 
 * **A**: play/pause
 * **Y**: rewind
-* **d-pad left/right**: seek backwards/forwards by 5 seconds
+* **d-pad left/right**: skip backwards/forwards by 5 seconds
 * **d-pad up/down**: volume up/down
 * **analog left or right**: look around (both sticks works the same)
 
@@ -107,7 +107,7 @@ XBox or compatible gamepad is supported.
 The 3D mice made by 3dconnexion are also supported. 
 [Official drivers for the device](http://www.3dconnexion.pl/service/drivers.html) must be installed.
 
-* **Tilt up/down**: look up/down (this can be inverted in the settings)
+* **Tilt up/down**: look up/down (this option can be inverted in settings)
 * **Tilt left/right**: look left/right
 * **Rotate clockwise/counter-clockwise**: look left/right
 
@@ -127,22 +127,22 @@ Contact support at: support@bivrost360.com.
 This software is free and can be used only for noncommercial purposes. To purchase the commercial license contact us: contact@bivrost360.com.
 
 ### Why is the player crashing on Nvidia Optimus?
-You need to run the player with Nvidia graphic card. See here for instruction. There are still some Optimus configurations that may not properly work. Feel free to write to support if you have one of them to help us make the player better.
+You need to run the player with Nvidia graphic card. Click here for more instructions. There are some Optimus configurations that may not work properly. Feel free to write to support if you encountered one of them to help us make the player better.
 
-### Oculus Rift doesn't work. Playback is only visible on Player window.
-Oculus Rift is still under development. Check if you have newest version of Oculus PC Runtime. In some cases you need to reconnect Rift or restart your PC to make it work again. This problem considers not only the player but other applications connecting to Oculus Services.
+### Oculus Rift doesn't work. Playback is only visible on the Player window.
+Oculus Rift is still under development. Check if you have the newest version of Oculus PC Runtime. In some cases you need to reconnect the Rift or restart your PC to make it work again. This problem affects not only the player but also other applications connected to Oculus Services.
 
-### I'm getting "File not supported" trying to play video.
-Bivrost Player supports playback of video files and codecs based on Microsoft Media Foundation. Popular file formats compatible with Player: mp4, avi, mov. Popular codecs: H.263, H.264, H.265/HEVC, Windows Media Video. Matroska is not currently supported. Complete list is available on [MSDN][msdn-file-formats].  
- However, not all formats and resolutions are supported on all systems. It depends on your configuration and Windows version. The greatest variety is on Windows 10.
+### I'm getting "File not supported" error when trying to play video.
+Bivrost Player supports playback of video files and codecs based on Microsoft Media Foundation. Popular file formats compatible with the Player: mp4, avi, mov. Popular codecs: H.263, H.264, H.265/HEVC, Windows Media Video. Matroska is not currently supported. Complete list of formats is available here [MSDN][msdn-file-formats].  
+ However, not all formats and resolutions are supported on all systems. It depends on your configuration and Windows version. The greatest variety is available on Windows 10.
 
 [msdn-file-formats]: https://msdn.microsoft.com/pl-pl/library/windows/desktop/dd757927(v=vs.85).aspx
 
 ### Do I need the Oculus Rift camera to be connected?
-Positional tracker (camera) is not needed but is recommended. It helps re-position Oculus when playback is started to always look forward in VR. Without position tracking headset gyroscope may drift in time and make movies start looking at wrong direction.
+Positional tracker (camera) is not needed but it is recommended. It helps to re-position the Oculus when playback is set up to always look forward in VR. Without position tracking headset gyroscope may drift at times and cause the videos to start in a wrong position.
 
 ### Is a VR headset required?
-No. Headsets are supported but not required, You can watch movies using your computer's screen and look around with a mouse or another device.
+No. Headsets are supported but are not required, You can watch the videos using your computer's screen and look around with a mouse or another device.
 
 ### 360Player won't run on Windows N and Windows KN
 You have to install Media Feature Pack for correct Windows version: Windows 8 ([KB2703761][KB2703761]), Windows 8.1 ([KB2929699][KB2929699]), Windows 10 ([KB3010081][KB3010081]) or Windows 10 1511 ([KB3099229][KB3099229]).
@@ -164,4 +164,4 @@ Windows 8.1 or newer is required, will not work on XP, Vista, 7 or 8.
 Changelog
 =========
 
-The BIVROST 360Player has been in development since 2015, the major improvements are listed in [the changelog](CHANGELOG.md).
+The BIVROST 360Player has been in development since 2015, all of the major improvements are listed in [the changelog](CHANGELOG.md).
