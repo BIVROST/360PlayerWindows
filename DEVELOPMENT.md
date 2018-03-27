@@ -92,13 +92,52 @@ Projects imported from other sources:
 Integration - the `bivrost` protocol
 ------------------------------------
 
-TODO
+The `bivrost` protocol enabled links in a browser to run the 360Player.
+
+The protocol syntax is:
+
+```
+bivrost:<url>
+    [?version=<version>]
+    [&stereoscopy=<stereoscopy type>]
+    [&projection=<projection type>]
+    [&autoplay=<boolean>]
+    [&loop=<boolean>]
+```
+
+Where:
+
+* `<url>` is the absolute url to the media file, URI encoded.
+* `<version>` is the version of software generating the link
+* `<stereoscopy type>` is one of:
+  * `autodetect` - guess by filename tags and media ratio (the default).
+  * `mono` - whole image used.
+  * `side_by_side` - image for left eye is on the left half, and right on the right half of the media.
+  * `top_and_bottom` - the left eye is the top half of the image, the right one in the bottom half.
+  * `top_and_bottom_reversed` - the left eye is the bottom half of the image, the right one in the top half.
+* `<projection>` - only `equirectangular` is supported.
+
+Only the `<url>` is required, all other values are optional.  
+All except of the first argument have to be added with an question mark (`?`) or ampersand (`&`) at their start. The question mark before the first one and ampersands after the next ones - just like in a normal URI query string.
 
 
 File naming scheme - stereoscopy auto detection
 -----------------------------------------------
 
-TODO
+Stereoscopy in local and remote files is guessed from tags in the filename.  
+Adding a word in the filename will change the stereoscopy file to that value.
+
+Available words are:
+* `SbS` or `LR` - side by side.
+* `RL` - reverse side by side.
+* `TaB` or `TB` - top and bottom.
+* `BaT` or `BT` - top and bottom reversed.
+* `mono` or none of the above - monoscopic.
+
+!["Different types of stereoscopy"](Docs/stereoscopy-types.png)
+
+Words have to be separated from other characters in the filename by interpunction characters (`_`, `-`, `,`, `.`, `(`, `)` or space).
+
 
 
 Features that have been disabled or removed
