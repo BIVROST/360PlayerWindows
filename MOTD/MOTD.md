@@ -4,7 +4,7 @@
 Module for retrieving release updates and important messages from a remote server.
 
 ```plantuml
-skinparam monochrome reverse
+'skinparam monochrome reverse
 skinparam backgroundColor transparent
 
 participant "360Player" as app
@@ -152,7 +152,7 @@ The embedded web view can bind additional Javascript callbacks to the main appli
 
 #### A server error (`error`)
 
-Returned when the server has had an issue.
+Returned when the server encounters an issue.
 
 ```json
 {
@@ -168,8 +168,6 @@ URL: `https://tools.bivrost360.com/motd-server/?action=upgrade`
 
 Used to get a greeting message after an upgrade.
 
-Similar to the `motd` endpoint, differs in use and in supplying two versions instead of one.
-
 ### Parameters
 
 * POST param `product`:string  
@@ -177,15 +175,15 @@ Similar to the `motd` endpoint, differs in use and in supplying two versions ins
 * POST param `install-id`:string  
   Unique identificator of this installation, example: `13bf5143-c542-4126-91db-60ded9f74926`
 * POST param `version-previous`:string  
-  The version of the product, used for informing about changes (displaying changelog).  
+  The version of the product, used for informing about the changes (displaying changelog).  
   Format of the version string is `([0-9]+)(.([0-9]+))*` (example. `1.0.0.123`).  
   Version numbers are compared starting from the first element, that is `1.0` is the same as `1.0.0.0`, and `2.0` is before `2.0.0.1`.  
-  The `version-previous` can be also null when the version is not known (for example a development build).
+  The `version-previous` can also be also null when the version is not known (for example a development build).
 * POST param `version-current`:string  
-  The version of the product, used for informing about changes (displaying changelog).  
+  The version of the product, used for informing about the changes (displaying changelog).  
   Format of the version string is `([0-9]+)(.([0-9]+))*` (example. `1.0.0.123`).  
   Version numbers are compared starting from the first element, that is `1.0` is the same as `1.0.0.0`, and `2.0` is before `2.0.0.1`.  
-  The `version` can be also null when the version is not known (for example a development build).
+  The `version` can also be null when the version is not known (for example a development build).
 
 Version numbers in a request should differ.
 

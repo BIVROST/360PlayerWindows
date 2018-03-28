@@ -5,10 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Bivrost.MOTD"
         mc:Ignorable="d"
-		SizeToContent="WidthAndHeight" WindowStartupLocation="CenterOwner"
-		ResizeMode="NoResize"
+        ResizeMode="CanResize"
+        Width="600"
+        Height="400"
+        WindowStartupLocation="CenterOwner"
 		>
-    <Grid Width="600" Height="400">
+    <Grid >
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>

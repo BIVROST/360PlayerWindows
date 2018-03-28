@@ -28,14 +28,16 @@ namespace Bivrost.MOTD
 	{
 		private readonly Logger logger;
 
+
 		internal MOTDPopup(string title, string url, int width, int height, object scriptingHelper)
 		{
 			logger = MOTD.MOTDClient.logger;
 			Title = title;
-			Width = width;
-			Height = height;
+			Loaded += (s, e) => {
+				Width = width;
+				Height = height;
+			};
 			InitializeComponent();
-			//browser.LoadCompleted += (s, e) => ...
 			browser.Navigate(url);
 			browser.ObjectForScripting = scriptingHelper;
 		}
@@ -50,7 +52,7 @@ namespace Bivrost.MOTD
 				// fix: when main window is closed, but another window is still active, app would not turn off without this
 				if (ShellViewModel.Instance.shellView.IsActive)
 					popup.Owner = ShellViewModel.Instance.shellView;
-				popup.ShowDialog();
+				popup.Show();
 			});
 		}
 
@@ -80,7 +82,7 @@ namespace Bivrost.MOTD
 				// fix: when main window is closed, but another window is still active, app would not turn off without this
 				if (ShellViewModel.Instance.shellView.IsActive)
 					popup.Owner = ShellViewModel.Instance.shellView;
-				popup.ShowDialog();
+				popup.Show();
 			});
 		}
 		
