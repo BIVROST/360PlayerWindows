@@ -20,12 +20,22 @@ namespace Bivrost.Bivrost360Player
 
 			public void DisplayNotification(string text, string link, string url)
 			{
-				Logic.NotifyWithLink(text, url, link);
+				if (url == "::update::")
+				{
+					var notification = new NotificationViewModel(text, Updater.InstallUpdate, link);
+					Caliburn.Micro.Execute.OnUIThreadAsync(
+						() => ShellViewModel.Instance?.NotificationCenter?.PushNotification(notification)
+					);
+				}
+				else
+				{
+					Logic.NotifyWithLink(text, url, link);
+				}
 			}
 
 			public void DisplayPopup(string title, string url, int width = 600, int height = 400)
 			{
-				MOTDPopup.ShowPopup(title, url, width, height);
+				MOTDPopup.ShowPopup(title, url, width, height, Updater.InstallUpdate);
 			}
 		}
 	}
