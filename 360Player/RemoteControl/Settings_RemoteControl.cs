@@ -1,4 +1,4 @@
-﻿#if FEATURE_REMOTE_CONTROL || true
+﻿#if FEATURE_REMOTE_CONTROL
 
 using Bivrost.Bivrost360Player.ConfigUI;
 using Newtonsoft.Json;

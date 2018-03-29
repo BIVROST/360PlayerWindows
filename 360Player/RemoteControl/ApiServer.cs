@@ -1,4 +1,6 @@
-﻿//using Nancy;
+﻿#if FEATURE_REMOTE_CONTROL
+
+//using Nancy;
 using System;
 //using Nancy.Hosting.Self;
 using System.Diagnostics;
@@ -92,7 +94,7 @@ namespace Bivrost.Bivrost360Player
 		}
 
 
-		#region API
+#region API
 
 		/// <summary>
 		/// W unity3d jest kopia
@@ -140,7 +142,7 @@ namespace Bivrost.Bivrost360Player
 		public static event Action<string> OnInfo;
 		public static event Action<string> OnConfirmPlay;
 
-        #endregion
+#endregion
 
         /// <summary>
         /// Wywoływane automatycznie przez Nancy
@@ -367,3 +369,5 @@ namespace Bivrost.Bivrost360Player
 
 	}
 }
+
+#endif

@@ -1,4 +1,6 @@
-﻿using Bivrost.Log;
+﻿#if FEATURE_REMOTE_CONTROL
+
+using Bivrost.Log;
 using Caliburn.Micro;
 using Newtonsoft.Json;
 using System;
@@ -34,7 +36,7 @@ namespace Bivrost.Bivrost360Player
 					}
 				);
 
-				#region GearVR slave app
+#region GearVR slave app
 
 				ApiServer.OnBackPressed += () =>
 				{
@@ -135,10 +137,10 @@ namespace Bivrost.Bivrost360Player
 					remoteLogger.Info("[remote] msg = " + msg);
 				};
 
-				#endregion
+#endregion
 
 
-				#region Remote controll app - control API
+#region Remote controll app - control API
 
 				ApiServer.CommandLoadHandler = (movie, autoplay) =>
 				{
@@ -269,7 +271,7 @@ namespace Bivrost.Bivrost360Player
 				};
 
 
-				#endregion
+#endregion
 
 				IsRemoteControlEnabled = true;
 
@@ -308,3 +310,5 @@ namespace Bivrost.Bivrost360Player
 
 	}
 }
+
+#endif
