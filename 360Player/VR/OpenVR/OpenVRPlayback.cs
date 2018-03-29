@@ -187,7 +187,7 @@ namespace Bivrost.Bivrost360Player.OpenVR
 
 				ResizeTexture(MediaDecoder.Instance.TextureL, _stereoVideo ? MediaDecoder.Instance.TextureR : MediaDecoder.Instance.TextureL);
 
-				primitive = GraphicTools.CreateGeometry(_projection, _gd, false);
+				primitive = GraphicTools.CreateGeometry(Projection, _gd, false);
 
 				Stopwatch stopwatch = new Stopwatch();
 				Texture_t leftEyeTex = new Texture_t() { eColorSpace = EColorSpace.Gamma, eType = EGraphicsAPIConvention.API_DirectX, handle = leftEye.NativePointer };
@@ -300,7 +300,7 @@ namespace Bivrost.Bivrost360Player.OpenVR
                         if (vrui.isUIHidden)
 							vrui.SetWorldPosition(viewMatrix.Forward, lookPosition, false);
 
-						vrui.Draw(movieTitle, currentTime, duration);
+						vrui.Draw(MovieTitle, currentTime, Duration);
 						vrui.Render(deltaTime, viewMatrix, projectionMatrix, lookPosition, pause);
 
                         //// controllers:

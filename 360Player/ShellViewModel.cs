@@ -63,37 +63,34 @@ namespace Bivrost.Bivrost360Player
 			}
 		}
 
-		public string SelectedFileNameLabel
-		{
-			get
-			{
-				if (!string.IsNullOrWhiteSpace(SelectedFileTitle)) return SelectedFileTitle;
-				if (!string.IsNullOrWhiteSpace(SelectedFileName))
-					if (SelectedFileName.ToLower().StartsWith("http")) return "web stream";
-				return Path.GetFileNameWithoutExtension(SelectedFileName);
-			}
-		}
+		public string SelectedFileNameLabel => SelectedServiceResult?.TitleWithFallback ?? "";
 
-		private string _selectedFileName = "";
-		public string SelectedFileName {
-			get { return _selectedFileName; }
+
+		public string SelectedFileName => SelectedServiceResult?.BestQualityVideoStream(
+					Streaming.VideoContainer.mp4 | Streaming.VideoContainer.hls | Streaming.VideoContainer.avi | Streaming.VideoContainer.wmv).url;
+
+		private Streaming.ServiceResult _selectedServiceResult = null;
+		public Streaming.ServiceResult SelectedServiceResult
+        {
+			get { return _selectedServiceResult; }
 			set
 			{
-				this._selectedFileName = value;
-				NotifyOfPropertyChange(() => SelectedFileName);
-                if (value == null)
-                    SelectedServiceResult = null;
+				_selectedServiceResult = value;
+				NotifyOfPropertyChange(nameof(SelectedFileName));
+				NotifyOfPropertyChange(nameof(SelectedFileTitle));
+				NotifyOfPropertyChange(nameof(SelectedFileDescription));
+				NotifyOfPropertyChange(nameof(SelectedFileNameLabel));
+				if (CurrentHeadset != null)
+				{
+					CurrentHeadset.Media = value;
+				}
 			}
 		}
-        public Streaming.ServiceResult SelectedServiceResult
-        {
-            get; protected set;
-        }
 
 		public bool IsFileSelected { get; set; }
 
-		public string SelectedFileTitle { get; set; } = "";
-		public string SelectedFileDescription { get; set; } = "";
+		public string SelectedFileTitle => SelectedServiceResult?.title;
+		public string SelectedFileDescription { get; } = "";
 
 		public DPFCanvas DXCanvas;
 		public ShellView shellView;
@@ -211,7 +208,6 @@ namespace Bivrost.Bivrost360Player
 				Execute.OnUIThreadAsync(() =>
 				{
 					NotificationCenter.PushNotification(MediaDecoderHelper.GetNotification(error));
-					SelectedFileName = null;
                     SelectedServiceResult = null;
 					ShowStartupUI();
 				});
@@ -453,7 +449,10 @@ namespace Bivrost.Bivrost360Player
 				{
 					if (File.Exists(Logic.Instance.settings.AutoPlayFile))
 					{
-						SelectedFileName = Logic.Instance.settings.AutoPlayFile.Trim();
+						//SelectedFileName = Logic.Instance.settings.AutoPlayFile.Trim();
+
+						SelectedServiceResult = Streaming.StreamingFactory.Instance.GetStreamingInfo(Logic.Instance.settings.AutoPlayFile.Trim());
+
 						LoadMedia();
 						//Play();
 					}
@@ -671,7 +670,8 @@ namespace Bivrost.Bivrost360Player
 
 			_mediaDecoder.Projection = MediaDecoder.ProjectionMode.Sphere;
 			_mediaDecoder.StereoMode = MediaDecoder.VideoMode.Autodetect;
-			SelectedFileTitle = "";
+
+			SelectedServiceResult = null;
 		}
 
 
@@ -695,7 +695,7 @@ namespace Bivrost.Bivrost360Player
 
 		public void OpenURI(string uri)
 		{
-			SelectedFileTitle = "";
+			SelectedServiceResult = null;
 
 			Streaming.ServiceResult result = ServiceResultResolver.DialogProcessURIBlocking(uri, ShellViewModel.Instance.playerWindow);
 			LoggerManager.Info($"OpenURI: Parsed '{uri}' to {result}");
@@ -710,14 +710,12 @@ namespace Bivrost.Bivrost360Player
 			{
 				ResetPlayback();
 
-				SelectedFileName = result.BestQualityVideoStream(
-					Streaming.VideoContainer.mp4 | Streaming.VideoContainer.hls | Streaming.VideoContainer.avi | Streaming.VideoContainer.wmv).url;
                 SelectedServiceResult = result;
 
 				IsFileSelected = true;
 				_mediaDecoder.Projection = result.projection;
 				_mediaDecoder.StereoMode = result.stereoscopy;
-				SelectedFileTitle = result.title;
+				//SelectedFileTitle = result.title;
 
 				Recents.AddRecent(result);
 				UpdateFileRecentsMenuState();
@@ -912,7 +910,7 @@ namespace Bivrost.Bivrost360Player
 
 			this.DXCanvas.Scene = null;
 
-			headsets.ForEach(h => h.Stop());
+			//headsets.ForEach(h => h.Stop());
 
 			Execute.OnUIThread(() =>
 			{

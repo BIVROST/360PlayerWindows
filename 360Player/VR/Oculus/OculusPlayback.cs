@@ -141,7 +141,7 @@ namespace Bivrost.Bivrost360Player.Oculus
 					if (hmd.ProductName == string.Empty)
 						throw new HeadsetError("The HMD is not enabled.");
 
-					primitive = GraphicTools.CreateGeometry(_projection, _gd, false);
+					primitive = GraphicTools.CreateGeometry(Projection, _gd, false);
 
 					Viewport viewport = new Viewport(0, 0, hmd.Resolution.Width, hmd.Resolution.Height, 0.0f, 1.0f);
 					LayerEyeFov layerEyeFov = layers.AddLayerEyeFov();
@@ -366,7 +366,7 @@ namespace Bivrost.Bivrost360Player.Oculus
 								vrui.SetWorldPosition(viewMatrix.Forward, lookPosition, false);
 
 
-							vrui.Draw(movieTitle, currentTime, duration);
+							vrui.Draw(MovieTitle, currentTime, Duration);
 							vrui.Render(deltaTime, viewMatrix, projectionMatrix, lookPosition, pause);
 
 							// Commits any pending changes to the TextureSwapChain, and advances its current index

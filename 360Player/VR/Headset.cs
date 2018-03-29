@@ -4,6 +4,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpDX;
+using Bivrost.Bivrost360Player.Streaming;
 
 namespace Bivrost.Bivrost360Player
 {
@@ -19,8 +20,23 @@ namespace Bivrost.Bivrost360Player
     {
 		public Texture2D textureL;
 		public Texture2D textureR;
-		public bool _stereoVideo = false;
-		public MediaDecoder.ProjectionMode _projection = MediaDecoder.ProjectionMode.Sphere;
+
+
+		public ServiceResult _media;
+		public ServiceResult Media
+		{
+			get => _media;
+			set
+			{
+				_media = value;
+				vrui.EnqueueUIRedraw();
+				UpdateSceneSettings(_media.projection, _media.stereoscopy);
+			}
+		}
+		public bool _stereoVideo => Array.IndexOf(new[] { MediaDecoder.VideoMode.Mono, MediaDecoder.VideoMode.Autodetect }, Media.stereoscopy) < 0;
+		public MediaDecoder.ProjectionMode Projection => Media.projection;
+		protected string MovieTitle => Media.TitleWithFallback;
+		protected float Duration => (float)MediaDecoder.Instance.Duration;
 
 
 
@@ -65,8 +81,6 @@ namespace Bivrost.Bivrost360Player
 		protected bool abort = false;
 		protected bool pause = false;
 
-		protected string movieTitle = "";
-		protected float duration = 0;
 		protected float currentTime = 0;
 
 		protected SharpDX.Toolkit.Graphics.Effect customEffectL;
@@ -118,11 +132,6 @@ namespace Bivrost.Bivrost360Player
 			currentTime = time;
 		}
 
-		public void Configure(string title, float movieDuration)
-		{
-			movieTitle = title;
-			duration = movieDuration;
-		}
 
 		public void Stop()
 		{
@@ -187,6 +196,7 @@ namespace Bivrost.Bivrost360Player
 				//_device.ImmediateContext.Flush();
 			}
 
+			vrui?.EnqueueUIRedraw();
 		}
 
 

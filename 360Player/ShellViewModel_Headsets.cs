@@ -71,6 +71,12 @@ namespace Bivrost.Bivrost360Player
 		{
 			Logger log = new Logger("ResetVR");
 
+			if (headsets.Any(h => h.Lock))
+			{
+				log.Info("Will not reset, because some headset is still alive.");
+				return;
+			}
+
 			CurrentHeadset?.Stop();
 
 			CurrentHeadset = null;
@@ -91,9 +97,7 @@ namespace Bivrost.Bivrost360Player
 						Logic.Notify("Oculus Rift detected. Starting VR playback...");
 						oculusPlayback.textureL = _mediaDecoder.TextureL;
 						oculusPlayback.textureR = _mediaDecoder.TextureR;
-						oculusPlayback._stereoVideo = _mediaDecoder.IsStereoRendered;
-						oculusPlayback._projection = _mediaDecoder.Projection;
-						oculusPlayback.Configure(SelectedFileNameLabel, (float)_mediaDecoder.Duration);
+						oculusPlayback.Media = SelectedServiceResult;
 						oculusPlayback.Start();
 						ShellViewModel.SendEvent("headsetConnected", "oculus");
 						CurrentHeadset = oculusPlayback;
@@ -118,9 +122,7 @@ namespace Bivrost.Bivrost360Player
 						Logic.Notify("OpenVR detected. Starting VR playback...");
 						openVRPlayback.textureL = _mediaDecoder.TextureL;
 						openVRPlayback.textureR = _mediaDecoder.TextureR;
-						openVRPlayback._stereoVideo = _mediaDecoder.IsStereoRendered;
-						openVRPlayback._projection = _mediaDecoder.Projection;
-						openVRPlayback.Configure(SelectedFileNameLabel, (float)_mediaDecoder.Duration);
+						openVRPlayback.Media = SelectedServiceResult;
 						openVRPlayback.Start();
 						ShellViewModel.SendEvent("headsetConnected", "openvr");
 						CurrentHeadset = openVRPlayback;
@@ -143,9 +145,7 @@ namespace Bivrost.Bivrost360Player
 					Logic.Notify("OSVR detected. Starting VR playback...");
 					osvrPlayback.textureL = _mediaDecoder.TextureL;
 					osvrPlayback.textureR = _mediaDecoder.TextureR;
-					osvrPlayback._stereoVideo = _mediaDecoder.IsStereoRendered;
-					osvrPlayback._projection = _mediaDecoder.Projection;
-					osvrPlayback.Configure(SelectedFileNameLabel, (float)_mediaDecoder.Duration);
+					osvrPlayback.Media = SelectedServiceResult;
 					osvrPlayback.Start();
 					ShellViewModel.SendEvent("headsetConnected", "osvr");
 					CurrentHeadset = osvrPlayback;

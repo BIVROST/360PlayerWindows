@@ -155,8 +155,17 @@ namespace Bivrost.Bivrost360Player.Streaming
 
         public readonly string mediaId;
 
+		public virtual string TitleWithFallback
+		{
+			get
+			{
+				if (!string.IsNullOrWhiteSpace(title))
+					return title;
+				return "web stream";
+			}
+		}
 
-        public ServiceResult(string originalURL, string serviceName, string mediaId)
+		public ServiceResult(string originalURL, string serviceName, string mediaId)
         {
             this.originalURL = originalURL;
             this.serviceName = serviceName;

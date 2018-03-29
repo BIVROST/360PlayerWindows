@@ -112,9 +112,9 @@ namespace Bivrost.Bivrost360Player
 
 		public bool Ready { get; private set; }
 
-		public double Duration { get { return _mediaEngineEx.Duration; } }
+		public double Duration { get; protected set; } = -1;  //  _mediaEngineEx.Duration; 
 
-		public double CurrentPosition { get { return _mediaEngineEx.CurrentTime; } }
+		public double CurrentPosition { get; protected set; } = 0; // _mediaEngineEx.CurrentTime; 
 		public bool Initialized { get { return _initialized; } }
 		public VideoMode StereoMode { get; set; } = VideoMode.Autodetect;
 		public VideoMode CurrentMode { get; set; } = VideoMode.Autodetect;
@@ -265,10 +265,12 @@ namespace Bivrost.Bivrost360Player
 						case MediaEngineEvent.CanPlay:
 							Console.WriteLine(string.Format("CAN PLAY {0}, {1}", param1, param2));
 							Ready = true;
+							Duration = _mediaEngineEx.Duration;
 							OnReady(_mediaEngineEx.Duration);
 							break;
 
 						case MediaEngineEvent.TimeUpdate:
+							CurrentPosition = _mediaEngineEx.CurrentTime;
 							OnTimeUpdate(_mediaEngineEx.CurrentTime);
 							break;
 
@@ -528,6 +530,10 @@ namespace Bivrost.Bivrost360Player
 							if(ts > 0)
 							if (result && ts != lastTs)
 							{
+										//Duration = _mediaEngineEx.Duration;
+										//CurrentPosition = _mediaEngineEx.CurrentTime; 
+
+
 										try {
 											switch (CurrentMode)
 											{

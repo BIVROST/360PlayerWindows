@@ -312,7 +312,7 @@ namespace Bivrost.Bivrost360Player.OSVRKit
 			{
 				ResizeTexture(MediaDecoder.Instance.TextureL, _stereoVideo ? MediaDecoder.Instance.TextureR : MediaDecoder.Instance.TextureL);
 				MediaDecoder.Instance.OnFormatChanged += ResizeTexture;
-				primitive = GraphicTools.CreateGeometry(_projection, _gd);
+				primitive = GraphicTools.CreateGeometry(Projection, _gd);
 
 				DateTime startTime = DateTime.Now;
 				Vector3 position = new Vector3(0, 0, -1);
@@ -415,7 +415,7 @@ namespace Bivrost.Bivrost360Player.OSVRKit
                                 ProvideLook?.Invoke(lookPosition, lookRotation, OSVRFOV);
                             }
 
-                            vrui.Draw(movieTitle, currentTime, duration);
+                            vrui.Draw(MovieTitle, currentTime, Duration);
 							vrui.Render(deltaTime, viewMatrix, projectionMatrix, lookPosition, pause);
 						}
 
