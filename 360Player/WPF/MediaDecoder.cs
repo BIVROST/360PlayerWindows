@@ -222,7 +222,7 @@ namespace Bivrost.Bivrost360Player
 
 		public static bool CheckExtension(string extension)
 		{
-			switch(extension)
+			switch(extension.ToLower())
 			{
 				case ".mp4": return true;
 				case ".wmv": return true;
