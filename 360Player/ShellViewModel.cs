@@ -376,7 +376,7 @@ namespace Bivrost.Bivrost360Player
 			InputDevices.NavigatorInputDevice.TryInit(windowHandle);
 
 			var motdBridge = new MOTDBridge();
-			motd = new MOTDClient("https://tools.bivrost360.com/motd-server/?action=", motdBridge);
+			motd = new MOTDClient("https://download.bivrost360.com/player-desktop/?action=", motdBridge);
 
 			var currentVersion = motdBridge.Version;
 			var prevVersion = Logic.Instance.settings.LastStoredPlayerVersion;

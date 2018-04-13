@@ -256,3 +256,19 @@ Details:
 - Remote implementation moved behind conditional compilation (FEATURE_REMOTE_CONTROL)
 - Option to change the headset while running
 - Added an after-upgrade notice
+
+
+### 2018-04-12 b93df98 / 1.0.0.199
+End-of-life release for the Canary deployment channel.
+Details:
+- From now on, only the stable channel remains.
+
+
+### 2018-04-12 b93df98 / 1.0.0.200
+Headsets now persist.
+Details:
+- Headset integration stays opened while switching movies
+- Documentation update
+- Better looking MOTD popup
+- Less intrusive update popup
+
