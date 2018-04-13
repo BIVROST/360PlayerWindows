@@ -22,15 +22,23 @@ namespace Bivrost.Bivrost360Player
 		public Texture2D textureR;
 
 
-		public ServiceResult _media;
+		private static ServiceResult nothingIsPlaying = new ServiceResult(null, "(none)", "nothing")
+		{
+			description = "",
+			stereoscopy = MediaDecoder.VideoMode.Autodetect,
+			projection = MediaDecoder.ProjectionMode.Sphere,
+			title = ""
+		};
+
+		private ServiceResult _media;
 		public ServiceResult Media
 		{
-			get => _media;
+			get => _media ?? nothingIsPlaying;
 			set
 			{
 				_media = value;
-				vrui.EnqueueUIRedraw();
-				UpdateSceneSettings(_media.projection, _media.stereoscopy);
+				vrui?.EnqueueUIRedraw();
+				UpdateSceneSettings(Media.projection, Media.stereoscopy);
 			}
 		}
 		public bool _stereoVideo => Array.IndexOf(new[] { MediaDecoder.VideoMode.Mono, MediaDecoder.VideoMode.Autodetect }, Media.stereoscopy) < 0;
@@ -179,8 +187,8 @@ namespace Bivrost.Bivrost360Player
 				resourceL?.Dispose();
 				sharedTexL?.Dispose();
 
-				if (_stereoVideo)
-				{
+				//if (_stereoVideo)
+				//{
 					var resourceR = textureR.QueryInterface<SharpDX.DXGI.Resource>();
 					var sharedTexR = _device.OpenSharedResource<Texture2D>(resourceR.SharedHandle);
 
@@ -192,7 +200,9 @@ namespace Bivrost.Bivrost360Player
 
 					resourceR?.Dispose();
 					sharedTexR?.Dispose();
-				}
+				//}
+
+
 				//_device.ImmediateContext.Flush();
 			}
 
