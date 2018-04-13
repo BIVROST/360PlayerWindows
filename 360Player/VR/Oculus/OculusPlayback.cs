@@ -72,9 +72,9 @@ namespace Bivrost.Bivrost360Player.Oculus
 	}
 
 	#region ILookProvider properties
-	public override event Action<Vector3, Quaternion, float> ProvideLook;
+		public override event Action<Vector3, Quaternion, float> ProvideLook;
 		public override string DescribeType { get { return "Oculus"; } }
-		#endregion
+	#endregion
 
 		override protected void Render()
 		{
@@ -354,10 +354,7 @@ namespace Bivrost.Bivrost360Player.Oculus
                                 LoggerManager.Publish("oculus.lookUp", lookUp.ToString("0.00"));
                                 LoggerManager.Publish("oculus.vr_quat", lookRotation);
 
-
-                                //ProvideLook(lookPosition, lookRotation, OculusFOV);
-                                //ProvideLook(new Vector3(lookRotation.X, lookRotation.Y, lookRotation.Z), lookRotation, lookRotation.W);
-                                ProvideLook(lookPosition, lookRotation, OculusFOV);
+								ProvideLook(lookPosition, lookRotation, OculusFOV);
 								LoggerManager.Publish("q.sent", lookRotation);
 							}
 
@@ -394,12 +391,6 @@ namespace Bivrost.Bivrost360Player.Oculus
 					eyeTextures[1].Dispose();
 					immediateContext.ClearState();
 					immediateContext.Flush();
-
-					// == nieaktualne? ==
-					// Disposing the device, before the hmd, will cause the hmd to fail when disposing.
-					// Disposing the device, after the hmd, will cause the dispose of the device to fail.
-					// It looks as if the hmd steals ownership of the device and destroys it, when it's shutting down.
-					// device.Dispose();
 				}
 			}
 
