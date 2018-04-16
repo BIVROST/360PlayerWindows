@@ -21,10 +21,6 @@ namespace Bivrost.Bivrost360Player.OpenVR
 {
 	class OpenVRPlayback : Headset
 	{
-		private static Logger log = new Logger("OpenVR");
-
-
-
 		[DllImport("kernel32", SetLastError = true, CharSet = CharSet.Ansi)]
 		private static extern IntPtr LoadLibrary([MarshalAs(UnmanagedType.LPStr)]string lpFileName);
 
@@ -61,6 +57,12 @@ namespace Bivrost.Bivrost360Player.OpenVR
 			//return true;
 			EnsureDllsLoaded();
 			return Valve.VR.OpenVR.IsHmdPresent();
+		}
+
+
+		public OpenVRPlayback()
+		{
+			log = new Logger("OpenVR");
 		}
 
 

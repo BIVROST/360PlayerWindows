@@ -16,9 +16,6 @@ namespace Bivrost.Bivrost360Player.OSVRKit
 {
 	public class OSVRPlayback : Headset
 	{
-		private static Logger log = new Logger("OSVR");
-
-
 		bool _preloaded = false;
 		int _selectedOutput = 0;
 
@@ -81,6 +78,12 @@ namespace Bivrost.Bivrost360Player.OSVRKit
 			} while (mainRetry-- > 0);
             return false;
         }
+
+
+		public OSVRPlayback()
+		{
+			log = new Logger("OSVR");
+		}
 
 
 		protected override float Gamma { get { return 1f; } }

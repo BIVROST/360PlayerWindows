@@ -10,7 +10,6 @@ using System.Windows.Forms;
 using Device = SharpDX.Direct3D11.Device;
 using Bivrost.Bivrost360Player.Tools;
 using Bivrost.AnalyticsForVR;
-using Bivrost.Log;
 
 namespace Bivrost.Bivrost360Player.Oculus
 {
@@ -43,13 +42,12 @@ namespace Bivrost.Bivrost360Player.Oculus
 		protected override float Gamma { get { return 2.2f; } }
 
 
-		Logger logger = new Logger("Oculus");
-
-
 		SharpDX.Toolkit.Graphics.GeometricPrimitive primitive;
 		private OVRTypes.InitParams initializationParameters;
 		public OculusPlayback()
 		{
+			log = new Log.Logger("Oculus");
+
 			initializationParameters = new OVRTypes.InitParams()
 			{
 				LogCallback = (_, level, msg) => 
@@ -58,11 +56,11 @@ namespace Bivrost.Bivrost360Player.Oculus
 					{
 						case OVRTypes.LogLevel.Info:
 						case OVRTypes.LogLevel.Debug:
-							logger.Info(msg);
+							log.Info(msg);
 							break;
 
 						case OVRTypes.LogLevel.Error:
-							logger.Error(msg);
+							log.Error(msg);
 							break;
 					}
 				}
@@ -348,14 +346,14 @@ namespace Bivrost.Bivrost360Player.Oculus
                                 Vector3 forward = Vector3.Transform(Vector3.ForwardRH, lookRotation);
                                 Vector3 up = Vector3.Transform(Vector3.Up, lookRotation);
 
-                                LoggerManager.Publish("oculus.forward", forward.ToString("0.00"));
-                                LoggerManager.Publish("oculus.up", up.ToString("0.00"));
-                                LoggerManager.Publish("oculus.lookAt", lookAt.ToString("0.00"));
-                                LoggerManager.Publish("oculus.lookUp", lookUp.ToString("0.00"));
-                                LoggerManager.Publish("oculus.vr_quat", lookRotation);
+								log.Publish("oculus.forward", forward.ToString("0.00"));
+								log.Publish("oculus.up", up.ToString("0.00"));
+								log.Publish("oculus.lookAt", lookAt.ToString("0.00"));
+								log.Publish("oculus.lookUp", lookUp.ToString("0.00"));
+								log.Publish("oculus.vr_quat", lookRotation);
+								log.Publish("q.sent", lookRotation);
 
 								ProvideLook(lookPosition, lookRotation, OculusFOV);
-								LoggerManager.Publish("q.sent", lookRotation);
 							}
 
 							// reset UI position every frame if it is not visible

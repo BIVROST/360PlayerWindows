@@ -114,6 +114,11 @@ namespace Bivrost.Log
 		{
 			Fatal((additionalMsg + "\n").Trim() + e, memberName, sourceFilePath, sourceLineNumber);
 		}
+
+		internal void Publish(string subkey, object val)
+		{
+			LoggerManager.Publish(Tag + "." + subkey, val);
+		}
 	}
 
 }

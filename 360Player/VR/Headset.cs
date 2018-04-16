@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using SharpDX;
 using Bivrost.Bivrost360Player.Streaming;
+using Bivrost.Log;
 
 namespace Bivrost.Bivrost360Player
 {
@@ -46,6 +47,8 @@ namespace Bivrost.Bivrost360Player
 		protected string MovieTitle => Media.TitleWithFallback;
 		protected float Duration => (float)MediaDecoder.Instance.Duration;
 
+
+		protected Logger log;
 
 
 		public void Start()
