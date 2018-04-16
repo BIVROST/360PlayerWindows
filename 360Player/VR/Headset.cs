@@ -163,12 +163,65 @@ namespace Bivrost.Bivrost360Player
         abstract protected float Gamma { get; }
         public abstract string DescribeType { get; }
 
+
+		private SharpDX.Toolkit.Graphics.Texture2D _defaultBackgroundTexture = null;
+		public SharpDX.Toolkit.Graphics.Texture2D DefaultBackgroundTexture
+		{
+			get
+			{
+				if(_defaultBackgroundTexture == null)
+				{
+					var assembly = GetType().Assembly;
+					var fullResourceName = "Bivrost.Bivrost360Player.Resources.default-background-requirectangular.png";
+					using (var stream = assembly.GetManifestResourceStream(fullResourceName))
+					{
+						_defaultBackgroundTexture = SharpDX.Toolkit.Graphics.Texture2D.Load(_gd, stream);
+					}
+
+				}
+				return _defaultBackgroundTexture;
+			}
+		}
+
+
 		protected void ResizeTexture(Texture2D tL, Texture2D tR)
 		{
-			if (MediaDecoder.Instance.TextureReleased) return;
+			if(tL == null && tR == null)
+			{
+				log.Info("ResizeTexture got null textures, loading defaults...");
 
-			var tempL = textureL;
-			var tempR = textureR;
+				lock (localCritical)
+				{
+					(customEffectL.Parameters["UserTex"]?.GetResource<IDisposable>())?.Dispose();
+					(customEffectR.Parameters["UserTex"]?.GetResource<IDisposable>())?.Dispose();
+					textureL = tL;
+					textureR = tR;
+
+					customEffectL.Parameters["UserTex"].SetResource(DefaultBackgroundTexture);
+					customEffectL.Parameters["gammaFactor"].SetValue(Gamma);
+					customEffectL.CurrentTechnique = customEffectL.Techniques["ColorTechnique"];
+					customEffectL.CurrentTechnique.Passes[0].Apply();
+
+					customEffectR.Parameters["UserTex"].SetResource(DefaultBackgroundTexture);
+					customEffectR.Parameters["gammaFactor"].SetValue(Gamma);
+					customEffectR.CurrentTechnique = customEffectR.Techniques["ColorTechnique"];
+					customEffectR.CurrentTechnique.Passes[0].Apply();
+				}
+
+				vrui?.EnqueueUIRedraw();
+
+				UpdateSceneSettings(MediaDecoder.ProjectionMode.Sphere, MediaDecoder.VideoMode.Mono);
+				return;
+			}
+
+
+
+			log.Info($"ResizeTexture {tL}, {tR}");
+
+			if (MediaDecoder.Instance.TextureReleased) {
+				log.Error("MediaDecoder texture released");
+				return;
+			}
 
 			lock (localCritical)
 			{

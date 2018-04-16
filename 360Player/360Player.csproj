@@ -21,7 +21,8 @@
     <IsWebBootstrapper>true</IsWebBootstrapper>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
-    <PublishUrl></PublishUrl>
+    <PublishUrl>
+    </PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>true</UpdateEnabled>
@@ -128,7 +129,8 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <PublishUrl></PublishUrl>
+    <PublishUrl>
+    </PublishUrl>
     <InstallUrl>http://download.bivrost360.com/player-desktop/canary/</InstallUrl>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release-Canary|x64'">
@@ -149,7 +151,8 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <PublishUrl></PublishUrl>
+    <PublishUrl>
+    </PublishUrl>
     <InstallUrl>http://download.bivrost360.com/player-desktop/</InstallUrl>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release-Stable|x64'">
@@ -524,6 +527,7 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <Content Include="..\CHANGELOG.md">
       <Link>CHANGELOG.md</Link>
@@ -580,6 +584,7 @@
     </Content>
     <None Include="Shaders\GammaShader.fx" />
     <Resource Include="Resources\icon-ghostvr.ico" />
+    <EmbeddedResource Include="Resources\default-background-requirectangular.png" />
     <Content Include="x64\openvr_api.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
