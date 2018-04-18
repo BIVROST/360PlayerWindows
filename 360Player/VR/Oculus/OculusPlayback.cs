@@ -241,15 +241,7 @@ namespace Bivrost.Bivrost360Player.Oculus
 						layerEyeFov.Header.Flags = OVRTypes.LayerFlags.HighQuality;
 					}
 
-					#region Rendering primitives and resources
-
-					MediaDecoder.Instance.OnFormatChanged += ResizeTexture;
-
-					ResizeTexture(MediaDecoder.Instance.TextureL, _stereoVideo ? MediaDecoder.Instance.TextureR : MediaDecoder.Instance.TextureL);
-
-					#endregion
-
-
+					BindToMediadecoder();
 
 					#region Render loop
 					DateTime startTime = DateTime.Now;

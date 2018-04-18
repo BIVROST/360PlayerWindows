@@ -57,25 +57,30 @@ namespace Bivrost.Bivrost360Player
 			waitForRendererStop.Reset();
 			if (Lock)
 				return;
-			Task.Factory.StartNew(() =>
+
+			var thread = new Thread(() =>
 			{
 				try
 				{
 					Render();
 				}
-#if !DEBUG
-				catch(Exception exc)
+				catch (Exception exc)
 				{
 					log.Error(exc.Message);
+					Logic.Notify("An error was encountered in VR playback. See log for details.");
 				}
-#endif
 				finally
 				{
 					Lock = false;
 					_defaultBackgroundTexture?.Dispose();
 					_defaultBackgroundTexture = null;
 				}
-			});
+			})
+			{
+				Name = $"Headset: {DescribeType}",
+				IsBackground = true
+			};
+			thread.Start();
 		}
 
 
@@ -215,52 +220,51 @@ namespace Bivrost.Bivrost360Player
 				return;
 			}
 
-			log.Info($"ResizeTexture {textureL}, {textureR}");
+			log.Info($"ResizeTexture {textureL}, {textureR} enqueued");
 
-			if (MediaDecoder.Instance.TextureReleased) {
-				log.Error("MediaDecoder texture released");
-				return;
-			}
-
-			lock (localCritical)
+			updateSettingsActionQueue.Enqueue(() => 
 			{
-				//(customEffectL.Parameters["UserTex"]?.GetResource<IDisposable>())?.Dispose();
-				//(customEffectR.Parameters["UserTex"]?.GetResource<IDisposable>())?.Dispose();
-				TextureCleanup();
+				if (MediaDecoder.Instance.TextureReleased) {
+					log.Error("MediaDecoder texture released");
+					return;
+				}
 
-				var resourceL = textureL.QueryInterface<SharpDX.DXGI.Resource>();
-				var sharedTexL = _device.OpenSharedResource<Texture2D>(resourceL.SharedHandle);
+				lock (localCritical)
+				{
+					TextureCleanup();
 
-
-				//basicEffectL.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexL);
-				customEffectL.Parameters["UserTex"].SetResource(SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexL));
-				customEffectL.Parameters["gammaFactor"].SetValue(Gamma);
-				customEffectL.CurrentTechnique = customEffectL.Techniques["ColorTechnique"];
-				customEffectL.CurrentTechnique.Passes[0].Apply();
-
-				resourceL?.Dispose();
-				sharedTexL?.Dispose();
-
-				//if (_stereoVideo)
-				//{
-					var resourceR = textureR.QueryInterface<SharpDX.DXGI.Resource>();
-					var sharedTexR = _device.OpenSharedResource<Texture2D>(resourceR.SharedHandle);
-
-					//basicEffectR.Texture = SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexR);
-					customEffectR.Parameters["UserTex"].SetResource(SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexR));
-					customEffectR.Parameters["gammaFactor"].SetValue(Gamma);
-					customEffectR.CurrentTechnique = customEffectR.Techniques["ColorTechnique"];
-					customEffectR.CurrentTechnique.Passes[0].Apply();
-
-					resourceR?.Dispose();
-					sharedTexR?.Dispose();
-				//}
+					using (var resourceL = textureL.QueryInterface<SharpDX.DXGI.Resource>())
+					using (var sharedTexL = _device.OpenSharedResource<Texture2D>(resourceL.SharedHandle))
+					{
+						customEffectL.Parameters["UserTex"].SetResource(SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexL));
+						customEffectL.Parameters["gammaFactor"].SetValue(Gamma);
+						customEffectL.CurrentTechnique = customEffectL.Techniques["ColorTechnique"];
+						customEffectL.CurrentTechnique.Passes[0].Apply();
+					}
 
 
-				//_device.ImmediateContext.Flush();
-			}
+					using (var resourceR = textureR.QueryInterface<SharpDX.DXGI.Resource>())
+					using (var sharedTexR = _device.OpenSharedResource<Texture2D>(resourceR.SharedHandle))
+					{
+						customEffectR.Parameters["UserTex"].SetResource(SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexR));
+						customEffectR.Parameters["gammaFactor"].SetValue(Gamma);
+						customEffectR.CurrentTechnique = customEffectR.Techniques["ColorTechnique"];
+						customEffectR.CurrentTechnique.Passes[0].Apply();
+					}
 
-			vrui?.EnqueueUIRedraw();
+					//_device.ImmediateContext.Flush();
+				}
+
+				vrui?.EnqueueUIRedraw();
+			});
+		}
+
+
+		protected void BindToMediadecoder()
+		{
+			//_stereoVideo ? MediaDecoder.Instance.TextureR : MediaDecoder.Instance.TextureL);
+			ResizeTexture(MediaDecoder.Instance.TextureL, MediaDecoder.Instance.TextureR);
+			MediaDecoder.Instance.OnFormatChanged += ResizeTexture;
 		}
 
 

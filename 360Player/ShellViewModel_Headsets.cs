@@ -124,7 +124,6 @@ namespace Bivrost.Bivrost360Player
 					{
 						Logic.Notify("Oculus Rift detected. Starting VR playback...");
 						oculusPlayback.Media = SelectedServiceResult;
-						oculusPlayback.ResizeTexture(_mediaDecoder.TextureL, _mediaDecoder.TextureR);
 						oculusPlayback.Start();
 						ShellViewModel.SendEvent("headsetConnected", "oculus");
 						CurrentHeadset = oculusPlayback;
@@ -149,7 +148,6 @@ namespace Bivrost.Bivrost360Player
 					{
 						Logic.Notify("OpenVR detected. Starting VR playback...");
 						openVRPlayback.Media = SelectedServiceResult;
-						openVRPlayback.ResizeTexture(_mediaDecoder.TextureL, _mediaDecoder.TextureR);
 						openVRPlayback.Start();
 						ShellViewModel.SendEvent("headsetConnected", "openvr");
 						CurrentHeadset = openVRPlayback;
@@ -172,7 +170,6 @@ namespace Bivrost.Bivrost360Player
 				{
 					Logic.Notify("OSVR detected. Starting VR playback...");
 					osvrPlayback.Media = SelectedServiceResult;
-					osvrPlayback.ResizeTexture(_mediaDecoder.TextureL, _mediaDecoder.TextureR);
 					osvrPlayback.Start();
 					ShellViewModel.SendEvent("headsetConnected", "osvr");
 					CurrentHeadset = osvrPlayback;
