@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using SharpDX;
 using Bivrost.Bivrost360Player.Streaming;
 using Bivrost.Log;
+using Bivrost.Bivrost360Player.Tools;
 
 namespace Bivrost.Bivrost360Player
 {
@@ -19,16 +20,14 @@ namespace Bivrost.Bivrost360Player
 
 	public abstract class Headset : ILookProvider, IUpdatableSceneSettings
     {
-		public Texture2D textureL;
-		public Texture2D textureR;
-
 
 		private static ServiceResult nothingIsPlaying = new ServiceResult(null, "(none)", "nothing")
 		{
 			description = "",
 			stereoscopy = MediaDecoder.VideoMode.Autodetect,
 			projection = MediaDecoder.ProjectionMode.Sphere,
-			title = ""
+			title = "",
+			contentType = ServiceResult.ContentType.none
 		};
 
 		private ServiceResult _media;
@@ -37,6 +36,7 @@ namespace Bivrost.Bivrost360Player
 			get => _media ?? nothingIsPlaying;
 			set
 			{
+				pause = false;
 				_media = value;
 				vrui?.EnqueueUIRedraw();
 				UpdateSceneSettings(Media.projection, Media.stereoscopy);
@@ -44,7 +44,6 @@ namespace Bivrost.Bivrost360Player
 		}
 		public bool _stereoVideo => Array.IndexOf(new[] { MediaDecoder.VideoMode.Mono, MediaDecoder.VideoMode.Autodetect }, Media.stereoscopy) < 0;
 		public MediaDecoder.ProjectionMode Projection => Media.projection;
-		protected string MovieTitle => Media.TitleWithFallback;
 		protected float Duration => (float)MediaDecoder.Instance.Duration;
 
 
@@ -67,12 +66,14 @@ namespace Bivrost.Bivrost360Player
 #if !DEBUG
 				catch(Exception exc)
 				{
-					Console.WriteLine("[EXC] " + exc.Message);
+					log.Error(exc.Message);
 				}
 #endif
 				finally
 				{
 					Lock = false;
+					_defaultBackgroundTexture?.Dispose();
+					_defaultBackgroundTexture = null;
 				}
 			});
 		}
@@ -128,14 +129,31 @@ namespace Bivrost.Bivrost360Player
 
 
 		protected VRUI vrui;
-
+		protected bool ShouldShowVRUI
+		{
+			get
+			{
+				if (Media.contentType != ServiceResult.ContentType.video)
+					return false;
+				return pause;
+			}
+		}
 
 		public void Pause()
 		{
 			vrui?.EnqueueUIRedraw();
 			pause = true;
 		}
+
 		public void UnPause() { pause = false; }
+
+		public void Stop()
+		{
+			SetDefaultScene();
+			Media = null;
+			pause = true;
+			vrui?.EnqueueUIRedraw();
+		}
 
 		public void UpdateTime(float time)
 		{
@@ -144,15 +162,12 @@ namespace Bivrost.Bivrost360Player
 		}
 
 
-		public void Stop()
+		public void Abort()
 		{
 			abort = true;
 		}
+		
 
-		public void Reset()
-		{
-			abort = false;
-		}
 
 
 		protected SharpDX.Toolkit.Graphics.GraphicsDevice _gd;
@@ -178,45 +193,29 @@ namespace Bivrost.Bivrost360Player
 						_defaultBackgroundTexture = SharpDX.Toolkit.Graphics.Texture2D.Load(_gd, stream);
 					}
 
+					_defaultBackgroundTexture.Disposing += (s, e) =>
+					{
+						log.Info("Default background is being disposed.");
+					};
 				}
+
+
 				return _defaultBackgroundTexture;
 			}
 		}
 
 
-		protected void ResizeTexture(Texture2D tL, Texture2D tR)
+		public void ResizeTexture(Texture2D textureL, Texture2D textureR)
 		{
-			if(tL == null && tR == null)
+			if(textureL == null && textureR == null)
 			{
 				log.Info("ResizeTexture got null textures, loading defaults...");
 
-				lock (localCritical)
-				{
-					(customEffectL.Parameters["UserTex"]?.GetResource<IDisposable>())?.Dispose();
-					(customEffectR.Parameters["UserTex"]?.GetResource<IDisposable>())?.Dispose();
-					textureL = tL;
-					textureR = tR;
-
-					customEffectL.Parameters["UserTex"].SetResource(DefaultBackgroundTexture);
-					customEffectL.Parameters["gammaFactor"].SetValue(Gamma);
-					customEffectL.CurrentTechnique = customEffectL.Techniques["ColorTechnique"];
-					customEffectL.CurrentTechnique.Passes[0].Apply();
-
-					customEffectR.Parameters["UserTex"].SetResource(DefaultBackgroundTexture);
-					customEffectR.Parameters["gammaFactor"].SetValue(Gamma);
-					customEffectR.CurrentTechnique = customEffectR.Techniques["ColorTechnique"];
-					customEffectR.CurrentTechnique.Passes[0].Apply();
-				}
-
-				vrui?.EnqueueUIRedraw();
-
-				UpdateSceneSettings(MediaDecoder.ProjectionMode.Sphere, MediaDecoder.VideoMode.Mono);
+				SetDefaultScene();
 				return;
 			}
 
-
-
-			log.Info($"ResizeTexture {tL}, {tR}");
+			log.Info($"ResizeTexture {textureL}, {textureR}");
 
 			if (MediaDecoder.Instance.TextureReleased) {
 				log.Error("MediaDecoder texture released");
@@ -225,10 +224,9 @@ namespace Bivrost.Bivrost360Player
 
 			lock (localCritical)
 			{
-				(customEffectL.Parameters["UserTex"]?.GetResource<IDisposable>())?.Dispose();
-				(customEffectR.Parameters["UserTex"]?.GetResource<IDisposable>())?.Dispose();
-				textureL = tL;
-				textureR = tR;
+				//(customEffectL.Parameters["UserTex"]?.GetResource<IDisposable>())?.Dispose();
+				//(customEffectR.Parameters["UserTex"]?.GetResource<IDisposable>())?.Dispose();
+				TextureCleanup();
 
 				var resourceL = textureL.QueryInterface<SharpDX.DXGI.Resource>();
 				var sharedTexL = _device.OpenSharedResource<Texture2D>(resourceL.SharedHandle);
@@ -266,10 +264,57 @@ namespace Bivrost.Bivrost360Player
 		}
 
 
+		void TextureCleanup()
+		{
+			var disposableL = customEffectL.Parameters["UserTex"]?.GetResource<IDisposable>();
+			var disposableR = customEffectR.Parameters["UserTex"]?.GetResource<IDisposable>();
+
+			if (disposableL != null && disposableL != _defaultBackgroundTexture)
+				disposableL.Dispose();
+
+			if (disposableR != null && disposableR != _defaultBackgroundTexture)
+				disposableR.Dispose();
+		}
+
+
+		public void SetDefaultScene()
+		{
+			updateSettingsActionQueue.Enqueue(() => {
+				lock (localCritical)
+				{
+					TextureCleanup();
+
+					customEffectL.Parameters["UserTex"].SetResource(DefaultBackgroundTexture);
+					customEffectL.Parameters["gammaFactor"].SetValue(Gamma);
+					customEffectL.CurrentTechnique = customEffectL.Techniques["ColorTechnique"];
+					customEffectL.CurrentTechnique.Passes[0].Apply();
+
+					customEffectR.Parameters["UserTex"].SetResource(DefaultBackgroundTexture);
+					customEffectR.Parameters["gammaFactor"].SetValue(Gamma);
+					customEffectR.CurrentTechnique = customEffectR.Techniques["ColorTechnique"];
+					customEffectR.CurrentTechnique.Passes[0].Apply();
+				}
+
+				vrui?.EnqueueUIRedraw();
+
+			});
+
+			// also enqueued
+			UpdateSceneSettings(MediaDecoder.ProjectionMode.Sphere, MediaDecoder.VideoMode.Mono);
+		}
+
 		abstract public bool IsPresent();
 
 
 		protected Bivrost.ActionQueue updateSettingsActionQueue = new Bivrost.ActionQueue();
-		public abstract void UpdateSceneSettings(MediaDecoder.ProjectionMode projectionMode, MediaDecoder.VideoMode stereoscopy);
+		protected SharpDX.Toolkit.Graphics.GeometricPrimitive primitive;
+		public void UpdateSceneSettings(MediaDecoder.ProjectionMode projectionMode, MediaDecoder.VideoMode stereoscopy)
+		{
+			updateSettingsActionQueue.Enqueue(() =>
+			{
+				primitive?.Dispose();
+				primitive = GraphicTools.CreateGeometry(projectionMode, _gd, false);
+			});
+		}
 	}
 }

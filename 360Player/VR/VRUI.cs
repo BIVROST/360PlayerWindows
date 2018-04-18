@@ -5,6 +5,7 @@ using System;
 using Device = SharpDX.Direct3D11.Device;
 using DX2D = SharpDX.Direct2D1;
 using Bivrost.Bivrost360Player.Tools;
+using Bivrost.Bivrost360Player.Streaming;
 
 namespace Bivrost.Bivrost360Player
 {
@@ -121,7 +122,7 @@ namespace Bivrost.Bivrost360Player
 		}
 
 
-		public void Draw(string movieTitle, float currentTime, float duration)
+		public void Draw(ServiceResult serviceResult, float currentTime, float duration)
 		{
 			if (!uiInitialized) return;
 			if (!redraw) return;
@@ -129,36 +130,41 @@ namespace Bivrost.Bivrost360Player
 
 			target2d.BeginDraw();
 			target2d.Clear(new Color4(0, 0, 0, 0.7f));
+
 			target2d.DrawLine(new Vector2(0, 1), new Vector2(1024, 1), blueBrush, 2);
 			target2d.DrawLine(new Vector2(0, 511), new Vector2(1024, 511), blueBrush, 2);
 
 			textFormat.TextAlignment = SharpDX.DirectWrite.TextAlignment.Center;
 			textFormatSmall.TextAlignment = SharpDX.DirectWrite.TextAlignment.Center;
-			target2d.DrawText("now playing:", textFormatSmall, new RectangleF(0, 0, 1024, 100), textBrush);
-			target2d.DrawText(movieTitle, textFormat, new RectangleF(0, 50, 1024, 100), textBrush);
 
-			var barLength = 1024 - 265;
-			var currentLength = barLength * (currentTime / duration);
+			if (serviceResult.contentType == ServiceResult.ContentType.video)
+			{
+				target2d.DrawText("now playing:", textFormatSmall, new RectangleF(0, 0, 1024, 100), textBrush);
+				target2d.DrawText(serviceResult.TitleWithFallback, textFormat, new RectangleF(0, 50, 1024, 100), textBrush);
 
-			target2d.DrawLine(new Vector2(128, 384), new Vector2(1024 - 128, 384), textBrush, 6);
-			target2d.DrawLine(new Vector2(128, 384), new Vector2(128 + currentLength, 384), blueBrush, 6);
-			var ellipse = new DX2D.Ellipse(new Vector2(128 + currentLength + 3.5f, 384), 7, 7);
-			target2d.FillEllipse(ellipse, blueBrush);
+				var barLength = 1024 - 265;
+				var currentLength = barLength * (currentTime / duration);
 
-			target2d.DrawEllipse(new DX2D.Ellipse(new Vector2(512, 256), 48, 48), textBrush, 2);
-			var dist = 8;
-			var len = 10;
-			target2d.DrawLine(new Vector2(512 - dist, 256 - len), new Vector2(512 - dist, 256 + len), textBrush, 2);
-			target2d.DrawLine(new Vector2(512 + dist, 256 - len), new Vector2(512 + dist, 256 + len), textBrush, 2);
+				target2d.DrawLine(new Vector2(128, 384), new Vector2(1024 - 128, 384), textBrush, 6);
+				target2d.DrawLine(new Vector2(128, 384), new Vector2(128 + currentLength, 384), blueBrush, 6);
+				var ellipse = new DX2D.Ellipse(new Vector2(128 + currentLength + 3.5f, 384), 7, 7);
+				target2d.FillEllipse(ellipse, blueBrush);
 
-			textFormatSmall.TextAlignment = SharpDX.DirectWrite.TextAlignment.Trailing;
-			target2d.DrawText((new TimeSpan(0, 0, (int)Math.Floor(duration))).ToString(), textFormatSmall, new Rectangle(1024 - 128 - 150, 384, 150, 50), textBrush);
+				target2d.DrawEllipse(new DX2D.Ellipse(new Vector2(512, 256), 48, 48), textBrush, 2);
+				var dist = 8;
+				var len = 10;
+				target2d.DrawLine(new Vector2(512 - dist, 256 - len), new Vector2(512 - dist, 256 + len), textBrush, 2);
+				target2d.DrawLine(new Vector2(512 + dist, 256 - len), new Vector2(512 + dist, 256 + len), textBrush, 2);
+
+				textFormatSmall.TextAlignment = SharpDX.DirectWrite.TextAlignment.Trailing;
+				target2d.DrawText((new TimeSpan(0, 0, (int)Math.Floor(duration))).ToString(), textFormatSmall, new Rectangle(1024 - 128 - 150, 384, 150, 50), textBrush);
 
 
-			int positionx = (int)(128 + currentLength - 74 / 2);
-			positionx = MathUtil.Clamp(positionx, 128, 1024 - 128 - 74);
-			textFormatSmall.TextAlignment = SharpDX.DirectWrite.TextAlignment.Center;
-			target2d.DrawText((new TimeSpan(0, 0, (int)Math.Floor(currentTime))).ToString(), textFormatSmall, new Rectangle(positionx, 340, 74, 32), textBrush);
+				int positionx = (int)(128 + currentLength - 74 / 2);
+				positionx = MathUtil.Clamp(positionx, 128, 1024 - 128 - 74);
+				textFormatSmall.TextAlignment = SharpDX.DirectWrite.TextAlignment.Center;
+				target2d.DrawText((new TimeSpan(0, 0, (int)Math.Floor(currentTime))).ToString(), textFormatSmall, new Rectangle(positionx, 340, 74, 32), textBrush);
+			}
 
 			target2d.EndDraw();
 		}

@@ -17,9 +17,6 @@ namespace Bivrost.Bivrost360Player.OSVRKit
 	public class OSVRPlayback : Headset
 	{
 		bool _preloaded = false;
-		int _selectedOutput = 0;
-
-		SharpDX.Toolkit.Graphics.GeometricPrimitive primitive;
 
 		override public bool IsPresent()
         {
@@ -418,8 +415,8 @@ namespace Bivrost.Bivrost360Player.OSVRKit
                                 ProvideLook?.Invoke(lookPosition, lookRotation, OSVRFOV);
                             }
 
-                            vrui.Draw(MovieTitle, currentTime, Duration);
-							vrui.Render(deltaTime, viewMatrix, projectionMatrix, lookPosition, pause);
+                            vrui.Draw(Media, currentTime, Duration);
+							vrui.Render(deltaTime, viewMatrix, projectionMatrix, lookPosition, ShouldShowVRUI);
 						}
 
 
@@ -465,15 +462,6 @@ namespace Bivrost.Bivrost360Player.OSVRKit
 			Lock = false;
 		}
 
-
-		public override void UpdateSceneSettings(MediaDecoder.ProjectionMode projectionMode, MediaDecoder.VideoMode stereoscopy)
-		{
-			updateSettingsActionQueue.Enqueue(() =>
-			{
-				primitive?.Dispose();
-				primitive = GraphicTools.CreateGeometry(projectionMode, _gd, true);
-			});
-		}
 
 		public event Action OnGotFocus = delegate {};
 

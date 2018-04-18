@@ -80,10 +80,6 @@ namespace Bivrost.Bivrost360Player
 				NotifyOfPropertyChange(nameof(SelectedFileTitle));
 				NotifyOfPropertyChange(nameof(SelectedFileDescription));
 				NotifyOfPropertyChange(nameof(SelectedFileNameLabel));
-				if (CurrentHeadset != null)
-				{
-					CurrentHeadset.Media = value;
-				}
 			}
 		}
 
@@ -333,15 +329,6 @@ namespace Bivrost.Bivrost360Player
 				OpenURI(FileFromArgs);
 			}
 
-			osvrPlayback.OnGotFocus += () => Task.Factory.StartNew(() =>
-			{
-				Execute.OnUIThreadAsync(() =>
-				{
-					shellView.Activate();
-				});
-			});
-
-
 			Logic.Instance.CheckForUpdate();
 #if FEATURE_BROWSER_PLUGINS
 			BrowserPluginManagement.CheckForBrowsers();
@@ -428,6 +415,11 @@ namespace Bivrost.Bivrost360Player
 			//		_mediaDecoder.Projection = MediaDecoder.ProjectionMode.Sphere;
 			//}
 
+			if (CurrentHeadset != null)
+			{
+				CurrentHeadset.Media = SelectedServiceResult;
+			}
+
 			string mediaFile = SelectedFileName;
 			Task.Factory.StartNew(() => _mediaDecoder.LoadMedia(mediaFile));
 		}
@@ -457,7 +449,10 @@ namespace Bivrost.Bivrost360Player
 						//Play();
 					}
 				}
-			
+
+			ResetVR();
+
+
 			shellView.MouseMove += WatchUIVisibility;
 
 			uiVisibilityBackgrundChecker = new BackgroundWorker();
@@ -733,11 +728,11 @@ namespace Bivrost.Bivrost360Player
 			if (!_ready)
 				return;
 
-			if (!IsPlaying)
+			if (!IsPlaying)		// <press space or click while movie disabled hack
 			{
 				if (CanPlay)
 					LoadMedia();
-				//Play();
+				// is automatic - Play();
 			}
 			else
 			{
@@ -910,6 +905,7 @@ namespace Bivrost.Bivrost360Player
 
 			this.DXCanvas.Scene = null;
 
+			HeadsetStop();
 			//headsets.ForEach(h => h.Stop());
 
 			Execute.OnUIThread(() =>

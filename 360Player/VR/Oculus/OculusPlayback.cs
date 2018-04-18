@@ -42,7 +42,6 @@ namespace Bivrost.Bivrost360Player.Oculus
 		protected override float Gamma { get { return 2.2f; } }
 
 
-		SharpDX.Toolkit.Graphics.GeometricPrimitive primitive;
 		private OVRTypes.InitParams initializationParameters;
 		public OculusPlayback()
 		{
@@ -361,8 +360,8 @@ namespace Bivrost.Bivrost360Player.Oculus
 								vrui.SetWorldPosition(viewMatrix.Forward, lookPosition, false);
 
 
-							vrui.Draw(MovieTitle, currentTime, Duration);
-							vrui.Render(deltaTime, viewMatrix, projectionMatrix, lookPosition, pause);
+							vrui.Draw(Media, currentTime, Duration);
+							vrui.Render(deltaTime, viewMatrix, projectionMatrix, lookPosition, ShouldShowVRUI);
 
 							// Commits any pending changes to the TextureSwapChain, and advances its current index
 							AssertSuccess(eyeTexture.SwapTextureSet.Commit(), oculus, "Failed to commit the swap chain texture.");
@@ -411,13 +410,5 @@ namespace Bivrost.Bivrost360Player.Oculus
 			throw new HeadsetError(formattedMessage);
 		}
 
-		public override void UpdateSceneSettings(MediaDecoder.ProjectionMode projectionMode, MediaDecoder.VideoMode stereoscopy)
-		{
-			updateSettingsActionQueue.Enqueue(() => 
-			{
-				primitive?.Dispose();
-				primitive = GraphicTools.CreateGeometry(projectionMode, _gd, false);
-			});
-		}
 	}
 }

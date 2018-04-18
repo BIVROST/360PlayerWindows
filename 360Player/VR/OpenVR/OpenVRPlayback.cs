@@ -26,7 +26,6 @@ namespace Bivrost.Bivrost360Player.OpenVR
 
 
 		bool dllsLoaded = false;
-		SharpDX.Toolkit.Graphics.GeometricPrimitive primitive;
 
 		protected void EnsureDllsLoaded()
 		{
@@ -302,8 +301,8 @@ namespace Bivrost.Bivrost360Player.OpenVR
                         if (vrui.isUIHidden)
 							vrui.SetWorldPosition(viewMatrix.Forward, lookPosition, false);
 
-						vrui.Draw(MovieTitle, currentTime, Duration);
-						vrui.Render(deltaTime, viewMatrix, projectionMatrix, lookPosition, pause);
+						vrui.Draw(Media, currentTime, Duration);
+						vrui.Render(deltaTime, viewMatrix, projectionMatrix, lookPosition, ShouldShowVRUI);
 
                         //// controllers:
                         //cubeEffect.View = viewMatrix;
@@ -360,13 +359,5 @@ namespace Bivrost.Bivrost360Player.OpenVR
 			}
 		}
 
-		public override void UpdateSceneSettings(MediaDecoder.ProjectionMode projectionMode, MediaDecoder.VideoMode stereoscopy)
-		{
-			updateSettingsActionQueue.Enqueue(() =>
-			{
-				primitive?.Dispose();
-				primitive = GraphicTools.CreateGeometry(projectionMode, _gd, false);
-			});
-		}
 	}
 }
