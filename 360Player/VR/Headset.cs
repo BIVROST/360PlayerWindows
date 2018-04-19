@@ -192,7 +192,7 @@ namespace Bivrost.Bivrost360Player
 				if(_defaultBackgroundTexture == null)
 				{
 					var assembly = GetType().Assembly;
-					var fullResourceName = "Bivrost.Bivrost360Player.Resources.default-background-requirectangular.png";
+					var fullResourceName = "Bivrost.Bivrost360Player.Resources.default-background-equirectangular.png";
 					using (var stream = assembly.GetManifestResourceStream(fullResourceName))
 					{
 						_defaultBackgroundTexture = SharpDX.Toolkit.Graphics.Texture2D.Load(_gd, stream);

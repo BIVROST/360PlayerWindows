@@ -128,7 +128,8 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <PublishUrl></PublishUrl>
+    <PublishUrl>
+    </PublishUrl>
     <InstallUrl>http://download.bivrost360.com/player-desktop/canary/</InstallUrl>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release-Canary|x64'">
@@ -149,7 +150,8 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <PublishUrl></PublishUrl>
+    <PublishUrl>
+    </PublishUrl>
     <InstallUrl>http://download.bivrost360.com/player-desktop/</InstallUrl>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release-Stable|x64'">
@@ -580,6 +582,7 @@
     </Content>
     <None Include="Shaders\GammaShader.fx" />
     <Resource Include="Resources\icon-ghostvr.ico" />
+    <EmbeddedResource Include="Resources\default-background-equirectangular.png" />
     <Content Include="x64\openvr_api.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
