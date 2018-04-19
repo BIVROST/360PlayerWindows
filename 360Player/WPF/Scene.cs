@@ -89,25 +89,28 @@
         }
 
 
-        internal void HeadsetEnabled(Headset headset) { headset.ProvideLook += Headset_ProvideLook; LoggerManager.Publish("headset", headset.DescribeType); }
+		internal void HeadsetEnabled(Headset headset)
+		{
+			headset.ProvideLook += Headset_ProvideLook;
+			LoggerManager.Publish("headset", headset.DescribeType);
+		}
 
-		private void Headset_ProvideLook(Vector3 pos, Quaternion rot, float fov) { headsetLookRotation = rot; LoggerManager.Publish("q.recv", rot); }
+		private void Headset_ProvideLook(Vector3 pos, Quaternion rot, float fov)
+		{
+			headsetLookRotation = rot;
+			LoggerManager.Publish("q.recv", rot);
+		}
 
-		internal void HeadsetDisabled(Headset headset) { headset.ProvideLook -= Headset_ProvideLook; LoggerManager.Publish("headset", null); }
+		internal void HeadsetDisabled(Headset headset)
+		{
+			headset.ProvideLook -= Headset_ProvideLook;
+			Headset_ProvideLook(Vector3.Zero, Quaternion.Identity, 0);
+			LoggerManager.Publish("headset", null);
+		}
 		#endregion
 
 
-		public Quaternion GetCurrentLook()
-        {
-            if(UseVrLook)
-				return headsetLookRotation;
-			else if (currentRotationQuaternion != Quaternion.Identity)
-                return currentRotationQuaternion;
-			else
-				return Quaternion.Identity;
-		}
-
-        public Scene(Texture2D sharedTexture, ProjectionMode projection)
+		public Scene(Texture2D sharedTexture, ProjectionMode projection)
 		{
 			videoTexture = sharedTexture;
 			projectionMode = projection;

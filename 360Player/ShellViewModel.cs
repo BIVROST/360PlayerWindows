@@ -625,6 +625,8 @@ namespace Bivrost.Bivrost360Player
 
 				HeadsetEnable += scene.HeadsetEnabled;
 				HeadsetDisable += scene.HeadsetDisabled;
+				if (CurrentHeadset != null)
+					scene.HeadsetEnabled(CurrentHeadset);
 
 
 
