@@ -7,15 +7,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Bivrost.Bivrost360Player
 {
 	partial class ShellViewModel
 	{
-		// ShellViewModel.cs#142
-		Oculus.OculusPlayback oculusPlayback;
-		OSVRKit.OSVRPlayback osvrPlayback;
-		OpenVR.OpenVRPlayback openVRPlayback;
 		Headset _currentHeadset = null;
 		public Headset CurrentHeadset
 		{
@@ -39,11 +36,20 @@ namespace Bivrost.Bivrost360Player
 		// ShellViewModel.cs#195
 		void InitHeadsets()
 		{
+			var oculus = new Oculus.OculusPlayback();
+			var osvr = new OSVRKit.OSVRPlayback();
+			var openvr = new OpenVR.OpenVRPlayback();
+
+			osvr.OnGotFocus += () => Task.Factory.StartNew(() =>
+			{
+				Execute.OnUIThreadAsync(() => shellView.Activate());
+			});
+
 			headsets = new List<Headset>()
 			{
-				(oculusPlayback = new Oculus.OculusPlayback()),
-				(osvrPlayback = new OSVRKit.OSVRPlayback()),
-				(openVRPlayback = new OpenVR.OpenVRPlayback())
+				oculus,
+				osvr,
+				openvr
 			};
 
 			HeadsetMenu = new HeadsetMenuViewModel();
@@ -55,23 +61,46 @@ namespace Bivrost.Bivrost360Player
 
 		// ShellViewModel.cs#260
 
-		void VRUIUpdatePlaybackTime(double time) {
-			headsets.ForEach(h => h.UpdateTime((float)time));
+		void VRUIUpdatePlaybackTime(double time) { CurrentHeadset?.UpdateTime((float)time); }
+		void VRUIPause() { CurrentHeadset?.Pause(); }
+		void VRUIUnpause() { CurrentHeadset?.UnPause(); }
+
+
+		void HeadsetStop() { CurrentHeadset?.Stop(); }
+
+		HeadsetMode CurrentHeadsetMode
+		{
+			get
+			{
+				if (CurrentHeadset == null)
+					return HeadsetMode.Disable;
+				if (CurrentHeadset is Oculus.OculusPlayback)
+					return HeadsetMode.Oculus;
+				if (CurrentHeadset is OSVRKit.OSVRPlayback)
+					return HeadsetMode.OSVR;
+				if (CurrentHeadset is OpenVR.OpenVRPlayback)
+					return HeadsetMode.OpenVR;
+
+				throw new Exception("Unknown headset type");
+			}
 		}
-
-
-		void VRUIPause() { headsets.ForEach(h => h.Pause()); }
-
-
-		void VRUIUnpause() { headsets.ForEach(h => h.UnPause()); }
-
 
 		// ShellViewModel.cs#636
 		void ResetVR()
 		{
 			Logger log = new Logger("ResetVR");
 
-			CurrentHeadset?.Stop();
+			if(CurrentHeadsetMode == SettingHeadsetUsage)
+			{
+				log.Info("Will not reset, because the headset is still alive.");
+				return;
+			}
+			else
+			{
+				log.Info($"Headset change: {CurrentHeadsetMode} -> {SettingHeadsetUsage}");
+			}
+
+			CurrentHeadset?.Abort();
 
 			CurrentHeadset = null;
 
@@ -80,20 +109,21 @@ namespace Bivrost.Bivrost360Player
 				Thread.Sleep(50);
 			}
 
-			headsets.ForEach(h => h.Reset());
+			//	case HeadsetMode.Oculus: Logic.Notify("Oculus Rift playback selected."); break;
+			//	case HeadsetMode.OSVR: Logic.Notify("OSVR playback selected."); break;
+			//	case HeadsetMode.OpenVR: Logic.Notify("OpenVR (SteamVR) playback selected."); break;
+
 
 			if (SettingHeadsetUsage == HeadsetMode.Oculus)
 			{
+				Logic.Instance.stats.TrackEvent("Application events", "Headset", "Oculus Rift");
 				try
 				{
+					Headset oculusPlayback = headsets.Find(h => h is Oculus.OculusPlayback);
 					if (oculusPlayback.IsPresent())
 					{
 						Logic.Notify("Oculus Rift detected. Starting VR playback...");
-						oculusPlayback.textureL = _mediaDecoder.TextureL;
-						oculusPlayback.textureR = _mediaDecoder.TextureR;
-						oculusPlayback._stereoVideo = _mediaDecoder.IsStereoRendered;
-						oculusPlayback._projection = _mediaDecoder.Projection;
-						oculusPlayback.Configure(SelectedFileNameLabel, (float)_mediaDecoder.Duration);
+						oculusPlayback.Media = SelectedServiceResult;
 						oculusPlayback.Start();
 						ShellViewModel.SendEvent("headsetConnected", "oculus");
 						CurrentHeadset = oculusPlayback;
@@ -106,21 +136,18 @@ namespace Bivrost.Bivrost360Player
 				}
 				Logic.Notify("Oculus Rift not detected.");
 				ShellViewModel.SendEvent("headsetError", "oculus");
-				Logic.Instance.stats.TrackEvent("Application events", "Headset", "Oculus Rift");
 			}
 
 			if (SettingHeadsetUsage == HeadsetMode.OpenVR)
 			{
+				Logic.Instance.stats.TrackEvent("Application events", "Headset", "OpenVR");
 				try
 				{
+					Headset openVRPlayback = headsets.Find(h => h is OpenVR.OpenVRPlayback);
 					if (openVRPlayback.IsPresent())
 					{
 						Logic.Notify("OpenVR detected. Starting VR playback...");
-						openVRPlayback.textureL = _mediaDecoder.TextureL;
-						openVRPlayback.textureR = _mediaDecoder.TextureR;
-						openVRPlayback._stereoVideo = _mediaDecoder.IsStereoRendered;
-						openVRPlayback._projection = _mediaDecoder.Projection;
-						openVRPlayback.Configure(SelectedFileNameLabel, (float)_mediaDecoder.Duration);
+						openVRPlayback.Media = SelectedServiceResult;
 						openVRPlayback.Start();
 						ShellViewModel.SendEvent("headsetConnected", "openvr");
 						CurrentHeadset = openVRPlayback;
@@ -133,19 +160,16 @@ namespace Bivrost.Bivrost360Player
 				}
 				Logic.Notify("OpenVR not detected.");
 				ShellViewModel.SendEvent("headsetError", "openvr");
-				Logic.Instance.stats.TrackEvent("Application events", "Headset", "OpenVR");
 			}
 
 			if (SettingHeadsetUsage == HeadsetMode.OSVR)
 			{
+				Logic.Instance.stats.TrackEvent("Application events", "Headset", "OSVR");
+				Headset osvrPlayback = headsets.Find(h => h is OSVRKit.OSVRPlayback);
 				if (osvrPlayback.IsPresent())
 				{
 					Logic.Notify("OSVR detected. Starting VR playback...");
-					osvrPlayback.textureL = _mediaDecoder.TextureL;
-					osvrPlayback.textureR = _mediaDecoder.TextureR;
-					osvrPlayback._stereoVideo = _mediaDecoder.IsStereoRendered;
-					osvrPlayback._projection = _mediaDecoder.Projection;
-					osvrPlayback.Configure(SelectedFileNameLabel, (float)_mediaDecoder.Duration);
+					osvrPlayback.Media = SelectedServiceResult;
 					osvrPlayback.Start();
 					ShellViewModel.SendEvent("headsetConnected", "osvr");
 					CurrentHeadset = osvrPlayback;
@@ -153,7 +177,6 @@ namespace Bivrost.Bivrost360Player
 				}
 				Logic.Notify("OSVR not detected.");
 				ShellViewModel.SendEvent("headsetError", "osvr");
-				Logic.Instance.stats.TrackEvent("Application events", "Headset", "OSVR");
 			}
 		}
 
@@ -184,13 +207,13 @@ namespace Bivrost.Bivrost360Player
 			Logic.Instance.settings.HeadsetUsage = headset;
 			Logic.Instance.settings.Save();
 
-			switch (headset)
-			{
-				case HeadsetMode.Oculus: Logic.Notify("Oculus Rift playback selected."); break;
-				case HeadsetMode.OSVR: Logic.Notify("OSVR playback selected."); break;
-				case HeadsetMode.OpenVR: Logic.Notify("OpenVR (SteamVR) playback selected."); break;
-				case HeadsetMode.Disable: Logic.Notify("Headset playback disabled."); break;
-			}
+			//switch (headset)
+			//{
+			//	case HeadsetMode.Oculus: Logic.Notify("Oculus Rift playback selected."); break;
+			//	case HeadsetMode.OSVR: Logic.Notify("OSVR playback selected."); break;
+			//	case HeadsetMode.OpenVR: Logic.Notify("OpenVR (SteamVR) playback selected."); break;
+			//	case HeadsetMode.Disable: Logic.Notify("Headset playback disabled."); break;
+			//}
 
 			NotifyOfPropertyChange(() => HeadsetIsOculus);
 			NotifyOfPropertyChange(() => HeadsetIsOpenVR);

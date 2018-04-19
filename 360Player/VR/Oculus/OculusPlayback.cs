@@ -10,7 +10,6 @@ using System.Windows.Forms;
 using Device = SharpDX.Direct3D11.Device;
 using Bivrost.Bivrost360Player.Tools;
 using Bivrost.AnalyticsForVR;
-using Bivrost.Log;
 
 namespace Bivrost.Bivrost360Player.Oculus
 {
@@ -43,13 +42,11 @@ namespace Bivrost.Bivrost360Player.Oculus
 		protected override float Gamma { get { return 2.2f; } }
 
 
-		Logger logger = new Logger("Oculus");
-
-
-		SharpDX.Toolkit.Graphics.GeometricPrimitive primitive;
 		private OVRTypes.InitParams initializationParameters;
 		public OculusPlayback()
 		{
+			log = new Log.Logger("Oculus");
+
 			initializationParameters = new OVRTypes.InitParams()
 			{
 				LogCallback = (_, level, msg) => 
@@ -58,11 +55,11 @@ namespace Bivrost.Bivrost360Player.Oculus
 					{
 						case OVRTypes.LogLevel.Info:
 						case OVRTypes.LogLevel.Debug:
-							logger.Info(msg);
+							log.Info(msg);
 							break;
 
 						case OVRTypes.LogLevel.Error:
-							logger.Error(msg);
+							log.Error(msg);
 							break;
 					}
 				}
@@ -72,9 +69,9 @@ namespace Bivrost.Bivrost360Player.Oculus
 	}
 
 	#region ILookProvider properties
-	public override event Action<Vector3, Quaternion, float> ProvideLook;
+		public override event Action<Vector3, Quaternion, float> ProvideLook;
 		public override string DescribeType { get { return "Oculus"; } }
-		#endregion
+	#endregion
 
 		override protected void Render()
 		{
@@ -141,7 +138,7 @@ namespace Bivrost.Bivrost360Player.Oculus
 					if (hmd.ProductName == string.Empty)
 						throw new HeadsetError("The HMD is not enabled.");
 
-					primitive = GraphicTools.CreateGeometry(_projection, _gd, false);
+					primitive = GraphicTools.CreateGeometry(Projection, _gd, false);
 
 					Viewport viewport = new Viewport(0, 0, hmd.Resolution.Width, hmd.Resolution.Height, 0.0f, 1.0f);
 					LayerEyeFov layerEyeFov = layers.AddLayerEyeFov();
@@ -244,15 +241,7 @@ namespace Bivrost.Bivrost360Player.Oculus
 						layerEyeFov.Header.Flags = OVRTypes.LayerFlags.HighQuality;
 					}
 
-					#region Rendering primitives and resources
-
-					MediaDecoder.Instance.OnFormatChanged += ResizeTexture;
-
-					ResizeTexture(MediaDecoder.Instance.TextureL, _stereoVideo ? MediaDecoder.Instance.TextureR : MediaDecoder.Instance.TextureL);
-
-					#endregion
-
-
+					BindToMediadecoder();
 
 					#region Render loop
 					DateTime startTime = DateTime.Now;
@@ -348,17 +337,14 @@ namespace Bivrost.Bivrost360Player.Oculus
                                 Vector3 forward = Vector3.Transform(Vector3.ForwardRH, lookRotation);
                                 Vector3 up = Vector3.Transform(Vector3.Up, lookRotation);
 
-                                LoggerManager.Publish("oculus.forward", forward.ToString("0.00"));
-                                LoggerManager.Publish("oculus.up", up.ToString("0.00"));
-                                LoggerManager.Publish("oculus.lookAt", lookAt.ToString("0.00"));
-                                LoggerManager.Publish("oculus.lookUp", lookUp.ToString("0.00"));
-                                LoggerManager.Publish("oculus.vr_quat", lookRotation);
+								log.Publish("oculus.forward", forward.ToString("0.00"));
+								log.Publish("oculus.up", up.ToString("0.00"));
+								log.Publish("oculus.lookAt", lookAt.ToString("0.00"));
+								log.Publish("oculus.lookUp", lookUp.ToString("0.00"));
+								log.Publish("oculus.vr_quat", lookRotation);
+								log.Publish("q.sent", lookRotation);
 
-
-                                //ProvideLook(lookPosition, lookRotation, OculusFOV);
-                                //ProvideLook(new Vector3(lookRotation.X, lookRotation.Y, lookRotation.Z), lookRotation, lookRotation.W);
-                                ProvideLook(lookPosition, lookRotation, OculusFOV);
-								LoggerManager.Publish("q.sent", lookRotation);
+								ProvideLook(lookPosition, lookRotation, OculusFOV);
 							}
 
 							// reset UI position every frame if it is not visible
@@ -366,8 +352,8 @@ namespace Bivrost.Bivrost360Player.Oculus
 								vrui.SetWorldPosition(viewMatrix.Forward, lookPosition, false);
 
 
-							vrui.Draw(movieTitle, currentTime, duration);
-							vrui.Render(deltaTime, viewMatrix, projectionMatrix, lookPosition, pause);
+							vrui.Draw(Media, currentTime, Duration);
+							vrui.Render(deltaTime, viewMatrix, projectionMatrix, lookPosition, ShouldShowVRUI);
 
 							// Commits any pending changes to the TextureSwapChain, and advances its current index
 							AssertSuccess(eyeTexture.SwapTextureSet.Commit(), oculus, "Failed to commit the swap chain texture.");
@@ -394,12 +380,6 @@ namespace Bivrost.Bivrost360Player.Oculus
 					eyeTextures[1].Dispose();
 					immediateContext.ClearState();
 					immediateContext.Flush();
-
-					// == nieaktualne? ==
-					// Disposing the device, before the hmd, will cause the hmd to fail when disposing.
-					// Disposing the device, after the hmd, will cause the dispose of the device to fail.
-					// It looks as if the hmd steals ownership of the device and destroys it, when it's shutting down.
-					// device.Dispose();
 				}
 			}
 
@@ -422,13 +402,5 @@ namespace Bivrost.Bivrost360Player.Oculus
 			throw new HeadsetError(formattedMessage);
 		}
 
-		public override void UpdateSceneSettings(MediaDecoder.ProjectionMode projectionMode, MediaDecoder.VideoMode stereoscopy)
-		{
-			updateSettingsActionQueue.Enqueue(() => 
-			{
-				primitive?.Dispose();
-				primitive = GraphicTools.CreateGeometry(projectionMode, _gd, false);
-			});
-		}
 	}
 }

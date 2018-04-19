@@ -25,6 +25,7 @@ namespace Bivrost.Bivrost360Player.Streaming
 			catch (NotSupportedException) { return false; }
 		}
 
+
 		public override ServiceResult Parse(string uri)
 		{
 			string path = Path.GetFullPath(uri);
@@ -56,7 +57,8 @@ namespace Bivrost.Bivrost360Player.Streaming
 						hasAudio = true, // TODO
                         container = GuessContainerFromExtension(path)
                     }
-				}
+				},
+				title = Path.GetFileNameWithoutExtension(uri)
 			};
 		}
 

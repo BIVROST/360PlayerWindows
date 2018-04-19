@@ -138,6 +138,7 @@ Available words are:
 
 Words have to be separated from other characters in the filename by interpunction characters (`_`, `-`, `,`, `.`, `(`, `)` or space).
 
+For example, `movie_TaB.mp4`, `video(LR).mp4` or `http://example.com/another%20movie%20SbS.mp4` will work properly.
 
 
 Features that have been disabled or removed

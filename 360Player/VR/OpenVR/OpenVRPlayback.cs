@@ -21,16 +21,11 @@ namespace Bivrost.Bivrost360Player.OpenVR
 {
 	class OpenVRPlayback : Headset
 	{
-		private static Logger log = new Logger("OpenVR");
-
-
-
 		[DllImport("kernel32", SetLastError = true, CharSet = CharSet.Ansi)]
 		private static extern IntPtr LoadLibrary([MarshalAs(UnmanagedType.LPStr)]string lpFileName);
 
 
 		bool dllsLoaded = false;
-		SharpDX.Toolkit.Graphics.GeometricPrimitive primitive;
 
 		protected void EnsureDllsLoaded()
 		{
@@ -61,6 +56,12 @@ namespace Bivrost.Bivrost360Player.OpenVR
 			//return true;
 			EnsureDllsLoaded();
 			return Valve.VR.OpenVR.IsHmdPresent();
+		}
+
+
+		public OpenVRPlayback()
+		{
+			log = new Logger("OpenVR");
 		}
 
 
@@ -183,11 +184,9 @@ namespace Bivrost.Bivrost360Player.OpenVR
 			using (DepthStencilView rightEyeDepthView = new DepthStencilView(_device, rightEyeDepth))
 			using (vrui = new VRUI(_device, _gd))
 			{
-				MediaDecoder.Instance.OnFormatChanged += ResizeTexture;
+				BindToMediadecoder();
 
-				ResizeTexture(MediaDecoder.Instance.TextureL, _stereoVideo ? MediaDecoder.Instance.TextureR : MediaDecoder.Instance.TextureL);
-
-				primitive = GraphicTools.CreateGeometry(_projection, _gd, false);
+				primitive = GraphicTools.CreateGeometry(Projection, _gd, false);
 
 				Stopwatch stopwatch = new Stopwatch();
 				Texture_t leftEyeTex = new Texture_t() { eColorSpace = EColorSpace.Gamma, eType = EGraphicsAPIConvention.API_DirectX, handle = leftEye.NativePointer };
@@ -197,174 +196,171 @@ namespace Bivrost.Bivrost360Player.OpenVR
 				TrackedDevicePose_t[] gamePoseArray = new TrackedDevicePose_t[16];
 				TrackedDevicePose_t pose = new TrackedDevicePose_t();
 
-				while (!abort)
+				try
 				{
-					updateSettingsActionQueue.RunAllActions();
-
-					float deltaTime = (float)stopwatch.Elapsed.TotalSeconds;
-					stopwatch.Restart();
-
-					compositor.WaitGetPoses(renderPoseArray, gamePoseArray);
-					if (renderPoseArray[Valve.VR.OpenVR.k_unTrackedDeviceIndex_Hmd].bPoseIsValid)
+					while (!abort)
 					{
-						pose = gamePoseArray[Valve.VR.OpenVR.k_unTrackedDeviceIndex_Hmd];
-					}
+						updateSettingsActionQueue.RunAllActions();
 
-					foreach (EVREye eye in new EVREye[] { EVREye.Eye_Left, EVREye.Eye_Right })
-					{
-						DepthStencilView currentEyeDepthView = (eye == EVREye.Eye_Left) ? leftEyeDepthView : rightEyeDepthView;
-						RenderTargetView currentEyeView = (eye == EVREye.Eye_Left) ? leftEyeView : rightEyeView;
+						float deltaTime = (float)stopwatch.Elapsed.TotalSeconds;
+						stopwatch.Restart();
 
-						// Setup targets and viewport for rendering
-						context.OutputMerger.SetTargets(currentEyeDepthView, currentEyeView);
-						context.ClearDepthStencilView(currentEyeDepthView, DepthStencilClearFlags.Depth, 1.0f, 0);
-						context.ClearRenderTargetView(currentEyeView, Color.Black);
-						context.Rasterizer.SetViewport(new Viewport(0, 0, (int)targetWidth, (int)targetHeight, 0.0f, 1.0f));
-
-						Quaternion lookRotation; // = pose.mDeviceToAbsoluteTracking.GetRotation();
-						Vector3 lookPosition; // = pose.mDeviceToAbsoluteTracking.GetPosition();
-						Vector3 scale;
-						Matrix eyePose = hmd.GetEyeToHeadTransform(eye).RebuildTRSMatrix() * pose.mDeviceToAbsoluteTracking.RebuildTRSMatrix();
-						eyePose.Decompose(out scale, out lookRotation, out lookPosition);
-
-						Matrix rotationMatrix = Matrix.RotationQuaternion(lookRotation);
-						Vector3 lookUp = Vector3.Transform(Vector3.Up, rotationMatrix).ToVector3();
-						Vector3 lookAt = Vector3.Transform(Vector3.ForwardRH, rotationMatrix).ToVector3();
-
-						//Console.WriteLine($"OpenVR {eye} up: {lookUp:00.00} at: {lookAt:00.00} position:{lookPosition:00.00}");
-
-						Matrix viewMatrix = Matrix.LookAtRH(lookPosition, lookPosition + lookAt, lookUp);
-
-						Matrix pm1 = Matrix.PerspectiveFovLH(lookFov * ((float)Math.PI / 180f), aspect, 0.001f, 100.0f);
-						//Matrix pm2 = hmd.GetProjectionMatrix(eye, 0.001f, 100f, EGraphicsAPIConvention.API_DirectX).ToProjMatrix();
-
-						Matrix projectionMatrix = pm1;
-
-
-						Matrix worldMatrix = Matrix.Translation(lookPosition);
-						if (Logic.Instance.settings.OpenVRReverse)
-							worldMatrix = Matrix.RotationY(180) * worldMatrix;
-
-						Matrix MVP = worldMatrix * viewMatrix * projectionMatrix;
-						customEffectL.Parameters["WorldViewProj"].SetValue(MVP);
-						customEffectR.Parameters["WorldViewProj"].SetValue(MVP);
-
-						lock (localCritical)
+						compositor.WaitGetPoses(renderPoseArray, gamePoseArray);
+						if (renderPoseArray[Valve.VR.OpenVR.k_unTrackedDeviceIndex_Hmd].bPoseIsValid)
 						{
-							if (_stereoVideo)
+							pose = gamePoseArray[Valve.VR.OpenVR.k_unTrackedDeviceIndex_Hmd];
+						}
+
+						foreach (EVREye eye in new EVREye[] { EVREye.Eye_Left, EVREye.Eye_Right })
+						{
+							DepthStencilView currentEyeDepthView = (eye == EVREye.Eye_Left) ? leftEyeDepthView : rightEyeDepthView;
+							RenderTargetView currentEyeView = (eye == EVREye.Eye_Left) ? leftEyeView : rightEyeView;
+
+							// Setup targets and viewport for rendering
+							context.OutputMerger.SetTargets(currentEyeDepthView, currentEyeView);
+							context.ClearDepthStencilView(currentEyeDepthView, DepthStencilClearFlags.Depth, 1.0f, 0);
+							context.ClearRenderTargetView(currentEyeView, Color.Black);
+							context.Rasterizer.SetViewport(new Viewport(0, 0, (int)targetWidth, (int)targetHeight, 0.0f, 1.0f));
+
+							Quaternion lookRotation; // = pose.mDeviceToAbsoluteTracking.GetRotation();
+							Vector3 lookPosition; // = pose.mDeviceToAbsoluteTracking.GetPosition();
+							Vector3 scale;
+							Matrix eyePose = hmd.GetEyeToHeadTransform(eye).RebuildTRSMatrix() * pose.mDeviceToAbsoluteTracking.RebuildTRSMatrix();
+							eyePose.Decompose(out scale, out lookRotation, out lookPosition);
+
+							Matrix rotationMatrix = Matrix.RotationQuaternion(lookRotation);
+							Vector3 lookUp = Vector3.Transform(Vector3.Up, rotationMatrix).ToVector3();
+							Vector3 lookAt = Vector3.Transform(Vector3.ForwardRH, rotationMatrix).ToVector3();
+
+							//Console.WriteLine($"OpenVR {eye} up: {lookUp:00.00} at: {lookAt:00.00} position:{lookPosition:00.00}");
+
+							Matrix viewMatrix = Matrix.LookAtRH(lookPosition, lookPosition + lookAt, lookUp);
+
+							Matrix pm1 = Matrix.PerspectiveFovLH(lookFov * ((float)Math.PI / 180f), aspect, 0.001f, 100.0f);
+							//Matrix pm2 = hmd.GetProjectionMatrix(eye, 0.001f, 100f, EGraphicsAPIConvention.API_DirectX).ToProjMatrix();
+
+							Matrix projectionMatrix = pm1;
+
+
+							Matrix worldMatrix = Matrix.Translation(lookPosition);
+							if (Logic.Instance.settings.OpenVRReverse)
+								worldMatrix = Matrix.RotationY(180) * worldMatrix;
+
+							Matrix MVP = worldMatrix * viewMatrix * projectionMatrix;
+							customEffectL.Parameters["WorldViewProj"].SetValue(MVP);
+							customEffectR.Parameters["WorldViewProj"].SetValue(MVP);
+
+							lock (localCritical)
 							{
-								if (eye == EVREye.Eye_Left)
+								if (_stereoVideo)
+								{
+									if (eye == EVREye.Eye_Left)
+										primitive.Draw(customEffectL);
+									if (eye == EVREye.Eye_Right)
+										primitive.Draw(customEffectR);
+								}
+								else
 									primitive.Draw(customEffectL);
-								if (eye == EVREye.Eye_Right)
-									primitive.Draw(customEffectR);
 							}
-							else
-								primitive.Draw(customEffectL);
+
+							if (eye == EVREye.Eye_Left || true)
+							{
+								Vector3 fixedLookPosition = Vector3.Transform(lookPosition, MVP).ToVector3();
+								Vector3 fixedLookAt = Vector3.Transform(lookPosition + Vector3.ForwardLH, MVP).ToVector3() - fixedLookPosition;
+								Vector3 fixedLookUp = Vector3.Transform(lookPosition + Vector3.Up, MVP).ToVector3() - fixedLookPosition;
+								fixedLookAt.Normalize();
+								fixedLookUp.Normalize();
+								Quaternion fixedLookRotation = Quaternion.LookAtRH(Vector3.Zero, fixedLookAt, fixedLookUp);
+
+								//fixedLookRotation.X *= -1;
+								//fixedLookRotation.Y *= -1;
+								fixedLookRotation.Z *= -1;
+
+
+								//if(eye == EVREye.Eye_Left)
+								// fixedLookRotation.Invert();
+
+								//Mirror effect of rotation along z axis by flipping x and y elements of the quaternion.
+								//http://stackoverflow.com/a/32482386/785171
+								//float t = fixedLookRotation.X;
+								//fixedLookRotation.X = fixedLookRotation.Y;
+								//fixedLookRotation.Y = t;
+
+								//fixedLookRotation = new Quaternion(1, 0, 0, 0) * fixedLookRotation;
+								//fixedLookRotation = new Quaternion(0, 0, 1, 0) * fixedLookRotation;
+
+								LoggerManager.Publish("openvr.forward", fixedLookAt);
+								LoggerManager.Publish("openvr.up", fixedLookUp);
+
+
+								// TODO: normalize
+								ProvideLook?.Invoke(fixedLookPosition, fixedLookRotation, lookFov);
+							}
+
+							// reset UI position every frame if it is not visible
+							if (vrui.isUIHidden)
+								vrui.SetWorldPosition(viewMatrix.Forward, lookPosition, false);
+
+							vrui.Draw(Media, currentTime, Duration);
+							vrui.Render(deltaTime, viewMatrix, projectionMatrix, lookPosition, ShouldShowVRUI);
+
+							//// controllers:
+							//cubeEffect.View = viewMatrix;
+							//cubeEffect.Projection = projectionMatrix;
+
+							//for (uint controller = 1 /*skip hmd*/; controller < Valve.VR.OpenVR.k_unMaxTrackedDeviceCount; controller++)
+							//{
+							//	VRControllerState_t controllerState = default(VRControllerState_t);
+							//	//var controllerPose = renderPoseArray[controller];
+							//	//if (hmd.GetControllerState(controller, ref controllerState)) {
+							//	Vector3 pos = renderPoseArray[controller].mDeviceToAbsoluteTracking.GetPosition();
+							//	Quaternion rot = renderPoseArray[controller].mDeviceToAbsoluteTracking.GetRotation();
+							//	rot = rot * new Quaternion(0, 1, 0, 0);
+							//	float s = controllerState.ulButtonPressed > 0 ? 0.5f : 0.1f;
+							//	cubeEffect.World = Matrix.Scaling(s) * Matrix.RotationQuaternion(rot) * Matrix.Translation(pos);
+							//	cube.Draw(cubeEffect);
+
+							//	//}
+							//}
+
 						}
 
-						if (eye == EVREye.Eye_Left || true)
-						{
-                            Vector3 fixedLookPosition = Vector3.Transform(lookPosition, MVP).ToVector3();
-                            Vector3 fixedLookAt = Vector3.Transform(lookPosition + Vector3.ForwardLH, MVP).ToVector3() - fixedLookPosition;
-                            Vector3 fixedLookUp = Vector3.Transform(lookPosition + Vector3.Up, MVP).ToVector3() - fixedLookPosition;
-                            fixedLookAt.Normalize();
-                            fixedLookUp.Normalize();
-                            Quaternion fixedLookRotation = Quaternion.LookAtRH(Vector3.Zero, fixedLookAt, fixedLookUp);
-
-                            //fixedLookRotation.X *= -1;
-                            //fixedLookRotation.Y *= -1;
-                            fixedLookRotation.Z *= -1;
-
-
-                            //if(eye == EVREye.Eye_Left)
-                            // fixedLookRotation.Invert();
-
-                            //Mirror effect of rotation along z axis by flipping x and y elements of the quaternion.
-                            //http://stackoverflow.com/a/32482386/785171
-                            //float t = fixedLookRotation.X;
-                            //fixedLookRotation.X = fixedLookRotation.Y;
-                            //fixedLookRotation.Y = t;
-
-                            //fixedLookRotation = new Quaternion(1, 0, 0, 0) * fixedLookRotation;
-                            //fixedLookRotation = new Quaternion(0, 0, 1, 0) * fixedLookRotation;
-
-                            LoggerManager.Publish("openvr.forward", fixedLookAt);
-                            LoggerManager.Publish("openvr.up", fixedLookUp);
-
-
-                            // TODO: normalize
-                            ProvideLook?.Invoke(fixedLookPosition, fixedLookRotation, lookFov);
-						}
-
-                        // reset UI position every frame if it is not visible
-                        if (vrui.isUIHidden)
-							vrui.SetWorldPosition(viewMatrix.Forward, lookPosition, false);
-
-						vrui.Draw(movieTitle, currentTime, duration);
-						vrui.Render(deltaTime, viewMatrix, projectionMatrix, lookPosition, pause);
-
-                        //// controllers:
-                        //cubeEffect.View = viewMatrix;
-                        //cubeEffect.Projection = projectionMatrix;
-
-                        //for (uint controller = 1 /*skip hmd*/; controller < Valve.VR.OpenVR.k_unMaxTrackedDeviceCount; controller++)
-                        //{
-                        //	VRControllerState_t controllerState = default(VRControllerState_t);
-                        //	//var controllerPose = renderPoseArray[controller];
-                        //	//if (hmd.GetControllerState(controller, ref controllerState)) {
-                        //	Vector3 pos = renderPoseArray[controller].mDeviceToAbsoluteTracking.GetPosition();
-                        //	Quaternion rot = renderPoseArray[controller].mDeviceToAbsoluteTracking.GetRotation();
-                        //	rot = rot * new Quaternion(0, 1, 0, 0);
-                        //	float s = controllerState.ulButtonPressed > 0 ? 0.5f : 0.1f;
-                        //	cubeEffect.World = Matrix.Scaling(s) * Matrix.RotationQuaternion(rot) * Matrix.Translation(pos);
-                        //	cube.Draw(cubeEffect);
-
-                        //	//}
-                        //}
-
-                    }
 
 
 
+						// RENDER TO HMD
 
-                    // RENDER TO HMD
+						EVRCompositorError errorLeft = compositor.Submit(
+							EVREye.Eye_Left,
+							ref leftEyeTex,
+							ref textureBounds[0],
+							EVRSubmitFlags.Submit_Default
+						);
 
-                    EVRCompositorError errorLeft = compositor.Submit(
-						EVREye.Eye_Left,
-						ref leftEyeTex,
-						ref textureBounds[0],
-						EVRSubmitFlags.Submit_Default
-					);
+						EVRCompositorError errorRight = compositor.Submit(
+							EVREye.Eye_Right,
+							ref rightEyeTex,
+							ref textureBounds[1],
+							EVRSubmitFlags.Submit_Default
+						);
 
-					EVRCompositorError errorRight = compositor.Submit(
-						EVREye.Eye_Right,
-						ref rightEyeTex,
-						ref textureBounds[1],
-						EVRSubmitFlags.Submit_Default
-					);
+						if (errorLeft != EVRCompositorError.None)
+							throw new HeadsetError("VR Compositor failure (left): " + errorLeft);
+						if (errorRight != EVRCompositorError.None)
+							throw new HeadsetError("VR Compositor failure (right): " + errorRight);
+					};
+				}
+				finally
+				{
+					Valve.VR.OpenVR.Shutdown();
+					MediaDecoder.Instance.OnFormatChanged -= ResizeTexture;
 
-					if (errorLeft != EVRCompositorError.None)
-						log.Error("VR Compositor failure (left): " + errorLeft);
-					if (errorRight != EVRCompositorError.None)
-                        log.Error("VR Compositor failure (right): " + errorRight);
-				};
-
-				Valve.VR.OpenVR.Shutdown();
-				MediaDecoder.Instance.OnFormatChanged -= ResizeTexture;
-
-				primitive?.Dispose();
-				context.ClearState();
-				context.Flush();
+					primitive?.Dispose();
+					context.ClearState();
+					context.Flush();
+				}
 			}
 		}
 
-		public override void UpdateSceneSettings(MediaDecoder.ProjectionMode projectionMode, MediaDecoder.VideoMode stereoscopy)
-		{
-			updateSettingsActionQueue.Enqueue(() =>
-			{
-				primitive?.Dispose();
-				primitive = GraphicTools.CreateGeometry(projectionMode, _gd, false);
-			});
-		}
 	}
 }

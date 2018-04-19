@@ -62,7 +62,7 @@ namespace Bivrost.AnalyticsForVR
         public LookHistory(int precision, double mediaLength)
 		{
             this.precision = precision;
-            int count = (int)Math.Ceiling(mediaLength / precision);
+            int count = (int)Math.Ceiling(mediaLength * precision);
             data = new List<HeadPosition>(count);
             data.AddRange(Enumerable.Repeat<HeadPosition>(null, count));
         }
@@ -77,11 +77,11 @@ namespace Bivrost.AnalyticsForVR
             double yaw01 = yaw / (2 * Math.PI) + 0.5;
             double pitch01 = pitch / Math.PI + 0.5;
             TrackData(t, yaw01, pitch01, fov);
-            Bivrost.Log.LoggerManager.Publish("history.yaw", yaw * 180f / Math.PI);
-            Bivrost.Log.LoggerManager.Publish("history.pitch", pitch * 180f / Math.PI);
-            Bivrost.Log.LoggerManager.Publish("history.yaw01", yaw01);
-            Bivrost.Log.LoggerManager.Publish("history.pitch01", pitch01);
-        }
+			Bivrost.Log.LoggerManager.Publish("history.yaw", yaw * 180f / Math.PI);
+			Bivrost.Log.LoggerManager.Publish("history.pitch", pitch * 180f / Math.PI);
+			Bivrost.Log.LoggerManager.Publish("history.yaw01", yaw01);
+			Bivrost.Log.LoggerManager.Publish("history.pitch01", pitch01);
+		}
 
         void TrackData(float t, double yaw01, double pitch01, byte fov)
 		{

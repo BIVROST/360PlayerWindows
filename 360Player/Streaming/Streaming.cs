@@ -131,6 +131,10 @@ namespace Bivrost.Bivrost360Player.Streaming
 		/// </summary>
 		public string description = null;
 
+		public enum ContentType { none, video, image }
+		public ContentType contentType = ContentType.video;
+
+
 		/// <summary>
 		/// All available stand alone audio streams, excluding those that are in video files.
 		/// Often empty.
@@ -155,8 +159,19 @@ namespace Bivrost.Bivrost360Player.Streaming
 
         public readonly string mediaId;
 
+		public virtual string TitleWithFallback
+		{
+			get
+			{
+				if (!string.IsNullOrWhiteSpace(title))
+					return title;
+				if(contentType == ContentType.video)
+					return "web stream";
+				return "";
+			}
+		}
 
-        public ServiceResult(string originalURL, string serviceName, string mediaId)
+		public ServiceResult(string originalURL, string serviceName, string mediaId)
         {
             this.originalURL = originalURL;
             this.serviceName = serviceName;

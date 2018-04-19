@@ -27,16 +27,16 @@ else type=notification
 
 ... a toast is displayed with an optional link ...
 
-motd -> app: the user clicks on a link
-motd ->  : link launched by a notification's url
+app -> app: the user clicks on a link
+app ->  : link launched by a notification's url
 
 else type=popup
 
 ... a popup with a website is displayed ....
 
-motd -> website: embedded webpage in a popup
+app -> website: embedded webpage in a popup
 website -> website: additional resources are loaded
-website -> motd: optionally, a callback might happen
+website -> app: optionally, a callback might happen
 
 else an error occured with communication to the MOTD server
 
@@ -122,7 +122,8 @@ Additional fields returned:
 * `text`:string - Text that will be displayed as plain text.
 * `link`:string (optional) - Text that will be displayed as the link title.
 * `uri`:string (optional) - The address that will be opened when the link is opened. 
-  This is a full URI, not just an URL, so it doesn't have to be a HTTP/HTTPS protocol
+  This is a full URI, not just an URL, so it doesn't have to be a HTTP/HTTPS protocol  
+  The special value `::update::` will trigger the auto-update system.
 
 
 #### A HTML popup (`popup`)

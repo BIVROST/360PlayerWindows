@@ -16,13 +16,7 @@ namespace Bivrost.Bivrost360Player.OSVRKit
 {
 	public class OSVRPlayback : Headset
 	{
-		private static Logger log = new Logger("OSVR");
-
-
 		bool _preloaded = false;
-		int _selectedOutput = 0;
-
-		SharpDX.Toolkit.Graphics.GeometricPrimitive primitive;
 
 		override public bool IsPresent()
         {
@@ -81,6 +75,12 @@ namespace Bivrost.Bivrost360Player.OSVRKit
 			} while (mainRetry-- > 0);
             return false;
         }
+
+
+		public OSVRPlayback()
+		{
+			log = new Logger("OSVR");
+		}
 
 
 		protected override float Gamma { get { return 1f; } }
@@ -310,9 +310,8 @@ namespace Bivrost.Bivrost360Player.OSVRKit
 			using (Texture2D backBuffer = Texture2D.FromSwapChain<Texture2D>(swapChain, 0))
 			using (RenderTargetView renderView = new RenderTargetView(_device, backBuffer))
 			{
-				ResizeTexture(MediaDecoder.Instance.TextureL, _stereoVideo ? MediaDecoder.Instance.TextureR : MediaDecoder.Instance.TextureL);
-				MediaDecoder.Instance.OnFormatChanged += ResizeTexture;
-				primitive = GraphicTools.CreateGeometry(_projection, _gd);
+				BindToMediadecoder();
+				primitive = GraphicTools.CreateGeometry(Projection, _gd);
 
 				DateTime startTime = DateTime.Now;
 				Vector3 position = new Vector3(0, 0, -1);
@@ -415,8 +414,8 @@ namespace Bivrost.Bivrost360Player.OSVRKit
                                 ProvideLook?.Invoke(lookPosition, lookRotation, OSVRFOV);
                             }
 
-                            vrui.Draw(movieTitle, currentTime, duration);
-							vrui.Render(deltaTime, viewMatrix, projectionMatrix, lookPosition, pause);
+                            vrui.Draw(Media, currentTime, Duration);
+							vrui.Render(deltaTime, viewMatrix, projectionMatrix, lookPosition, ShouldShowVRUI);
 						}
 
 
@@ -462,15 +461,6 @@ namespace Bivrost.Bivrost360Player.OSVRKit
 			Lock = false;
 		}
 
-
-		public override void UpdateSceneSettings(MediaDecoder.ProjectionMode projectionMode, MediaDecoder.VideoMode stereoscopy)
-		{
-			updateSettingsActionQueue.Enqueue(() =>
-			{
-				primitive?.Dispose();
-				primitive = GraphicTools.CreateGeometry(projectionMode, _gd, true);
-			});
-		}
 
 		public event Action OnGotFocus = delegate {};
 

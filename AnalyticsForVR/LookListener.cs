@@ -92,14 +92,14 @@ namespace Bivrost.AnalyticsForVR
 
         private void HandleHeadsetDisable(ILookProvider headset)
         {
-            headset.ProvideLook -= HandleProvideLook;
-            lookProvider = null;
+			headset.ProvideLook -= HandleProvideLook;
+			lookProvider = null;
         }
 
         private void HandleHeadsetEnable(ILookProvider headset)
         {
-            headset.ProvideLook += HandleProvideLook;
-            lookProvider = headset;
+			headset.ProvideLook += HandleProvideLook;
+			lookProvider = headset;
         }
 
         //Stopwatch hpls = new Stopwatch();
