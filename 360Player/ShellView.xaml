@@ -150,7 +150,9 @@
 								<Setter Property="Command" Value="{Binding Command}" />
 							</DataTrigger>
 						</Style.Triggers>
-					</Style>
+                        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                    </Style>
 
 					<CollectionViewSource x:Key="dynamicItems" Source="{Binding Items}"/>
 				</Menu.Resources>
@@ -351,7 +353,7 @@
 					>
             </Slider>
 
-            <StackPanel Orientation="Horizontal" x:Name="playbackControlButtons" Grid.ColumnSpan="3" Height="68">
+            <StackPanel Orientation="Horizontal" x:Name="playbackControlButtons" Grid.ColumnSpan="3" Height="68" Visibility="{Binding Path=IsContentAVideo, Converter={StaticResource BoolToVis}, FallbackValue=Hidden}">
                 <Button x:Name="FastRewind"  Width="36" Height="36" Margin="24 0 4 0">
                     <Button.Template>
                         <ControlTemplate TargetType="{x:Type Button}">

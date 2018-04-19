@@ -80,8 +80,13 @@ namespace Bivrost.Bivrost360Player
 				NotifyOfPropertyChange(nameof(SelectedFileTitle));
 				NotifyOfPropertyChange(nameof(SelectedFileDescription));
 				NotifyOfPropertyChange(nameof(SelectedFileNameLabel));
+				NotifyOfPropertyChange(nameof(IsContentAVideo));
 			}
 		}
+
+		public bool IsContentAVideo => (SelectedServiceResult == null) 
+			? true 
+			: SelectedServiceResult.contentType == Streaming.ServiceResult.ContentType.video;
 
 		public bool IsFileSelected { get; set; }
 
