@@ -184,8 +184,8 @@ namespace Bivrost.Bivrost360Player.Streaming
             string originalURL = "https://www.littlstar.com/videos/" + id;
             return new ServiceResult(originalURL, ServiceName, originalURL)
 			{
-				projection = MediaDecoder.ProjectionMode.Sphere,
-				stereoscopy = MediaDecoder.VideoMode.Mono,
+				projection = ProjectionMode.Sphere,
+				stereoscopy = VideoMode.Mono,
 				title = (string)jobject["title"],
 				description = (string)jobject["description"],
 				videoStreams = videostreams

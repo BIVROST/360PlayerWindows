@@ -181,7 +181,7 @@ namespace Bivrost.Bivrost360Player
 		}
 
 
-		void UpdateVRSceneSettings(MediaDecoder.ProjectionMode projectionMode, MediaDecoder.VideoMode videoMode)
+		void UpdateVRSceneSettings(ProjectionMode projectionMode, VideoMode videoMode)
 		{
 			CurrentHeadset?.UpdateSceneSettings(projectionMode, videoMode);
 		}

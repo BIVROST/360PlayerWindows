@@ -270,9 +270,9 @@ namespace Bivrost.Bivrost360Player.Streaming
                 description = (string)json["description"],
                 audioStreams = audioStreams,
                 videoStreams = videoStreams,
-                stereoscopy = MediaDecoder.VideoMode.Autodetect,
+                stereoscopy = VideoMode.Autodetect,
                 title = (string)json["fulltitle"],
-                projection = MediaDecoder.ProjectionMode.Sphere // always?
+                projection = ProjectionMode.Sphere // always?
                 // duration = (float)json["duration"]
             };
         }

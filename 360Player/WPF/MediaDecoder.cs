@@ -16,29 +16,32 @@ using System.Windows.Interop;
 
 namespace Bivrost.Bivrost360Player
 {
+
+	public enum VideoMode
+	{
+		Autodetect,
+		Mono,
+		SideBySide,
+		TopBottom,
+		SideBySideReversed,
+		TopBottomReversed
+	}
+
+
+	public enum ProjectionMode
+	{
+		Sphere, // Equirectangular 360x180
+		CubeFacebook,
+		Dome    // Equirectangular 180x180
+	}
+
+
 	public class MediaDecoder
 	{
 		public class Error
 		{
 			public long major;
 			public int minor;
-		}
-
-		public enum VideoMode
-		{
-			Autodetect,
-			Mono,
-			SideBySide,
-			TopBottom,
-			SideBySideReversed,
-			TopBottomReversed
-		}
-
-		public enum ProjectionMode
-		{
-			Sphere,	// Equirectangular 360x180
-			CubeFacebook,
-			Dome	// Equirectangular 180x180
 		}
 
 		public Error LastError;
@@ -118,7 +121,7 @@ namespace Bivrost.Bivrost360Player
 		public bool Initialized { get { return _initialized; } }
 		public VideoMode StereoMode { get; set; } = VideoMode.Autodetect;
 		public VideoMode CurrentMode { get; set; } = VideoMode.Autodetect;
-		public ProjectionMode Projection { get; set; } = MediaDecoder.ProjectionMode.Sphere;
+		public ProjectionMode Projection { get; set; } = ProjectionMode.Sphere;
 
 		private bool _initialized = false;
 		private bool _rendering = false;

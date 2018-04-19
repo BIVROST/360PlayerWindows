@@ -30,7 +30,7 @@ namespace Bivrost.Bivrost360Player.Streaming
 
 			return new ServiceResult(uri, ServiceName, URIToMediaId(uri))
             {
-                projection = MediaDecoder.ProjectionMode.Sphere,
+                projection = ProjectionMode.Sphere,
 				stereoscopy = GuessStereoscopyFromFileName(uri),
                 videoStreams = new List<VideoStream>()
                 {

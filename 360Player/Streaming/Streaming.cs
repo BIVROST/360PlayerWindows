@@ -150,12 +150,12 @@ namespace Bivrost.Bivrost360Player.Streaming
 		/// <summary>
 		/// Stereoscopy mode (mono, side by side etc)
 		/// </summary>
-		public MediaDecoder.VideoMode stereoscopy = MediaDecoder.VideoMode.Mono;
+		public VideoMode stereoscopy = VideoMode.Mono;
 
 		/// <summary>
 		/// Projection mode (equirectangular, cubemap types, dome etc)
 		/// </summary>
-		public MediaDecoder.ProjectionMode projection = MediaDecoder.ProjectionMode.Sphere;
+		public ProjectionMode projection = ProjectionMode.Sphere;
 
         public readonly string mediaId;
 
@@ -330,26 +330,26 @@ namespace Bivrost.Bivrost360Player.Streaming
 		}
 
 
-		protected MediaDecoder.VideoMode GuessStereoscopyFromFileName(string path)
+		protected VideoMode GuessStereoscopyFromFileName(string path)
 		{
 			string fileName = Path.GetFileNameWithoutExtension(path);
 
 			if (Regex.IsMatch(fileName, @"(\b|_)(SbS|LR)(\b|_)"))
-				return MediaDecoder.VideoMode.SideBySide;
+				return VideoMode.SideBySide;
 
 			if (Regex.IsMatch(fileName, @"(\b|_)(RL)(\b|_)"))
-				return MediaDecoder.VideoMode.SideBySideReversed;
+				return VideoMode.SideBySideReversed;
 
 			if (Regex.IsMatch(fileName, @"(\b|_)(TaB|TB)(\b|_)"))
-				return MediaDecoder.VideoMode.TopBottom;
+				return VideoMode.TopBottom;
 
 			if (Regex.IsMatch(fileName, @"(\b|_)(BaT|BT)(\b|_)"))
-				return MediaDecoder.VideoMode.TopBottomReversed;
+				return VideoMode.TopBottomReversed;
 
 			if (Regex.IsMatch(fileName, @"(\b|_)mono(\b|_)"))
-				return MediaDecoder.VideoMode.Mono;
+				return VideoMode.Mono;
 
-			return MediaDecoder.VideoMode.Autodetect;
+			return VideoMode.Autodetect;
 		}
 
         protected static string URIToMediaId(string URI)

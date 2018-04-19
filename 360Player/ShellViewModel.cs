@@ -663,8 +663,8 @@ namespace Bivrost.Bivrost360Player
 				}
 			}
 
-			_mediaDecoder.Projection = MediaDecoder.ProjectionMode.Sphere;
-			_mediaDecoder.StereoMode = MediaDecoder.VideoMode.Autodetect;
+			_mediaDecoder.Projection = ProjectionMode.Sphere;
+			_mediaDecoder.StereoMode = VideoMode.Autodetect;
 
 			SelectedServiceResult = null;
 		}
@@ -1206,19 +1206,19 @@ namespace Bivrost.Bivrost360Player
 
  
 #region menu options: projection
-		protected void SetProjection(MediaDecoder.ProjectionMode? projection)
+		protected void SetProjection(ProjectionMode? projection)
 		{
 			HACK_Projection = projection;
 
 			if (DXCanvas.Scene != null)
 			{
 				Scene scene = (Scene)DXCanvas.Scene;
-				scene.UpdateSceneSettings(projection.GetValueOrDefault(MediaDecoder.ProjectionMode.Sphere), MediaDecoder.VideoMode.Autodetect);
+				scene.UpdateSceneSettings(projection.GetValueOrDefault(ProjectionMode.Sphere), VideoMode.Autodetect);
 			}
 
 			UpdateVRSceneSettings(
-				projection.GetValueOrDefault(MediaDecoder.ProjectionMode.Sphere), 
-				MediaDecoder.VideoMode.Autodetect
+				projection.GetValueOrDefault(ProjectionMode.Sphere), 
+				VideoMode.Autodetect
 			);
 
 			NotifyOfPropertyChange(() => ProjectionIsAuto);
@@ -1227,7 +1227,7 @@ namespace Bivrost.Bivrost360Player
 			NotifyOfPropertyChange(() => ProjectionIsDome);
 		}
 
-		protected MediaDecoder.ProjectionMode? HACK_Projection = null;
+		protected ProjectionMode? HACK_Projection = null;
 		public bool ProjectionIsAuto
 		{
 			get { return !HACK_Projection.HasValue; }
@@ -1235,18 +1235,18 @@ namespace Bivrost.Bivrost360Player
 		}
 		public bool ProjectionIsEquirectangular
 		{
-			get { return HACK_Projection.HasValue && HACK_Projection == MediaDecoder.ProjectionMode.Sphere; }
-			set { if (value) SetProjection(MediaDecoder.ProjectionMode.Sphere); }
+			get { return HACK_Projection.HasValue && HACK_Projection == ProjectionMode.Sphere; }
+			set { if (value) SetProjection(ProjectionMode.Sphere); }
 		}
 		public bool ProjectionIsCubeFacebook
 		{
-			get { return HACK_Projection.HasValue && HACK_Projection == MediaDecoder.ProjectionMode.CubeFacebook; }
-			set { if (value) SetProjection(MediaDecoder.ProjectionMode.CubeFacebook); }
+			get { return HACK_Projection.HasValue && HACK_Projection == ProjectionMode.CubeFacebook; }
+			set { if (value) SetProjection(ProjectionMode.CubeFacebook); }
 		}
 		public bool ProjectionIsDome
 		{
-			get { return HACK_Projection.HasValue && HACK_Projection == MediaDecoder.ProjectionMode.Dome; }
-			set { if (value) SetProjection(MediaDecoder.ProjectionMode.Dome); }
+			get { return HACK_Projection.HasValue && HACK_Projection == ProjectionMode.Dome; }
+			set { if (value) SetProjection(ProjectionMode.Dome); }
 		}
 #endregion
 

@@ -24,8 +24,8 @@ namespace Bivrost.Bivrost360Player
 		private static ServiceResult nothingIsPlaying = new ServiceResult(null, "(none)", "nothing")
 		{
 			description = "",
-			stereoscopy = MediaDecoder.VideoMode.Autodetect,
-			projection = MediaDecoder.ProjectionMode.Sphere,
+			stereoscopy = VideoMode.Autodetect,
+			projection = ProjectionMode.Sphere,
 			title = "",
 			contentType = ServiceResult.ContentType.none
 		};
@@ -42,8 +42,8 @@ namespace Bivrost.Bivrost360Player
 				UpdateSceneSettings(Media.projection, Media.stereoscopy);
 			}
 		}
-		public bool _stereoVideo => Array.IndexOf(new[] { MediaDecoder.VideoMode.Mono, MediaDecoder.VideoMode.Autodetect }, Media.stereoscopy) < 0;
-		public MediaDecoder.ProjectionMode Projection => Media.projection;
+		public bool _stereoVideo => Array.IndexOf(new[] { VideoMode.Mono, VideoMode.Autodetect }, Media.stereoscopy) < 0;
+		public ProjectionMode Projection => Media.projection;
 		protected float Duration => (float)MediaDecoder.Instance.Duration;
 
 
@@ -304,7 +304,7 @@ namespace Bivrost.Bivrost360Player
 			});
 
 			// also enqueued
-			UpdateSceneSettings(MediaDecoder.ProjectionMode.Sphere, MediaDecoder.VideoMode.Mono);
+			UpdateSceneSettings(ProjectionMode.Sphere, VideoMode.Mono);
 		}
 
 		abstract public bool IsPresent();
@@ -312,7 +312,7 @@ namespace Bivrost.Bivrost360Player
 
 		protected Bivrost.ActionQueue updateSettingsActionQueue = new Bivrost.ActionQueue();
 		protected SharpDX.Toolkit.Graphics.GeometricPrimitive primitive;
-		public void UpdateSceneSettings(MediaDecoder.ProjectionMode projectionMode, MediaDecoder.VideoMode stereoscopy)
+		public void UpdateSceneSettings(ProjectionMode projectionMode, VideoMode stereoscopy)
 		{
 			updateSettingsActionQueue.Enqueue(() =>
 			{

@@ -17,7 +17,7 @@
 
 	public interface IUpdatableSceneSettings
 	{
-		void UpdateSceneSettings(MediaDecoder.ProjectionMode projectionMode, MediaDecoder.VideoMode stereoscopy);
+		void UpdateSceneSettings(ProjectionMode projectionMode, VideoMode stereoscopy);
 	}
 
 
@@ -68,7 +68,7 @@
         
 
         private Texture2D sharedTex;
-		private MediaDecoder.ProjectionMode projectionMode;
+		private ProjectionMode projectionMode;
 		private SharpDX.DXGI.Resource resource;
 
         Dictionary<GamepadButtonFlags, bool> buttonStates = new Dictionary<GamepadButtonFlags, bool>();
@@ -107,7 +107,7 @@
 				return Quaternion.Identity;
 		}
 
-        public Scene(Texture2D sharedTexture, MediaDecoder.ProjectionMode projection)
+        public Scene(Texture2D sharedTexture, ProjectionMode projection)
 		{
 			videoTexture = sharedTexture;
 			projectionMode = projection;
@@ -525,7 +525,7 @@
 			UpdateInput();
 
 			// Little planet makes sense only in sphere and dome projections
-			var littlePlanetProjections = new[] { MediaDecoder.ProjectionMode.Sphere, MediaDecoder.ProjectionMode.Dome };
+			var littlePlanetProjections = new[] { ProjectionMode.Sphere, ProjectionMode.Dome };
 			if (littlePlanet && !littlePlanetProjections.Contains(projectionMode))
 			{
 				RectlinearProjection();
@@ -558,7 +558,7 @@
 
 		ActionQueue actionQueue = new ActionQueue();
 
-		public void UpdateSceneSettings(MediaDecoder.ProjectionMode projectionMode, MediaDecoder.VideoMode stereoscopy)
+		public void UpdateSceneSettings(ProjectionMode projectionMode, VideoMode stereoscopy)
 		{
 			actionQueue.Enqueue(() =>
 			{

@@ -25,15 +25,15 @@ namespace Bivrost.Bivrost360Player.Streaming
 		public override ServiceResult Parse(string uri)
 		{
 			var protocol = Protocol.Parse(uri);
-			MediaDecoder.VideoMode stereoscopy;
+			VideoMode stereoscopy;
 			switch (protocol.stereoscopy)
 			{
 				default:
-				case Protocol.Stereoscopy.autodetect: stereoscopy = MediaDecoder.VideoMode.Autodetect; break;
-				case Protocol.Stereoscopy.mono: stereoscopy = MediaDecoder.VideoMode.Mono; break;
-				case Protocol.Stereoscopy.side_by_side: stereoscopy = MediaDecoder.VideoMode.SideBySide; break;
-				case Protocol.Stereoscopy.top_and_bottom: stereoscopy = MediaDecoder.VideoMode.TopBottom; break;
-				case Protocol.Stereoscopy.top_and_bottom_reversed: stereoscopy = MediaDecoder.VideoMode.TopBottomReversed; break;
+				case Protocol.Stereoscopy.autodetect: stereoscopy = VideoMode.Autodetect; break;
+				case Protocol.Stereoscopy.mono: stereoscopy = VideoMode.Mono; break;
+				case Protocol.Stereoscopy.side_by_side: stereoscopy = VideoMode.SideBySide; break;
+				case Protocol.Stereoscopy.top_and_bottom: stereoscopy = VideoMode.TopBottom; break;
+				case Protocol.Stereoscopy.top_and_bottom_reversed: stereoscopy = VideoMode.TopBottomReversed; break;
 			}
 			bool Loop = protocol.loop.HasValue ? protocol.loop.Value : false;       // unused
 			string videoUrl = protocol.urls.FirstOrDefault((u) =>
@@ -48,11 +48,11 @@ namespace Bivrost.Bivrost360Player.Streaming
 			if (string.IsNullOrWhiteSpace(videoUrl))
 				throw new StreamParsingFailed("no video stated in protocol");
 
-			MediaDecoder.ProjectionMode projection;
+			ProjectionMode projection;
 			switch (protocol.projection)
 			{
 				default:
-				case Protocol.Projection.equirectangular: projection = MediaDecoder.ProjectionMode.Sphere; break;
+				case Protocol.Projection.equirectangular: projection = ProjectionMode.Sphere; break;
 			}
 
 			string title = System.IO.Path.GetFileName(videoUrl);
