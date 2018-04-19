@@ -265,10 +265,14 @@ Details:
 
 
 ### 2018-04-12 b93df98 / 1.0.0.200
-Headsets now persist.
+Minor bugfix issue.
 Details:
-- Headset integration stays opened while switching movies
 - Documentation update
 - Better looking MOTD popup
 - Less intrusive update popup
+
+### 2018-04-12 g294848d / 1.0.0.201
+Headsets now persist.
+- Headset integration stays opened while switching movies
+- A background image is displayed when nothing is playing
 

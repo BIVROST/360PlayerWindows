@@ -60,12 +60,24 @@ It might help to disable *Tools -> Options -> Debugging -> General -> Enable UI 
 Change *Test -> Test settings -> Default processor architecture* to *x64*.
 
 
-### Oculus DLL `LibOVRRT64_1.dll ` not found?
+### Oculus DLL `LibOVRRT64_1.dll` not found?
 
 Add to path: `C:\Program Files\Oculus\Support\oculus-runtime`.
 This is probably some legacy installation issue.
 Issue was not found on new installations.
 
+
+### Security debugging popup in Visual Studio
+
+You might encounter this popup after starting the solution:
+
+> The security debugging option is set but it requires the Visual Studio 
+> hosting process which is unavailable in this debugging configuration.
+> The security debugging option will be disabled. 
+> This option may be re-enabled in the Security property page. 
+> The debugging session will continue without security debugging
+
+Please ignore it and press *OK*. Please check this [stack overflow answer](https://stackoverflow.com/a/45232833/785171) for details.
 
 
 Projects in the solution
