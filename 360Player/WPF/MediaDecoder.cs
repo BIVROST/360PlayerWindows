@@ -84,7 +84,14 @@ namespace Bivrost.Bivrost360Player
 				return (_initialized ? (bool)_mediaEngineEx.IsPaused : false);
 				//}
 			} }
-		public bool IsDisplayingStaticContent => panoTexture != null;
+		public bool IsDisplayingStaticContent => staticContentSource != null;
+
+
+		/// <summary>
+		/// Used instead of mediaEngine to show non-animated content.
+		/// Should contain the bytes of a png or jpeg (stored, so the textures can be recreated with other stereoscopy values)
+		/// </summary>
+		byte[] staticContentSource = null;
 
 
 		private bool _loop = false;
@@ -742,8 +749,7 @@ namespace Bivrost.Bivrost360Player
 					}
 				}
 
-				panoTexture?.Dispose();
-				panoTexture = null;
+				staticContentSource = null;
 
 				textureL?.Dispose();
 				textureR?.Dispose();
@@ -779,8 +785,7 @@ namespace Bivrost.Bivrost360Player
 
 			_fileName = fileName;
 
-			panoTexture?.Dispose();
-			panoTexture = null;
+			staticContentSource = null;
 
 			switch (serviceResult.contentType)
 			{
@@ -810,50 +815,69 @@ namespace Bivrost.Bivrost360Player
 
 				case ServiceResult.ContentType.image:
 
+					//SharpDX.Toolkit.Graphics.GraphicsDevice gd;
+					//_factory.Adapters.
+					// gd.copy?
+
+					staticContentSource = File.ReadAllBytes(_fileName);
+
+					using (var stream = new MemoryStream(staticContentSource))	// stream, so it won't lock the file
 					using (var imagingFactory = new SharpDX.WIC.ImagingFactory2())
+					using (var bitmapDecoder = new SharpDX.WIC.BitmapDecoder(imagingFactory, stream, SharpDX.WIC.DecodeOptions.CacheOnDemand))
+					using (var frame = bitmapDecoder.GetFrame(0))
+					using (var formatConverter = new SharpDX.WIC.FormatConverter(imagingFactory))
 					{
-						using (var bitmapDecoder = new SharpDX.WIC.BitmapDecoder(imagingFactory, _fileName, SharpDX.WIC.DecodeOptions.CacheOnDemand))
-						using (var formatConverter = new SharpDX.WIC.FormatConverter(imagingFactory))
+						formatConverter.Initialize(
+							frame,
+							SharpDX.WIC.PixelFormat.Format32bppBGRA,       // CreateTexture uses B8G8R8X8_UNorm
+							SharpDX.WIC.BitmapDitherType.None,
+							null,
+							0.0,
+							SharpDX.WIC.BitmapPaletteType.Custom
+						);
+
+						// to be later cleaned up
+						var tempL = textureL;
+						var tempR = textureR;
+
+						var w = formatConverter.Size.Width;
+						var h = formatConverter.Size.Height;
+						var ww = w / 2;
+						var hh = h / 2;
+						const int bpp = 4;
+
+						//int stride = w * bpp;
+						//using (var buffer = new SharpDX.DataStream(h * stride, true, true))
+						//{
+						//	formatConverter.CopyPixels(stride, buffer);
+						//	var dataRect = new SharpDX.DataRectangle(buffer.DataPointer, stride);
+						//	panoTexture = CreateTexture(_device, w, h, dataRect);
+						//}
+
+						int stride = ww * bpp;
+
+						using (var buffer = new SharpDX.DataStream(hh * stride, true, true))
 						{
-							using (var frame = bitmapDecoder.GetFrame(0))
-								formatConverter.Initialize(
-									frame,
-									SharpDX.WIC.PixelFormat.Format32bppBGR,       // CreateTexture uses B8G8R8X8_UNorm
-									SharpDX.WIC.BitmapDitherType.None,
-									null,
-									0.0,
-									SharpDX.WIC.BitmapPaletteType.Custom
-								);
-
-							int stride = formatConverter.Size.Width * 4;
-							using (var buffer = new SharpDX.DataStream(formatConverter.Size.Height * stride, true, true))
-							{
-								// Copy the content of the WIC to the buffer
-								formatConverter.CopyPixels(stride, buffer);
-								var dataRect = new SharpDX.DataRectangle(buffer.DataPointer, stride);
-								var tempL = textureL;
-								var tempR = textureR;
-								textureL = CreateTexture(_device, formatConverter.Size.Width, formatConverter.Size.Height, dataRect);
-								textureR = CreateTexture(_device, formatConverter.Size.Width, formatConverter.Size.Height, dataRect);
-
-
-
-								//_mediaEngine.TransferVideoFrame(textureR, topRect, new SharpDX.Rectangle(0, 0, w, h / 2), null);
-								panoTexture = CreateTexture(_device, formatConverter.Size.Width, formatConverter.Size.Height, dataRect);
-								//_device.ImmediateContext.CopySubresourceRegion()
-
-
-								textureReleased = false;
-								OnFormatChanged(textureL, textureR);
-								tempL?.Dispose();
-								tempR?.Dispose();
-
-								// TODO: use panoTexture
-								// TODO: stereoscopy
-
-								OnReady?.Invoke(-1);
-							}
+							formatConverter.CopyPixels(new Rectangle(0, 0, ww, hh), stride, buffer);
+							var dataRect = new SharpDX.DataRectangle(buffer.DataPointer, stride);
+							textureL = CreateTexture(_device, ww, hh, dataRect);
 						}
+
+						using (var buffer = new SharpDX.DataStream(hh * stride, true, true))
+						{
+							formatConverter.CopyPixels(new Rectangle(ww, hh, ww, hh), stride, buffer);
+							var dataRect = new SharpDX.DataRectangle(buffer.DataPointer, stride);
+							textureR = CreateTexture(_device, ww, hh, dataRect);
+						}
+
+						textureReleased = false;
+						OnFormatChanged(textureL, textureR);
+						tempL?.Dispose();
+						tempR?.Dispose();
+
+						// TODO: stereoscopy
+
+						OnReady?.Invoke(-1);
 					}
 
 					break;
