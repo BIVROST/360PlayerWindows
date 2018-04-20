@@ -812,38 +812,34 @@ namespace Bivrost.Bivrost360Player
 
 					using (var imagingFactory = new SharpDX.WIC.ImagingFactory2())
 					{
-						var bitmapDecoder = new SharpDX.WIC.BitmapDecoder(
-							imagingFactory,
-							_fileName,
-							SharpDX.WIC.DecodeOptions.CacheOnDemand
-						);
-						
-						using (var bitmapSource = new SharpDX.WIC.FormatConverter(imagingFactory))
+						using (var bitmapDecoder = new SharpDX.WIC.BitmapDecoder(imagingFactory, _fileName, SharpDX.WIC.DecodeOptions.CacheOnDemand))
+						using (var formatConverter = new SharpDX.WIC.FormatConverter(imagingFactory))
 						{
-							bitmapSource.Initialize(
-								bitmapDecoder.GetFrame(0),
-								SharpDX.WIC.PixelFormat.Format32bppBGR,       // CreateTexture uses B8G8R8X8_UNorm
-								SharpDX.WIC.BitmapDitherType.None,
-								null,
-								0.0,
-								SharpDX.WIC.BitmapPaletteType.Custom
-							);
+							using (var frame = bitmapDecoder.GetFrame(0))
+								formatConverter.Initialize(
+									frame,
+									SharpDX.WIC.PixelFormat.Format32bppBGR,       // CreateTexture uses B8G8R8X8_UNorm
+									SharpDX.WIC.BitmapDitherType.None,
+									null,
+									0.0,
+									SharpDX.WIC.BitmapPaletteType.Custom
+								);
 
-							int stride = bitmapSource.Size.Width * 4;
-							using (var buffer = new SharpDX.DataStream(bitmapSource.Size.Height * stride, true, true))
+							int stride = formatConverter.Size.Width * 4;
+							using (var buffer = new SharpDX.DataStream(formatConverter.Size.Height * stride, true, true))
 							{
 								// Copy the content of the WIC to the buffer
-								bitmapSource.CopyPixels(stride, buffer);
+								formatConverter.CopyPixels(stride, buffer);
 								var dataRect = new SharpDX.DataRectangle(buffer.DataPointer, stride);
 								var tempL = textureL;
 								var tempR = textureR;
-								textureL = CreateTexture(_device, bitmapSource.Size.Width, bitmapSource.Size.Height, dataRect);
-								textureR = CreateTexture(_device, bitmapSource.Size.Width, bitmapSource.Size.Height, dataRect);
+								textureL = CreateTexture(_device, formatConverter.Size.Width, formatConverter.Size.Height, dataRect);
+								textureR = CreateTexture(_device, formatConverter.Size.Width, formatConverter.Size.Height, dataRect);
 
 
 
 								//_mediaEngine.TransferVideoFrame(textureR, topRect, new SharpDX.Rectangle(0, 0, w, h / 2), null);
-								panoTexture = CreateTexture(_device, bitmapSource.Size.Width, bitmapSource.Size.Height, dataRect);
+								panoTexture = CreateTexture(_device, formatConverter.Size.Width, formatConverter.Size.Height, dataRect);
 								//_device.ImmediateContext.CopySubresourceRegion()
 
 
@@ -854,10 +850,7 @@ namespace Bivrost.Bivrost360Player
 
 								// TODO: use panoTexture
 								// TODO: stereoscopy
-								// TODO: cleanup source
 
-
-								//IsPlaying = true;
 								OnReady?.Invoke(-1);
 							}
 						}
