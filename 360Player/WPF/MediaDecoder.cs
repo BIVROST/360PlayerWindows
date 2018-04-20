@@ -58,7 +58,6 @@ namespace Bivrost.Bivrost360Player
 		private bool formatChangePending = false;
 
 		private long ts;
-		private int w, h;
 		private bool manualRender = false;
 
 		private Texture2D textureL;
@@ -312,34 +311,6 @@ namespace Bivrost.Bivrost360Player
                         case MediaEngineEvent.FormatChange:
 							Console.WriteLine("[!!!] FormatChange " + formatCounter++);
 							formatChangePending = true;
-							//Task.Factory.StartNew(() =>
-							//{
-								//if (_mediaEngineEx.IsDisposed) break;
-								//if (_mediaEngineEx.IsEnded) break;
-
-								//lock (criticalSection)
-								//{
-								//	if (_mediaEngineEx.IsDisposed) break;
-								//	if (_mediaEngineEx.IsEnded) break;
-									
-									//Texture2D tempL = textureL;
-									//Texture2D tempR = textureR;
-									//_mediaEngineEx.GetNativeVideoSize(out w, out h);
-									
-									//textureReleased = true;
-									
-									//textureL = CreateTexture(_device, w, h);
-									//textureR = CreateTexture(_device, w, h);
-									//textureReleased = false;
-
-									////OnReleaseTexture();
-									//OnFormatChanged(textureL, textureR);
-									//if (waitForFormatChange) waitForFormatChange = false;
-
-									//tempL?.Dispose();
-									//tempR?.Dispose();
-								//}
-							//});
 							break;
 
                         case MediaEngineEvent.Playing:
@@ -373,7 +344,8 @@ namespace Bivrost.Bivrost360Player
 		//	return new Guid(guidData);
 		//}
 
-		public static Texture2D CreateTexture(SharpDX.Direct3D11.Device _device, int width, int height)
+
+		public static Texture2D CreateTexture(SharpDX.Direct3D11.Device _device, int width, int height, DataRectangle? dataRectangle = null)
 		{
 			Texture2DDescription frameTextureDescription = new Texture2DDescription()
 			{
@@ -389,30 +361,53 @@ namespace Bivrost.Bivrost360Player
 				OptionFlags = ResourceOptionFlags.Shared
 			};
 
-			return new SharpDX.Direct3D11.Texture2D(_device, frameTextureDescription);
+			return dataRectangle.HasValue
+				?new Texture2D(_device, frameTextureDescription, dataRectangle.Value)
+				:new Texture2D(_device, frameTextureDescription);
 		}
 
-		public static Texture2D CreateTexture(SharpDX.Direct3D11.Device _device, int width, int height, DataRectangle dataRectangle)
-		{
-			Texture2DDescription frameTextureDescription = new Texture2DDescription()
+
+		private class ClipCoords {
+
+			public float w;
+			public float h;
+			public float l;
+			public float t;
+
+			public VideoNormalizedRect NormalizedSrcRect
 			{
-				Width = width,
-				Height = height,
-				MipLevels = 1,
-				ArraySize = 1,
-				Format = Format.B8G8R8X8_UNorm,
-				Usage = ResourceUsage.Default,
-				SampleDescription = new SampleDescription(1, 0),
-				BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
-				CpuAccessFlags = CpuAccessFlags.None,
-				OptionFlags = ResourceOptionFlags.Shared
-			};
+				get
+				{
+					return new VideoNormalizedRect()
+					{
+						Left = l,
+						Top = t,
+						Bottom = t + h,
+						Right = l + w
+					};
+				}
+			}
 
-			return new SharpDX.Direct3D11.Texture2D(_device, frameTextureDescription, dataRectangle);
+			internal Rectangle DstRect(int pxw, int pxh)
+			{
+				return new Rectangle(0, 0, Width(pxw), Height(pxh));
+			}
+
+			internal int Width(int pxw)
+			{
+				return (int)(w * pxw);
+			}
+
+			internal int Height(int pxh)
+			{
+				return (int)(h * pxh);
+			}
+
+			internal Rectangle SrcRect(int pxw, int pxh)
+			{
+				return new Rectangle((int)(l * pxw), (int)(t * pxh), (int)(w * pxw), (int)(h * pxh));
+			}
 		}
-
-
-		private class ClipCoords { public float w; public float h; public float l; public float t; }
 		private void GetTextureClipCoordinates(out ClipCoords texL, out ClipCoords texR)
 		{
 			switch (CurrentMode)
@@ -464,39 +459,14 @@ namespace Bivrost.Bivrost360Player
 					//SharpDX.Win32.Variant variant;
 					//_mediaEngineEx.GetStreamAttribute(1, MediaTypeAttributeKeys.FrameSize.Guid, out variant);
 
-
+					int w, h;
 					_mediaEngineEx.GetNativeVideoSize(out w, out h);
+					CurrentMode = ParseStereoMode(LoadedStereoMode, w, h);
+
 					int cx, cy;
 					_mediaEngineEx.GetVideoAspectRatio(out cx, out cy);
 					var s3d = _mediaEngineEx.IsStereo3D;
 					var sns = _mediaEngineEx.NumberOfStreams;
-
-					CurrentMode = ParseStereoMode(LoadedStereoMode, w, h);
-
-					// Moved to streaming parser
-					//if (CurrentMode == VideoMode.Autodetect)
-					//	CurrentMode = DetectFromFileName(_fileName);
-
-
-					//Texture2DDescription frameTextureDescription = new Texture2DDescription()
-					//{
-					//	Width = w,
-					//	Height = h,
-					//	MipLevels = 1,
-					//	ArraySize = 1,
-					//	Format = Format.B8G8R8A8_UNorm,
-					//	Usage = ResourceUsage.Default,
-					//	SampleDescription = new SampleDescription(1, 0),
-					//	BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
-					//	CpuAccessFlags = CpuAccessFlags.None,
-					//	OptionFlags = ResourceOptionFlags.Shared
-					//};
-
-
-					//textureL = new SharpDX.Direct3D11.Texture2D(_device, frameTextureDescription);
-					//textureR = new SharpDX.Direct3D11.Texture2D(_device, frameTextureDescription);
-					//textureL = CreateTexture(_device, w, h);
-					//textureR = CreateTexture(_device, w, h);
 				}
 
 				_mediaEngineEx.Play();
@@ -508,14 +478,18 @@ namespace Bivrost.Bivrost360Player
 			Task t = Task.Factory.StartNew(() =>
 			{
 				_rendering = true;
+				int w = -1, h = -1;
 				while (_mediaEngine != null && isPlaying)
 				{
 					lock (criticalSection)
 					{
+						if(w < 0 || h < 0)
+							_mediaEngineEx.GetNativeVideoSize(out w, out h);
+
 						if(formatChangePending)
 						{
-							formatChangePending = false;
 							_mediaEngineEx.GetNativeVideoSize(out w, out h);
+							formatChangePending = false;
 							ChangeFormat(w, h);
 						}
 
@@ -532,135 +506,22 @@ namespace Bivrost.Bivrost360Player
 							if(ts > 0)
 							if (result && ts != lastTs)
 							{
-										//Duration = _mediaEngineEx.Duration;
-										//CurrentPosition = _mediaEngineEx.CurrentTime; 
+								//Duration = _mediaEngineEx.Duration;
+								//CurrentPosition = _mediaEngineEx.CurrentTime; 
 
+								try {
+									ClipCoords texL;
+									ClipCoords texR;
+									GetTextureClipCoordinates(out texL, out texR);
 
-										try {
-											//switch (CurrentMode)
-											//{
-											//	case VideoMode.Autodetect:
-											//		if (IsStereo)
-											//		{
-											//			_mediaEngine.TransferVideoFrame(textureL, topRect, new SharpDX.Rectangle(0, 0, w, h), null);
-											//			_mediaEngine.TransferVideoFrame(textureR, bottomRect, new SharpDX.Rectangle(0, 0, w, h), null);
-											//		}
-											//		else
-											//		{
-											//			_mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
-											//		}
-											//		break;
-											//	case VideoMode.Mono:
-											//		_mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
-											//		break;
-											//	case VideoMode.SideBySide:
-											//		_mediaEngine.TransferVideoFrame(textureL, leftRect, new SharpDX.Rectangle(0, 0, w, h), null);
-											//		_mediaEngine.TransferVideoFrame(textureR, rightRect, new SharpDX.Rectangle(0, 0, w, h), null);
-											//		break;
-											//	case VideoMode.SideBySideReversed:
-											//		_mediaEngine.TransferVideoFrame(textureL, rightRect, new SharpDX.Rectangle(0, 0, w, h), null);
-											//		_mediaEngine.TransferVideoFrame(textureR, leftRect, new SharpDX.Rectangle(0, 0, w, h), null);
-											//		break;
-											//	case VideoMode.TopBottom:
-											//		_mediaEngine.TransferVideoFrame(textureL, topRect, new SharpDX.Rectangle(0, 0, w, h/2), null);
-											//		_mediaEngine.TransferVideoFrame(textureR, bottomRect, new SharpDX.Rectangle(0, 0, w, h/2), null);
-											//		break;
-											//	case VideoMode.TopBottomReversed:
-											//		_mediaEngine.TransferVideoFrame(textureR, topRect, new SharpDX.Rectangle(0, 0, w, h/2), null);
-											//		_mediaEngine.TransferVideoFrame(textureL, bottomRect, new SharpDX.Rectangle(0, 0, w, h/2), null);
-											//		break;
-											//}
-
-
-
-
-											VideoNormalizedRect topRect = new VideoNormalizedRect()
-											{
-												Left = 0,
-												Top = 0,
-												Right = 1,
-												Bottom = 0.5f
-											};
-
-											VideoNormalizedRect bottomRect = new VideoNormalizedRect()
-											{
-												Left = 0,
-												Top = 0.5f,
-												Right = 1,
-												Bottom = 1f
-											};
-
-											VideoNormalizedRect leftRect = new VideoNormalizedRect()
-											{
-												Left = 0f,
-												Top = 0f,
-												Right = 0.5f,
-												Bottom = 1f
-											};
-
-											VideoNormalizedRect rightRect = new VideoNormalizedRect()
-											{
-												Left = 0.5f,
-												Top = 0f,
-												Right = 1f,
-												Bottom = 1f
-											};
-
-
-
-											switch (CurrentMode)
-											{
-												case VideoMode.Autodetect:
-													throw new ArgumentException();
-												case VideoMode.Mono:
-													_mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
-													break;
-												case VideoMode.SideBySide:
-													_mediaEngine.TransferVideoFrame(textureL, leftRect, new SharpDX.Rectangle(0, 0, w, h), null);
-													_mediaEngine.TransferVideoFrame(textureR, rightRect, new SharpDX.Rectangle(0, 0, w, h), null);
-													break;
-												case VideoMode.SideBySideReversed:
-													_mediaEngine.TransferVideoFrame(textureL, rightRect, new SharpDX.Rectangle(0, 0, w, h), null);
-													_mediaEngine.TransferVideoFrame(textureR, leftRect, new SharpDX.Rectangle(0, 0, w, h), null);
-													break;
-												case VideoMode.TopBottom:
-													_mediaEngine.TransferVideoFrame(textureL, topRect, new SharpDX.Rectangle(0, 0, w, h / 2), null);
-													_mediaEngine.TransferVideoFrame(textureR, bottomRect, new SharpDX.Rectangle(0, 0, w, h / 2), null);
-													break;
-												case VideoMode.TopBottomReversed:
-													_mediaEngine.TransferVideoFrame(textureR, topRect, new SharpDX.Rectangle(0, 0, w, h / 2), null);
-													_mediaEngine.TransferVideoFrame(textureL, bottomRect, new SharpDX.Rectangle(0, 0, w, h / 2), null);
-													break;
-											}
-
-
-											//VideoNormalizedRect srcL = new VideoNormalizedRect()
-											//{
-											//	Left = 0,
-											//	Top = 0,
-											//	Right = 1,
-											//	Bottom = 0.5f
-											//};
-											//SharpDX.Rectangle dstL = new SharpDX.Rectangle(0, 0, w, h);
-											//_mediaEngine.TransferVideoFrame(textureL, srcL, dstL, null);
-
-											//if(r)
-											//{
-											//	VideoNormalizedRect srcR = new VideoNormalizedRect()
-											//	{
-											//		Left = 0,
-											//		Top = 0.5f,
-											//		Right = 1,
-											//		Bottom = 1f
-											//	};
-											//	SharpDX.Rectangle dstR = new SharpDX.Rectangle(0, 0, w, h);
-											//	_mediaEngine.TransferVideoFrame(textureL, srcL, dstL, null);
-											//}
-
-										} catch (Exception exc)
-										{
-											Console.WriteLine("Playback exception " + exc.Message);
-										}
+									_mediaEngine.TransferVideoFrame(textureL, texL.NormalizedSrcRect, texL.DstRect(w,h), null);
+									if(texR != null)
+										_mediaEngine.TransferVideoFrame(textureR, texR.NormalizedSrcRect, texR.DstRect(w,h), null);
+								}
+								catch (Exception exc)
+								{
+									Console.WriteLine("Playback exception " + exc.Message);
+								}
 							}
 						} else Thread.Sleep(1);
 					}
@@ -688,6 +549,11 @@ namespace Bivrost.Bivrost360Player
 			}
 		}
 
+		/// <summary>
+		/// Should be executed in locked context
+		/// </summary>
+		/// <param name="w"></param>
+		/// <param name="h"></param>
 		private void ChangeFormat(int w, int h)
 		{
 			Texture2D tempL = textureL;
@@ -695,32 +561,10 @@ namespace Bivrost.Bivrost360Player
 
 			textureReleased = true;
 
-			switch (CurrentMode)
-			{
-				case VideoMode.Autodetect:
-					throw new ArgumentException();
-				case VideoMode.Mono:
-					textureL = CreateTexture(_device, w, h);
-					textureR = CreateTexture(_device, w, h);
-					//_mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
-					break;
-
-				case VideoMode.SideBySide:
-				case VideoMode.SideBySideReversed:
-					textureL = CreateTexture(_device, w / 2, h);
-					textureR = CreateTexture(_device, w / 2, h);
-					//_mediaEngine.TransferVideoFrame(textureL, rightRect, new SharpDX.Rectangle(0, 0, w, h), null);
-					//_mediaEngine.TransferVideoFrame(textureR, leftRect, new SharpDX.Rectangle(0, 0, w, h), null);
-					break;
-				case VideoMode.TopBottom:
-				case VideoMode.TopBottomReversed:
-					textureL = CreateTexture(_device, w, h / 2);
-					textureR = CreateTexture(_device, w, h / 2);
-					//_mediaEngine.TransferVideoFrame(textureR, topRect, new SharpDX.Rectangle(0, 0, w, h), null);
-					//_mediaEngine.TransferVideoFrame(textureL, bottomRect, new SharpDX.Rectangle(0, 0, w, h), null);
-					break;
-			}
-
+			ClipCoords texL, texR;
+			GetTextureClipCoordinates(out texL, out texR);
+			textureL = CreateTexture(_device, texL.Width(w), texL.Height(h));
+			textureR = CreateTexture(_device, texL.Width(w), texL.Height(h));	//< even if mono, this texture should be created
 
 			textureReleased = false;
 
@@ -939,29 +783,47 @@ namespace Bivrost.Bivrost360Player
 
 						var w = formatConverter.Size.Width;
 						var h = formatConverter.Size.Height;
+						log.Info($"Loaded image of size {w}x{h} from {_fileName}");
 						CurrentMode = ParseStereoMode(LoadedStereoMode, w, h);
 
-						var ww = w / 2;
-						var hh = h / 2;
 						const int bpp = 4;
 
-						int stride = ww * bpp;
 
-						using (var buffer = new SharpDX.DataStream(hh * stride, true, true))
+						ClipCoords texL, texR;
+						GetTextureClipCoordinates(out texL, out texR);
+
+
+						lock (criticalSection)
 						{
-							formatConverter.CopyPixels(new Rectangle(0, 0, ww, hh), stride, buffer);
-							var dataRect = new SharpDX.DataRectangle(buffer.DataPointer, stride);
-							textureL = CreateTexture(_device, ww, hh, dataRect);
+							textureReleased = true;
+
+							int stride = texL.Width(w) * bpp;
+							using (var buffer = new SharpDX.DataStream(texL.Height(h) * stride, true, true))
+							{
+								formatConverter.CopyPixels(texL.SrcRect(w, h), stride, buffer);
+								var dataRect = new SharpDX.DataRectangle(buffer.DataPointer, stride);
+								textureL = CreateTexture(_device, texL.Width(w), texL.Height(h), dataRect);
+							}
+
+							if (texR != null)
+							{
+								stride = texR.Width(w) * bpp;
+								using (var buffer = new SharpDX.DataStream(texR.Height(h) * stride, true, true))
+								{
+									formatConverter.CopyPixels(texR.SrcRect(w, h), stride, buffer);
+									var dataRect = new SharpDX.DataRectangle(buffer.DataPointer, stride);
+									textureR = CreateTexture(_device, texR.Width(w), texR.Height(h), dataRect);
+								}
+							}
+							else
+							{
+								textureR = CreateTexture(_device, texL.Width(w), texL.Height(h));   // an empty one still needs to be created
+							}
+
+							textureReleased = false;
 						}
 
-						using (var buffer = new SharpDX.DataStream(hh * stride, true, true))
-						{
-							formatConverter.CopyPixels(new Rectangle(ww, hh, ww, hh), stride, buffer);
-							var dataRect = new SharpDX.DataRectangle(buffer.DataPointer, stride);
-							textureR = CreateTexture(_device, ww, hh, dataRect);
-						}
 
-						textureReleased = false;
 						OnFormatChanged(textureL, textureR);
 						tempL?.Dispose();
 						tempR?.Dispose();
