@@ -149,7 +149,7 @@ namespace Bivrost.Bivrost360Player
 		{
 			ShowStartupPanel(false);
 			ShowDropFilesPanel(false);
-			shellView.VideoTime.Visibility = Visibility.Visible;
+			//shellView.VideoTime.Visibility = Visibility.Visible;
 		}
 
 
@@ -214,7 +214,7 @@ namespace Bivrost.Bivrost360Player
                 this.DXCanvas.Visibility = Visibility.Hidden;
                 ShowStartupPanel(true);
                 ShowDropFilesPanel(false);
-                shellView.VideoTime.Visibility = Visibility.Hidden;
+                //shellView.VideoTime.Visibility = Visibility.Hidden;
             });			
 		}
 

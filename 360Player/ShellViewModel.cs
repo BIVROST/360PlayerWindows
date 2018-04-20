@@ -80,12 +80,17 @@ namespace Bivrost.Bivrost360Player
 				NotifyOfPropertyChange(nameof(SelectedFileDescription));
 				NotifyOfPropertyChange(nameof(SelectedFileNameLabel));
 				NotifyOfPropertyChange(nameof(IsContentAVideo));
+				NotifyOfPropertyChange(nameof(ShouldShowVideoTime));
 			}
 		}
 
 		public bool IsContentAVideo => (SelectedServiceResult == null) 
 			? true 
 			: SelectedServiceResult.contentType == Streaming.ServiceResult.ContentType.video;
+
+		public bool ShouldShowVideoTime => (SelectedServiceResult == null)
+			? false
+			: SelectedServiceResult.contentType == Streaming.ServiceResult.ContentType.video && IsPlaying;
 
 		public bool IsFileSelected { get; set; }
 

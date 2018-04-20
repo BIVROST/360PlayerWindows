@@ -350,10 +350,12 @@
             <Slider x:Name="VideoProgressBar" Orientation="Horizontal" Minimum="0" Maximum="{Binding MaxTime, Mode=OneWay}" ClipToBounds="False" Style="{StaticResource MyCustomStyleForSlider}" IsMoveToPointEnabled="True"
 					cal:Message.Attach="[PreviewMouseDown] = [SliderLock]; [PreviewMouseUp] = [SliderUnlock]" LargeChange="0" SmallChange="0" VerticalAlignment="Top" Margin="0 -8 0 0"
 					Value="{Binding TimeValue}" Grid.ColumnSpan="3" Focusable="False"
+					Visibility="{Binding Path=IsContentAVideo, Converter={StaticResource BoolToVis}, FallbackValue=Visible}"
 					>
             </Slider>
 
-            <StackPanel Orientation="Horizontal" x:Name="playbackControlButtons" Grid.ColumnSpan="3" Height="68" Visibility="{Binding Path=IsContentAVideo, Converter={StaticResource BoolToVis}, FallbackValue=Hidden}">
+            <StackPanel Orientation="Horizontal" x:Name="playbackControlButtons" Grid.ColumnSpan="3" Height="68" 
+                        Visibility="{Binding Path=IsContentAVideo, Converter={StaticResource BoolToVis}, FallbackValue=Visible}">
                 <Button x:Name="FastRewind"  Width="36" Height="36" Margin="24 0 4 0">
                     <Button.Template>
                         <ControlTemplate TargetType="{x:Type Button}">
@@ -579,14 +581,18 @@
                     </ToggleButton.Template>
                 </ToggleButton>
 
-                <TextBlock x:Name="BufferingStatus" Grid.Column="1" Foreground="White" Text="Buffering media..." HorizontalAlignment="Right" VerticalAlignment="Center" Margin="18 0 18 0" />
+                <TextBlock x:Name="BufferingStatus" Grid.Column="1" Foreground="White" Text="Buffering media..." 
+                           HorizontalAlignment="Right" VerticalAlignment="Center" Margin="18 0 18 0" />
 
 
             </StackPanel>
 
             <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Grid.Column="2" Height="68">
 
-                <TextBlock x:Name="VideoTime" Grid.Column="1" Foreground="White" Text="0:00 / 0:00" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="5 0 18 0" />
+                <TextBlock x:Name="VideoTime" Grid.Column="1" Foreground="White" Text="0:00 / 0:00" 
+                           HorizontalAlignment="Right" VerticalAlignment="Center" Margin="5 0 18 0"
+                    Visibility="{Binding Path=ShouldShowVideoTime, Converter={StaticResource BoolToVis}, FallbackValue=Visible}"
+                />
 
 
 
