@@ -227,18 +227,27 @@ namespace Bivrost.Bivrost360Player
 		{
 			switch(extension.ToLower())
 			{
-				case ".mp4": return true;
-				case ".wmv": return true;
-				case ".avi": return true;
-				case ".m4v": return true;
-				case ".mov": return true;
-				default: return false;
+				case ".mp4":
+				case ".wmv":
+				case ".avi":
+				case ".m4v":
+				case ".mov":
+				case ".png":
+				case ".jpg":
+				case ".jpeg":	// TODO: tiff?
+					return true;
+
+				default:
+					return false;
 			}
 		}
 
 		public static string ExtensionsFilter()
 		{
-			return "Video MP4|*.mp4|Video M4V|*.m4v|Video MOV|*.mov|Video AVI|*.avi|Video WMV|*.wmv";
+			return
+				"All supported formats|*.mp4; *.m4v; *.mov; *.avi; *.wmv; *.png; *.jpg; *.jpeg"
+				+"|Video (*.mp4; *.m4v; *.mov; *.avi; *.wmv)|*.mp4; *.m4v; *.mov; *.avi; *.wmv"
+				+"|Panorama (*.png; *.jpg; *.jpeg)|*.png; *.jpg; *.jpeg";
 		}
 
 		public void Init()
@@ -351,20 +360,20 @@ namespace Bivrost.Bivrost360Player
 			}
 		}
 
-		private MediaSource CreateMediaSource(string sURL)
-		{
-			SourceResolver sourceResolver = new SourceResolver();
-			ComObject comObject;
-			comObject = sourceResolver.CreateObjectFromURL(sURL, SourceResolverFlags.MediaSource | SourceResolverFlags.ContentDoesNotHaveToMatchExtensionOrMimeType);
-			return comObject.QueryInterface<MediaSource>();
-		}
+		//private MediaSource CreateMediaSource(string sURL)
+		//{
+		//	SourceResolver sourceResolver = new SourceResolver();
+		//	ComObject comObject;
+		//	comObject = sourceResolver.CreateObjectFromURL(sURL, SourceResolverFlags.MediaSource | SourceResolverFlags.ContentDoesNotHaveToMatchExtensionOrMimeType);
+		//	return comObject.QueryInterface<MediaSource>();
+		//}
 
-		public static Guid ToGuid(long value)
-		{
-			byte[] guidData = new byte[16];
-			Array.Copy(BitConverter.GetBytes(value), guidData, 8);
-			return new Guid(guidData);
-		}
+		//public static Guid ToGuid(long value)
+		//{
+		//	byte[] guidData = new byte[16];
+		//	Array.Copy(BitConverter.GetBytes(value), guidData, 8);
+		//	return new Guid(guidData);
+		//}
 
 		public static Texture2D CreateTexture(SharpDX.Direct3D11.Device _device, int width, int height)
 		{
