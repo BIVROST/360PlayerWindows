@@ -424,8 +424,7 @@ namespace Bivrost.Bivrost360Player
 				CurrentHeadset.Media = SelectedServiceResult;
 			}
 
-			string mediaFile = SelectedFileName;
-			Task.Factory.StartNew(() => _mediaDecoder.LoadMedia(mediaFile));
+			Task.Factory.StartNew(() => _mediaDecoder.LoadMedia(SelectedServiceResult));
 		}
 
 		protected override void OnViewAttached(object view, object context)

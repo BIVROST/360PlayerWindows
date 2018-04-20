@@ -1,4 +1,5 @@
-﻿using SharpDX;
+﻿using Bivrost.Bivrost360Player.Streaming;
+using SharpDX;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
@@ -77,7 +78,7 @@ namespace Bivrost.Bivrost360Player
 		public bool IsPaused { get {
 				/////lock(criticalSection)
 				//{
-					return _initialized ? (bool)_mediaEngineEx.IsPaused : false;
+					return (_initialized ? (bool)_mediaEngineEx.IsPaused : false) || panoTexture != null;
 				//}
 			} }
 
@@ -151,6 +152,11 @@ namespace Bivrost.Bivrost360Player
 		public event Action<Texture2D, Texture2D> OnFormatChanged = delegate { };
 		private bool textureReleased = true;
 		public bool TextureReleased { get { return textureReleased; } }
+
+		/// <summary>
+		/// Used instead of mediaEngine to show non-animated content.
+		/// </summary>
+		private Texture2D panoTexture = null;
 
         VideoNormalizedRect topRect = new VideoNormalizedRect()
 		{
@@ -394,6 +400,25 @@ namespace Bivrost.Bivrost360Player
 			return new SharpDX.Direct3D11.Texture2D(_device, frameTextureDescription);
 		}
 
+		public static Texture2D CreateTexture(SharpDX.Direct3D11.Device _device, int width, int height, DataRectangle dataRectangle)
+		{
+			Texture2DDescription frameTextureDescription = new Texture2DDescription()
+			{
+				Width = width,
+				Height = height,
+				MipLevels = 1,
+				ArraySize = 1,
+				Format = Format.B8G8R8X8_UNorm,
+				Usage = ResourceUsage.Default,
+				SampleDescription = new SampleDescription(1, 0),
+				BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
+				CpuAccessFlags = CpuAccessFlags.None,
+				OptionFlags = ResourceOptionFlags.Shared
+			};
+
+			return new SharpDX.Direct3D11.Texture2D(_device, frameTextureDescription, dataRectangle);
+		}
+
 		public void Play()
 		{
 			lock(criticalSection)
@@ -473,60 +498,8 @@ namespace Bivrost.Bivrost360Player
 						if(formatChangePending)
 						{
 							formatChangePending = false;
-							Texture2D tempL = textureL;
-							Texture2D tempR = textureR;
 							_mediaEngineEx.GetNativeVideoSize(out w, out h);
-
-							textureReleased = true;
-
-							switch (CurrentMode)
-							{
-								case VideoMode.Autodetect:
-									if (IsStereo)
-									{
-										textureL = CreateTexture(_device, w, h);
-										textureR = CreateTexture(_device, w, h);
-										//_mediaEngine.TransferVideoFrame(textureL, topRect, new SharpDX.Rectangle(0, 0, w, h), null);
-										//_mediaEngine.TransferVideoFrame(textureR, bottomRect, new SharpDX.Rectangle(0, 0, w, h), null);
-									}
-									else
-									{
-										textureL = CreateTexture(_device, w, h);
-										textureR = CreateTexture(_device, w, h);
-										//_mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
-									}
-									break;
-								case VideoMode.Mono:
-									textureL = CreateTexture(_device, w, h);
-									textureR = CreateTexture(_device, w, h);
-									//_mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
-									break;
-
-								case VideoMode.SideBySide:
-								case VideoMode.SideBySideReversed:
-									textureL = CreateTexture(_device, w/2, h);
-									textureR = CreateTexture(_device, w/2, h);
-									//_mediaEngine.TransferVideoFrame(textureL, rightRect, new SharpDX.Rectangle(0, 0, w, h), null);
-									//_mediaEngine.TransferVideoFrame(textureR, leftRect, new SharpDX.Rectangle(0, 0, w, h), null);
-									break;
-								case VideoMode.TopBottom:
-								case VideoMode.TopBottomReversed:
-									textureL = CreateTexture(_device, w, h/2);
-									textureR = CreateTexture(_device, w, h/2);
-									//_mediaEngine.TransferVideoFrame(textureR, topRect, new SharpDX.Rectangle(0, 0, w, h), null);
-									//_mediaEngine.TransferVideoFrame(textureL, bottomRect, new SharpDX.Rectangle(0, 0, w, h), null);
-									break;
-							}
-
-							
-							textureReleased = false;
-
-							//OnReleaseTexture();
-							OnFormatChanged(textureL, textureR);
-							if (waitForFormatChange) waitForFormatChange = false;
-
-							tempL?.Dispose();
-							tempR?.Dispose();
+							ChangeFormat(w, h);
 						}
 
 						if(!textureReleased)
@@ -594,6 +567,65 @@ namespace Bivrost.Bivrost360Player
 			});
 			
 		}
+
+
+		private void ChangeFormat(int w, int h)
+		{
+			Texture2D tempL = textureL;
+			Texture2D tempR = textureR;
+
+			textureReleased = true;
+
+			switch (CurrentMode)
+			{
+				case VideoMode.Autodetect:
+					if (IsStereo)
+					{
+						textureL = CreateTexture(_device, w, h);
+						textureR = CreateTexture(_device, w, h);
+						//_mediaEngine.TransferVideoFrame(textureL, topRect, new SharpDX.Rectangle(0, 0, w, h), null);
+						//_mediaEngine.TransferVideoFrame(textureR, bottomRect, new SharpDX.Rectangle(0, 0, w, h), null);
+					}
+					else
+					{
+						textureL = CreateTexture(_device, w, h);
+						textureR = CreateTexture(_device, w, h);
+						//_mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
+					}
+					break;
+				case VideoMode.Mono:
+					textureL = CreateTexture(_device, w, h);
+					textureR = CreateTexture(_device, w, h);
+					//_mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
+					break;
+
+				case VideoMode.SideBySide:
+				case VideoMode.SideBySideReversed:
+					textureL = CreateTexture(_device, w / 2, h);
+					textureR = CreateTexture(_device, w / 2, h);
+					//_mediaEngine.TransferVideoFrame(textureL, rightRect, new SharpDX.Rectangle(0, 0, w, h), null);
+					//_mediaEngine.TransferVideoFrame(textureR, leftRect, new SharpDX.Rectangle(0, 0, w, h), null);
+					break;
+				case VideoMode.TopBottom:
+				case VideoMode.TopBottomReversed:
+					textureL = CreateTexture(_device, w, h / 2);
+					textureR = CreateTexture(_device, w, h / 2);
+					//_mediaEngine.TransferVideoFrame(textureR, topRect, new SharpDX.Rectangle(0, 0, w, h), null);
+					//_mediaEngine.TransferVideoFrame(textureL, bottomRect, new SharpDX.Rectangle(0, 0, w, h), null);
+					break;
+			}
+
+
+			textureReleased = false;
+
+			//OnReleaseTexture();
+			OnFormatChanged(textureL, textureR);
+			if (waitForFormatChange) waitForFormatChange = false;
+
+			tempL?.Dispose();
+			tempR?.Dispose();
+		}
+
 
 		public void Pause()
 		{
@@ -711,8 +743,10 @@ namespace Bivrost.Bivrost360Player
 		private string _fileName;
         public string FileName { get { return _fileName; } }
 
-		public void LoadMedia(string fileName)
+		public void LoadMedia(ServiceResult serviceResult)
 		{
+			string fileName = serviceResult.BestSupportedStream;
+
 			Console.WriteLine("Load media: " + fileName);
 
 			_fileName = "";
@@ -725,32 +759,95 @@ namespace Bivrost.Bivrost360Player
 				Stop(true);
 				Thread.Sleep(5);
 			}
-			Init();
-            			
+
 			_fileName = fileName;
 
-			//Collection collection;
-			//MediaFactory.CreateCollection(out collection);
+			switch (serviceResult.contentType)
+			{
+				case ServiceResult.ContentType.video:
+					Init();
 
-			//SourceResolver sourceResolver = new SourceResolver();
-			//var mediaSource1 = sourceResolver.CreateObjectFromURL(@"D:\TestVideos\maroon.m4a", SourceResolverFlags.MediaSource | SourceResolverFlags.ContentDoesNotHaveToMatchExtensionOrMimeType).QueryInterface<MediaSource>();
-			//var mediaSource2 = sourceResolver.CreateObjectFromURL(@"D:\TestVideos\maroon-video.mp4", SourceResolverFlags.MediaSource | SourceResolverFlags.ContentDoesNotHaveToMatchExtensionOrMimeType).QueryInterface<MediaSource>();
-			//collection.AddElement(mediaSource1);
-			//collection.AddElement(mediaSource2);
-			//MediaSource aggregateSource;
-			//MediaFactory.CreateAggregateSource(collection, out aggregateSource);
 
-			//MediaEngineSrcElementsEx
-			formatCounter = 0;
-			textureReleased = true;
-			waitForFormatChange = true;
-			_mediaEngineEx.Source = _fileName;
-            _mediaEngineEx.Preload = MediaEnginePreload.Automatic;
-			_mediaEngineEx.Load();
+					//Collection collection;
+					//MediaFactory.CreateCollection(out collection);
+
+					//SourceResolver sourceResolver = new SourceResolver();
+					//var mediaSource1 = sourceResolver.CreateObjectFromURL(@"D:\TestVideos\maroon.m4a", SourceResolverFlags.MediaSource | SourceResolverFlags.ContentDoesNotHaveToMatchExtensionOrMimeType).QueryInterface<MediaSource>();
+					//var mediaSource2 = sourceResolver.CreateObjectFromURL(@"D:\TestVideos\maroon-video.mp4", SourceResolverFlags.MediaSource | SourceResolverFlags.ContentDoesNotHaveToMatchExtensionOrMimeType).QueryInterface<MediaSource>();
+					//collection.AddElement(mediaSource1);
+					//collection.AddElement(mediaSource2);
+					//MediaSource aggregateSource;
+					//MediaFactory.CreateAggregateSource(collection, out aggregateSource);
+
+					//MediaEngineSrcElementsEx
+					formatCounter = 0;
+					textureReleased = true;
+					waitForFormatChange = true;
+					_mediaEngineEx.Source = _fileName;
+					_mediaEngineEx.Preload = MediaEnginePreload.Automatic;
+					_mediaEngineEx.Load();
+					break;
+
+				case ServiceResult.ContentType.image:
+
+					using (var imagingFactory = new SharpDX.WIC.ImagingFactory2())
+					{
+						var bitmapDecoder = new SharpDX.WIC.BitmapDecoder(
+							imagingFactory,
+							_fileName,
+							SharpDX.WIC.DecodeOptions.CacheOnDemand
+						);
+						
+						using (var bitmapSource = new SharpDX.WIC.FormatConverter(imagingFactory))
+						{
+							bitmapSource.Initialize(
+								bitmapDecoder.GetFrame(0),
+								SharpDX.WIC.PixelFormat.Format32bppBGR,       // CreateTexture uses B8G8R8X8_UNorm
+								SharpDX.WIC.BitmapDitherType.None,
+								null,
+								0.0,
+								SharpDX.WIC.BitmapPaletteType.Custom
+							);
+
+							int stride = bitmapSource.Size.Width * 4;
+							using (var buffer = new SharpDX.DataStream(bitmapSource.Size.Height * stride, true, true))
+							{
+								// Copy the content of the WIC to the buffer
+								bitmapSource.CopyPixels(stride, buffer);
+								var dataRect = new SharpDX.DataRectangle(buffer.DataPointer, stride);
+								var tempL = textureL;
+								var tempR = textureR;
+								textureL = CreateTexture(_device, bitmapSource.Size.Width, bitmapSource.Size.Height, dataRect);
+								textureR = CreateTexture(_device, bitmapSource.Size.Width, bitmapSource.Size.Height, dataRect);
+
+
+								//_mediaEngine.TransferVideoFrame(textureR, topRect, new SharpDX.Rectangle(0, 0, w, h / 2), null);
+								//panoTexture = CreateTexture(_device, bitmapSource.Size.Width, bitmapSource.Size.Height, dataRect);
+								//_device.ImmediateContext.CopySubresourceRegion()
+
+
+								textureReleased = false;
+								OnFormatChanged(textureL, textureR);
+								tempL?.Dispose();
+								tempR?.Dispose();
+
+								// TODO: use panoTexture
+								// TODO: stereoscopy
+								// TODO: cleanup source
+
+								OnReady?.Invoke(-1);
+							}
+						}
+					}
+
+					break;
+			}
 			
 		}
 
+
 		public MediaEngine Engine { get { return this._mediaEngine; } }
+
 
 		public void Shutdown()
 		{
