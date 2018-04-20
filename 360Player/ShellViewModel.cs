@@ -647,7 +647,8 @@ namespace Bivrost.Bivrost360Player
 				NotifyOfPropertyChange(null);
 
 				playerWindow.Focus();
-				AnimateIndicator(shellView.PlayIndicator);
+				if(IsContentAVideo)
+					AnimateIndicator(shellView.PlayIndicator);
 			});
 
 			//});			
@@ -769,7 +770,8 @@ namespace Bivrost.Bivrost360Player
 				shellView.PlayPause.Visibility = Visibility.Visible;
 				shellView.Pause.Visibility = Visibility.Collapsed;
 				NotifyOfPropertyChange(() => CanPlay);
-				AnimateIndicator(shellView.PauseIndicator);
+				if (IsContentAVideo)
+					AnimateIndicator(shellView.PauseIndicator);
 			});
 
 			VRUIPause();
@@ -788,7 +790,8 @@ namespace Bivrost.Bivrost360Player
 				shellView.PlayPause.Visibility = Visibility.Collapsed;
 				shellView.Pause.Visibility = Visibility.Visible;
 				NotifyOfPropertyChange(() => CanPlay);
-				AnimateIndicator(shellView.PlayIndicator);
+				if (IsContentAVideo)
+					AnimateIndicator(shellView.PlayIndicator);
 
 				VRUIUnpause();
 			});
@@ -897,21 +900,21 @@ namespace Bivrost.Bivrost360Player
 		}
 
 		public bool CanPlay { get { return (!IsPlaying || IsPaused) && IsFileSelected; } }
-		public bool CanStopOrRewind { get { return IsPlaying; } }
+		public bool CanStopOrRewind { get { return IsPlaying && !_mediaDecoder.IsDisplayingStaticContent; } }
 
 		//public bool CanOpenFile { get { return !IsPlaying; } }
 
 
 		public void Stop()
 		{
-			LoggerManager.Info("FILE ENDED");
+			LoggerManager.Info("File ended");
 			if (Fullscreen) if (!Logic.Instance.settings.DoNotExitFullscreenOnStop) ToggleFullscreen(true);
 			//space press hack
 			Execute.OnUIThread(() => shellView.VideoProgressBar.Focus());
 			ShowBars();
 			ShowStartupUI();
 
-			LoggerManager.Info("STOP STOP STOP");
+			LoggerManager.Info("Media stopped");
 
 			this.DXCanvas.Scene = null;
 
@@ -954,6 +957,8 @@ namespace Bivrost.Bivrost360Player
 			});
 
 			waitForPlaybackStop.Set();
+
+			//SelectedServiceResult = null;
 
 			NotifyOfPropertyChange(() => PlayerTitle);
 			NotifyOfPropertyChange(() => CanStopOrRewind);

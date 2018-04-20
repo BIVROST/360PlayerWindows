@@ -63,7 +63,7 @@ namespace Bivrost.Bivrost360Player
 		public Texture2D TextureL { get { return this.textureL; } }
 		public Texture2D TextureR { get { return this.textureR; } }
 
-		public bool IsStereo { get { return IsPlaying ? _stereoVideo : false; } }
+		public bool IsStereo { get { return isPlaying ? _stereoVideo : false; } }
 		public bool IsStereoRendered { get
 			{
 				switch(StereoMode)
@@ -74,13 +74,17 @@ namespace Bivrost.Bivrost360Player
 				}
 			} }
 
-		public bool IsPlaying { get; private set; }
+		public bool IsPlaying => isPlaying || IsDisplayingStaticContent;
+		private bool isPlaying;
 		public bool IsPaused { get {
 				/////lock(criticalSection)
 				//{
-					return (_initialized ? (bool)_mediaEngineEx.IsPaused : false) || panoTexture != null;
+				if (IsDisplayingStaticContent) return true;
+
+				return (_initialized ? (bool)_mediaEngineEx.IsPaused : false);
 				//}
 			} }
+		public bool IsDisplayingStaticContent => panoTexture != null;
 
 
 		private bool _loop = false;
@@ -192,7 +196,7 @@ namespace Bivrost.Bivrost360Player
 
 		public MediaDecoder()
 		{
-			IsPlaying = false;
+			isPlaying = false;
 			Ready = false;
 			MediaDecoder._instance = this;
             if (MediaDecoder.OnInstantiated != null)
@@ -423,7 +427,9 @@ namespace Bivrost.Bivrost360Player
 		{
 			lock(criticalSection)
 			{
-				if (IsPlaying) return;
+				if (isPlaying) return;
+				if (IsDisplayingStaticContent) return;
+
 
 				if (!_initialized) return;
 				if (!Ready) return;
@@ -485,13 +491,13 @@ namespace Bivrost.Bivrost360Player
 				_mediaEngineEx.Play();
                 ShellViewModel.SendEvent("moviePlaybackStarted");
                 //_mediaEngineEx.Volume = 0.2;
-                IsPlaying = true;
+                isPlaying = true;
 			}
 
 			Task t = Task.Factory.StartNew(() =>
 			{
 				_rendering = true;
-				while (_mediaEngine != null && IsPlaying)
+				while (_mediaEngine != null && isPlaying)
 				{
 					lock (criticalSection)
 					{
@@ -629,7 +635,8 @@ namespace Bivrost.Bivrost360Player
 
 		public void Pause()
 		{
-			if(IsPlaying)
+			if (IsDisplayingStaticContent) return;
+			if(isPlaying)
 			{
 				lock (criticalSection)
 				{
@@ -641,7 +648,8 @@ namespace Bivrost.Bivrost360Player
 
 		public void Unpause()
 		{
-			if (IsPlaying)
+			if (IsDisplayingStaticContent) return;
+			if (isPlaying)
 			{
 				lock (criticalSection)
 				{
@@ -653,7 +661,8 @@ namespace Bivrost.Bivrost360Player
 
 		public void TogglePause()
 		{
-			if(IsPlaying)
+			if (IsDisplayingStaticContent) return;
+			if (isPlaying)
 			{
 				if (IsPaused) Unpause();
 				else Pause();
@@ -678,7 +687,8 @@ namespace Bivrost.Bivrost360Player
 
 		public void Seek(double time)
 		{
-			if(IsPlaying)
+			if (IsDisplayingStaticContent) return;
+			if (isPlaying)
 			{
 				lock (criticalSection)
 				{	
@@ -700,14 +710,14 @@ namespace Bivrost.Bivrost360Player
 			textureReleased = true;
 			//OnReleaseTexture();			
 
-			if (!force)
+			if (!force && !IsDisplayingStaticContent)
 			{
 				if (!_initialized) return;
-				if (!IsPlaying) return;
+				if (!isPlaying) return;
 			}
 
 			waitForRenderingEnd.Reset();
-			IsPlaying = false;
+			isPlaying = false;
 			
 			if (_rendering) {
 
@@ -718,15 +728,22 @@ namespace Bivrost.Bivrost360Player
 
 			lock (criticalSection)
 			{
-                try {
-                    _mediaEngineEx.Shutdown();
-                    _mediaEngineEx.Dispose();
-                    _mediaEngine.Dispose();
-                }catch(Exception)
-                {
+				if (_mediaEngineEx != null)
+				{
+					try
+					{
+						_mediaEngineEx.Shutdown();
+						_mediaEngineEx.Dispose();
+						_mediaEngine.Dispose();
+					}
+					catch (Exception e)
+					{
+						;
+					}
+				}
 
-                }
-
+				panoTexture?.Dispose();
+				panoTexture = null;
 
 				textureL?.Dispose();
 				textureR?.Dispose();
@@ -761,6 +778,9 @@ namespace Bivrost.Bivrost360Player
 			}
 
 			_fileName = fileName;
+
+			panoTexture?.Dispose();
+			panoTexture = null;
 
 			switch (serviceResult.contentType)
 			{
@@ -821,8 +841,9 @@ namespace Bivrost.Bivrost360Player
 								textureR = CreateTexture(_device, bitmapSource.Size.Width, bitmapSource.Size.Height, dataRect);
 
 
+
 								//_mediaEngine.TransferVideoFrame(textureR, topRect, new SharpDX.Rectangle(0, 0, w, h / 2), null);
-								//panoTexture = CreateTexture(_device, bitmapSource.Size.Width, bitmapSource.Size.Height, dataRect);
+								panoTexture = CreateTexture(_device, bitmapSource.Size.Width, bitmapSource.Size.Height, dataRect);
 								//_device.ImmediateContext.CopySubresourceRegion()
 
 
@@ -835,6 +856,8 @@ namespace Bivrost.Bivrost360Player
 								// TODO: stereoscopy
 								// TODO: cleanup source
 
+
+								//IsPlaying = true;
 								OnReady?.Invoke(-1);
 							}
 						}
