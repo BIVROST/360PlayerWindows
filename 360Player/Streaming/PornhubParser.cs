@@ -104,7 +104,7 @@ namespace Bivrost.Bivrost360Player.Streaming
 				{
 					var stream = new VideoStream()
 					{
-						container = VideoContainer.mp4,
+						container = Container.mp4,
 						url = md.videoUrl,
 						hasAudio = true,
 						quality = 0,

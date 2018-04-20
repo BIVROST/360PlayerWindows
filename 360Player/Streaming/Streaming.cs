@@ -31,7 +31,7 @@ namespace Bivrost.Bivrost360Player.Streaming
 	//}
 
 	public enum VideoCodec { h264, h265, vp8, vp9, other }
-	[Flags] public enum VideoContainer { mp4 = 1, webm = 2, avi = 4, wmv = 8, flv = 16, ogg = 32, _3gp = 64, hls = 128 }
+	[Flags] public enum Container { mp4 = 1, webm = 2, avi = 4, wmv = 8, flv = 16, ogg = 32, _3gp = 64, hls = 128, png = 256, jpeg = 512 }
 	public enum AudioCodec { aac, mp3, opus, other }
 	public enum AudioContainer { webm, m4a, mp3, in_video }
 
@@ -57,7 +57,7 @@ namespace Bivrost.Bivrost360Player.Streaming
 		public long? size;
 
 		public bool hasAudio;
-		public VideoContainer container;
+		public Container container;
 		public VideoCodec? videoCodec;
 
 
@@ -171,6 +171,7 @@ namespace Bivrost.Bivrost360Player.Streaming
 			}
 		}
 
+
 		public ServiceResult(string originalURL, string serviceName, string mediaId)
         {
             this.originalURL = originalURL;
@@ -184,7 +185,7 @@ namespace Bivrost.Bivrost360Player.Streaming
 		/// <param name="containerType">container that will be required</param>
         /// <param name="mayNotHaveAudio">set to true to make audio optional</param>
 		/// <returns>VideoStream or null when not found</returns>
-		public VideoStream BestQualityVideoStream(VideoContainer containerType, bool mayNotHaveAudio = false)
+		public VideoStream BestQualityVideoStream(Container containerType, bool mayNotHaveAudio = false)
 		{
             VideoStream best = videoStreams
                 .Where(vs => vs.hasAudio || mayNotHaveAudio)
@@ -196,6 +197,9 @@ namespace Bivrost.Bivrost360Player.Streaming
             return best;
 		}
 
+		public string BestSupportedStream => BestQualityVideoStream(
+					Container.mp4 | Container.hls | Container.avi | Container.wmv | Container.png | Container.jpeg
+			).url;
 
 		public override string ToString()
 		{
@@ -289,38 +293,46 @@ namespace Bivrost.Bivrost360Player.Streaming
 		}
 
 
-		protected VideoContainer GuessContainerFromExtension(string path)
+		protected Container GuessContainerFromExtension(string path)
 		{
 			string extension = System.IO.Path.GetExtension(path).ToLowerInvariant();
 			switch(extension)
 			{
 
 				case ".avi":
-					return VideoContainer.avi;
+					return Container.avi;
 
 				case ".flv":
-					return VideoContainer.flv;
+					return Container.flv;
 
 				case ".m3u":
 				case ".m3u8":
-					return VideoContainer.hls;
+					return Container.hls;
 
 				case ".webm":
-					return VideoContainer.webm;
+					return Container.webm;
 
 				case ".ogg":
 				case ".ogv":
-					return VideoContainer.ogg;
+					return Container.ogg;
 
 				case ".3gp":
-					return VideoContainer._3gp;
+					return Container._3gp;
 
 				case ".wmv":
-					return VideoContainer.wmv;
+					return Container.wmv;
 
 				case ".m4v":
 				case ".mp4":
-					return VideoContainer.mp4;
+					return Container.mp4;
+
+				case ".png":
+					return Container.png;
+
+				case ".jpe":
+				case ".jpeg":
+				case ".jpg":
+					return Container.jpeg;
 
 				case "":
 				default:

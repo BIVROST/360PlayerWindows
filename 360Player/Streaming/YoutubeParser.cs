@@ -173,21 +173,21 @@ namespace Bivrost.Bivrost360Player.Streaming
                         int? tbr = (int?)format["tbr"];
                         int? vbr = (int?)format["vbr"];
 
-                        VideoContainer vc;
+                        Container vc;
                         switch ((string)format["ext"])
                         {
                             case "mp4":
-                                vc = VideoContainer.mp4;
+                                vc = Container.mp4;
                                 break;
                             case "webm":
-                                vc = VideoContainer.webm;
+                                vc = Container.webm;
                                 break;
                             case "3gp":
-                                vc = VideoContainer._3gp;
+                                vc = Container._3gp;
                                 break;
                             case "ogv":
                             case "ogg":
-                                vc = VideoContainer.ogg;
+                                vc = Container.ogg;
                                 break;
                             default:
                                 throw new StreamParsingFailed("Unknown video extension: " + format["ext"]);

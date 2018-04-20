@@ -45,7 +45,9 @@ namespace Bivrost.Bivrost360Player.Streaming
             byte[] hash = sha.ComputeHash(data);
             string mediaId = $"sha1+len:{string.Concat(Array.ConvertAll(hash, x => x.ToString("x2")))}+{fileInfo.Length}";
 
-            return new ServiceResult(path, ServiceName, mediaId)
+			var container = GuessContainerFromExtension(path);
+
+			return new ServiceResult(path, ServiceName, mediaId)
 			{
 				projection = ProjectionMode.Sphere,
 				stereoscopy = GuessStereoscopyFromFileName(uri),
@@ -55,14 +57,37 @@ namespace Bivrost.Bivrost360Player.Streaming
 					{
 						url = uri,
 						hasAudio = true, // TODO
-                        container = GuessContainerFromExtension(path)
+                        container = container
                     }
 				},
-				title = Path.GetFileNameWithoutExtension(uri)
+				title = Path.GetFileNameWithoutExtension(uri),
+				contentType = GuessContentTypeFromContainer(container)
 			};
 		}
 
-        public override string ServiceName
+		private ServiceResult.ContentType GuessContentTypeFromContainer(Container container)
+		{
+			switch(container)
+			{
+				case Container.png:
+				case Container.jpeg:
+					return ServiceResult.ContentType.image;
+
+				case Container.avi:
+				case Container.flv:
+				case Container.hls:
+				case Container.mp4:
+				case Container.ogg:
+				case Container.webm:
+				case Container.wmv:
+				case Container._3gp:
+					return ServiceResult.ContentType.video;
+				default:
+					throw new Exception("Unknown container type");
+			}
+		}
+
+		public override string ServiceName
         {
             get { return "Local file"; }
         }

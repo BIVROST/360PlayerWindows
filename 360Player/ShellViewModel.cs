@@ -66,8 +66,7 @@ namespace Bivrost.Bivrost360Player
 		public string SelectedFileNameLabel => SelectedServiceResult?.TitleWithFallback ?? "";
 
 
-		public string SelectedFileName => SelectedServiceResult?.BestQualityVideoStream(
-					Streaming.VideoContainer.mp4 | Streaming.VideoContainer.hls | Streaming.VideoContainer.avi | Streaming.VideoContainer.wmv).url;
+		public string SelectedFileName => SelectedServiceResult?.BestSupportedStream;
 
 		private Streaming.ServiceResult _selectedServiceResult = null;
 		public Streaming.ServiceResult SelectedServiceResult
