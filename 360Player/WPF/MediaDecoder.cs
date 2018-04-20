@@ -768,6 +768,10 @@ namespace Bivrost.Bivrost360Player
 
 		public void LoadMedia(ServiceResult serviceResult)
 		{
+			Projection = serviceResult.projection;
+			LoadedStereoMode = serviceResult.stereoscopy;
+
+
 			string fileName = serviceResult.BestSupportedStream;
 
 			Console.WriteLine("Load media: " + fileName);

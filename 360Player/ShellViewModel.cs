@@ -25,6 +25,7 @@ using LoggerManager = Bivrost.Log.LoggerManager;
 using Bivrost.AnalyticsForVR;
 using Bivrost.Log;
 using Bivrost.MOTD;
+using Bivrost.Bivrost360Player.Streaming;
 
 namespace Bivrost.Bivrost360Player
 {
@@ -68,8 +69,8 @@ namespace Bivrost.Bivrost360Player
 
 		public string SelectedFileName => SelectedServiceResult?.BestSupportedStream;
 
-		private Streaming.ServiceResult _selectedServiceResult = null;
-		public Streaming.ServiceResult SelectedServiceResult
+		private ServiceResult _selectedServiceResult = null;
+		public ServiceResult SelectedServiceResult
         {
 			get { return _selectedServiceResult; }
 			set
@@ -411,11 +412,20 @@ namespace Bivrost.Bivrost360Player
 
 
 
-		public void LoadMedia(bool autoplay = true)
+		public void LoadMedia(ServiceResult result, bool autoplay = true)
 		{
+
+			SelectedServiceResult = result;
+
+			IsFileSelected = true;
+
+			Recents.AddRecent(result);
+			UpdateFileRecentsMenuState();
+
 			_ready = false;
 			if (!IsFileSelected) return;
 			this.autoplay = autoplay;
+
 			//if (!string.IsNullOrWhiteSpace(SelectedFileName))
 			//{
 			//	if (Path.GetFileNameWithoutExtension(SelectedFileName).ToLower().Contains("fbcube"))
@@ -429,7 +439,7 @@ namespace Bivrost.Bivrost360Player
 				CurrentHeadset.Media = SelectedServiceResult;
 			}
 
-			Task.Factory.StartNew(() => _mediaDecoder.LoadMedia(SelectedServiceResult));
+			Task.Factory.StartNew(() => _mediaDecoder.LoadMedia(result));
 		}
 
 		protected override void OnViewAttached(object view, object context)
@@ -451,9 +461,9 @@ namespace Bivrost.Bivrost360Player
 					{
 						//SelectedFileName = Logic.Instance.settings.AutoPlayFile.Trim();
 
-						SelectedServiceResult = Streaming.StreamingFactory.Instance.GetStreamingInfo(Logic.Instance.settings.AutoPlayFile.Trim());
+						var result = StreamingFactory.Instance.GetStreamingInfo(Logic.Instance.settings.AutoPlayFile.Trim());
 
-						LoadMedia();
+						LoadMedia(result);
 						//Play();
 					}
 				}
@@ -674,8 +684,8 @@ namespace Bivrost.Bivrost360Player
 				}
 			}
 
-			_mediaDecoder.Projection = ProjectionMode.Sphere;
-			_mediaDecoder.StereoMode = VideoMode.Autodetect;
+			//_mediaDecoder.Projection = ProjectionMode.Sphere;
+			//_mediaDecoder.StereoMode = VideoMode.Autodetect;
 
 			SelectedServiceResult = null;
 		}
@@ -716,17 +726,7 @@ namespace Bivrost.Bivrost360Player
 			{
 				ResetPlayback();
 
-                SelectedServiceResult = result;
-
-				IsFileSelected = true;
-				_mediaDecoder.Projection = result.projection;
-				_mediaDecoder.StereoMode = result.stereoscopy;
-				//SelectedFileTitle = result.title;
-
-				Recents.AddRecent(result);
-				UpdateFileRecentsMenuState();
-
-				LoadMedia();
+				LoadMedia(result);
 			});
 		}
 
@@ -742,7 +742,7 @@ namespace Bivrost.Bivrost360Player
 			if (!IsPlaying)		// <press space or click while movie disabled hack
 			{
 				if (CanPlay)
-					LoadMedia();
+					LoadMedia(SelectedServiceResult);
 				// is automatic - Play();
 			}
 			else
