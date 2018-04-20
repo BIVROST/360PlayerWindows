@@ -1,4 +1,5 @@
 ﻿using Bivrost.Bivrost360Player.Streaming;
+using Bivrost.Log;
 using SharpDX;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
@@ -39,6 +40,9 @@ namespace Bivrost.Bivrost360Player
 
 	public class MediaDecoder
 	{
+
+		private Logger log = new Logger("MediaDecoder");
+
 		public class Error
 		{
 			public long major;
@@ -54,7 +58,6 @@ namespace Bivrost.Bivrost360Player
 		private bool formatChangePending = false;
 
 		private long ts;
-		private bool _stereoVideo = false;
 		private int w, h;
 		private bool manualRender = false;
 
@@ -63,16 +66,18 @@ namespace Bivrost.Bivrost360Player
 		public Texture2D TextureL { get { return this.textureL; } }
 		public Texture2D TextureR { get { return this.textureR; } }
 
-		public bool IsStereo { get { return isPlaying ? _stereoVideo : false; } }
+		//private bool _stereoVideo = false;
+		//public bool IsStereo { get { return isPlaying ? _stereoVideo : false; } }
 		public bool IsStereoRendered { get
 			{
-				switch(StereoMode)
+				switch(CurrentMode)
 				{
 					case VideoMode.Mono: return false;
-					case VideoMode.Autodetect: return IsStereo;
+					case VideoMode.Autodetect: throw new Exception();
 					default: return true;
 				}
-			} }
+			}
+		}
 
 		public bool IsPlaying => isPlaying || IsDisplayingStaticContent;
 		private bool isPlaying;
@@ -131,9 +136,21 @@ namespace Bivrost.Bivrost360Player
 
 		public double CurrentPosition { get; protected set; } = 0; // _mediaEngineEx.CurrentTime; 
 		public bool Initialized { get { return _initialized; } }
-		public VideoMode StereoMode { get; set; } = VideoMode.Autodetect;
-		public VideoMode CurrentMode { get; set; } = VideoMode.Autodetect;
-		public ProjectionMode Projection { get; set; } = ProjectionMode.Sphere;
+		private VideoMode LoadedStereoMode { get; set; } = VideoMode.Autodetect;
+
+		private VideoMode _currentMode;
+		public VideoMode CurrentMode
+		{
+			get { return _currentMode; }
+			private set
+			{
+				if (_currentMode == value) return;
+
+				_currentMode = value;
+				log.Info($"Stereoscopy = {value}");
+			}
+		}
+		public ProjectionMode Projection { get; private set; } = ProjectionMode.Sphere;
 
 		private bool _initialized = false;
 		private bool _rendering = false;
@@ -164,42 +181,6 @@ namespace Bivrost.Bivrost360Player
 		private bool textureReleased = true;
 		public bool TextureReleased { get { return textureReleased; } }
 
-		/// <summary>
-		/// Used instead of mediaEngine to show non-animated content.
-		/// </summary>
-		private Texture2D panoTexture = null;
-
-        VideoNormalizedRect topRect = new VideoNormalizedRect()
-		{
-			Left = 0,
-			Top = 0,
-			Right = 1,
-			Bottom = 0.5f
-		};
-
-		VideoNormalizedRect bottomRect = new VideoNormalizedRect()
-		{
-			Left = 0,
-			Top = 0.5f,
-			Right = 1,
-			Bottom = 1f
-		};
-
-		VideoNormalizedRect leftRect = new VideoNormalizedRect()
-		{
-			Left = 0f,
-			Top = 0f,
-			Right = 0.5f,
-			Bottom = 1f
-		};
-
-		VideoNormalizedRect rightRect = new VideoNormalizedRect()
-		{
-			Left = 0.5f,
-			Top = 0f,
-			Right = 1f,
-			Bottom = 1f
-		};
 
 		public MediaDecoder()
 		{
@@ -430,6 +411,40 @@ namespace Bivrost.Bivrost360Player
 			return new SharpDX.Direct3D11.Texture2D(_device, frameTextureDescription, dataRectangle);
 		}
 
+
+		private class ClipCoords { public float w; public float h; public float l; public float t; }
+		private void GetTextureClipCoordinates(out ClipCoords texL, out ClipCoords texR)
+		{
+			switch (CurrentMode)
+			{
+				case VideoMode.Autodetect:
+					throw new ArgumentException();
+				case VideoMode.Mono:
+					texL = new ClipCoords() { w = 1, h = 1f, l = 0, t = 0 };
+					texR = null;
+					break;
+				case VideoMode.SideBySide:
+					texL = new ClipCoords() { w = 0.5f, h = 1, l = 0, t = 0 };
+					texR = new ClipCoords() { w = 0.5f, h = 1, l = 0.5f, t = 0 };
+					break;
+				case VideoMode.SideBySideReversed:
+					texL = new ClipCoords() { w = 0.5f, h = 1, l = 0.5f, t = 0 };
+					texR = new ClipCoords() { w = 0.5f, h = 1, l = 0, t = 0 };
+					break;
+				case VideoMode.TopBottom:
+					texL = new ClipCoords() { w = 1f, h = 0.5f, l = 0, t = 0 };
+					texR = new ClipCoords() { w = 1f, h = 0.5f, l = 0, t = 0.5f };
+					break;
+				case VideoMode.TopBottomReversed:
+					texL = new ClipCoords() { w = 1f, h = 0.5f, l = 0, t = 0.5f };
+					texR = new ClipCoords() { w = 1f, h = 0.5f, l = 0, t = 0 };
+					break;
+				default:
+					throw new Exception();
+			}
+		}
+
+
 		public void Play()
 		{
 			lock(criticalSection)
@@ -455,23 +470,12 @@ namespace Bivrost.Bivrost360Player
 					_mediaEngineEx.GetVideoAspectRatio(out cx, out cy);
 					var s3d = _mediaEngineEx.IsStereo3D;
 					var sns = _mediaEngineEx.NumberOfStreams;
-					
 
-					/// TODO: co to tu robi? Czemu _stereoVideo jest zależne od aspectu w taki sposób?
-					float videoAspect = ((float)w) / ((float)h);
-					_stereoVideo = videoAspect < 1.3;
-					h = _stereoVideo ? h / 2 : h;
-
-					CurrentMode = StereoMode;
+					CurrentMode = ParseStereoMode(LoadedStereoMode, w, h);
 
 					// Moved to streaming parser
 					//if (CurrentMode == VideoMode.Autodetect)
 					//	CurrentMode = DetectFromFileName(_fileName);
-
-					Bivrost.Log.LoggerManager.Info("VIDEO STEREO MODE: " + CurrentMode);
-
-					if (CurrentMode != VideoMode.Mono && CurrentMode != VideoMode.Autodetect)
-						_stereoVideo = true;
 
 
 					//Texture2DDescription frameTextureDescription = new Texture2DDescription()
@@ -533,19 +537,81 @@ namespace Bivrost.Bivrost360Player
 
 
 										try {
+											//switch (CurrentMode)
+											//{
+											//	case VideoMode.Autodetect:
+											//		if (IsStereo)
+											//		{
+											//			_mediaEngine.TransferVideoFrame(textureL, topRect, new SharpDX.Rectangle(0, 0, w, h), null);
+											//			_mediaEngine.TransferVideoFrame(textureR, bottomRect, new SharpDX.Rectangle(0, 0, w, h), null);
+											//		}
+											//		else
+											//		{
+											//			_mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
+											//		}
+											//		break;
+											//	case VideoMode.Mono:
+											//		_mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
+											//		break;
+											//	case VideoMode.SideBySide:
+											//		_mediaEngine.TransferVideoFrame(textureL, leftRect, new SharpDX.Rectangle(0, 0, w, h), null);
+											//		_mediaEngine.TransferVideoFrame(textureR, rightRect, new SharpDX.Rectangle(0, 0, w, h), null);
+											//		break;
+											//	case VideoMode.SideBySideReversed:
+											//		_mediaEngine.TransferVideoFrame(textureL, rightRect, new SharpDX.Rectangle(0, 0, w, h), null);
+											//		_mediaEngine.TransferVideoFrame(textureR, leftRect, new SharpDX.Rectangle(0, 0, w, h), null);
+											//		break;
+											//	case VideoMode.TopBottom:
+											//		_mediaEngine.TransferVideoFrame(textureL, topRect, new SharpDX.Rectangle(0, 0, w, h/2), null);
+											//		_mediaEngine.TransferVideoFrame(textureR, bottomRect, new SharpDX.Rectangle(0, 0, w, h/2), null);
+											//		break;
+											//	case VideoMode.TopBottomReversed:
+											//		_mediaEngine.TransferVideoFrame(textureR, topRect, new SharpDX.Rectangle(0, 0, w, h/2), null);
+											//		_mediaEngine.TransferVideoFrame(textureL, bottomRect, new SharpDX.Rectangle(0, 0, w, h/2), null);
+											//		break;
+											//}
+
+
+
+
+											VideoNormalizedRect topRect = new VideoNormalizedRect()
+											{
+												Left = 0,
+												Top = 0,
+												Right = 1,
+												Bottom = 0.5f
+											};
+
+											VideoNormalizedRect bottomRect = new VideoNormalizedRect()
+											{
+												Left = 0,
+												Top = 0.5f,
+												Right = 1,
+												Bottom = 1f
+											};
+
+											VideoNormalizedRect leftRect = new VideoNormalizedRect()
+											{
+												Left = 0f,
+												Top = 0f,
+												Right = 0.5f,
+												Bottom = 1f
+											};
+
+											VideoNormalizedRect rightRect = new VideoNormalizedRect()
+											{
+												Left = 0.5f,
+												Top = 0f,
+												Right = 1f,
+												Bottom = 1f
+											};
+
+
+
 											switch (CurrentMode)
 											{
 												case VideoMode.Autodetect:
-													if (IsStereo)
-													{
-														_mediaEngine.TransferVideoFrame(textureL, topRect, new SharpDX.Rectangle(0, 0, w, h), null);
-														_mediaEngine.TransferVideoFrame(textureR, bottomRect, new SharpDX.Rectangle(0, 0, w, h), null);
-													}
-													else
-													{
-														_mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
-													}
-													break;
+													throw new ArgumentException();
 												case VideoMode.Mono:
 													_mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
 													break;
@@ -558,14 +624,39 @@ namespace Bivrost.Bivrost360Player
 													_mediaEngine.TransferVideoFrame(textureR, leftRect, new SharpDX.Rectangle(0, 0, w, h), null);
 													break;
 												case VideoMode.TopBottom:
-													_mediaEngine.TransferVideoFrame(textureL, topRect, new SharpDX.Rectangle(0, 0, w, h/2), null);
-													_mediaEngine.TransferVideoFrame(textureR, bottomRect, new SharpDX.Rectangle(0, 0, w, h/2), null);
+													_mediaEngine.TransferVideoFrame(textureL, topRect, new SharpDX.Rectangle(0, 0, w, h / 2), null);
+													_mediaEngine.TransferVideoFrame(textureR, bottomRect, new SharpDX.Rectangle(0, 0, w, h / 2), null);
 													break;
 												case VideoMode.TopBottomReversed:
-													_mediaEngine.TransferVideoFrame(textureR, topRect, new SharpDX.Rectangle(0, 0, w, h/2), null);
-													_mediaEngine.TransferVideoFrame(textureL, bottomRect, new SharpDX.Rectangle(0, 0, w, h/2), null);
+													_mediaEngine.TransferVideoFrame(textureR, topRect, new SharpDX.Rectangle(0, 0, w, h / 2), null);
+													_mediaEngine.TransferVideoFrame(textureL, bottomRect, new SharpDX.Rectangle(0, 0, w, h / 2), null);
 													break;
 											}
+
+
+											//VideoNormalizedRect srcL = new VideoNormalizedRect()
+											//{
+											//	Left = 0,
+											//	Top = 0,
+											//	Right = 1,
+											//	Bottom = 0.5f
+											//};
+											//SharpDX.Rectangle dstL = new SharpDX.Rectangle(0, 0, w, h);
+											//_mediaEngine.TransferVideoFrame(textureL, srcL, dstL, null);
+
+											//if(r)
+											//{
+											//	VideoNormalizedRect srcR = new VideoNormalizedRect()
+											//	{
+											//		Left = 0,
+											//		Top = 0.5f,
+											//		Right = 1,
+											//		Bottom = 1f
+											//	};
+											//	SharpDX.Rectangle dstR = new SharpDX.Rectangle(0, 0, w, h);
+											//	_mediaEngine.TransferVideoFrame(textureL, srcL, dstL, null);
+											//}
+
 										} catch (Exception exc)
 										{
 											Console.WriteLine("Playback exception " + exc.Message);
@@ -581,6 +672,21 @@ namespace Bivrost.Bivrost360Player
 			
 		}
 
+		private VideoMode ParseStereoMode(VideoMode setStereoMode, float w, float h)
+		{
+			if (setStereoMode == VideoMode.Autodetect)
+			{
+				float videoAspect = w/h;
+				var mode = (videoAspect < 1.3) ? VideoMode.TopBottom : VideoMode.Mono;
+				log.Info($"Autodetected stereoscopy={mode} ({w}x{h}, aspect={videoAspect})");
+				return mode;
+				//h = _stereoVideo ? h / 2 : h;
+			}
+			else
+			{
+				return setStereoMode;
+			}
+		}
 
 		private void ChangeFormat(int w, int h)
 		{
@@ -592,20 +698,7 @@ namespace Bivrost.Bivrost360Player
 			switch (CurrentMode)
 			{
 				case VideoMode.Autodetect:
-					if (IsStereo)
-					{
-						textureL = CreateTexture(_device, w, h);
-						textureR = CreateTexture(_device, w, h);
-						//_mediaEngine.TransferVideoFrame(textureL, topRect, new SharpDX.Rectangle(0, 0, w, h), null);
-						//_mediaEngine.TransferVideoFrame(textureR, bottomRect, new SharpDX.Rectangle(0, 0, w, h), null);
-					}
-					else
-					{
-						textureL = CreateTexture(_device, w, h);
-						textureR = CreateTexture(_device, w, h);
-						//_mediaEngine.TransferVideoFrame(textureL, null, new SharpDX.Rectangle(0, 0, w, h), null);
-					}
-					break;
+					throw new ArgumentException();
 				case VideoMode.Mono:
 					textureL = CreateTexture(_device, w, h);
 					textureR = CreateTexture(_device, w, h);
@@ -846,17 +939,11 @@ namespace Bivrost.Bivrost360Player
 
 						var w = formatConverter.Size.Width;
 						var h = formatConverter.Size.Height;
+						CurrentMode = ParseStereoMode(LoadedStereoMode, w, h);
+
 						var ww = w / 2;
 						var hh = h / 2;
 						const int bpp = 4;
-
-						//int stride = w * bpp;
-						//using (var buffer = new SharpDX.DataStream(h * stride, true, true))
-						//{
-						//	formatConverter.CopyPixels(stride, buffer);
-						//	var dataRect = new SharpDX.DataRectangle(buffer.DataPointer, stride);
-						//	panoTexture = CreateTexture(_device, w, h, dataRect);
-						//}
 
 						int stride = ww * bpp;
 
