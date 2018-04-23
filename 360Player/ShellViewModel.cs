@@ -468,7 +468,7 @@ namespace Bivrost.Bivrost360Player
 					}
 				}
 
-			ResetVR();
+			//ResetVR();
 
 
 			shellView.MouseMove += WatchUIVisibility;

@@ -34,8 +34,8 @@
 		private Device _device;
 
 		private Texture2D videoTexture;
-		private bool textureReleased = true;
-		private bool pollForTexture = false;
+		//private bool textureReleased = true;
+		//private bool pollForTexture = false;
 
 		private object localCritical = new object();
 
@@ -47,8 +47,8 @@
 
 		private float yaw = 0;
 		private float pitch = 0;
-		private bool remoteRotationOverride = false;
-		private Matrix remoteRotation;
+		//private bool remoteRotationOverride = false;
+		//private Matrix remoteRotation;
 
 		private float deltaTime = 0;
 		private float lastFrameTime = 0;
@@ -67,11 +67,11 @@
 		private const float MAX_FOV = 150f;
         
 
-        private Texture2D sharedTex;
+        //private Texture2D sharedTex;
 		private ProjectionMode projectionMode;
-		private SharpDX.DXGI.Resource resource;
+		//private SharpDX.DXGI.Resource resource;
 
-        Dictionary<GamepadButtonFlags, bool> buttonStates = new Dictionary<GamepadButtonFlags, bool>();
+        //Dictionary<GamepadButtonFlags, bool> buttonStates = new Dictionary<GamepadButtonFlags, bool>();
 
 
 		#region ILookProvider integration
@@ -114,15 +114,17 @@
 		{
 			videoTexture = sharedTexture;
 			projectionMode = projection;
+
+			//ResizeTexture(sharedTexture, null);
 		}
 
 
         void ResizeTexture(Texture2D tL, Texture2D tR)
 		{
 			if(MediaDecoder.Instance.TextureReleased) return;
-			var tempResource = resource;
-			var tempSharedTex = sharedTex;
-			var tempVideotexture = videoTexture;
+			//var tempResource = resource;
+			//var tempSharedTex = sharedTex;
+			//var tempVideotexture = videoTexture;
 
 			lock(localCritical)
 			{
@@ -132,48 +134,49 @@
 
 				videoTexture = tL;
 
-				resource = videoTexture.QueryInterface<SharpDX.DXGI.Resource>();
-				sharedTex = _device.OpenSharedResource<Texture2D>(resource.SharedHandle);
+				using (var resource = videoTexture.QueryInterface<SharpDX.DXGI.Resource>())
+				using (var sharedTex = _device.OpenSharedResource<Texture2D>(resource.SharedHandle))
+				{
+					customEffect.Parameters["UserTex"].SetResource(SharpDX.Toolkit.Graphics.Texture2D.New(graphicsDevice, sharedTex));
+					customEffect.Parameters["gammaFactor"].SetValue(1f);
+					customEffect.CurrentTechnique = customEffect.Techniques["ColorTechnique"];
+					customEffect.CurrentTechnique.Passes[0].Apply();
 
-				customEffect.Parameters["UserTex"].SetResource(SharpDX.Toolkit.Graphics.Texture2D.New(graphicsDevice, sharedTex));
-				customEffect.Parameters["gammaFactor"].SetValue(1f);
-				customEffect.CurrentTechnique = customEffect.Techniques["ColorTechnique"];
-				customEffect.CurrentTechnique.Passes[0].Apply();
-
-				//SamplerStateDescription samplerDescription = new SamplerStateDescription()
-				//{
-				//	AddressU = TextureAddressMode.Wrap,
-				//	AddressV = TextureAddressMode.Wrap,
-				//	AddressW = TextureAddressMode.Wrap,
-				//	BorderColor = new Color4(0, 0, 0, 0),
-				//	ComparisonFunction = Comparison.Never,
-				//	Filter = Filter.Anisotropic,
-				//	MaximumAnisotropy = 16,
-				//	MaximumLod = float.MaxValue,
-				//	MinimumLod = 0,
-				//	MipLodBias = 0
-				//};
-				//SharpDX.Toolkit.Graphics.SamplerState textureSampler = SharpDX.Toolkit.Graphics.SamplerState.New(graphicsDevice, samplerDescription);
+					//SamplerStateDescription samplerDescription = new SamplerStateDescription()
+					//{
+					//	AddressU = TextureAddressMode.Wrap,
+					//	AddressV = TextureAddressMode.Wrap,
+					//	AddressW = TextureAddressMode.Wrap,
+					//	BorderColor = new Color4(0, 0, 0, 0),
+					//	ComparisonFunction = Comparison.Never,
+					//	Filter = Filter.Anisotropic,
+					//	MaximumAnisotropy = 16,
+					//	MaximumLod = float.MaxValue,
+					//	MinimumLod = 0,
+					//	MipLodBias = 0
+					//};
+					//SharpDX.Toolkit.Graphics.SamplerState textureSampler = SharpDX.Toolkit.Graphics.SamplerState.New(graphicsDevice, samplerDescription);
 
 
 
-				//ShaderResourceView shaderResourceView = new ShaderResourceView(_device, sharedTex);
+					//ShaderResourceView shaderResourceView = new ShaderResourceView(_device, sharedTex);
 
-				//_device.ImmediateContext.PixelShader.SetShaderResource(0, shaderResourceView);
+					//_device.ImmediateContext.PixelShader.SetShaderResource(0, shaderResourceView);
 
-				//customEffect.Parameters["UserTexSampler"].SetResource(textureSampler);
-				//customEffect.CurrentTechnique = customEffect.Techniques["ColorTechnique"];
-				//customEffect.CurrentTechnique.Passes[0].Apply();
+					//customEffect.Parameters["UserTexSampler"].SetResource(textureSampler);
+					//customEffect.CurrentTechnique = customEffect.Techniques["ColorTechnique"];
+					//customEffect.CurrentTechnique.Passes[0].Apply();
 
-				resource.Dispose();
-				sharedTex.Dispose();
-				//textureReleased = false;
+					//resource.Dispose();
+					//sharedTex.Dispose();
+					//textureReleased = false;
 
-				//_device.ImmediateContext.Flush();
+					//_device.ImmediateContext.Flush();
+				}
 			}
-			tempResource?.Dispose();
-			tempSharedTex?.Dispose();
-			tempVideotexture?.Dispose();
+			//tempResource?.Dispose();
+			//tempSharedTex?.Dispose();
+			//tempVideotexture?.Dispose();
 		}
 
         //void ReleaseTexture()
@@ -275,7 +278,8 @@
 
 		public void SetVideoTexture(Texture2D sharedTexture)
 		{
-			this.videoTexture = sharedTexture;
+			throw new NotImplementedException();
+			//this.videoTexture = sharedTexture;
 		}
 
 		public void MoveDelta(float x, float y, float ratio, float lerpSpeed)
@@ -320,8 +324,8 @@
 			MediaDecoder.Instance.OnFormatChanged -= ResizeTexture;
 			//MediaDecoder.Instance.OnReleaseTexture -= ReleaseTexture;
 
-			Disposer.RemoveAndDispose(ref sharedTex);
-			Disposer.RemoveAndDispose(ref resource);
+			//Disposer.RemoveAndDispose(ref sharedTex);
+			//Disposer.RemoveAndDispose(ref resource);
 			Disposer.RemoveAndDispose(ref graphicsDevice);
 			Disposer.RemoveAndDispose(ref customEffect);
 			Disposer.RemoveAndDispose(ref primitive);

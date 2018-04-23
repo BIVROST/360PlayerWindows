@@ -60,10 +60,18 @@ namespace Bivrost.Bivrost360Player
 		private long ts;
 		private bool manualRender = false;
 
-		private Texture2D textureL;
-		private Texture2D textureR;
-		public Texture2D TextureL { get { return this.textureL; } }
-		public Texture2D TextureR { get { return this.textureR; } }
+		private Texture2D _textureL;
+		private Texture2D _textureR;
+		public Texture2D TextureL
+		{
+			get { return _textureL; }
+			private set { _textureL = value; }
+		}
+		public Texture2D TextureR
+		{
+			get { return _textureR; }
+			private set { _textureR = value; }
+		}
 
 		//private bool _stereoVideo = false;
 		//public bool IsStereo { get { return isPlaying ? _stereoVideo : false; } }
@@ -208,16 +216,16 @@ namespace Bivrost.Bivrost360Player
 			_dxgiManager = new DXGIDeviceManager();
 
 			//MFTEnumEx 
-			var category = SharpDX.MediaFoundation.TransformCategoryGuids.VideoDecoder;
-			var flags = SharpDX.MediaFoundation.TransformEnumFlag.Hardware | TransformEnumFlag.Localmft | TransformEnumFlag.SortAndFilter;
-			var typeInfo = new SharpDX.MediaFoundation.TRegisterTypeInformation();
-			typeInfo.GuidMajorType = MediaTypeGuids.Video;
-			typeInfo.GuidSubtype = VideoFormatGuids.H264;
+			//var category = SharpDX.MediaFoundation.TransformCategoryGuids.VideoDecoder;
+			//var flags = SharpDX.MediaFoundation.TransformEnumFlag.Hardware | TransformEnumFlag.Localmft | TransformEnumFlag.SortAndFilter;
+			//var typeInfo = new SharpDX.MediaFoundation.TRegisterTypeInformation();
+			//typeInfo.GuidMajorType = MediaTypeGuids.Video;
+			//typeInfo.GuidSubtype = VideoFormatGuids.H264;
 		
-			Guid[] guids = new Guid[50];
-			int costamref;
-			MediaFactory.TEnum(category, (int)flags, null, null, null, guids, out costamref);
-			;			
+			//Guid[] guids = new Guid[50];
+			//int costamref;
+			//MediaFactory.TEnum(category, (int)flags, null, null, null, guids, out costamref);
+			//;			
         }
 
 		public static bool CheckExtension(string extension)
@@ -345,7 +353,7 @@ namespace Bivrost.Bivrost360Player
 		//}
 
 
-		public static Texture2D CreateTexture(SharpDX.Direct3D11.Device _device, int width, int height, DataRectangle? dataRectangle = null)
+		public Texture2D CreateTexture(SharpDX.Direct3D11.Device _device, int width, int height, DataRectangle? dataRectangle = null)
 		{
 			Texture2DDescription frameTextureDescription = new Texture2DDescription()
 			{
@@ -361,9 +369,21 @@ namespace Bivrost.Bivrost360Player
 				OptionFlags = ResourceOptionFlags.Shared
 			};
 
-			return dataRectangle.HasValue
+			var tex = dataRectangle.HasValue
 				?new Texture2D(_device, frameTextureDescription, dataRectangle.Value)
 				:new Texture2D(_device, frameTextureDescription);
+
+			tex.Disposing += (s, e) =>
+			{
+				log.Info("Disposing");
+			};
+
+			tex.Disposed += (s, e) =>
+			{
+				log.Info("Disposed");
+			};
+
+			return tex;
 		}
 
 
@@ -483,12 +503,11 @@ namespace Bivrost.Bivrost360Player
 				{
 					lock (criticalSection)
 					{
-						if(w < 0 || h < 0)
+						if(w < 0 || h < 0 || formatChangePending)
 							_mediaEngineEx.GetNativeVideoSize(out w, out h);
 
 						if(formatChangePending)
 						{
-							_mediaEngineEx.GetNativeVideoSize(out w, out h);
 							formatChangePending = false;
 							ChangeFormat(w, h);
 						}
@@ -514,9 +533,9 @@ namespace Bivrost.Bivrost360Player
 									ClipCoords texR;
 									GetTextureClipCoordinates(out texL, out texR);
 
-									_mediaEngine.TransferVideoFrame(textureL, texL.NormalizedSrcRect, texL.DstRect(w,h), null);
+									_mediaEngine.TransferVideoFrame(TextureL, texL.NormalizedSrcRect, texL.DstRect(w,h), null);
 									if(texR != null)
-										_mediaEngine.TransferVideoFrame(textureR, texR.NormalizedSrcRect, texR.DstRect(w,h), null);
+										_mediaEngine.TransferVideoFrame(TextureR, texR.NormalizedSrcRect, texR.DstRect(w,h), null);
 								}
 								catch (Exception exc)
 								{
@@ -556,20 +575,20 @@ namespace Bivrost.Bivrost360Player
 		/// <param name="h"></param>
 		private void ChangeFormat(int w, int h)
 		{
-			Texture2D tempL = textureL;
-			Texture2D tempR = textureR;
+			Texture2D tempL = TextureL;
+			Texture2D tempR = TextureR;
 
 			textureReleased = true;
 
 			ClipCoords texL, texR;
 			GetTextureClipCoordinates(out texL, out texR);
-			textureL = CreateTexture(_device, texL.Width(w), texL.Height(h));
-			textureR = CreateTexture(_device, texL.Width(w), texL.Height(h));	//< even if mono, this texture should be created
+			TextureL = CreateTexture(_device, texL.Width(w), texL.Height(h));
+			TextureR = CreateTexture(_device, texL.Width(w), texL.Height(h));	//< even if mono, this texture should be created
 
 			textureReleased = false;
 
 			//OnReleaseTexture();
-			OnFormatChanged(textureL, textureR);
+			OnFormatChanged(TextureL, TextureR);
 			if (waitForFormatChange) waitForFormatChange = false;
 
 			tempL?.Dispose();
@@ -688,11 +707,11 @@ namespace Bivrost.Bivrost360Player
 
 				staticContentSource = null;
 
-				textureL?.Dispose();
-				textureR?.Dispose();
+				TextureL?.Dispose();
+				TextureR?.Dispose();
 
-				textureL = null;
-				textureR = null;
+				TextureL = null;
+				TextureR = null;
 
 				_initialized = false;	
 			}
@@ -778,8 +797,8 @@ namespace Bivrost.Bivrost360Player
 						);
 
 						// to be later cleaned up
-						var tempL = textureL;
-						var tempR = textureR;
+						var tempL = TextureL;
+						var tempR = TextureR;
 
 						var w = formatConverter.Size.Width;
 						var h = formatConverter.Size.Height;
@@ -802,7 +821,7 @@ namespace Bivrost.Bivrost360Player
 							{
 								formatConverter.CopyPixels(texL.SrcRect(w, h), stride, buffer);
 								var dataRect = new SharpDX.DataRectangle(buffer.DataPointer, stride);
-								textureL = CreateTexture(_device, texL.Width(w), texL.Height(h), dataRect);
+								TextureL = CreateTexture(_device, texL.Width(w), texL.Height(h), dataRect);
 							}
 
 							if (texR != null)
@@ -812,19 +831,19 @@ namespace Bivrost.Bivrost360Player
 								{
 									formatConverter.CopyPixels(texR.SrcRect(w, h), stride, buffer);
 									var dataRect = new SharpDX.DataRectangle(buffer.DataPointer, stride);
-									textureR = CreateTexture(_device, texR.Width(w), texR.Height(h), dataRect);
+									TextureR = CreateTexture(_device, texR.Width(w), texR.Height(h), dataRect);
 								}
 							}
 							else
 							{
-								textureR = CreateTexture(_device, texL.Width(w), texL.Height(h));   // an empty one still needs to be created
+								//TextureR = CreateTexture(_device, texL.Width(w), texL.Height(h));   // an empty one still needs to be created
 							}
 
 							textureReleased = false;
 						}
 
 
-						OnFormatChanged(textureL, textureR);
+						OnFormatChanged(TextureL, TextureR);
 						tempL?.Dispose();
 						tempR?.Dispose();
 
