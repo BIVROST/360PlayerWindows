@@ -1331,7 +1331,17 @@ namespace Bivrost.Bivrost360Player
 
 		public string Header
 		{
-			get { return recent.title; }
+			get {
+				switch(Path.GetExtension(recent.uri).ToLowerInvariant())
+				{
+					case ".jpg":
+					case ".jpeg":
+					case ".png":
+						return recent.title + " (img)";
+					default:
+						return recent.title;
+				}
+			}
 		}
 		public ICommand Command
 		{
