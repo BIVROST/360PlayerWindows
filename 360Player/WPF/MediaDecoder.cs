@@ -7,6 +7,8 @@ using SharpDX.DXGI;
 using SharpDX.MediaFoundation;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -353,7 +355,7 @@ namespace Bivrost.Bivrost360Player
 		//}
 
 
-		public Texture2D CreateTexture(SharpDX.Direct3D11.Device _device, int width, int height, DataRectangle? dataRectangle = null)
+		public Texture2D CreateTexture(SharpDX.Direct3D11.Device _device, int width, int height)
 		{
 			Texture2DDescription frameTextureDescription = new Texture2DDescription()
 			{
@@ -369,19 +371,33 @@ namespace Bivrost.Bivrost360Player
 				OptionFlags = ResourceOptionFlags.Shared
 			};
 
-			var tex = dataRectangle.HasValue
-				?new Texture2D(_device, frameTextureDescription, dataRectangle.Value)
-				:new Texture2D(_device, frameTextureDescription);
+			var tex = new Texture2D(_device, frameTextureDescription);
 
-			tex.Disposing += (s, e) =>
-			{
-				log.Info("Disposing");
-			};
+			tex.Disposing += (s, e) => log.Info("Disposing");
+			tex.Disposed += (s, e) => log.Info("Disposed"); ;
 
-			tex.Disposed += (s, e) =>
+			return tex;
+		}
+
+		public Texture2D CreateTexture(SharpDX.Direct3D11.Device _device, int width, int height, DataRectangle dataRect)
+		{
+			Texture2DDescription frameTextureDescription = new Texture2DDescription()
 			{
-				log.Info("Disposed");
+				Width = width,
+				Height = height,
+				MipLevels = 1,
+				ArraySize = 1,
+				Format = Format.B8G8R8X8_UNorm,
+				Usage = ResourceUsage.Default,
+				SampleDescription = new SampleDescription(1, 0),
+				BindFlags = BindFlags.RenderTarget | BindFlags.ShaderResource,
+				CpuAccessFlags = CpuAccessFlags.None,
+				OptionFlags = ResourceOptionFlags.Shared
 			};
+			var tex = new Texture2D(_device, frameTextureDescription, dataRect);
+
+			tex.Disposing += (s, e) => log.Info("Disposing");
+			tex.Disposed += (s, e) => log.Info("Disposed");;
 
 			return tex;
 		}
@@ -408,9 +424,9 @@ namespace Bivrost.Bivrost360Player
 				}
 			}
 
-			internal Rectangle DstRect(int pxw, int pxh)
+			internal SharpDX.Rectangle DstRect(int pxw, int pxh)
 			{
-				return new Rectangle(0, 0, Width(pxw), Height(pxh));
+				return new SharpDX.Rectangle(0, 0, Width(pxw), Height(pxh));
 			}
 
 			internal int Width(int pxw)
@@ -423,10 +439,17 @@ namespace Bivrost.Bivrost360Player
 				return (int)(h * pxh);
 			}
 
-			internal Rectangle SrcRect(int pxw, int pxh)
+			internal SharpDX.Rectangle SrcRect(int pxw, int pxh)
 			{
-				return new Rectangle((int)(l * pxw), (int)(t * pxh), (int)(w * pxw), (int)(h * pxh));
+				return new SharpDX.Rectangle((int)(l * pxw), (int)(t * pxh), (int)(w * pxw), (int)(h * pxh));
 			}
+
+
+			internal System.Drawing.Rectangle SrcRectSystemDrawing(int pxw, int pxh)
+			{
+				return new System.Drawing.Rectangle((int)(l * pxw), (int)(t * pxh), (int)(w * pxw), (int)(h * pxh));
+			}
+
 		}
 		private void GetTextureClipCoordinates(out ClipCoords texL, out ClipCoords texR)
 		{
@@ -774,65 +797,62 @@ namespace Bivrost.Bivrost360Player
 					break;
 
 				case ServiceResult.ContentType.image:
-
-					//SharpDX.Toolkit.Graphics.GraphicsDevice gd;
-					//_factory.Adapters.
-					// gd.copy?
-
 					staticContentSource = File.ReadAllBytes(_fileName);
 
-					using (var stream = new MemoryStream(staticContentSource))	// stream, so it won't lock the file
-					using (var imagingFactory = new SharpDX.WIC.ImagingFactory2())
-					using (var bitmapDecoder = new SharpDX.WIC.BitmapDecoder(imagingFactory, stream, SharpDX.WIC.DecodeOptions.CacheOnDemand))
-					using (var frame = bitmapDecoder.GetFrame(0))
-					using (var formatConverter = new SharpDX.WIC.FormatConverter(imagingFactory))
+					using (var stream = new MemoryStream(staticContentSource))  // stream, so it won't lock the file
+					using (var bitmap = new Bitmap(stream))
 					{
-						formatConverter.Initialize(
-							frame,
-							SharpDX.WIC.PixelFormat.Format32bppBGRA,       // CreateTexture uses B8G8R8X8_UNorm
-							SharpDX.WIC.BitmapDitherType.None,
-							null,
-							0.0,
-							SharpDX.WIC.BitmapPaletteType.Custom
-						);
+						
+
+						//var ret = new SharpDX.Direct3D11.Texture2D(device, new SharpDX.Direct3D11.Texture2DDescription()
+						//{
+						//	Width = bitmap.Width,
+						//	Height = bitmap.Height,
+						//	ArraySize = 1,
+						//	BindFlags = SharpDX.Direct3D11.BindFlags.ShaderResource,
+						//	Usage = SharpDX.Direct3D11.ResourceUsage.Immutable,
+						//	CpuAccessFlags = SharpDX.Direct3D11.CpuAccessFlags.None,
+						//	Format = SharpDX.DXGI.Format.B8G8R8A8_UNorm,
+						//	MipLevels = 1,
+						//	OptionFlags = SharpDX.Direct3D11.ResourceOptionFlags.None,
+						//	SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
+						//}, new SharpDX.DataRectangle(data.Scan0, data.Stride));
+
+
 
 						// to be later cleaned up
 						var tempL = TextureL;
 						var tempR = TextureR;
 
-						var w = formatConverter.Size.Width;
-						var h = formatConverter.Size.Height;
+						var w = bitmap.Width;
+						var h = bitmap.Height;
 						log.Info($"Loaded image of size {w}x{h} from {_fileName}");
 						CurrentMode = ParseStereoMode(LoadedStereoMode, w, h);
 
-						const int bpp = 4;
-
-
 						ClipCoords texL, texR;
 						GetTextureClipCoordinates(out texL, out texR);
-
 
 						lock (criticalSection)
 						{
 							textureReleased = true;
 
-							int stride = texL.Width(w) * bpp;
-							using (var buffer = new SharpDX.DataStream(texL.Height(h) * stride, true, true))
-							{
-								formatConverter.CopyPixels(texL.SrcRect(w, h), stride, buffer);
-								var dataRect = new SharpDX.DataRectangle(buffer.DataPointer, stride);
-								TextureL = CreateTexture(_device, texL.Width(w), texL.Height(h), dataRect);
-							}
+							var data = bitmap.LockBits(
+								texL.SrcRectSystemDrawing(w, h),
+								ImageLockMode.ReadOnly, PixelFormat.Format32bppRgb
+							);
+							var dataRect = new DataRectangle(data.Scan0, data.Stride);
+							TextureL = CreateTexture(_device, texL.Width(w), texL.Height(h), dataRect);
+							bitmap.UnlockBits(data);
 
 							if (texR != null)
 							{
-								stride = texR.Width(w) * bpp;
-								using (var buffer = new SharpDX.DataStream(texR.Height(h) * stride, true, true))
-								{
-									formatConverter.CopyPixels(texR.SrcRect(w, h), stride, buffer);
-									var dataRect = new SharpDX.DataRectangle(buffer.DataPointer, stride);
-									TextureR = CreateTexture(_device, texR.Width(w), texR.Height(h), dataRect);
-								}
+								data = bitmap.LockBits(
+									texR.SrcRectSystemDrawing(w, h),
+									ImageLockMode.ReadOnly, PixelFormat.Format32bppRgb
+								);
+								dataRect = new DataRectangle(data.Scan0, data.Stride);
+								TextureR = CreateTexture(_device, texR.Width(w), texR.Height(h), dataRect);
+								bitmap.UnlockBits(data);
 							}
 							else
 							{
@@ -843,17 +863,16 @@ namespace Bivrost.Bivrost360Player
 						}
 
 
-						OnFormatChanged(TextureL, TextureR);
 						tempL?.Dispose();
 						tempR?.Dispose();
 
-						// TODO: stereoscopy
-
-						OnReady?.Invoke(-1);
 					}
 
+					OnFormatChanged(TextureL, TextureR);
+					OnReady?.Invoke(-1);
+					
 					break;
-			}
+					}
 			
 		}
 
