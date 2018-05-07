@@ -433,7 +433,7 @@ namespace Bivrost.Bivrost360Player
 			switch (CurrentMode)
 			{
 				case VideoMode.Autodetect:
-					throw new ArgumentException();
+					throw new ArgumentException("Autodetect should not reach here");
 				case VideoMode.Mono:
 					texL = new ClipCoords() { w = 1, h = 1f, l = 0, t = 0 };
 					texR = null;
@@ -583,7 +583,7 @@ namespace Bivrost.Bivrost360Player
 			ClipCoords texL, texR;
 			GetTextureClipCoordinates(out texL, out texR);
 			TextureL = CreateTexture(_device, texL.Width(w), texL.Height(h));
-			TextureR = CreateTexture(_device, texL.Width(w), texL.Height(h));	//< even if mono, this texture should be created
+			TextureR = (texR != null) ? CreateTexture(_device, texR.Width(w), texR.Height(h)) : null;
 
 			textureReleased = false;
 
@@ -836,7 +836,7 @@ namespace Bivrost.Bivrost360Player
 							}
 							else
 							{
-								//TextureR = CreateTexture(_device, texL.Width(w), texL.Height(h));   // an empty one still needs to be created
+								TextureR = null;
 							}
 
 							textureReleased = false;

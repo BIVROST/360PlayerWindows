@@ -42,7 +42,7 @@ namespace Bivrost.Bivrost360Player
 				UpdateSceneSettings(Media.projection, Media.stereoscopy);
 			}
 		}
-		public bool _stereoVideo => Array.IndexOf(new[] { VideoMode.Mono, VideoMode.Autodetect }, Media.stereoscopy) < 0;
+		//public bool _stereoVideo => Array.IndexOf(new[] { VideoMode.Mono, VideoMode.Autodetect }, Media.stereoscopy) < 0;
 		public ProjectionMode Projection => Media.projection;
 		protected float Duration => (float)MediaDecoder.Instance.Duration;
 
@@ -243,7 +243,7 @@ namespace Bivrost.Bivrost360Player
 					}
 
 
-					using (var resourceR = textureR.QueryInterface<SharpDX.DXGI.Resource>())
+					using (var resourceR = (textureR ?? textureL).QueryInterface<SharpDX.DXGI.Resource>())
 					using (var sharedTexR = _device.OpenSharedResource<Texture2D>(resourceR.SharedHandle))
 					{
 						customEffectR.Parameters["UserTex"].SetResource(SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexR));

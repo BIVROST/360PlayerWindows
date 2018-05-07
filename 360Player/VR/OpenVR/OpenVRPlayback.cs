@@ -252,18 +252,13 @@ namespace Bivrost.Bivrost360Player.OpenVR
 
 							lock (localCritical)
 							{
-								if (_stereoVideo)
-								{
-									if (eye == EVREye.Eye_Left)
-										primitive.Draw(customEffectL);
-									if (eye == EVREye.Eye_Right)
-										primitive.Draw(customEffectR);
-								}
-								else
+								if (eye == EVREye.Eye_Left)
 									primitive.Draw(customEffectL);
+								if (eye == EVREye.Eye_Right)
+									primitive.Draw(customEffectR);
 							}
 
-							if (eye == EVREye.Eye_Left || true)
+							if (eye == EVREye.Eye_Left)
 							{
 								Vector3 fixedLookPosition = Vector3.Transform(lookPosition, MVP).ToVector3();
 								Vector3 fixedLookAt = Vector3.Transform(lookPosition + Vector3.ForwardLH, MVP).ToVector3() - fixedLookPosition;

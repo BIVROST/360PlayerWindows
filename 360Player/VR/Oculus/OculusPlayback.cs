@@ -318,15 +318,10 @@ namespace Bivrost.Bivrost360Player.Oculus
 
 							lock (localCritical)
 							{
-								if (_stereoVideo)
-								{
-									if (eyeIndex == 0)
-										primitive.Draw(customEffectL);
-									if (eyeIndex == 1)
-										primitive.Draw(customEffectR);
-								}
-								else
+								if (eyeIndex == 0)
 									primitive.Draw(customEffectL);
+								if (eyeIndex == 1)
+									primitive.Draw(customEffectR);
 							}
 
 							if (ProvideLook != null && eyeIndex == 0)
