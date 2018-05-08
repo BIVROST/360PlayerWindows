@@ -2,18 +2,18 @@
 {
 	using System;
 	using SharpDX;
-	//using SharpDX.D3DCompiler;
 	using SharpDX.Direct3D11;
 	using SharpDX.DXGI;
-	using Buffer = SharpDX.Direct3D11.Buffer;
 	using Device = SharpDX.Direct3D11.Device;
 	using System.Windows.Input;
 	using Tools;
 	using System.Linq;
-	using System.Collections.Generic;
 	using SharpDX.XInput;
 	using Bivrost.Log;
 	using Bivrost;
+	using System.IO;
+	using System.Drawing;
+	using System.Drawing.Imaging;
 
 	public interface IUpdatableSceneSettings
 	{
@@ -21,38 +21,37 @@
 	}
 
 
-	public class Scene : IScene, IUpdatableSceneSettings
-    {
-        //private class RefBool
-        //{
-        //    public RefBool() { }
-        //    public RefBool(bool value) { this.Value = value; }
-        //    public bool Value = false;
-        //}
+	public interface IContentUpdatableFromMediaEngine
+	{
+		//bool IsReady { get; }
+		void ReceiveTextures(Texture2D textureL, Texture2D textureR);
+		void ReceiveBitmap(Bitmap bitmap, MediaDecoder.ClipCoords coordsL, MediaDecoder.ClipCoords coordsR);
+		void ClearContent();
 
-        private ISceneHost Host;
+		// TODO: stereoscopy?
+	}
+
+
+	public class Scene : IScene, IUpdatableSceneSettings, IContentUpdatableFromMediaEngine
+	{
+		Logger log = new Logger("scene");
+
+		private ISceneHost Host;
 		private Device _device;
-
-		private Texture2D videoTexture;
-		//private bool textureReleased = true;
-		//private bool pollForTexture = false;
 
 		private object localCritical = new object();
 
-        SharpDX.Toolkit.Graphics.GraphicsDevice graphicsDevice;
+		SharpDX.Toolkit.Graphics.GraphicsDevice graphicsDevice;
 		SharpDX.Toolkit.Graphics.Effect customEffect;
 
 		SharpDX.Toolkit.Graphics.GeometricPrimitive primitive;
-		//SharpDX.Toolkit.Graphics.GeometricPrimitive primitive2;
 
 		private float yaw = 0;
 		private float pitch = 0;
-		//private bool remoteRotationOverride = false;
-		//private Matrix remoteRotation;
 
 		private float deltaTime = 0;
 		private float lastFrameTime = 0;
-		public bool HasFocus {get;set;} = true;
+		public bool HasFocus { get; set; } = true;
 		private Quaternion targetRotationQuaternion;
 		private Quaternion currentRotationQuaternion;
 		private float lerpSpeed = 3f;
@@ -60,22 +59,17 @@
 		private float currentFov = DEFAULT_FOV;
 		private bool littlePlanet = false;
 		private float currentOffset = 0f;
-        
-		private const float MIN_FOV = 40f;		
+
+		private const float MIN_FOV = 40f;
 		private const float DEFAULT_FOV = 72f;
 		private const float DEFAULT_LITTLE_FOV = 120f;
 		private const float MAX_FOV = 150f;
-        
 
-        //private Texture2D sharedTex;
 		private ProjectionMode projectionMode;
-		//private SharpDX.DXGI.Resource resource;
-
-        //Dictionary<GamepadButtonFlags, bool> buttonStates = new Dictionary<GamepadButtonFlags, bool>();
-
+		private Action<IContentUpdatableFromMediaEngine> requestContentCallback;
+		private bool requestContent = true;
 
 		#region ILookProvider integration
-
 		private Quaternion headsetLookRotation = Quaternion.Identity;
 
 		private bool UseVrLook
@@ -83,11 +77,13 @@
 			get { return headsetLookRotation != Quaternion.Identity && SettingsVrLookEnabled; }
 		}
 
-		private bool SettingsVrLookEnabled {
-            get { return Logic.Instance.settings.UserHeadsetTracking; }
-            set { Logic.Instance.settings.UserHeadsetTracking = value; }
-        }
+		private bool SettingsVrLookEnabled
+		{
+			get { return Logic.Instance.settings.UserHeadsetTracking; }
+			set { Logic.Instance.settings.UserHeadsetTracking = value; }
+		}
 
+		//bool IContentUpdatableFromMediaEngine.IsReady => throw new NotImplementedException();
 
 		internal void HeadsetEnabled(Headset headset)
 		{
@@ -110,96 +106,31 @@
 		#endregion
 
 
-		public Scene(Texture2D sharedTexture, ProjectionMode projection)
+		public Scene(ProjectionMode projection, Action<IContentUpdatableFromMediaEngine> requestContent)
 		{
-			videoTexture = sharedTexture;
+			//videoTexture = sharedTexture;
 			projectionMode = projection;
-
+			this.requestContentCallback = requestContent;
 			//ResizeTexture(sharedTexture, null);
 		}
 
 
-        void ResizeTexture(Texture2D tL, Texture2D tR)
+		InputDevices.KeyboardInputDevice keyboardInput;
+		InputDevices.GamepadInputDevice gamepadInput;
+		InputDevices.NavigatorInputDevice navigatorInput;
+
+
+		void IScene.Attach(ISceneHost host)
 		{
-			if(MediaDecoder.Instance.TextureReleased) return;
-			//var tempResource = resource;
-			//var tempSharedTex = sharedTex;
-			//var tempVideotexture = videoTexture;
+			this.Host = host;
+			keyboardInput = new InputDevices.KeyboardInputDevice();
+			gamepadInput = new InputDevices.GamepadInputDevice();
+			navigatorInput = new InputDevices.NavigatorInputDevice();
 
-			lock(localCritical)
-			{
-				//resource?.Dispose();
-				//sharedTex?.Dispose();
-				//videoTexture?.Dispose();
+			_device = host.Device;
 
-				videoTexture = tL;
-
-				using (var resource = videoTexture.QueryInterface<SharpDX.DXGI.Resource>())
-				using (var sharedTex = _device.OpenSharedResource<Texture2D>(resource.SharedHandle))
-				{
-					customEffect.Parameters["UserTex"].SetResource(SharpDX.Toolkit.Graphics.Texture2D.New(graphicsDevice, sharedTex));
-					customEffect.Parameters["gammaFactor"].SetValue(1f);
-					customEffect.CurrentTechnique = customEffect.Techniques["ColorTechnique"];
-					customEffect.CurrentTechnique.Passes[0].Apply();
-
-					//SamplerStateDescription samplerDescription = new SamplerStateDescription()
-					//{
-					//	AddressU = TextureAddressMode.Wrap,
-					//	AddressV = TextureAddressMode.Wrap,
-					//	AddressW = TextureAddressMode.Wrap,
-					//	BorderColor = new Color4(0, 0, 0, 0),
-					//	ComparisonFunction = Comparison.Never,
-					//	Filter = Filter.Anisotropic,
-					//	MaximumAnisotropy = 16,
-					//	MaximumLod = float.MaxValue,
-					//	MinimumLod = 0,
-					//	MipLodBias = 0
-					//};
-					//SharpDX.Toolkit.Graphics.SamplerState textureSampler = SharpDX.Toolkit.Graphics.SamplerState.New(graphicsDevice, samplerDescription);
-
-
-
-					//ShaderResourceView shaderResourceView = new ShaderResourceView(_device, sharedTex);
-
-					//_device.ImmediateContext.PixelShader.SetShaderResource(0, shaderResourceView);
-
-					//customEffect.Parameters["UserTexSampler"].SetResource(textureSampler);
-					//customEffect.CurrentTechnique = customEffect.Techniques["ColorTechnique"];
-					//customEffect.CurrentTechnique.Passes[0].Apply();
-
-					//resource.Dispose();
-					//sharedTex.Dispose();
-					//textureReleased = false;
-
-					//_device.ImmediateContext.Flush();
-				}
-			}
-			//tempResource?.Dispose();
-			//tempSharedTex?.Dispose();
-			//tempVideotexture?.Dispose();
-		}
-
-        //void ReleaseTexture()
-        //{
-        //	textureReleased = true;
-        //}
-
-        InputDevices.KeyboardInputDevice keyboardInput;
-        InputDevices.GamepadInputDevice gamepadInput;
-        InputDevices.NavigatorInputDevice navigatorInput;
-
-
-        void IScene.Attach(ISceneHost host)
-        {
-            this.Host = host;
-            keyboardInput = new InputDevices.KeyboardInputDevice();
-            gamepadInput = new InputDevices.GamepadInputDevice();
-            navigatorInput = new InputDevices.NavigatorInputDevice();
-
-            _device = host.Device;
-
-            if (_device == null)
-                throw new Exception("Scene host device is null");
+			if (_device == null)
+				throw new Exception("Scene host device is null");
 
 			graphicsDevice = SharpDX.Toolkit.Graphics.GraphicsDevice.New(_device);
 			customEffect = Headset.GetCustomEffect(graphicsDevice);
@@ -208,7 +139,7 @@
 			//==============
 			//SharpDX.Toolkit.Graphics.EffectCompiler compiler = new SharpDX.Toolkit.Graphics.EffectCompiler();
 			//var shaderCode = compiler.CompileFromFile("Shaders/GammaShader.fx", SharpDX.Toolkit.Graphics.EffectCompilerFlags.Debug | SharpDX.Toolkit.Graphics.EffectCompilerFlags.EnableBackwardsCompatibility | SharpDX.Toolkit.Graphics.EffectCompilerFlags.SkipOptimization);
-			
+
 			//if (shaderCode.HasErrors)
 			//{
 			//	shaderCode.Logger.Messages.ForEach(m => System.Diagnostics.Debug.WriteLine("[shader error] " + m));
@@ -230,15 +161,22 @@
 
 
 
-			MediaDecoder.Instance.OnFormatChanged += ResizeTexture;
+			//			MediaDecoder.Instance.OnFormatChanged += ResizeTexture;
 			//MediaDecoder.Instance.OnReleaseTexture += ReleaseTexture;
 
-			projectionMatrix = Matrix.PerspectiveFovRH((float)(72f * Math.PI / 180f), (float)16f/9f, 0.0001f, 50.0f);
+			//MediaDecoder.Instance.OnLoadItYourself += (s, l, r) => actionQueue.Enqueue(() => {
+			//	Instance_OnLoadItYourself(s, l, r);
+			//});
+
+			MediaDecoder.Instance.OnContentChanged += () => requestContent = true;
+
+
+			projectionMatrix = Matrix.PerspectiveFovRH((float)(72f * Math.PI / 180f), (float)16f / 9f, 0.0001f, 50.0f);
 			worldMatrix = Matrix.Identity;
 
 			//basicEffect.PreferPerPixelLighting = false;
 
-			ResizeTexture(MediaDecoder.Instance.TextureL, MediaDecoder.Instance.TextureL);
+			//ResizeTexture(MediaDecoder.Instance.TextureL, MediaDecoder.Instance.TextureL);
 
 			//basicEffect.TextureEnabled = true;
 			//basicEffect.LightingEnabled = false;
@@ -249,16 +187,17 @@
 
 			_device.ImmediateContext.Flush();
 			ResetRotation();
-			
-            
-            var devices = SharpDX.RawInput.Device.GetDevices();
-            devices.ForEach(dev =>
-            {
-                if(dev.DeviceType == SharpDX.RawInput.DeviceType.Mouse)
-                    SharpDX.RawInput.Device.RegisterDevice(SharpDX.Multimedia.UsagePage.Generic, SharpDX.Multimedia.UsageId.GenericMouse, SharpDX.RawInput.DeviceFlags.None, dev.Handle);
-                Console.WriteLine($"Scene::Attach DX device: {dev.DeviceName} :: {dev.DeviceType}");
-            });
+
+
+			var devices = SharpDX.RawInput.Device.GetDevices();
+			devices.ForEach(dev =>
+			{
+				if (dev.DeviceType == SharpDX.RawInput.DeviceType.Mouse)
+					SharpDX.RawInput.Device.RegisterDevice(SharpDX.Multimedia.UsagePage.Generic, SharpDX.Multimedia.UsageId.GenericMouse, SharpDX.RawInput.DeviceFlags.None, dev.Handle);
+				Console.WriteLine($"Scene::Attach DX device: {dev.DeviceName} :: {dev.DeviceType}");
+			});
 		}
+
 
 		//public void SetLook(System.Tuple<float, float,float> euler)
 		//{
@@ -270,7 +209,7 @@
 		//	//remoteRotation = Matrix.RotationYawPitchRoll(MathUtil.DegreesToRadians(euler.Item2), MathUtil.DegreesToRadians(euler.Item1), MathUtil.DegreesToRadians(euler.Item3));
 		//}
 
-		public void SetLook(System.Tuple<float,float,float,float> quat)
+		public void SetLook(System.Tuple<float, float, float, float> quat)
 		{
 			targetRotationQuaternion = new Quaternion(quat.Item1, quat.Item2, -quat.Item3, quat.Item4);
 			lerpSpeed = 9f;
@@ -285,7 +224,7 @@
 		public void MoveDelta(float x, float y, float ratio, float lerpSpeed)
 		{
 			yaw += -MathUtil.DegreesToRadians(x) * ratio;
-            pitch += -MathUtil.DegreesToRadians(y) * ratio;
+			pitch += -MathUtil.DegreesToRadians(y) * ratio;
 
 			pitch = MathUtil.Clamp(pitch, (float)-Math.PI / 2f, (float)Math.PI / 2f);
 			Quaternion q1 = Quaternion.RotationYawPitchRoll(yaw, 0, 0);
@@ -299,14 +238,14 @@
 		{
 			targetFov += fov;
 			targetFov = Math.Min(MAX_FOV, Math.Max(targetFov, MIN_FOV));
-            ShellViewModel.SendEvent("zoomChanged", targetFov);
-        }
+			ShellViewModel.SendEvent("zoomChanged", targetFov);
+		}
 
 		public void ResetFov()
 		{
 			targetFov = DEFAULT_FOV;
-            ShellViewModel.SendEvent("zoomChanged", targetFov);
-        }
+			ShellViewModel.SendEvent("zoomChanged", targetFov);
+		}
 
 		public void ResetRotation()
 		{
@@ -319,9 +258,9 @@
 		}
 
 
-        void IScene.Detach()
-        {
-			MediaDecoder.Instance.OnFormatChanged -= ResizeTexture;
+		void IScene.Detach()
+		{
+			//MediaDecoder.Instance.OnFormatChanged -= ResizeTexture;
 			//MediaDecoder.Instance.OnReleaseTexture -= ReleaseTexture;
 
 			//Disposer.RemoveAndDispose(ref sharedTex);
@@ -349,10 +288,10 @@
 			targetFov = DEFAULT_FOV;
 
 			ShellViewModel.SendEvent("projectionChanged", "gnomic");
-        }
+		}
 
-        void IScene.Update(TimeSpan sceneTime)
-        {
+		void IScene.Update(TimeSpan sceneTime)
+		{
 			//if (pollForTexture)
 			//	if (!MediaDecoder.Instance.TextureReleased)
 			//	{
@@ -379,7 +318,7 @@
 
 			viewMatrix = Matrix.RotationQuaternion(currentRotationQuaternion);
 			viewMatrix *= Matrix.Translation(0, 0, currentOffset);
-			
+
 
 			Vector3 lookUp = Vector3.Transform(Vector3.Up, viewMatrix).ToVector3();
 			Vector3 lookAt = Vector3.Transform(Vector3.ForwardRH, viewMatrix).ToVector3();
@@ -395,7 +334,7 @@
 			//Quaternion q2 = q;
 			//q.X = 666;
 			//;
-			
+
 
 			//Logger.Publish("q1", q.ToString());
 			//GraphicTools.QuaternionToYawPitch(q);
@@ -456,7 +395,7 @@
 					if (keyboardInput.KeyDown(Key.OemMinus) || keyboardInput.KeyDown(Key.Subtract))
 						ChangeFov(fovVelocity * deltaTime);
 
-					if (keyboardInput.KeyDown(Key.OemPlus) || keyboardInput.KeyDown(Key.Add) )
+					if (keyboardInput.KeyDown(Key.OemPlus) || keyboardInput.KeyDown(Key.Add))
 						ChangeFov(-fovVelocity * deltaTime);
 				}
 
@@ -518,12 +457,12 @@
 
 
 		void IScene.Render()
-        {
+		{
 			actionQueue.RunAllActions();
 
 			Device device = this.Host.Device;
-            if (device == null)
-                return;
+			if (device == null)
+				return;
 
 			//currentFov = Lerp(currentFov, targetFov, 5f * deltaTime);
 			currentFov = currentFov.LerpInPlace(targetFov, 5f * deltaTime);
@@ -539,17 +478,23 @@
 			}
 
 
-            //if (!textureReleased)
-            //{
+			//if (!textureReleased)
+			//{
 
-            customEffect.Parameters["WorldViewProj"].SetValue(worldMatrix * viewMatrix * projectionMatrix);
+			customEffect.Parameters["WorldViewProj"].SetValue(worldMatrix * viewMatrix * projectionMatrix);
 
-			
+			if (requestContent)
+			{
+				requestContent = false;
+				requestContentCallback(this);
+			}
+
+
 			lock (localCritical)
 			{
 				primitive.Draw(customEffect);
 			}
-        }
+		}
 
 		private Matrix projectionMatrix;
 		private Matrix worldMatrix;
@@ -558,7 +503,7 @@
 		private float Lerp(float value1, float value2, float amount)
 		{
 			return value1 + (value2 - value1) * amount;
-        }
+		}
 
 
 		#region scene settings updater
@@ -575,6 +520,96 @@
 				// TODO: stereoscopy
 			});
 		}
+		#endregion
+
+
+		#region IContentUpdatableFromMediaEngine
+		void IContentUpdatableFromMediaEngine.ReceiveTextures(Texture2D textureL, Texture2D textureR)
+		{
+			if (MediaDecoder.Instance.TextureReleased) return;
+
+			lock (localCritical)
+			{
+				localVideoTexture?.Dispose();
+				localVideoTexture = null;
+
+				using (var resource = textureL.QueryInterface<SharpDX.DXGI.Resource>())
+				using (var sharedTex = _device.OpenSharedResource<Texture2D>(resource.SharedHandle))
+				{
+					customEffect.Parameters["UserTex"].SetResource(SharpDX.Toolkit.Graphics.Texture2D.New(graphicsDevice, sharedTex));
+					customEffect.Parameters["gammaFactor"].SetValue(1f);
+					customEffect.CurrentTechnique = customEffect.Techniques["ColorTechnique"];
+					customEffect.CurrentTechnique.Passes[0].Apply();
+				}
+			}
+		}
+
+
+		/// <summary>
+		/// Texture used with DataRects
+		/// </summary>
+		private Texture2D localVideoTexture = null;
+
+
+		void IContentUpdatableFromMediaEngine.ReceiveBitmap(Bitmap bitmap, MediaDecoder.ClipCoords texL, MediaDecoder.ClipCoords texR)
+		{
+			log.Info($"Received image of size {bitmap.Width}x{bitmap.Height} from stream");
+
+			var r = texL.SrcRectSystemDrawing(bitmap.Width, bitmap.Height);
+			var data = bitmap.LockBits(
+				r,
+				ImageLockMode.ReadOnly,
+				PixelFormat.Format32bppRgb
+			);
+			var dataRect = new DataRectangle(data.Scan0, data.Stride);
+
+			lock (localCritical)
+			{
+				localVideoTexture?.Dispose();
+
+				localVideoTexture = new Texture2D(
+					_device,
+					new Texture2DDescription()
+					{
+						Width = r.Width,
+						Height = r.Height,
+						MipLevels = 1,
+						ArraySize = 1,
+						Format = Format.B8G8R8X8_UNorm,
+						Usage = ResourceUsage.Default,
+						SampleDescription = new SampleDescription(1, 0),
+						BindFlags = /*BindFlags.RenderTarget |*/ BindFlags.ShaderResource,
+						CpuAccessFlags = CpuAccessFlags.None,
+						OptionFlags = ResourceOptionFlags.Shared
+					},
+					dataRect
+				);
+
+				using (var resource = localVideoTexture.QueryInterface<SharpDX.DXGI.Resource>())
+				using (var sharedTex = _device.OpenSharedResource<Texture2D>(resource.SharedHandle))
+				{
+					customEffect.Parameters["UserTex"].SetResource(SharpDX.Toolkit.Graphics.Texture2D.New(graphicsDevice, sharedTex));
+					customEffect.Parameters["gammaFactor"].SetValue(1f);
+					customEffect.CurrentTechnique = customEffect.Techniques["ColorTechnique"];
+					customEffect.CurrentTechnique.Passes[0].Apply();
+				}
+			}
+
+			bitmap.UnlockBits(data);
+
+			log.Info($"Changed texture");
+		}
+
+
+		void IContentUpdatableFromMediaEngine.ClearContent()
+		{
+			lock (localCritical)
+			{
+				localVideoTexture?.Dispose();
+				//customEffect.Parameters["UserTex"].SetResource(null);
+			}
+		}
+
 		#endregion
 	}
 }

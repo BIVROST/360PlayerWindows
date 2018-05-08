@@ -637,7 +637,7 @@ namespace Bivrost.Bivrost360Player
 					this.DXCanvas.Visibility = Visibility.Visible;
 				});
 
-				var scene = new Scene(_mediaDecoder.TextureL, _mediaDecoder.Projection);
+				var scene = new Scene(_mediaDecoder.Projection, _mediaDecoder.ContentRequested);
 				this.DXCanvas.Scene = scene;
                 this.DXCanvas.StartRendering();
 

@@ -186,6 +186,7 @@ namespace Bivrost.Bivrost360Player
         public event Action<double> OnProgress = delegate { };
 
 		//public event Action OnReleaseTexture = delegate { };
+		[Obsolete]
 		public event Action<Texture2D, Texture2D> OnFormatChanged = delegate { };
 		private bool textureReleased = true;
 		public bool TextureReleased { get { return textureReleased; } }
@@ -403,7 +404,7 @@ namespace Bivrost.Bivrost360Player
 		}
 
 
-		private class ClipCoords {
+		public class ClipCoords {
 
 			public float w;
 			public float h;
@@ -451,9 +452,9 @@ namespace Bivrost.Bivrost360Player
 			}
 
 		}
-		private void GetTextureClipCoordinates(out ClipCoords texL, out ClipCoords texR)
+		private static void GetTextureClipCoordinates(VideoMode mode, out ClipCoords texL, out ClipCoords texR)
 		{
-			switch (CurrentMode)
+			switch (mode)
 			{
 				case VideoMode.Autodetect:
 					throw new ArgumentException("Autodetect should not reach here");
@@ -504,7 +505,6 @@ namespace Bivrost.Bivrost360Player
 
 					int w, h;
 					_mediaEngineEx.GetNativeVideoSize(out w, out h);
-					CurrentMode = ParseStereoMode(LoadedStereoMode, w, h);
 
 					int cx, cy;
 					_mediaEngineEx.GetVideoAspectRatio(out cx, out cy);
@@ -532,7 +532,8 @@ namespace Bivrost.Bivrost360Player
 						if(formatChangePending)
 						{
 							formatChangePending = false;
-							ChangeFormat(w, h);
+							CurrentMode = ParseStereoMode(LoadedStereoMode, w, h);
+							ChangeFormat(CurrentMode, w, h);
 						}
 
 						if(!textureReleased)
@@ -554,7 +555,7 @@ namespace Bivrost.Bivrost360Player
 								try {
 									ClipCoords texL;
 									ClipCoords texR;
-									GetTextureClipCoordinates(out texL, out texR);
+									GetTextureClipCoordinates(CurrentMode, out texL, out texR);
 
 									_mediaEngine.TransferVideoFrame(TextureL, texL.NormalizedSrcRect, texL.DstRect(w,h), null);
 									if(texR != null)
@@ -583,7 +584,6 @@ namespace Bivrost.Bivrost360Player
 				var mode = (videoAspect < 1.3) ? VideoMode.TopBottom : VideoMode.Mono;
 				log.Info($"Autodetected stereoscopy={mode} ({w}x{h}, aspect={videoAspect})");
 				return mode;
-				//h = _stereoVideo ? h / 2 : h;
 			}
 			else
 			{
@@ -591,12 +591,50 @@ namespace Bivrost.Bivrost360Player
 			}
 		}
 
+
+		/// <summary>
+		/// Called by a IContentUpdatableFromMediaEngine when it wants
+		/// to have their content updated
+		/// </summary>
+		/// <param name="obj"></param>
+		public void ContentRequested(IContentUpdatableFromMediaEngine obj)
+		{
+			lock (criticalSection)
+			{
+				contentChangeDelegate(obj);
+			}
+		}
+
+		/// <summary>
+		/// When content changes (media, format, stereoscopy etc. changed), this event is called.
+		/// Objects implementing IContentUpdatableFromMediaEngine should react and call ContentRequested.
+		/// </summary>
+		public event Action OnContentChanged = delegate { };
+
+
+		Action<IContentUpdatableFromMediaEngine> contentChangeDelegate = null;
+
+
+		/// <summary>
+		/// Mark content as changed and notify whoever listens.
+		/// </summary>
+		/// <param name="contentChangeDelegate"></param>
+		private void ContentChanged(Action<IContentUpdatableFromMediaEngine> contentChangeDelegate)
+		{
+			lock (criticalSection)
+			{
+				this.contentChangeDelegate = contentChangeDelegate;
+				OnContentChanged?.Invoke();
+			}
+		}
+
+
 		/// <summary>
 		/// Should be executed in locked context
 		/// </summary>
 		/// <param name="w"></param>
 		/// <param name="h"></param>
-		private void ChangeFormat(int w, int h)
+		private void ChangeFormat(VideoMode mode, int w, int h)
 		{
 			Texture2D tempL = TextureL;
 			Texture2D tempR = TextureR;
@@ -604,7 +642,7 @@ namespace Bivrost.Bivrost360Player
 			textureReleased = true;
 
 			ClipCoords texL, texR;
-			GetTextureClipCoordinates(out texL, out texR);
+			GetTextureClipCoordinates(mode, out texL, out texR);
 			TextureL = CreateTexture(_device, texL.Width(w), texL.Height(h));
 			TextureR = (texR != null) ? CreateTexture(_device, texR.Width(w), texR.Height(h)) : null;
 
@@ -613,6 +651,9 @@ namespace Bivrost.Bivrost360Player
 			//OnReleaseTexture();
 			OnFormatChanged(TextureL, TextureR);
 			if (waitForFormatChange) waitForFormatChange = false;
+
+
+			ContentChanged(r => r.ReceiveTextures(TextureL, TextureR));
 
 			tempL?.Dispose();
 			tempR?.Dispose();
@@ -736,6 +777,8 @@ namespace Bivrost.Bivrost360Player
 				TextureL = null;
 				TextureR = null;
 
+				ContentChanged(r => r.ClearContent());
+
 				_initialized = false;	
 			}
 
@@ -799,81 +842,29 @@ namespace Bivrost.Bivrost360Player
 				case ServiceResult.ContentType.image:
 					staticContentSource = File.ReadAllBytes(_fileName);
 
-					using (var stream = new MemoryStream(staticContentSource))  // stream, so it won't lock the file
-					using (var bitmap = new Bitmap(stream))
+
+					ContentChanged(renderer =>
 					{
-						
-
-						//var ret = new SharpDX.Direct3D11.Texture2D(device, new SharpDX.Direct3D11.Texture2DDescription()
-						//{
-						//	Width = bitmap.Width,
-						//	Height = bitmap.Height,
-						//	ArraySize = 1,
-						//	BindFlags = SharpDX.Direct3D11.BindFlags.ShaderResource,
-						//	Usage = SharpDX.Direct3D11.ResourceUsage.Immutable,
-						//	CpuAccessFlags = SharpDX.Direct3D11.CpuAccessFlags.None,
-						//	Format = SharpDX.DXGI.Format.B8G8R8A8_UNorm,
-						//	MipLevels = 1,
-						//	OptionFlags = SharpDX.Direct3D11.ResourceOptionFlags.None,
-						//	SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
-						//}, new SharpDX.DataRectangle(data.Scan0, data.Stride));
-
-
-
-						// to be later cleaned up
-						var tempL = TextureL;
-						var tempR = TextureR;
-
-						var w = bitmap.Width;
-						var h = bitmap.Height;
-						log.Info($"Loaded image of size {w}x{h} from {_fileName}");
-						CurrentMode = ParseStereoMode(LoadedStereoMode, w, h);
-
-						ClipCoords texL, texR;
-						GetTextureClipCoordinates(out texL, out texR);
-
-						lock (criticalSection)
+						using (var stream = new MemoryStream(staticContentSource))  // stream, so it won't lock the file
+						using (var bitmap = new Bitmap(stream))
 						{
-							textureReleased = true;
+							var w = bitmap.Width;
+							var h = bitmap.Height;
+							log.Info($"Loaded image of size {w}x{h} from {_fileName}");
+							CurrentMode = ParseStereoMode(LoadedStereoMode, w, h);
 
-							var data = bitmap.LockBits(
-								texL.SrcRectSystemDrawing(w, h),
-								ImageLockMode.ReadOnly, PixelFormat.Format32bppRgb
-							);
-							var dataRect = new DataRectangle(data.Scan0, data.Stride);
-							TextureL = CreateTexture(_device, texL.Width(w), texL.Height(h), dataRect);
-							bitmap.UnlockBits(data);
+							ClipCoords texL, texR;
+							GetTextureClipCoordinates(CurrentMode, out texL, out texR);
 
-							if (texR != null)
-							{
-								data = bitmap.LockBits(
-									texR.SrcRectSystemDrawing(w, h),
-									ImageLockMode.ReadOnly, PixelFormat.Format32bppRgb
-								);
-								dataRect = new DataRectangle(data.Scan0, data.Stride);
-								TextureR = CreateTexture(_device, texR.Width(w), texR.Height(h), dataRect);
-								bitmap.UnlockBits(data);
-							}
-							else
-							{
-								TextureR = null;
-							}
-
-							textureReleased = false;
+							renderer.ReceiveBitmap(bitmap, texL, texR);
 						}
+					});
 
 
-						tempL?.Dispose();
-						tempR?.Dispose();
-
-					}
-
-					OnFormatChanged(TextureL, TextureR);
 					OnReady?.Invoke(-1);
 					
 					break;
-					}
-			
+			}
 		}
 
 
