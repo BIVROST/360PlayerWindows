@@ -23,9 +23,27 @@
 
 	public interface IContentUpdatableFromMediaEngine
 	{
-		//bool IsReady { get; }
+		/// <summary>
+		/// The renderer receives a texture that it will use but not manage
+		/// Should not be disposed.
+		/// </summary>
+		/// <param name="textureL">Texture that should be used with the left eye or common view</param>
+		/// <param name="textureR">Texture that should be used with the right eye, can be null</param>
 		void ReceiveTextures(Texture2D textureL, Texture2D textureR);
+
+
+		/// <summary>
+		/// The renderer receives a source bitmap and coordinates for viewports in 
+		/// </summary>
+		/// <param name="bitmap">Source bitmap with the complete video frame</param>
+		/// <param name="coordsL">Coordinates of the bitmap that should be used with the left eye or common view</param>
+		/// <param name="coordsR">Coordinates of the bitmap that should be used with the right eye, can be null</param>
 		void ReceiveBitmap(Bitmap bitmap, MediaDecoder.ClipCoords coordsL, MediaDecoder.ClipCoords coordsR);
+
+
+		/// <summary>
+		/// The renderer is instructed that the content previously sent is no more valid and should be discarded.
+		/// </summary>
 		void ClearContent();
 
 		// TODO: stereoscopy?
@@ -88,13 +106,13 @@
 		internal void HeadsetEnabled(Headset headset)
 		{
 			headset.ProvideLook += Headset_ProvideLook;
-			LoggerManager.Publish("headset", headset.DescribeType);
+			log.Publish("headset", headset.DescribeType);
 		}
 
 		private void Headset_ProvideLook(Vector3 pos, Quaternion rot, float fov)
 		{
 			headsetLookRotation = rot;
-			LoggerManager.Publish("q.recv", rot);
+			log.Publish("q.recv", rot);
 		}
 
 		internal void HeadsetDisabled(Headset headset)
@@ -106,12 +124,10 @@
 		#endregion
 
 
-		public Scene(ProjectionMode projection, Action<IContentUpdatableFromMediaEngine> requestContent)
+		public Scene(ProjectionMode projection, Action<IContentUpdatableFromMediaEngine> requestContentCallback)
 		{
-			//videoTexture = sharedTexture;
 			projectionMode = projection;
-			this.requestContentCallback = requestContent;
-			//ResizeTexture(sharedTexture, null);
+			this.requestContentCallback = requestContentCallback;
 		}
 
 
@@ -135,55 +151,12 @@
 			graphicsDevice = SharpDX.Toolkit.Graphics.GraphicsDevice.New(_device);
 			customEffect = Headset.GetCustomEffect(graphicsDevice);
 
-
-			//==============
-			//SharpDX.Toolkit.Graphics.EffectCompiler compiler = new SharpDX.Toolkit.Graphics.EffectCompiler();
-			//var shaderCode = compiler.CompileFromFile("Shaders/GammaShader.fx", SharpDX.Toolkit.Graphics.EffectCompilerFlags.Debug | SharpDX.Toolkit.Graphics.EffectCompilerFlags.EnableBackwardsCompatibility | SharpDX.Toolkit.Graphics.EffectCompilerFlags.SkipOptimization);
-
-			//if (shaderCode.HasErrors)
-			//{
-			//	shaderCode.Logger.Messages.ForEach(m => System.Diagnostics.Debug.WriteLine("[shader error] " + m));
-			//}
-			//customEffect = new SharpDX.Toolkit.Graphics.Effect(graphicsDevice, shaderCode.EffectData);
-			//customEffect.CurrentTechnique = customEffect.Techniques["ColorTechnique"];
-			//customEffect.CurrentTechnique.Passes[0].Apply();
-
-			//SharpDX.D3DCompiler.ShaderReflection sr;
-			//sr = new SharpDX.D3DCompiler.ShaderReflection(shaderCode.EffectData.Shaders[0].Bytecode);
-			//int ResourceCount = sr.Description.BoundResources;
-			//SharpDX.D3DCompiler.InputBindingDescription desc = sr.GetResourceBindingDescription(0);
-			//;
-
-
-			//==============
-
-
-
-
-
-			//			MediaDecoder.Instance.OnFormatChanged += ResizeTexture;
-			//MediaDecoder.Instance.OnReleaseTexture += ReleaseTexture;
-
-			//MediaDecoder.Instance.OnLoadItYourself += (s, l, r) => actionQueue.Enqueue(() => {
-			//	Instance_OnLoadItYourself(s, l, r);
-			//});
-
-			MediaDecoder.Instance.OnContentChanged += () => requestContent = true;
-
+			MediaDecoder.Instance.OnContentChanged += ContentChanged;
 
 			projectionMatrix = Matrix.PerspectiveFovRH((float)(72f * Math.PI / 180f), (float)16f / 9f, 0.0001f, 50.0f);
 			worldMatrix = Matrix.Identity;
-
-			//basicEffect.PreferPerPixelLighting = false;
-
-			//ResizeTexture(MediaDecoder.Instance.TextureL, MediaDecoder.Instance.TextureL);
-
-			//basicEffect.TextureEnabled = true;
-			//basicEffect.LightingEnabled = false;
-			//basicEffect.Sampler = graphicsDevice.SamplerStates.AnisotropicClamp;
-
+			
 			primitive = GraphicTools.CreateGeometry(projectionMode, graphicsDevice);
-			//primitive2 = SharpDX.Toolkit.Graphics.GeometricPrimitive.Plane.New(graphicsDevice, 1f,1f);
 
 			_device.ImmediateContext.Flush();
 			ResetRotation();
@@ -198,16 +171,10 @@
 			});
 		}
 
-
-		//public void SetLook(System.Tuple<float, float,float> euler)
-		//{
-		//	remoteRotationOverride = true;
-		//	Quaternion q1 = Quaternion.RotationYawPitchRoll(MathUtil.DegreesToRadians(euler.Item2), 0, 0);
-		//	Quaternion q2 = Quaternion.RotationYawPitchRoll(0, MathUtil.DegreesToRadians(euler.Item1), 0);
-		//	Quaternion q3 = Quaternion.RotationYawPitchRoll(0, 0, MathUtil.DegreesToRadians(euler.Item3));
-		//	remoteRotation = Matrix.RotationQuaternion(q3 * (q2 * q1));
-		//	//remoteRotation = Matrix.RotationYawPitchRoll(MathUtil.DegreesToRadians(euler.Item2), MathUtil.DegreesToRadians(euler.Item1), MathUtil.DegreesToRadians(euler.Item3));
-		//}
+		private void ContentChanged()
+		{
+			requestContent = true;
+		}
 
 		public void SetLook(System.Tuple<float, float, float, float> quat)
 		{
@@ -215,11 +182,6 @@
 			lerpSpeed = 9f;
 		}
 
-		public void SetVideoTexture(Texture2D sharedTexture)
-		{
-			throw new NotImplementedException();
-			//this.videoTexture = sharedTexture;
-		}
 
 		public void MoveDelta(float x, float y, float ratio, float lerpSpeed)
 		{
@@ -229,7 +191,6 @@
 			pitch = MathUtil.Clamp(pitch, (float)-Math.PI / 2f, (float)Math.PI / 2f);
 			Quaternion q1 = Quaternion.RotationYawPitchRoll(yaw, 0, 0);
 			Quaternion q2 = Quaternion.RotationYawPitchRoll(0, pitch, 0);
-			//basicEffect.View = Matrix.RotationQuaternion(q2 * q1);
 			this.lerpSpeed = lerpSpeed;
 			targetRotationQuaternion = q2 * q1;
 		}
@@ -260,11 +221,8 @@
 
 		void IScene.Detach()
 		{
-			//MediaDecoder.Instance.OnFormatChanged -= ResizeTexture;
-			//MediaDecoder.Instance.OnReleaseTexture -= ReleaseTexture;
+			MediaDecoder.Instance.OnContentChanged -= ContentChanged;
 
-			//Disposer.RemoveAndDispose(ref sharedTex);
-			//Disposer.RemoveAndDispose(ref resource);
 			Disposer.RemoveAndDispose(ref graphicsDevice);
 			Disposer.RemoveAndDispose(ref customEffect);
 			Disposer.RemoveAndDispose(ref primitive);
@@ -292,25 +250,12 @@
 
 		void IScene.Update(TimeSpan sceneTime)
 		{
-			//if (pollForTexture)
-			//	if (!MediaDecoder.Instance.TextureReleased)
-			//	{
-			//		ResizeTexture(MediaDecoder.Instance.TextureL, MediaDecoder.Instance.TextureR);
-			//		pollForTexture = false;
-			//	}
-
 			var currentFrameTime = (float)sceneTime.TotalMilliseconds * 0.001f;
 			if (lastFrameTime == 0) lastFrameTime = currentFrameTime;
 			deltaTime = currentFrameTime - lastFrameTime;
 			lastFrameTime = currentFrameTime;
 
 			currentRotationQuaternion = Quaternion.Lerp(currentRotationQuaternion, targetRotationQuaternion, lerpSpeed * deltaTime);
-
-
-
-
-			//Console.WriteLine("")
-
 			if (UseVrLook)
 				currentRotationQuaternion = headsetLookRotation;
 
@@ -319,34 +264,12 @@
 			viewMatrix = Matrix.RotationQuaternion(currentRotationQuaternion);
 			viewMatrix *= Matrix.Translation(0, 0, currentOffset);
 
-
 			Vector3 lookUp = Vector3.Transform(Vector3.Up, viewMatrix).ToVector3();
 			Vector3 lookAt = Vector3.Transform(Vector3.ForwardRH, viewMatrix).ToVector3();
 
-			//Console.WriteLine($"SCENE: up: {lookUp:00.00}|{Vector3.Transform(Vector3.Up, currentRotationQuaternion):00.00} at: {lookAt:00.00}|{Vector3.Transform(Vector3.ForwardRH, currentRotationQuaternion):00.00}");
-
-			LoggerManager.Publish("scene.forward", lookAt.ToString("0.00"));
-			LoggerManager.Publish("scene.up", lookUp.ToString("0.00"));
-			LoggerManager.Publish("scene.vr_quat", headsetLookRotation);
-
-
-			//Quaternion q = new Quaternion(headsetLookRotation.X, headsetLookRotation.Y, headsetLookRotation.Z, headsetLookRotation.W);
-			//Quaternion q2 = q;
-			//q.X = 666;
-			//;
-
-
-			//Logger.Publish("q1", q.ToString());
-			//GraphicTools.QuaternionToYawPitch(q);
-			//Logger.Publish("q2", q.ToString());
-
-
-
-
-			//basicEffect.View = Matrix.Lerp(basicEffect.View, Matrix.RotationQuaternion(targetRotationQuaternion), 3f * deltaTime);
-
-			//customEffect.Parameters["WorldViewProj"].SetValue(basicEffect.World * basicEffect.View * basicEffect.Projection);
-
+			log.Publish("forward", lookAt.ToString("0.00"));
+			log.Publish("up", lookUp.ToString("0.00"));
+			log.Publish("vr_quat", headsetLookRotation);
 		}
 
 

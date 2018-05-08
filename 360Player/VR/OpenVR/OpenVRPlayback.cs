@@ -184,8 +184,6 @@ namespace Bivrost.Bivrost360Player.OpenVR
 			using (DepthStencilView rightEyeDepthView = new DepthStencilView(_device, rightEyeDepth))
 			using (vrui = new VRUI(_device, _gd))
 			{
-				BindToMediadecoder();
-
 				primitive = GraphicTools.CreateGeometry(Projection, _gd, false);
 
 				Stopwatch stopwatch = new Stopwatch();
@@ -201,6 +199,7 @@ namespace Bivrost.Bivrost360Player.OpenVR
 					while (!abort)
 					{
 						updateSettingsActionQueue.RunAllActions();
+						UpdateContentIfRequested();
 
 						float deltaTime = (float)stopwatch.Elapsed.TotalSeconds;
 						stopwatch.Restart();
@@ -348,7 +347,6 @@ namespace Bivrost.Bivrost360Player.OpenVR
 				finally
 				{
 					Valve.VR.OpenVR.Shutdown();
-					MediaDecoder.Instance.OnFormatChanged -= ResizeTexture;
 
 					primitive?.Dispose();
 					context.ClearState();

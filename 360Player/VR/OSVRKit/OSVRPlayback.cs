@@ -310,7 +310,6 @@ namespace Bivrost.Bivrost360Player.OSVRKit
 			using (Texture2D backBuffer = Texture2D.FromSwapChain<Texture2D>(swapChain, 0))
 			using (RenderTargetView renderView = new RenderTargetView(_device, backBuffer))
 			{
-				BindToMediadecoder();
 				primitive = GraphicTools.CreateGeometry(Projection, _gd);
 
 				DateTime startTime = DateTime.Now;
@@ -343,6 +342,7 @@ namespace Bivrost.Bivrost360Player.OSVRKit
 					}
 
 					updateSettingsActionQueue.RunAllActions();
+					UpdateContentIfRequested();
 
 					context.update();
 
@@ -421,8 +421,6 @@ namespace Bivrost.Bivrost360Player.OSVRKit
 
 				#endregion
 				//debugWindow.Stop();
-
-				MediaDecoder.Instance.OnFormatChanged -= ResizeTexture;
 
 				waitForRendererStop.Set();
 

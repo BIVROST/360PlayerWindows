@@ -241,8 +241,6 @@ namespace Bivrost.Bivrost360Player.Oculus
 						layerEyeFov.Header.Flags = OVRTypes.LayerFlags.HighQuality;
 					}
 
-					BindToMediadecoder();
-
 					#region Render loop
 					DateTime startTime = DateTime.Now;
 					DateTime lastTime = DateTime.Now;
@@ -252,6 +250,7 @@ namespace Bivrost.Bivrost360Player.Oculus
 					while (!abort)
 					{
 						updateSettingsActionQueue.RunAllActions();
+						UpdateContentIfRequested();
 
 						OVRTypes.Vector3f[] hmdToEyeViewOffsets = { eyeTextures[0].HmdToEyeViewOffset, eyeTextures[1].HmdToEyeViewOffset };
 						//OVR.FrameTiming frameTiming = hmd.GetFrameTiming(0);
@@ -364,8 +363,6 @@ namespace Bivrost.Bivrost360Player.Oculus
 
 					#endregion
 					//debugWindow.Stop();
-
-					MediaDecoder.Instance.OnFormatChanged -= ResizeTexture;
 
 					waitForRendererStop.Set();
 
