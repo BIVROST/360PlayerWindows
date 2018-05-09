@@ -1,20 +1,21 @@
 BIVROST 360Player for Windows
 =============================
 
-The easiest way to watch 360-videos using a VR headset!
+The easiest way to watch 360-videos and images using a VR headset!
 
 ![Screenshot of BIVROST 360Player](Docs/360Player-movie.png)
 
-The 360Player by BIVROST is a video player for immersive spherical videos. The desktop application for Windows allows you to play virtual reality videos on your PC using a VR headset. It supports all versions of Oculus Rift, HTC Vive, OSVR and Windows Mixed Reality headsets.
+The 360Player by BIVROST is a video player for immersive spherical videos and images. The desktop application for Windows allows you to play virtual reality media on your PC using a VR headset. It supports all versions of Oculus Rift, HTC Vive, OSVR and Windows Mixed Reality headsets.
 
-Download the player to experience videos in a smooth way and with high performance. Watch videos up to 4K and enjoy the finest resolution at 360 degrees.
+Download the player to experience videos in a smooth way and with high performance. Watch images and videos up to 8K and enjoy the finest resolution at 360 degrees.
 
 
 Key features
 ------------
 
 * 360 videos in up to 8K resolution
-* 3D (stereoscopic) movie playback
+* 3D (stereoscopic) playback
+* 360 photo support (photosphere)
 * VR Headsets support
   * Oculus: Oculus Rift DK2, Oculus Rift CV1
   * OpenVR (SteamVR): HTC Vive
@@ -49,6 +50,7 @@ Requirements
 Supported files and internet services
 -------------------------------------
 * Local and remote mp4 with H264 or H265/HEVC encoding.
+* Local and remote images: JPEG and PNG.
 * HLS streams
 * Littlstar streams
 * Pornhub streams
@@ -59,7 +61,7 @@ Using the player
 
 To use the 360Player for Windows open a file or an URL address from the Internet using *File → Open File*, *File → Open URL* or the buttons at the center of the player when no movie is playing.
 
-You can also drag and drop a movie onto the player or right click on a movie and select "Open in 360Player".
+You can also drag and drop a movie or image onto the player or right click on a file and select "Open in 360Player".
 
 ![Right click menu on a mp4 file](Docs/Rightclick-menu.png)
 
@@ -88,7 +90,7 @@ Available only when movie is playing:
 * **Arrow keys** or **`A` `W` `S` `D`**: look around
 * **`+`/`-`** or **mouse wheel**: zoom in and out
 * **`Control` + `0`**: reset zoom
-* **`[`** and **`]`**
+* **`[`** and **`]`**: skip backwards/forwards by 5 seconds
 
 Gamepad control
 ---------------
@@ -131,8 +133,10 @@ This software is free and can be used only for noncommercial purposes. To purcha
 You need to run the player with Nvidia graphic card. Click here for more instructions. There are some Optimus configurations that may not work properly. Feel free to write to support if you encountered one of them to help us make the player better.
 
 ### I'm getting "File not supported" error when trying to play video.
-BIVROST 360Player supports playback of video files and codecs based on Microsoft Media Foundation. Popular file formats compatible with the Player: mp4, avi, mov. Popular codecs: H.263, H.264, H.265/HEVC, Windows Media Video. Matroska is not currently supported. Complete list of formats is available here [MSDN][msdn-file-formats].  
- However, not all formats and resolutions are supported on all systems. It depends on your configuration and Windows version. The greatest variety is available on Windows 10.
+BIVROST 360Player supports playback of video files and codecs based on Microsoft Media Foundation and common image formats.  
+Popular video file formats compatible with the Player: mp4, avi, mov. Popular codecs: H.263, H.264, H.265/HEVC, Windows Media Video. Matroska is not currently supported. Complete list of formats is available [on the MSDN][msdn-file-formats].  
+The Player also displays PNG and JPEG photos.  
+However, not all formats and resolutions are supported on all systems. It depends on your configuration and Windows version. The greatest variety is available on Windows 10.
 
 [msdn-file-formats]: https://msdn.microsoft.com/pl-pl/library/windows/desktop/dd757927(v=vs.85).aspx
 

@@ -276,3 +276,10 @@ Headsets now persist.
 - Headset integration stays opened while switching movies
 - A background image is displayed when nothing is playing
 
+### 2018-05-09 7167d80 / 1.0.0.202
+Panorama support
+Details:
+- 360 images are now supported from local and remote files.
+- Fixed: headset look direction again forwarded to main window.
+- Refactored internals of media and projection switching.
+

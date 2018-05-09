@@ -150,7 +150,9 @@
 								<Setter Property="Command" Value="{Binding Command}" />
 							</DataTrigger>
 						</Style.Triggers>
-					</Style>
+                        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                    </Style>
 
 					<CollectionViewSource x:Key="dynamicItems" Source="{Binding Items}"/>
 				</Menu.Resources>
@@ -348,11 +350,13 @@
             <Slider x:Name="VideoProgressBar" Orientation="Horizontal" Minimum="0" Maximum="{Binding MaxTime, Mode=OneWay}" ClipToBounds="False" Style="{StaticResource MyCustomStyleForSlider}" IsMoveToPointEnabled="True"
 					cal:Message.Attach="[PreviewMouseDown] = [SliderLock]; [PreviewMouseUp] = [SliderUnlock]" LargeChange="0" SmallChange="0" VerticalAlignment="Top" Margin="0 -8 0 0"
 					Value="{Binding TimeValue}" Grid.ColumnSpan="3" Focusable="False"
+					Visibility="{Binding Path=IsContentAVideo, Converter={StaticResource BoolToVis}, FallbackValue=Visible}"
 					>
             </Slider>
 
-            <StackPanel Orientation="Horizontal" x:Name="playbackControlButtons" Grid.ColumnSpan="3" Height="68">
-                <Button x:Name="FastRewind"  Width="36" Height="36" Margin="24 0 4 0">
+            <StackPanel Orientation="Horizontal" x:Name="playbackControlButtons" Grid.ColumnSpan="3" Height="68" 
+                        Visibility="{Binding Path=IsContentAVideo, Converter={StaticResource BoolToVis}, FallbackValue=Visible}">
+                <Button x:Name="FastRewind"  Width="36" Height="36" Margin="24 0 4 0" Focusable="False">
                     <Button.Template>
                         <ControlTemplate TargetType="{x:Type Button}">
                             <Grid IsHitTestVisible="True" Background="Transparent" ToolTip="Fast-Rewind">
@@ -375,7 +379,7 @@
 
 
 
-                <Button x:Name="PlayPause"  Width="45" Height="45" Margin="4 0">
+                <Button x:Name="PlayPause"  Width="45" Height="45" Margin="4 0" Focusable="False">
                     <Button.Template>
                         <ControlTemplate TargetType="{x:Type Button}">
                             <Grid IsHitTestVisible="True" Background="Transparent" ToolTip="Play">
@@ -396,7 +400,7 @@
                     </Button.Template>
                 </Button>
 
-                <Button x:Name="Pause"  Width="45" Height="45" Margin="4 0">
+                <Button x:Name="Pause"  Width="45" Height="45" Margin="4 0" Focusable="False">
                     <Button.Template>
                         <ControlTemplate TargetType="{x:Type Button}">
                             <Grid IsHitTestVisible="True" Background="Transparent" ToolTip="Pause">
@@ -417,7 +421,7 @@
                     </Button.Template>
                 </Button>
 
-                <Button x:Name="Stop"  Width="36" Height="36" Margin="4 0">
+                <Button x:Name="Stop"  Width="36" Height="36" Margin="4 0" Focusable="False">
                     <Button.Template>
                         <ControlTemplate TargetType="{x:Type Button}">
                             <Grid IsHitTestVisible="True" Background="Transparent" ToolTip="Stop">
@@ -438,7 +442,7 @@
                     </Button.Template>
                 </Button>
 
-                <Button x:Name="FastForward"  Width="36" Height="36" Margin="4 0">
+                <Button x:Name="FastForward"  Width="36" Height="36" Margin="4 0" Focusable="False">
                     <Button.Template>
                         <ControlTemplate TargetType="{x:Type Button}">
                             <Grid IsHitTestVisible="True" Background="Transparent" ToolTip="Fast-Forward">
@@ -459,7 +463,7 @@
                     </Button.Template>
                 </Button>
 
-                <ToggleButton x:Name="RepeatButton"  Width="36" Height="36" Margin="4 0"  IsChecked="{Binding Loop}">
+                <ToggleButton x:Name="RepeatButton"  Width="36" Height="36" Margin="4 0"  IsChecked="{Binding Loop}" Focusable="False">
                     <ToggleButton.Template>
                         <ControlTemplate TargetType="{x:Type ToggleButton}">
                             <Grid IsHitTestVisible="True" Background="Transparent" ToolTip="Play mode">
@@ -577,18 +581,22 @@
                     </ToggleButton.Template>
                 </ToggleButton>
 
-                <TextBlock x:Name="BufferingStatus" Grid.Column="1" Foreground="White" Text="Buffering media..." HorizontalAlignment="Right" VerticalAlignment="Center" Margin="18 0 18 0" />
+                <TextBlock x:Name="BufferingStatus" Grid.Column="1" Foreground="White" Text="Buffering media..." 
+                           HorizontalAlignment="Right" VerticalAlignment="Center" Margin="18 0 18 0" />
 
 
             </StackPanel>
 
             <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Grid.Column="2" Height="68">
 
-                <TextBlock x:Name="VideoTime" Grid.Column="1" Foreground="White" Text="0:00 / 0:00" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="5 0 18 0" />
+                <TextBlock x:Name="VideoTime" Grid.Column="1" Foreground="White" Text="0:00 / 0:00" 
+                           HorizontalAlignment="Right" VerticalAlignment="Center" Margin="5 0 18 0"
+                    Visibility="{Binding Path=ShouldShowVideoTime, Converter={StaticResource BoolToVis}, FallbackValue=Visible}"
+                />
 
 
 
-                <Button x:Name="OpenSettings"  Width="36" Height="36" Margin="4 0">
+                <Button x:Name="OpenSettings"  Width="36" Height="36" Margin="4 0" Focusable="False">
                     <Button.Template>
                         <ControlTemplate TargetType="{x:Type Button}">
                             <Grid IsHitTestVisible="True" Background="Transparent" ToolTip="Settings">
@@ -609,7 +617,7 @@
                     </Button.Template>
                 </Button>
 
-                <Button x:Name="HeadsetSelect"  Width="36" Height="36" Margin="4 0">
+                <Button x:Name="HeadsetSelect"  Width="36" Height="36" Margin="4 0" Focusable="False">
                     <Button.Template>
                         <ControlTemplate TargetType="{x:Type Button}">
                             <Grid IsHitTestVisible="True" Background="Transparent" ToolTip="VR Headset">
@@ -631,7 +639,7 @@
                 </Button>
 
                 <ToggleButton x:Name="VolumeButton"  Width="36" Height="36" Margin="4 0" cal:Message.Attach="[Event MouseEnter] = [Action ShowVolumeControl];
-							  [Event Click] = [Action Mute]; [Event MouseWheel] = [Action VolumeMouseWheel($eventArgs)]">
+							  [Event Click] = [Action Mute]; [Event MouseWheel] = [Action VolumeMouseWheel($eventArgs)]" Focusable="False">
                     <ToggleButton.Template>
                         <ControlTemplate TargetType="{x:Type ToggleButton}">
                             <Grid IsHitTestVisible="True" Background="Transparent" ToolTip="{Binding VolumeTooltip}">
@@ -749,7 +757,7 @@
                     </ToggleButton.Template>
                 </ToggleButton>
 
-                <ToggleButton x:Name="ToggleFullscreen"  Width="36" Height="36" Margin="4 0 20 0" IsChecked="{Binding Fullscreen}">
+                <ToggleButton x:Name="ToggleFullscreen"  Width="36" Height="36" Margin="4 0 20 0" IsChecked="{Binding Fullscreen}" Focusable="False">
                     <ToggleButton.Template>
                         <ControlTemplate TargetType="{x:Type ToggleButton}">
                             <Grid IsHitTestVisible="True" Background="Transparent" ToolTip="Fullscreen">

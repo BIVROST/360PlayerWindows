@@ -184,9 +184,7 @@ namespace Bivrost.Bivrost360Player.OpenVR
 			using (DepthStencilView rightEyeDepthView = new DepthStencilView(_device, rightEyeDepth))
 			using (vrui = new VRUI(_device, _gd))
 			{
-				BindToMediadecoder();
-
-				primitive = GraphicTools.CreateGeometry(Projection, _gd, false);
+				//primitive = GraphicTools.CreateGeometry(Projection, _gd, false);
 
 				Stopwatch stopwatch = new Stopwatch();
 				Texture_t leftEyeTex = new Texture_t() { eColorSpace = EColorSpace.Gamma, eType = EGraphicsAPIConvention.API_DirectX, handle = leftEye.NativePointer };
@@ -200,7 +198,7 @@ namespace Bivrost.Bivrost360Player.OpenVR
 				{
 					while (!abort)
 					{
-						updateSettingsActionQueue.RunAllActions();
+						UpdateContentIfRequested();
 
 						float deltaTime = (float)stopwatch.Elapsed.TotalSeconds;
 						stopwatch.Restart();
@@ -252,18 +250,13 @@ namespace Bivrost.Bivrost360Player.OpenVR
 
 							lock (localCritical)
 							{
-								if (_stereoVideo)
-								{
-									if (eye == EVREye.Eye_Left)
-										primitive.Draw(customEffectL);
-									if (eye == EVREye.Eye_Right)
-										primitive.Draw(customEffectR);
-								}
-								else
-									primitive.Draw(customEffectL);
+								if (eye == EVREye.Eye_Left)
+									primitive?.Draw(customEffectL);
+								if (eye == EVREye.Eye_Right)
+									primitive?.Draw(customEffectR);
 							}
 
-							if (eye == EVREye.Eye_Left || true)
+							if (eye == EVREye.Eye_Left)
 							{
 								Vector3 fixedLookPosition = Vector3.Transform(lookPosition, MVP).ToVector3();
 								Vector3 fixedLookAt = Vector3.Transform(lookPosition + Vector3.ForwardLH, MVP).ToVector3() - fixedLookPosition;
@@ -353,7 +346,6 @@ namespace Bivrost.Bivrost360Player.OpenVR
 				finally
 				{
 					Valve.VR.OpenVR.Shutdown();
-					MediaDecoder.Instance.OnFormatChanged -= ResizeTexture;
 
 					primitive?.Dispose();
 					context.ClearState();

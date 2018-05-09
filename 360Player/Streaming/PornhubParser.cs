@@ -21,25 +21,25 @@ namespace Bivrost.Bivrost360Player.Streaming
 			return Regex.IsMatch(uri, @"^(https?://)?(www.)?pornhub.com/view_video.php?.+", RegexOptions.IgnoreCase);
 		}
 
-		internal MediaDecoder.ProjectionMode ParseProjection(int projection)
+		internal ProjectionMode ParseProjection(int projection)
 		{
 			switch (projection)
 			{
 				case 1: throw new StreamNotSupported("DomeEquidistant projection not supported yet: " + projection);
-				case 2: return MediaDecoder.ProjectionMode.Sphere;
-				case 3: return MediaDecoder.ProjectionMode.Dome;
+				case 2: return ProjectionMode.Sphere;
+				case 3: return ProjectionMode.Dome;
 				default: throw new StreamParsingFailed("Projection unknown: " + projection);
 			}
 		}
 
-		internal MediaDecoder.VideoMode ParseStereo(int stereo)
+		internal VideoMode ParseStereo(int stereo)
 		{
 			switch (stereo)
 			{
-				case 1: return MediaDecoder.VideoMode.SideBySide;
-				case 2: return MediaDecoder.VideoMode.TopBottom;
-				case 3: return MediaDecoder.VideoMode.SideBySideReversed;
-				case 4: return MediaDecoder.VideoMode.TopBottomReversed;
+				case 1: return VideoMode.SideBySide;
+				case 2: return VideoMode.TopBottom;
+				case 3: return VideoMode.SideBySideReversed;
+				case 4: return VideoMode.TopBottomReversed;
 				default:
 					throw new StreamParsingFailed("Stereoscopy unknown: " + stereo);
 			}
@@ -68,7 +68,7 @@ namespace Bivrost.Bivrost360Player.Streaming
 				throw new StreamNotSupported("This movie is not VR enabled: " + uri);
 
 			result.projection = ParseProjection((int)vrProps["projection"]);
-			result.stereoscopy = (bool)vrProps["stereoSrc"] ? ParseStereo((int)vrProps["stereoType"]) : MediaDecoder.VideoMode.Mono;
+			result.stereoscopy = (bool)vrProps["stereoSrc"] ? ParseStereo((int)vrProps["stereoType"]) : VideoMode.Mono;
 
 			result.title = Regex.Match(html, @"<title>(.+)<[/]title>").Groups[1].Captures[0].Value;
 
@@ -104,7 +104,7 @@ namespace Bivrost.Bivrost360Player.Streaming
 				{
 					var stream = new VideoStream()
 					{
-						container = VideoContainer.mp4,
+						container = Container.mp4,
 						url = md.videoUrl,
 						hasAudio = true,
 						quality = 0,

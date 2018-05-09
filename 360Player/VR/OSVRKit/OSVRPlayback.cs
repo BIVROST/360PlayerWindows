@@ -310,8 +310,7 @@ namespace Bivrost.Bivrost360Player.OSVRKit
 			using (Texture2D backBuffer = Texture2D.FromSwapChain<Texture2D>(swapChain, 0))
 			using (RenderTargetView renderView = new RenderTargetView(_device, backBuffer))
 			{
-				BindToMediadecoder();
-				primitive = GraphicTools.CreateGeometry(Projection, _gd);
+				//primitive = GraphicTools.CreateGeometry(Projection, _gd);
 
 				DateTime startTime = DateTime.Now;
 				Vector3 position = new Vector3(0, 0, -1);
@@ -342,7 +341,7 @@ namespace Bivrost.Bivrost360Player.OSVRKit
 						first = false;
 					}
 
-					updateSettingsActionQueue.RunAllActions();
+					UpdateContentIfRequested();
 
 					context.update();
 
@@ -393,15 +392,10 @@ namespace Bivrost.Bivrost360Player.OSVRKit
 
 							lock (localCritical)
 							{
-								if (_stereoVideo)
-								{
-									if (eye == 0)
-										primitive.Draw(customEffectL);
-									if (eye == 1)
-										primitive.Draw(customEffectR);
-								}
-								else
-									primitive.Draw(customEffectL);
+								if (eye == 0)
+									primitive?.Draw(customEffectL);
+								if (eye == 1)
+									primitive?.Draw(customEffectR);
 							}
 
 							// reset UI position every frame if it is not visible
@@ -426,8 +420,6 @@ namespace Bivrost.Bivrost360Player.OSVRKit
 
 				#endregion
 				//debugWindow.Stop();
-
-				MediaDecoder.Instance.OnFormatChanged -= ResizeTexture;
 
 				waitForRendererStop.Set();
 

@@ -28,9 +28,10 @@ namespace Bivrost.Bivrost360Player.Streaming
 			// TODO: if html, try to parse it?
 			// TODO: search for bivrost-360webplayer tags
 
+			var container = GuessContainerFromExtension(uri);
 			return new ServiceResult(uri, ServiceName, URIToMediaId(uri))
             {
-                projection = MediaDecoder.ProjectionMode.Sphere,
+                projection = ProjectionMode.Sphere,
 				stereoscopy = GuessStereoscopyFromFileName(uri),
                 videoStreams = new List<VideoStream>()
                 {
@@ -38,10 +39,12 @@ namespace Bivrost.Bivrost360Player.Streaming
                     {
                         url = uri,
                         hasAudio = true, // TODO
-                        container = GuessContainerFromExtension(uri)
+                        container = container
                     }
-                }
-            };
+                },
+				contentType = GuessContentTypeFromContainer(container)
+
+			};
         }
     }
 }

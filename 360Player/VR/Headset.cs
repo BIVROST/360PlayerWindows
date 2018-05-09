@@ -2,11 +2,12 @@
 using SharpDX.Direct3D11;
 using System;
 using System.Threading;
-using System.Threading.Tasks;
 using SharpDX;
 using Bivrost.Bivrost360Player.Streaming;
 using Bivrost.Log;
 using Bivrost.Bivrost360Player.Tools;
+using System.Drawing;
+using System.Drawing.Imaging;
 
 namespace Bivrost.Bivrost360Player
 {
@@ -18,14 +19,14 @@ namespace Bivrost.Bivrost360Player
 	}
 
 
-	public abstract class Headset : ILookProvider, IUpdatableSceneSettings
-    {
+	public abstract class Headset : ILookProvider, IContentUpdatableFromMediaEngine
+	{
 
 		private static ServiceResult nothingIsPlaying = new ServiceResult(null, "(none)", "nothing")
 		{
 			description = "",
-			stereoscopy = MediaDecoder.VideoMode.Autodetect,
-			projection = MediaDecoder.ProjectionMode.Sphere,
+			stereoscopy = VideoMode.Autodetect,
+			projection = ProjectionMode.Sphere,
 			title = "",
 			contentType = ServiceResult.ContentType.none
 		};
@@ -39,11 +40,11 @@ namespace Bivrost.Bivrost360Player
 				pause = false;
 				_media = value;
 				vrui?.EnqueueUIRedraw();
-				UpdateSceneSettings(Media.projection, Media.stereoscopy);
+				
+				//UpdateSceneSettings(Media.projection, Media.stereoscopy);
 			}
 		}
-		public bool _stereoVideo => Array.IndexOf(new[] { MediaDecoder.VideoMode.Mono, MediaDecoder.VideoMode.Autodetect }, Media.stereoscopy) < 0;
-		public MediaDecoder.ProjectionMode Projection => Media.projection;
+		//public bool _stereoVideo => Array.IndexOf(new[] { VideoMode.Mono, VideoMode.Autodetect }, Media.stereoscopy) < 0;
 		protected float Duration => (float)MediaDecoder.Instance.Duration;
 
 
@@ -62,6 +63,7 @@ namespace Bivrost.Bivrost360Player
 			{
 				try
 				{
+					MediaDecoder.Instance.OnContentChanged += ContentChanged;
 					Render();
 				}
 				catch (Exception exc)
@@ -71,6 +73,7 @@ namespace Bivrost.Bivrost360Player
 				}
 				finally
 				{
+					MediaDecoder.Instance.OnContentChanged -= ContentChanged;
 					Lock = false;
 					_defaultBackgroundTexture?.Dispose();
 					_defaultBackgroundTexture = null;
@@ -209,116 +212,181 @@ namespace Bivrost.Bivrost360Player
 			}
 		}
 
-
-		public void ResizeTexture(Texture2D textureL, Texture2D textureR)
-		{
-			if(textureL == null && textureR == null)
-			{
-				log.Info("ResizeTexture got null textures, loading defaults...");
-
-				SetDefaultScene();
-				return;
-			}
-
-			log.Info($"ResizeTexture {textureL}, {textureR} enqueued");
-
-			updateSettingsActionQueue.Enqueue(() => 
-			{
-				if (MediaDecoder.Instance.TextureReleased) {
-					log.Error("MediaDecoder texture released");
-					return;
-				}
-
-				lock (localCritical)
-				{
-					TextureCleanup();
-
-					using (var resourceL = textureL.QueryInterface<SharpDX.DXGI.Resource>())
-					using (var sharedTexL = _device.OpenSharedResource<Texture2D>(resourceL.SharedHandle))
-					{
-						customEffectL.Parameters["UserTex"].SetResource(SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexL));
-						customEffectL.Parameters["gammaFactor"].SetValue(Gamma);
-						customEffectL.CurrentTechnique = customEffectL.Techniques["ColorTechnique"];
-						customEffectL.CurrentTechnique.Passes[0].Apply();
-					}
-
-
-					using (var resourceR = textureR.QueryInterface<SharpDX.DXGI.Resource>())
-					using (var sharedTexR = _device.OpenSharedResource<Texture2D>(resourceR.SharedHandle))
-					{
-						customEffectR.Parameters["UserTex"].SetResource(SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexR));
-						customEffectR.Parameters["gammaFactor"].SetValue(Gamma);
-						customEffectR.CurrentTechnique = customEffectR.Techniques["ColorTechnique"];
-						customEffectR.CurrentTechnique.Passes[0].Apply();
-					}
-
-					//_device.ImmediateContext.Flush();
-				}
-
-				vrui?.EnqueueUIRedraw();
-			});
-		}
-
-
-		protected void BindToMediadecoder()
-		{
-			//_stereoVideo ? MediaDecoder.Instance.TextureR : MediaDecoder.Instance.TextureL);
-			ResizeTexture(MediaDecoder.Instance.TextureL, MediaDecoder.Instance.TextureR);
-			MediaDecoder.Instance.OnFormatChanged += ResizeTexture;
-		}
-
-
+		
 		void TextureCleanup()
 		{
-			var disposableL = customEffectL.Parameters["UserTex"]?.GetResource<IDisposable>();
-			var disposableR = customEffectR.Parameters["UserTex"]?.GetResource<IDisposable>();
-
-			if (disposableL != null && disposableL != _defaultBackgroundTexture)
-				disposableL.Dispose();
-
-			if (disposableR != null && disposableR != _defaultBackgroundTexture)
-				disposableR.Dispose();
+			localBitmapTextureL?.Dispose();
+			localBitmapTextureR?.Dispose();
+			localBitmapTextureL = null;
+			localBitmapTextureR = null;
 		}
 
 
 		public void SetDefaultScene()
 		{
-			updateSettingsActionQueue.Enqueue(() => {
-				lock (localCritical)
-				{
-					TextureCleanup();
+			lock (localCritical)
+			{
+				TextureCleanup();
 
-					customEffectL.Parameters["UserTex"].SetResource(DefaultBackgroundTexture);
+				customEffectL.Parameters["UserTex"].SetResource(DefaultBackgroundTexture);
+				customEffectL.Parameters["gammaFactor"].SetValue(Gamma);
+				customEffectL.CurrentTechnique = customEffectL.Techniques["ColorTechnique"];
+				customEffectL.CurrentTechnique.Passes[0].Apply();
+
+				customEffectR.Parameters["UserTex"].SetResource(DefaultBackgroundTexture);
+				customEffectR.Parameters["gammaFactor"].SetValue(Gamma);
+				customEffectR.CurrentTechnique = customEffectR.Techniques["ColorTechnique"];
+				customEffectR.CurrentTechnique.Passes[0].Apply();
+
+				primitive?.Dispose();
+				primitive = GraphicTools.CreateGeometry(ProjectionMode.Sphere, _gd, false);
+			}
+
+			vrui?.EnqueueUIRedraw();
+		}
+
+
+		private bool contentUpdateRequested = true;
+		protected void UpdateContentIfRequested()
+		{
+			if (contentUpdateRequested)
+			{
+				contentUpdateRequested = false;
+				lock (localCritical)
+					MediaDecoder.Instance.ContentRequested(this);
+			}
+		}
+		private void ContentChanged()
+		{
+			contentUpdateRequested = true;
+		}
+
+
+		abstract public bool IsPresent();
+
+
+		protected SharpDX.Toolkit.Graphics.GeometricPrimitive primitive;
+
+		void IContentUpdatableFromMediaEngine.ReceiveTextures(Texture2D textureL, Texture2D textureR)
+		{
+			if (MediaDecoder.Instance.TextureReleased)
+			{
+				log.Error("MediaDecoder texture released");
+				return;
+			}
+
+			lock (localCritical)
+			{
+				TextureCleanup();
+
+				using (var resourceL = textureL.QueryInterface<SharpDX.DXGI.Resource>())
+				using (var sharedTexL = _device.OpenSharedResource<Texture2D>(resourceL.SharedHandle))
+				{
+					customEffectL.Parameters["UserTex"].SetResource(SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexL));
 					customEffectL.Parameters["gammaFactor"].SetValue(Gamma);
 					customEffectL.CurrentTechnique = customEffectL.Techniques["ColorTechnique"];
 					customEffectL.CurrentTechnique.Passes[0].Apply();
+				}
 
-					customEffectR.Parameters["UserTex"].SetResource(DefaultBackgroundTexture);
+				using (var resourceR = (textureR ?? textureL).QueryInterface<SharpDX.DXGI.Resource>())
+				using (var sharedTexR = _device.OpenSharedResource<Texture2D>(resourceR.SharedHandle))
+				{
+					customEffectR.Parameters["UserTex"].SetResource(SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexR));
 					customEffectR.Parameters["gammaFactor"].SetValue(Gamma);
 					customEffectR.CurrentTechnique = customEffectR.Techniques["ColorTechnique"];
 					customEffectR.CurrentTechnique.Passes[0].Apply();
 				}
 
-				vrui?.EnqueueUIRedraw();
+				//_device.ImmediateContext.Flush();
+			}
 
-			});
-
-			// also enqueued
-			UpdateSceneSettings(MediaDecoder.ProjectionMode.Sphere, MediaDecoder.VideoMode.Mono);
+			vrui?.EnqueueUIRedraw();
 		}
 
-		abstract public bool IsPresent();
+
+		Texture2D localBitmapTextureL;
+		Texture2D localBitmapTextureR;
 
 
-		protected Bivrost.ActionQueue updateSettingsActionQueue = new Bivrost.ActionQueue();
-		protected SharpDX.Toolkit.Graphics.GeometricPrimitive primitive;
-		public void UpdateSceneSettings(MediaDecoder.ProjectionMode projectionMode, MediaDecoder.VideoMode stereoscopy)
+
+		private Texture2D BitmapAndCoordsToTexture2D(Bitmap bitmap, MediaDecoder.ClipCoords coords)
 		{
-			updateSettingsActionQueue.Enqueue(() =>
+			var rect = coords.SrcRectSystemDrawing(bitmap.Width, bitmap.Height);
+			var data = bitmap.LockBits(
+				rect,
+				ImageLockMode.ReadOnly,
+				PixelFormat.Format32bppRgb
+			);
+			DataRectangle dataRect = new DataRectangle(data.Scan0, data.Stride);
+			var tex = new Texture2D(
+				_device,
+				new Texture2DDescription()
+				{
+					Width = rect.Width,
+					Height = rect.Height,
+					MipLevels = 1,
+					ArraySize = 1,
+					Format = SharpDX.DXGI.Format.B8G8R8X8_UNorm,
+					Usage = ResourceUsage.Default,
+					SampleDescription = new SharpDX.DXGI.SampleDescription(1, 0),
+					BindFlags = /*BindFlags.RenderTarget |*/ BindFlags.ShaderResource,
+					CpuAccessFlags = CpuAccessFlags.None,
+					OptionFlags = ResourceOptionFlags.Shared
+				},
+				dataRect
+			);
+			bitmap.UnlockBits(data);
+
+			return tex;
+		}
+
+		void IContentUpdatableFromMediaEngine.ReceiveBitmap(Bitmap bitmap, MediaDecoder.ClipCoords texL, MediaDecoder.ClipCoords texR)
+		{
+			log.Info($"Received image of size {bitmap.Width}x{bitmap.Height} from stream");
+
+
+			lock (localCritical)
+			{
+				TextureCleanup();
+
+				localBitmapTextureL = BitmapAndCoordsToTexture2D(bitmap, texL);
+				localBitmapTextureR = (texR != null) ? BitmapAndCoordsToTexture2D(bitmap, texR) : null;
+
+				using (var resourceL = localBitmapTextureL.QueryInterface<SharpDX.DXGI.Resource>())
+				using (var sharedTexL = _device.OpenSharedResource<Texture2D>(resourceL.SharedHandle))
+				{
+					customEffectL.Parameters["UserTex"].SetResource(SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexL));
+					customEffectL.Parameters["gammaFactor"].SetValue(Gamma);
+					customEffectL.CurrentTechnique = customEffectL.Techniques["ColorTechnique"];
+					customEffectL.CurrentTechnique.Passes[0].Apply();
+				}
+
+				using (var resourceR = (localBitmapTextureR ?? localBitmapTextureL).QueryInterface<SharpDX.DXGI.Resource>())
+				using (var sharedTexR = _device.OpenSharedResource<Texture2D>(resourceR.SharedHandle))
+				{
+					customEffectR.Parameters["UserTex"].SetResource(SharpDX.Toolkit.Graphics.Texture2D.New(_gd, sharedTexR));
+					customEffectR.Parameters["gammaFactor"].SetValue(Gamma);
+					customEffectR.CurrentTechnique = customEffectR.Techniques["ColorTechnique"];
+					customEffectR.CurrentTechnique.Passes[0].Apply();
+				}
+			}
+
+			log.Info($"Changed texture");
+		}
+
+
+		void IContentUpdatableFromMediaEngine.ClearContent()
+		{
+			SetDefaultScene();
+		}
+
+		void IContentUpdatableFromMediaEngine.SetProjection(ProjectionMode projection)
+		{
+			lock (localCritical)
 			{
 				primitive?.Dispose();
-				primitive = GraphicTools.CreateGeometry(projectionMode, _gd, false);
-			});
+				primitive = GraphicTools.CreateGeometry(projection, _gd, false);
+			}
 		}
 	}
 }

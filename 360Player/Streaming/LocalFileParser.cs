@@ -45,9 +45,11 @@ namespace Bivrost.Bivrost360Player.Streaming
             byte[] hash = sha.ComputeHash(data);
             string mediaId = $"sha1+len:{string.Concat(Array.ConvertAll(hash, x => x.ToString("x2")))}+{fileInfo.Length}";
 
-            return new ServiceResult(path, ServiceName, mediaId)
+			var container = GuessContainerFromExtension(path);
+
+			return new ServiceResult(path, ServiceName, mediaId)
 			{
-				projection = MediaDecoder.ProjectionMode.Sphere,
+				projection = ProjectionMode.Sphere,
 				stereoscopy = GuessStereoscopyFromFileName(uri),
 				videoStreams = new List<VideoStream>()
 				{
@@ -55,14 +57,15 @@ namespace Bivrost.Bivrost360Player.Streaming
 					{
 						url = uri,
 						hasAudio = true, // TODO
-                        container = GuessContainerFromExtension(path)
+                        container = container
                     }
 				},
-				title = Path.GetFileNameWithoutExtension(uri)
+				title = Path.GetFileNameWithoutExtension(uri),
+				contentType = GuessContentTypeFromContainer(container)
 			};
 		}
 
-        public override string ServiceName
+		public override string ServiceName
         {
             get { return "Local file"; }
         }

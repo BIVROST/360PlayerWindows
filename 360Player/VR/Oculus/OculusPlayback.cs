@@ -138,8 +138,6 @@ namespace Bivrost.Bivrost360Player.Oculus
 					if (hmd.ProductName == string.Empty)
 						throw new HeadsetError("The HMD is not enabled.");
 
-					primitive = GraphicTools.CreateGeometry(Projection, _gd, false);
-
 					Viewport viewport = new Viewport(0, 0, hmd.Resolution.Width, hmd.Resolution.Height, 0.0f, 1.0f);
 					LayerEyeFov layerEyeFov = layers.AddLayerEyeFov();
 
@@ -241,8 +239,6 @@ namespace Bivrost.Bivrost360Player.Oculus
 						layerEyeFov.Header.Flags = OVRTypes.LayerFlags.HighQuality;
 					}
 
-					BindToMediadecoder();
-
 					#region Render loop
 					DateTime startTime = DateTime.Now;
 					DateTime lastTime = DateTime.Now;
@@ -251,7 +247,7 @@ namespace Bivrost.Bivrost360Player.Oculus
 
 					while (!abort)
 					{
-						updateSettingsActionQueue.RunAllActions();
+						UpdateContentIfRequested();
 
 						OVRTypes.Vector3f[] hmdToEyeViewOffsets = { eyeTextures[0].HmdToEyeViewOffset, eyeTextures[1].HmdToEyeViewOffset };
 						//OVR.FrameTiming frameTiming = hmd.GetFrameTiming(0);
@@ -318,15 +314,10 @@ namespace Bivrost.Bivrost360Player.Oculus
 
 							lock (localCritical)
 							{
-								if (_stereoVideo)
-								{
-									if (eyeIndex == 0)
-										primitive.Draw(customEffectL);
-									if (eyeIndex == 1)
-										primitive.Draw(customEffectR);
-								}
-								else
-									primitive.Draw(customEffectL);
+								if (eyeIndex == 0)
+									primitive?.Draw(customEffectL);
+								if (eyeIndex == 1)
+									primitive?.Draw(customEffectR);
 							}
 
 							if (ProvideLook != null && eyeIndex == 0)
@@ -369,8 +360,6 @@ namespace Bivrost.Bivrost360Player.Oculus
 
 					#endregion
 					//debugWindow.Stop();
-
-					MediaDecoder.Instance.OnFormatChanged -= ResizeTexture;
 
 					waitForRendererStop.Set();
 

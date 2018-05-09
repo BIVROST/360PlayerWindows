@@ -72,7 +72,7 @@ namespace Bivrost.Bivrost360Player.Streaming
 					case "mobile":
 						videostreams.Add(new VideoStream()
 						{
-							container = VideoContainer.mp4,
+							container = Container.mp4,
 							quality = 1,
 							width = 1334,
 							height = 666,
@@ -84,7 +84,7 @@ namespace Bivrost.Bivrost360Player.Streaming
 					case "mobile_hd":
 						videostreams.Add(new VideoStream()
 						{
-							container = VideoContainer.mp4,
+							container = Container.mp4,
 							quality = 2,
 							width = 1920,
 							height = 960,
@@ -96,7 +96,7 @@ namespace Bivrost.Bivrost360Player.Streaming
 					case "web":
 						videostreams.Add(new VideoStream()
 						{
-							container = VideoContainer.mp4,
+							container = Container.mp4,
 							quality = 3,
 							width = 1920,
 							height = 960,
@@ -108,7 +108,7 @@ namespace Bivrost.Bivrost360Player.Streaming
 					case "alcatel":
 						videostreams.Add(new VideoStream()
 						{
-							container = VideoContainer.mp4,
+							container = Container.mp4,
 							quality = 4,
 							width = 1920,
 							height = 1080,
@@ -120,7 +120,7 @@ namespace Bivrost.Bivrost360Player.Streaming
 					case "oculus_rift":
 						videostreams.Add(new VideoStream()
 						{
-							container = VideoContainer.mp4,
+							container = Container.mp4,
 							quality = 5,
 							width = 2160,
 							height = 1080,
@@ -132,7 +132,7 @@ namespace Bivrost.Bivrost360Player.Streaming
 					case "gear_vr":
 						videostreams.Add(new VideoStream()
 						{
-							container = VideoContainer.mp4,
+							container = Container.mp4,
 							quality = 6,
 							width = 2560,
 							height = 1280,
@@ -144,7 +144,7 @@ namespace Bivrost.Bivrost360Player.Streaming
 					case "vr":
 						videostreams.Add(new VideoStream()
 						{
-							container = VideoContainer.mp4,
+							container = Container.mp4,
 							quality = 7,
 							width = 2560,
 							height = 1280,
@@ -156,7 +156,7 @@ namespace Bivrost.Bivrost360Player.Streaming
 					case "web_hd":
 						videostreams.Add(new VideoStream()
 						{
-							container = VideoContainer.mp4,
+							container = Container.mp4,
 							quality = 8,
 							width = 2560,
 							height = 1280,
@@ -168,7 +168,7 @@ namespace Bivrost.Bivrost360Player.Streaming
                     case "psvr":
                         videostreams.Add(new VideoStream()
                         {
-                            container = VideoContainer.hls,
+                            container = Container.hls,
                             quality = 9,
                             url = (string)kvp.Value,
                             hasAudio = true
@@ -184,8 +184,8 @@ namespace Bivrost.Bivrost360Player.Streaming
             string originalURL = "https://www.littlstar.com/videos/" + id;
             return new ServiceResult(originalURL, ServiceName, originalURL)
 			{
-				projection = MediaDecoder.ProjectionMode.Sphere,
-				stereoscopy = MediaDecoder.VideoMode.Mono,
+				projection = ProjectionMode.Sphere,
+				stereoscopy = VideoMode.Mono,
 				title = (string)jobject["title"],
 				description = (string)jobject["description"],
 				videoStreams = videostreams

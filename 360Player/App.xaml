@@ -10,6 +10,10 @@
 				</ResourceDictionary>
 				<ResourceDictionary Source="/Theme/Generic.xaml" />					
 			</ResourceDictionary.MergedDictionaries>
-		</ResourceDictionary>
+            <Style TargetType="MenuItem">
+                <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+            </Style>
+        </ResourceDictionary>
 	</Application.Resources>
 </Application>

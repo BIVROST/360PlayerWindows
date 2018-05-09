@@ -35,6 +35,5 @@ namespace Bivrost.Bivrost360Player
         void Detach();
         void Update(TimeSpan timeSpan);
         void Render();
-		void SetVideoTexture(Texture2D texure);
     }
 }

@@ -25,6 +25,7 @@ using LoggerManager = Bivrost.Log.LoggerManager;
 using Bivrost.AnalyticsForVR;
 using Bivrost.Log;
 using Bivrost.MOTD;
+using Bivrost.Bivrost360Player.Streaming;
 
 namespace Bivrost.Bivrost360Player
 {
@@ -66,11 +67,10 @@ namespace Bivrost.Bivrost360Player
 		public string SelectedFileNameLabel => SelectedServiceResult?.TitleWithFallback ?? "";
 
 
-		public string SelectedFileName => SelectedServiceResult?.BestQualityVideoStream(
-					Streaming.VideoContainer.mp4 | Streaming.VideoContainer.hls | Streaming.VideoContainer.avi | Streaming.VideoContainer.wmv).url;
+		public string SelectedFileName => SelectedServiceResult?.BestSupportedStream;
 
-		private Streaming.ServiceResult _selectedServiceResult = null;
-		public Streaming.ServiceResult SelectedServiceResult
+		private ServiceResult _selectedServiceResult = null;
+		public ServiceResult SelectedServiceResult
         {
 			get { return _selectedServiceResult; }
 			set
@@ -80,8 +80,18 @@ namespace Bivrost.Bivrost360Player
 				NotifyOfPropertyChange(nameof(SelectedFileTitle));
 				NotifyOfPropertyChange(nameof(SelectedFileDescription));
 				NotifyOfPropertyChange(nameof(SelectedFileNameLabel));
+				NotifyOfPropertyChange(nameof(IsContentAVideo));
+				NotifyOfPropertyChange(nameof(ShouldShowVideoTime));
 			}
 		}
+
+		public bool IsContentAVideo => (SelectedServiceResult == null) 
+			? true 
+			: SelectedServiceResult.contentType == Streaming.ServiceResult.ContentType.video;
+
+		public bool ShouldShowVideoTime => (SelectedServiceResult == null)
+			? false
+			: SelectedServiceResult.contentType == Streaming.ServiceResult.ContentType.video && IsPlaying;
 
 		public bool IsFileSelected { get; set; }
 
@@ -402,26 +412,26 @@ namespace Bivrost.Bivrost360Player
 
 
 
-		public void LoadMedia(bool autoplay = true)
+		public void LoadMedia(ServiceResult result, bool autoplay = true)
 		{
+
+			SelectedServiceResult = result;
+
+			IsFileSelected = true;
+
+			Recents.AddRecent(result);
+			UpdateFileRecentsMenuState();
+
 			_ready = false;
 			if (!IsFileSelected) return;
 			this.autoplay = autoplay;
-			//if (!string.IsNullOrWhiteSpace(SelectedFileName))
-			//{
-			//	if (Path.GetFileNameWithoutExtension(SelectedFileName).ToLower().Contains("fbcube"))
-			//		_mediaDecoder.Projection = MediaDecoder.ProjectionMode.CubeFacebook;
-			//	else
-			//		_mediaDecoder.Projection = MediaDecoder.ProjectionMode.Sphere;
-			//}
 
 			if (CurrentHeadset != null)
 			{
 				CurrentHeadset.Media = SelectedServiceResult;
 			}
 
-			string mediaFile = SelectedFileName;
-			Task.Factory.StartNew(() => _mediaDecoder.LoadMedia(mediaFile));
+			Task.Factory.StartNew(() => _mediaDecoder.LoadMedia(result));
 		}
 
 		protected override void OnViewAttached(object view, object context)
@@ -443,14 +453,14 @@ namespace Bivrost.Bivrost360Player
 					{
 						//SelectedFileName = Logic.Instance.settings.AutoPlayFile.Trim();
 
-						SelectedServiceResult = Streaming.StreamingFactory.Instance.GetStreamingInfo(Logic.Instance.settings.AutoPlayFile.Trim());
+						var result = StreamingFactory.Instance.GetStreamingInfo(Logic.Instance.settings.AutoPlayFile.Trim());
 
-						LoadMedia();
+						LoadMedia(result);
 						//Play();
 					}
 				}
 
-			ResetVR();
+			//ResetVR();
 
 
 			shellView.MouseMove += WatchUIVisibility;
@@ -619,12 +629,14 @@ namespace Bivrost.Bivrost360Player
 					this.DXCanvas.Visibility = Visibility.Visible;
 				});
 
-				var scene = new Scene(_mediaDecoder.TextureL, _mediaDecoder.Projection);
+				var scene = new Scene(_mediaDecoder.ContentRequested);
 				this.DXCanvas.Scene = scene;
                 this.DXCanvas.StartRendering();
 
 				HeadsetEnable += scene.HeadsetEnabled;
 				HeadsetDisable += scene.HeadsetDisabled;
+				if (CurrentHeadset != null)
+					scene.HeadsetEnabled(CurrentHeadset);
 
 
 
@@ -637,7 +649,8 @@ namespace Bivrost.Bivrost360Player
 				NotifyOfPropertyChange(null);
 
 				playerWindow.Focus();
-				AnimateIndicator(shellView.PlayIndicator);
+				if(IsContentAVideo)
+					AnimateIndicator(shellView.PlayIndicator);
 			});
 
 			//});			
@@ -663,8 +676,8 @@ namespace Bivrost.Bivrost360Player
 				}
 			}
 
-			_mediaDecoder.Projection = MediaDecoder.ProjectionMode.Sphere;
-			_mediaDecoder.StereoMode = MediaDecoder.VideoMode.Autodetect;
+			//_mediaDecoder.Projection = ProjectionMode.Sphere;
+			//_mediaDecoder.StereoMode = VideoMode.Autodetect;
 
 			SelectedServiceResult = null;
 		}
@@ -705,17 +718,7 @@ namespace Bivrost.Bivrost360Player
 			{
 				ResetPlayback();
 
-                SelectedServiceResult = result;
-
-				IsFileSelected = true;
-				_mediaDecoder.Projection = result.projection;
-				_mediaDecoder.StereoMode = result.stereoscopy;
-				//SelectedFileTitle = result.title;
-
-				Recents.AddRecent(result);
-				UpdateFileRecentsMenuState();
-
-				LoadMedia();
+				LoadMedia(result);
 			});
 		}
 
@@ -731,7 +734,7 @@ namespace Bivrost.Bivrost360Player
 			if (!IsPlaying)		// <press space or click while movie disabled hack
 			{
 				if (CanPlay)
-					LoadMedia();
+					LoadMedia(SelectedServiceResult);
 				// is automatic - Play();
 			}
 			else
@@ -759,7 +762,8 @@ namespace Bivrost.Bivrost360Player
 				shellView.PlayPause.Visibility = Visibility.Visible;
 				shellView.Pause.Visibility = Visibility.Collapsed;
 				NotifyOfPropertyChange(() => CanPlay);
-				AnimateIndicator(shellView.PauseIndicator);
+				if (IsContentAVideo)
+					AnimateIndicator(shellView.PauseIndicator);
 			});
 
 			VRUIPause();
@@ -778,7 +782,8 @@ namespace Bivrost.Bivrost360Player
 				shellView.PlayPause.Visibility = Visibility.Collapsed;
 				shellView.Pause.Visibility = Visibility.Visible;
 				NotifyOfPropertyChange(() => CanPlay);
-				AnimateIndicator(shellView.PlayIndicator);
+				if (IsContentAVideo)
+					AnimateIndicator(shellView.PlayIndicator);
 
 				VRUIUnpause();
 			});
@@ -887,21 +892,21 @@ namespace Bivrost.Bivrost360Player
 		}
 
 		public bool CanPlay { get { return (!IsPlaying || IsPaused) && IsFileSelected; } }
-		public bool CanStopOrRewind { get { return IsPlaying; } }
+		public bool CanStopOrRewind { get { return IsPlaying && !_mediaDecoder.IsDisplayingStaticContent; } }
 
 		//public bool CanOpenFile { get { return !IsPlaying; } }
 
 
 		public void Stop()
 		{
-			LoggerManager.Info("FILE ENDED");
+			LoggerManager.Info("File ended");
 			if (Fullscreen) if (!Logic.Instance.settings.DoNotExitFullscreenOnStop) ToggleFullscreen(true);
 			//space press hack
 			Execute.OnUIThread(() => shellView.VideoProgressBar.Focus());
 			ShowBars();
 			ShowStartupUI();
 
-			LoggerManager.Info("STOP STOP STOP");
+			LoggerManager.Info("Media stopped");
 
 			this.DXCanvas.Scene = null;
 
@@ -944,6 +949,8 @@ namespace Bivrost.Bivrost360Player
 			});
 
 			waitForPlaybackStop.Set();
+
+			//SelectedServiceResult = null;
 
 			NotifyOfPropertyChange(() => PlayerTitle);
 			NotifyOfPropertyChange(() => CanStopOrRewind);
@@ -1206,20 +1213,27 @@ namespace Bivrost.Bivrost360Player
 
  
 #region menu options: projection
-		protected void SetProjection(MediaDecoder.ProjectionMode? projection)
+		protected void SetProjection(ProjectionMode projection)
 		{
-			HACK_Projection = projection;
+			_mediaDecoder.Projection = projection;
 
-			if (DXCanvas.Scene != null)
-			{
-				Scene scene = (Scene)DXCanvas.Scene;
-				scene.UpdateSceneSettings(projection.GetValueOrDefault(MediaDecoder.ProjectionMode.Sphere), MediaDecoder.VideoMode.Autodetect);
-			}
+			//if (DXCanvas.Scene != null)
+			//{
+			//	Scene scene = (Scene)DXCanvas.Scene;
+			//	scene.UpdateSceneSettings(projection, VideoMode.Autodetect);
+			//}
 
-			UpdateVRSceneSettings(
-				projection.GetValueOrDefault(MediaDecoder.ProjectionMode.Sphere), 
-				MediaDecoder.VideoMode.Autodetect
-			);
+			//UpdateVRSceneSettings(
+			//	projection.GetValueOrDefault(ProjectionMode.Sphere), 
+			//	VideoMode.Autodetect
+			//);
+
+
+
+			//void UpdateVRSceneSettings(ProjectionMode projectionMode, VideoMode videoMode)
+			//{
+			//	CurrentHeadset?.UpdateSceneSettings(projectionMode, videoMode);
+			//}
 
 			NotifyOfPropertyChange(() => ProjectionIsAuto);
 			NotifyOfPropertyChange(() => ProjectionIsEquirectangular);
@@ -1227,26 +1241,25 @@ namespace Bivrost.Bivrost360Player
 			NotifyOfPropertyChange(() => ProjectionIsDome);
 		}
 
-		protected MediaDecoder.ProjectionMode? HACK_Projection = null;
 		public bool ProjectionIsAuto
 		{
-			get { return !HACK_Projection.HasValue; }
-			set { if (value) SetProjection(null); }
+			get { return _mediaDecoder.Projection == ProjectionMode.Autodetect; }
+			set { if (value) SetProjection(ProjectionMode.Autodetect); }
 		}
 		public bool ProjectionIsEquirectangular
 		{
-			get { return HACK_Projection.HasValue && HACK_Projection == MediaDecoder.ProjectionMode.Sphere; }
-			set { if (value) SetProjection(MediaDecoder.ProjectionMode.Sphere); }
+			get { return _mediaDecoder.Projection == ProjectionMode.Sphere; }
+			set { if (value) SetProjection(ProjectionMode.Sphere); }
 		}
 		public bool ProjectionIsCubeFacebook
 		{
-			get { return HACK_Projection.HasValue && HACK_Projection == MediaDecoder.ProjectionMode.CubeFacebook; }
-			set { if (value) SetProjection(MediaDecoder.ProjectionMode.CubeFacebook); }
+			get { return _mediaDecoder.Projection == ProjectionMode.CubeFacebook; }
+			set { if (value) SetProjection(ProjectionMode.CubeFacebook); }
 		}
 		public bool ProjectionIsDome
 		{
-			get { return HACK_Projection.HasValue && HACK_Projection == MediaDecoder.ProjectionMode.Dome; }
-			set { if (value) SetProjection(MediaDecoder.ProjectionMode.Dome); }
+			get { return _mediaDecoder.Projection == ProjectionMode.Dome; }
+			set { if (value) SetProjection(ProjectionMode.Dome); }
 		}
 #endregion
 
@@ -1316,7 +1329,17 @@ namespace Bivrost.Bivrost360Player
 
 		public string Header
 		{
-			get { return recent.title; }
+			get {
+				switch(Path.GetExtension(recent.uri).ToLowerInvariant())
+				{
+					case ".jpg":
+					case ".jpeg":
+					case ".png":
+						return recent.title + " 📷"; //  (🖼)
+					default:
+						return recent.title;
+				}
+			}
 		}
 		public ICommand Command
 		{
