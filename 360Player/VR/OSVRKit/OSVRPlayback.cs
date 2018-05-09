@@ -393,9 +393,9 @@ namespace Bivrost.Bivrost360Player.OSVRKit
 							lock (localCritical)
 							{
 								if (eye == 0)
-									primitive.Draw(customEffectL);
+									primitive?.Draw(customEffectL);
 								if (eye == 1)
-									primitive.Draw(customEffectR);
+									primitive?.Draw(customEffectR);
 							}
 
 							// reset UI position every frame if it is not visible

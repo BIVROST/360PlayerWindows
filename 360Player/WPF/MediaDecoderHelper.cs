@@ -12,14 +12,18 @@ namespace Bivrost.Bivrost360Player.WPF
 	{
 		public static NotificationViewModel GetNotification(MediaDecoder.Error error)
 		{
-			var notification = new NotificationViewModel(ParseError(error), GetHelpUrl(error), Timeout(error));
+			var majorErr = (SharpDX.MediaFoundation.MediaEngineErr)error.major;
+			return GetNotification(majorErr);
+		}
+
+		public static NotificationViewModel GetNotification(SharpDX.MediaFoundation.MediaEngineErr errorType)
+		{
+			var notification = new NotificationViewModel(ParseError(errorType), GetHelpUrl(errorType), Timeout(errorType));
 			return notification;
 		}
 
-		public static string ParseError(MediaDecoder.Error error)
-		{
-			var errorType = (SharpDX.MediaFoundation.MediaEngineErr)error.major;
-			switch(errorType)
+		private static string ParseError(SharpDX.MediaFoundation.MediaEngineErr errorType) { 
+			switch (errorType)
 			{
 				case SharpDX.MediaFoundation.MediaEngineErr.Aborted: return "Media playback was aborted.";
 				case SharpDX.MediaFoundation.MediaEngineErr.Decode: return "An error occured while decoding the media resource.";
@@ -31,9 +35,8 @@ namespace Bivrost.Bivrost360Player.WPF
 			}
 		}
 
-		public static string GetHelpUrl(MediaDecoder.Error error)
+		private static string GetHelpUrl(SharpDX.MediaFoundation.MediaEngineErr errorType)
 		{
-			var errorType = (SharpDX.MediaFoundation.MediaEngineErr)error.major;
 			switch (errorType)
 			{
 				case SharpDX.MediaFoundation.MediaEngineErr.SourceNotSupported: return "http://bivrost360.com/desktop/help/formats";
@@ -42,7 +45,7 @@ namespace Bivrost.Bivrost360Player.WPF
 			}
 		}
 
-		public static float Timeout(MediaDecoder.Error error)
+		public static float Timeout(SharpDX.MediaFoundation.MediaEngineErr errorType)
 		{
 			return 5f;
 		}

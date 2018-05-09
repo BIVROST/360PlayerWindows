@@ -65,28 +65,6 @@ namespace Bivrost.Bivrost360Player.Streaming
 			};
 		}
 
-		private ServiceResult.ContentType GuessContentTypeFromContainer(Container container)
-		{
-			switch(container)
-			{
-				case Container.png:
-				case Container.jpeg:
-					return ServiceResult.ContentType.image;
-
-				case Container.avi:
-				case Container.flv:
-				case Container.hls:
-				case Container.mp4:
-				case Container.ogg:
-				case Container.webm:
-				case Container.wmv:
-				case Container._3gp:
-					return ServiceResult.ContentType.video;
-				default:
-					throw new Exception("Unknown container type");
-			}
-		}
-
 		public override string ServiceName
         {
             get { return "Local file"; }

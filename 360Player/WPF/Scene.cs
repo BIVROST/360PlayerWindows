@@ -414,7 +414,7 @@
 			lock (localCritical)
 			{
 				// requiestContentCallback should ensure that primitive is set at this point
-				primitive.Draw(customEffect);
+				primitive?.Draw(customEffect);
 			}
 		}
 

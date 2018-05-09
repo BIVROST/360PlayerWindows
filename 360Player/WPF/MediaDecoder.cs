@@ -1,5 +1,6 @@
 ﻿using Bivrost.Bivrost360Player.Streaming;
 using Bivrost.Log;
+using RestSharp;
 using SharpDX;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
@@ -99,14 +100,14 @@ namespace Bivrost.Bivrost360Player
 				return (_initialized ? (bool)_mediaEngineEx.IsPaused : false);
 				//}
 			} }
-		public bool IsDisplayingStaticContent => staticContentSource != null;
+		public bool IsDisplayingStaticContent => bitmap != null;
 
 
 		/// <summary>
 		/// Used instead of mediaEngine to show non-animated content.
-		/// Should contain the bytes of a png or jpeg (stored, so the textures can be recreated with other stereoscopy values)
+		/// Should contain the decoded png or jpeg (stored, so the textures can be recreated with other stereoscopy values)
 		/// </summary>
-		byte[] staticContentSource = null;
+		private Bitmap bitmap = null;
 
 
 		private bool _loop = false;
@@ -380,8 +381,8 @@ namespace Bivrost.Bivrost360Player
 
 			var tex = new Texture2D(_device, frameTextureDescription);
 
-			tex.Disposing += (s, e) => log.Info("Disposing");
-			tex.Disposed += (s, e) => log.Info("Disposed"); ;
+			//tex.Disposing += (s, e) => log.Info("Disposing");
+			//tex.Disposed += (s, e) => log.Info("Disposed"); ;
 
 			return tex;
 		}
@@ -403,8 +404,8 @@ namespace Bivrost.Bivrost360Player
 			};
 			var tex = new Texture2D(_device, frameTextureDescription, dataRect);
 
-			tex.Disposing += (s, e) => log.Info("Disposing");
-			tex.Disposed += (s, e) => log.Info("Disposed");;
+			//tex.Disposing += (s, e) => log.Info("Disposing");
+			//tex.Disposed += (s, e) => log.Info("Disposed");;
 
 			return tex;
 		}
@@ -779,7 +780,8 @@ namespace Bivrost.Bivrost360Player
 					}
 				}
 
-				staticContentSource = null;
+				bitmap?.Dispose();
+				bitmap = null;
 
 				TextureL?.Dispose();
 				TextureR?.Dispose();
@@ -821,7 +823,8 @@ namespace Bivrost.Bivrost360Player
 
 			_fileName = fileName;
 
-			staticContentSource = null;
+			bitmap?.Dispose();
+			bitmap = null;
 
 			switch (serviceResult.contentType)
 			{
@@ -850,14 +853,75 @@ namespace Bivrost.Bivrost360Player
 					break;
 
 				case ServiceResult.ContentType.image:
-					staticContentSource = File.ReadAllBytes(_fileName);
-
-
-					ContentChanged(renderer =>
+					Task.Factory.StartNew(() => 
 					{
-						using (var stream = new MemoryStream(staticContentSource))  // stream, so it won't lock the file
-						using (var bitmap = new Bitmap(stream))
+						byte[] contentSource;
+
+						if (_fileName.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) || _fileName.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
 						{
+							RestClient client = new RestClient(_fileName);
+							IRestRequest request = new RestRequest(Method.GET);
+							IRestResponse response = client.Execute(request);
+
+							log.Info("Loading remote image file via HTTP: " + _fileName);
+
+							if ((int)response.StatusCode < 200 || (int)response.StatusCode >= 400) {
+								log.Error($"Bad HTTP status: {response.StatusCode} ({(int)response.StatusCode})");
+								OnError(new Error() { major = (long)MediaEngineErr.Network });
+								return;
+							}
+
+							if (response.ErrorException != null)
+							{
+								log.Error(response.ErrorException, "Error while downloading");
+								OnError(new Error() { major = (long)MediaEngineErr.Network });
+								return;
+							}
+
+							contentSource = response.RawBytes;
+						}
+						else
+						{
+							log.Info("Loading local image file: " + _fileName);
+							try
+							{
+								contentSource = File.ReadAllBytes(_fileName);
+							}
+							catch(Exception e)
+							{
+								log.Error(e, "Error while loading from disk");
+								OnError(new Error() { major = (long)MediaEngineErr.SourceNotSupported });
+								return;
+							}
+						}
+
+						try
+						{
+							lock (criticalSection)
+							{
+								bitmap?.Dispose();
+								using (var stream = new MemoryStream(contentSource))
+								{
+									bitmap = new Bitmap(stream);
+								}
+							}
+						}
+						catch(Exception e)
+						{
+							log.Error(e, "Error while decoding");
+							OnError(new Error() { major = (long)MediaEngineErr.SourceNotSupported });
+							return;
+						}
+
+						ContentChanged(renderer =>
+						{
+							if(bitmap == null)
+							{
+								renderer.ClearContent();
+								log.Error("Content changed while loading, aborted.");
+								return;
+							}
+
 							var w = bitmap.Width;
 							var h = bitmap.Height;
 							log.Info($"Loaded image of size {w}x{h} from {_fileName}");
@@ -867,12 +931,12 @@ namespace Bivrost.Bivrost360Player
 							GetTextureClipCoordinates(CurrentMode, out texL, out texR);
 
 							renderer.ReceiveBitmap(bitmap, texL, texR);
-						}
+						});
+
+						OnReady?.Invoke(-1);
 					});
 
 
-					OnReady?.Invoke(-1);
-					
 					break;
 			}
 		}

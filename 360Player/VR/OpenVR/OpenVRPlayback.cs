@@ -251,9 +251,9 @@ namespace Bivrost.Bivrost360Player.OpenVR
 							lock (localCritical)
 							{
 								if (eye == EVREye.Eye_Left)
-									primitive.Draw(customEffectL);
+									primitive?.Draw(customEffectL);
 								if (eye == EVREye.Eye_Right)
-									primitive.Draw(customEffectR);
+									primitive?.Draw(customEffectR);
 							}
 
 							if (eye == EVREye.Eye_Left)
