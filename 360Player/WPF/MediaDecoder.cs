@@ -80,7 +80,7 @@ namespace Bivrost.Bivrost360Player
 		//public bool IsStereo { get { return isPlaying ? _stereoVideo : false; } }
 		public bool IsStereoRendered { get
 			{
-				switch(CurrentMode)
+				switch (CurrentMode)
 				{
 					case VideoMode.Mono: return false;
 					case VideoMode.Autodetect: throw new Exception();
@@ -112,7 +112,7 @@ namespace Bivrost.Bivrost360Player
 		private bool _loop = false;
 		public bool Loop
 		{
-			get { return _loop;}
+			get { return _loop; }
 			set {
 				_loop = value;
 				if (_initialized) _mediaEngineEx.Loop = _loop;
@@ -125,7 +125,7 @@ namespace Bivrost.Bivrost360Player
 			{
 				lock (criticalSection)
 				{
-					return _initialized? (bool)_mediaEngineEx.IsEnded : false;
+					return _initialized ? (bool)_mediaEngineEx.IsEnded : false;
 				}
 			}
 		}
@@ -179,7 +179,7 @@ namespace Bivrost.Bivrost360Player
 
 		private static MediaDecoder _instance = null;
 		public static MediaDecoder Instance { get { return MediaDecoder._instance; } }
-        public static event Action<MediaDecoder> OnInstantiated;
+		public static event Action<MediaDecoder> OnInstantiated;
 
 		private SharpDX.Direct3D11.Device _device;
 		private Factory _factory;
@@ -193,9 +193,9 @@ namespace Bivrost.Bivrost360Player
 		public event Action<Error> OnError = delegate { };
 		public event Action OnAbort = delegate { };
 		public event Action<double> OnTimeUpdate = delegate { };
-        public event Action OnBufferingStarted = delegate { };
-        public event Action OnBufferingEnded = delegate { };
-        public event Action<double> OnProgress = delegate { };
+		public event Action OnBufferingStarted = delegate { };
+		public event Action OnBufferingEnded = delegate { };
+		public event Action<double> OnProgress = delegate { };
 
 		//public event Action OnReleaseTexture = delegate { };
 		[Obsolete]
@@ -209,18 +209,18 @@ namespace Bivrost.Bivrost360Player
 			isPlaying = false;
 			Ready = false;
 			MediaDecoder._instance = this;
-            if (MediaDecoder.OnInstantiated != null)
-                MediaDecoder.OnInstantiated(this);
-            _initialized = false;
+			if (MediaDecoder.OnInstantiated != null)
+				MediaDecoder.OnInstantiated(this);
+			_initialized = false;
 
 			_factory = new SharpDX.DXGI.Factory();
 			_device = new SharpDX.Direct3D11.Device(SharpDX.Direct3D.DriverType.Hardware, DeviceCreationFlags.BgraSupport | DeviceCreationFlags.VideoSupport, _levels);
 
-            //SharpDX.DXGI.Device1 dxdevice = _device.QueryInterface<SharpDX.DXGI.Device1>();
-            //MessageBox.Show(dxdevice.Adapter.Description.Description);
-            //dxdevice.Dispose();
+			//SharpDX.DXGI.Device1 dxdevice = _device.QueryInterface<SharpDX.DXGI.Device1>();
+			//MessageBox.Show(dxdevice.Adapter.Description.Description);
+			//dxdevice.Dispose();
 
-            DeviceMultithread mt = _device.QueryInterface<DeviceMultithread>();
+			DeviceMultithread mt = _device.QueryInterface<DeviceMultithread>();
 			mt.SetMultithreadProtected(true);
 
 			using (SharpDX.DXGI.Device1 dxgiDevice = _device.QueryInterface<SharpDX.DXGI.Device1>())
@@ -236,38 +236,32 @@ namespace Bivrost.Bivrost360Player
 			//var typeInfo = new SharpDX.MediaFoundation.TRegisterTypeInformation();
 			//typeInfo.GuidMajorType = MediaTypeGuids.Video;
 			//typeInfo.GuidSubtype = VideoFormatGuids.H264;
-		
+
 			//Guid[] guids = new Guid[50];
 			//int costamref;
 			//MediaFactory.TEnum(category, (int)flags, null, null, null, guids, out costamref);
 			//;			
-        }
+		}
+
+
+		public static string[] SupportedVideoFileExtensions => new string[] { "mp4", "m4v", "mov", "avi", "wmv" };
+		public static string[] SupportedImageFileExtensions => new string[] { "png", "jpg", "jpeg", "png", "jpg", "jpeg" };
+		public static string[] SupportedFileExtensions => SupportedVideoFileExtensions.Concat(SupportedImageFileExtensions).ToArray();
+
 
 		public static bool CheckExtension(string extension)
 		{
-			switch(extension.ToLower())
-			{
-				case ".mp4":
-				case ".wmv":
-				case ".avi":
-				case ".m4v":
-				case ".mov":
-				case ".png":
-				case ".jpg":
-				case ".jpeg":	// TODO: tiff?
-					return true;
-
-				default:
-					return false;
-			}
+			string e = extension.TrimStart(new char[] { '.' });
+			return SupportedVideoFileExtensions.Contains(e) || SupportedImageFileExtensions.Contains(e);
 		}
 
 		public static string ExtensionsFilter()
 		{
-			return
-				"All supported formats|*.mp4; *.m4v; *.mov; *.avi; *.wmv; *.png; *.jpg; *.jpeg"
-				+"|Video (*.mp4; *.m4v; *.mov; *.avi; *.wmv)|*.mp4; *.m4v; *.mov; *.avi; *.wmv"
-				+"|Panorama (*.png; *.jpg; *.jpeg)|*.png; *.jpg; *.jpeg";
+			var allExtensions = string.Join("; ", SupportedFileExtensions.ToList().ConvertAll(ext => $"*.{ext}"));
+			var videoExtensions = string.Join("; ", SupportedVideoFileExtensions.ToList().ConvertAll(ext => $"*.{ext}"));
+			var imageExtensions = string.Join("; ", SupportedImageFileExtensions.ToList().ConvertAll(ext => $"*.{ext}"));
+
+			return $"All supported formats|{allExtensions}|Video ({videoExtensions})|{videoExtensions}|Panorama ({imageExtensions})|{imageExtensions}";
 		}
 
 		public void Init()
@@ -572,7 +566,6 @@ namespace Bivrost.Bivrost360Player
 									_mediaEngine.TransferVideoFrame(TextureL, texL.NormalizedSrcRect, texL.DstRect(w,h), null);
 									if(texR != null)
 										_mediaEngine.TransferVideoFrame(TextureR, texR.NormalizedSrcRect, texR.DstRect(w,h), null);
-									//log.Info("frame");
 								}
 								catch (Exception exc)
 								{

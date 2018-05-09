@@ -305,11 +305,15 @@ namespace Bivrost.Bivrost360Player
 			//catch (Exception exc) {
 			//	//MessageBox.Show(exc.Message + "\n\n" + exc.StackTrace);
 			//}
-			AssociateExtension(".mp4");
-			AssociateExtension(".m4v");
-			AssociateExtension(".mov");
-			AssociateExtension(".avi");
-			AssociateExtension(".wmv");
+			//AssociateExtension(".mp4");
+			//AssociateExtension(".m4v");
+			//AssociateExtension(".mov");
+			//AssociateExtension(".avi");
+			//AssociateExtension(".wmv");
+
+
+			foreach(var ext in MediaDecoder.SupportedFileExtensions)
+				AssociateExtension($".{ext}");
 		}
 
 		private static void AssociateExtension(string extension)
