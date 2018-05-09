@@ -31,8 +31,8 @@ namespace Bivrost.Bivrost360Player
 		{
 			var ver = System.Environment.OSVersion;
 			if (ver.Platform != PlatformID.Win32NT) return true; // Not windows NT (98/Me/95?)
-			if (ver.Version.Major < 6) return false;
-			if (ver.Version.Major == 6 && ver.Version.Minor < 3) return false; // Vista, 2008, 7 or 8
+			if (ver.Version.Major < 6) return true;
+			if (ver.Version.Major == 6 && ver.Version.Minor < 3) return true; // Vista, 2008, 7 or 8
 			return false;
 		}
 
@@ -63,11 +63,14 @@ namespace Bivrost.Bivrost360Player
 
 			LoggerManager.RegisterListener(new TextFileLogListener(Logic.LocalDataDirectory));
 			LoggerManager.RegisterListener(new TraceLogListener(false));
+			//LoggerManager.RegisterListener(new WindowsEventLogListener());
+			logger.Info("Registered all listeners");
 
 			System.Windows.Forms.Application.EnableVisualStyles();
 
 			if (!System.Diagnostics.Debugger.IsAttached && ApplicationDeployment.IsNetworkDeployed)
 			{
+				//logger.Info("Copying appref and associating icons and file extensions");
 				Logic.LocalDataDirectory = ApplicationDeployment.CurrentDeployment.DataDirectory + "\\";
 
 				Task.Factory.StartNew(() =>
@@ -79,8 +82,9 @@ namespace Bivrost.Bivrost360Player
 			}
 			else
 			{
+				//logger.Info("Not copying appref and associating icons and file extensions - but making a stub, because this app is not network deployed");
 				{
-                    string path = (new System.Uri(Assembly.GetExecutingAssembly().CodeBase, true)).AbsolutePath;
+					string path = (new System.Uri(Assembly.GetExecutingAssembly().CodeBase, true)).AbsolutePath;
                     //string path = Assembly.GetExecutingAssembly().CodeBase;
                     Logic.LocalDataDirectory = Path.GetDirectoryName(path) + Path.DirectorySeparatorChar;
 				}
@@ -88,11 +92,15 @@ namespace Bivrost.Bivrost360Player
 
 
 			string[] args = Environment.GetCommandLineArgs();
-			
-			try {
+			if(args.Length > 0)
+				logger.Info("Received command line arguments: " + string.Join(", ", args));
+
+			try
+			{
 				if (AppDomain.CurrentDomain.SetupInformation.ActivationArguments != null)
 				{
 					args = AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData;
+					logger.Info("Forwarding activation arguments as command line: " + string.Join(", ", args));
 				}
 				
 			} catch(Exception ex)
@@ -115,11 +123,12 @@ namespace Bivrost.Bivrost360Player
 
 			if (mutex.WaitOne(TimeSpan.Zero, true) || System.Diagnostics.Debugger.IsAttached)
 			{
+				logger.Info("Initiating player window...");
 				ownMutex = true;
 
 				if(args != null && args.Length > 0)
 				{
-					if(!args[args.Length - 1].EndsWith(".exe"))
+					if(!args[args.Length - 1].EndsWith(".exe") && !args[args.Length - 1].EndsWith(".application"))
 						ShellViewModel.FileFromArgs = args[args.Length - 1];
 				}
 				
@@ -128,6 +137,7 @@ namespace Bivrost.Bivrost360Player
 			}
 			else
 			{
+				logger.Info("This is a secondary instance - forwarding the file that should be played (if any) to the main instance.");
 				if (args.Length > 0)
 				{
 					if (!string.IsNullOrWhiteSpace(args[args.Length - 1]))
@@ -143,6 +153,7 @@ namespace Bivrost.Bivrost360Player
 						//MessageBox.Show("Sending: " + cds.lpData);
 
 						IntPtr bwin = GetPlayerWindow();
+						logger.Info("Sending to player window: " + bwin.ToString());
 						NativeMethods.SendMessage(bwin, NativeMethods.WM_COPYDATA, IntPtr.Zero, ref cds);
 
 
@@ -283,7 +294,9 @@ namespace Bivrost.Bivrost360Player
 				RegistryKey commandKey = bivrostProtocolKey.OpenSubKey(@"shell\open\command", true);
 				//commandKey.SetValue("","\"" + System.Reflection.Assembly.GetExecutingAssembly().CodeBase.Substring(8).Replace('/',Path.DirectorySeparatorChar) + "\" --bivrost-protocol \"%1\"");
 				commandKey.SetValue("", "rundll32.exe dfshim.dll,ShOpenVerbShortcut " + Logic.LocalDataDirectory + "Bivrost360Player.appref-ms" +"|%1");
-			} catch(Exception exc) { }
+			} catch(Exception exc) {
+				logger.Error(exc, "Exception while associating protocol");
+			}
 
 
 			////VIDEO FILES CONTEXT MENU
@@ -381,7 +394,7 @@ namespace Bivrost.Bivrost360Player
 				StringBuilder sb = new StringBuilder(256);
 				NativeMethods.GetWindowText(in1, sb, 256);
 				string text = sb.ToString();
-				if (text.StartsWith("Bivrost 360Player"))
+				if (text.StartsWith("BIVROST 360Player"))
 				{
 					StringBuilder sbname = new StringBuilder(256);
 					NativeMethods.GetClassName(in1, sbname, 256);
