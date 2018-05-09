@@ -184,7 +184,7 @@ namespace Bivrost.Bivrost360Player.OpenVR
 			using (DepthStencilView rightEyeDepthView = new DepthStencilView(_device, rightEyeDepth))
 			using (vrui = new VRUI(_device, _gd))
 			{
-				primitive = GraphicTools.CreateGeometry(Projection, _gd, false);
+				//primitive = GraphicTools.CreateGeometry(Projection, _gd, false);
 
 				Stopwatch stopwatch = new Stopwatch();
 				Texture_t leftEyeTex = new Texture_t() { eColorSpace = EColorSpace.Gamma, eType = EGraphicsAPIConvention.API_DirectX, handle = leftEye.NativePointer };
@@ -198,7 +198,6 @@ namespace Bivrost.Bivrost360Player.OpenVR
 				{
 					while (!abort)
 					{
-						updateSettingsActionQueue.RunAllActions();
 						UpdateContentIfRequested();
 
 						float deltaTime = (float)stopwatch.Elapsed.TotalSeconds;

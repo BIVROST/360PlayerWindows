@@ -34,6 +34,7 @@ namespace Bivrost.Bivrost360Player
 
 	public enum ProjectionMode
 	{
+		Autodetect,
 		Sphere, // Equirectangular 360x180
 		CubeFacebook,
 		Dome    // Equirectangular 180x180
@@ -159,7 +160,18 @@ namespace Bivrost.Bivrost360Player
 				log.Info($"Stereoscopy = {value}");
 			}
 		}
-		public ProjectionMode Projection { get; private set; } = ProjectionMode.Sphere;
+
+
+		private ProjectionMode _projection = ProjectionMode.Autodetect;
+		public ProjectionMode Projection
+		{
+			get => _projection;
+			set
+			{
+				_projection = value;
+				OnContentChanged?.Invoke(); // no need for a critical section
+			}
+		}
 
 		private bool _initialized = false;
 		private bool _rendering = false;
@@ -540,10 +552,10 @@ namespace Bivrost.Bivrost360Player
 						if (!_mediaEngine.IsPaused || manualRender)
 						{
 							manualRender = false;
-								//waitForResize.WaitOne();
-								if(formatCounter == 0)
-									Console.WriteLine("[!!!] Render " + formatCounter++);
-								long lastTs = ts;
+							//waitForResize.WaitOne();
+							if(formatCounter == 0)
+								Console.WriteLine("[!!!] Render " + formatCounter++);
+							long lastTs = ts;
 							bool result = _mediaEngine.OnVideoStreamTick(out ts);
 								if (!result || ts <= 0) Thread.Sleep(1);
 							if(ts > 0)
@@ -560,6 +572,7 @@ namespace Bivrost.Bivrost360Player
 									_mediaEngine.TransferVideoFrame(TextureL, texL.NormalizedSrcRect, texL.DstRect(w,h), null);
 									if(texR != null)
 										_mediaEngine.TransferVideoFrame(TextureR, texR.NormalizedSrcRect, texR.DstRect(w,h), null);
+									//log.Info("frame");
 								}
 								catch (Exception exc)
 								{
@@ -602,6 +615,10 @@ namespace Bivrost.Bivrost360Player
 			lock (criticalSection)
 			{
 				contentChangeDelegate(obj);
+				var proj = Projection;
+				if (proj == ProjectionMode.Autodetect)
+					proj = ProjectionMode.Sphere;
+				obj.SetProjection(proj);
 			}
 		}
 

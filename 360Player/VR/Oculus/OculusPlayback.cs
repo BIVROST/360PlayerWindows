@@ -138,8 +138,6 @@ namespace Bivrost.Bivrost360Player.Oculus
 					if (hmd.ProductName == string.Empty)
 						throw new HeadsetError("The HMD is not enabled.");
 
-					primitive = GraphicTools.CreateGeometry(Projection, _gd, false);
-
 					Viewport viewport = new Viewport(0, 0, hmd.Resolution.Width, hmd.Resolution.Height, 0.0f, 1.0f);
 					LayerEyeFov layerEyeFov = layers.AddLayerEyeFov();
 
@@ -249,7 +247,6 @@ namespace Bivrost.Bivrost360Player.Oculus
 
 					while (!abort)
 					{
-						updateSettingsActionQueue.RunAllActions();
 						UpdateContentIfRequested();
 
 						OVRTypes.Vector3f[] hmdToEyeViewOffsets = { eyeTextures[0].HmdToEyeViewOffset, eyeTextures[1].HmdToEyeViewOffset };

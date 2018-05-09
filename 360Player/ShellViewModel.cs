@@ -426,14 +426,6 @@ namespace Bivrost.Bivrost360Player
 			if (!IsFileSelected) return;
 			this.autoplay = autoplay;
 
-			//if (!string.IsNullOrWhiteSpace(SelectedFileName))
-			//{
-			//	if (Path.GetFileNameWithoutExtension(SelectedFileName).ToLower().Contains("fbcube"))
-			//		_mediaDecoder.Projection = MediaDecoder.ProjectionMode.CubeFacebook;
-			//	else
-			//		_mediaDecoder.Projection = MediaDecoder.ProjectionMode.Sphere;
-			//}
-
 			if (CurrentHeadset != null)
 			{
 				CurrentHeadset.Media = SelectedServiceResult;
@@ -637,7 +629,7 @@ namespace Bivrost.Bivrost360Player
 					this.DXCanvas.Visibility = Visibility.Visible;
 				});
 
-				var scene = new Scene(_mediaDecoder.Projection, _mediaDecoder.ContentRequested);
+				var scene = new Scene(_mediaDecoder.ContentRequested);
 				this.DXCanvas.Scene = scene;
                 this.DXCanvas.StartRendering();
 
@@ -1221,20 +1213,27 @@ namespace Bivrost.Bivrost360Player
 
  
 #region menu options: projection
-		protected void SetProjection(ProjectionMode? projection)
+		protected void SetProjection(ProjectionMode projection)
 		{
-			HACK_Projection = projection;
+			_mediaDecoder.Projection = projection;
 
-			if (DXCanvas.Scene != null)
-			{
-				Scene scene = (Scene)DXCanvas.Scene;
-				scene.UpdateSceneSettings(projection.GetValueOrDefault(ProjectionMode.Sphere), VideoMode.Autodetect);
-			}
+			//if (DXCanvas.Scene != null)
+			//{
+			//	Scene scene = (Scene)DXCanvas.Scene;
+			//	scene.UpdateSceneSettings(projection, VideoMode.Autodetect);
+			//}
 
-			UpdateVRSceneSettings(
-				projection.GetValueOrDefault(ProjectionMode.Sphere), 
-				VideoMode.Autodetect
-			);
+			//UpdateVRSceneSettings(
+			//	projection.GetValueOrDefault(ProjectionMode.Sphere), 
+			//	VideoMode.Autodetect
+			//);
+
+
+
+			//void UpdateVRSceneSettings(ProjectionMode projectionMode, VideoMode videoMode)
+			//{
+			//	CurrentHeadset?.UpdateSceneSettings(projectionMode, videoMode);
+			//}
 
 			NotifyOfPropertyChange(() => ProjectionIsAuto);
 			NotifyOfPropertyChange(() => ProjectionIsEquirectangular);
@@ -1242,25 +1241,24 @@ namespace Bivrost.Bivrost360Player
 			NotifyOfPropertyChange(() => ProjectionIsDome);
 		}
 
-		protected ProjectionMode? HACK_Projection = null;
 		public bool ProjectionIsAuto
 		{
-			get { return !HACK_Projection.HasValue; }
-			set { if (value) SetProjection(null); }
+			get { return _mediaDecoder.Projection == ProjectionMode.Autodetect; }
+			set { if (value) SetProjection(ProjectionMode.Autodetect); }
 		}
 		public bool ProjectionIsEquirectangular
 		{
-			get { return HACK_Projection.HasValue && HACK_Projection == ProjectionMode.Sphere; }
+			get { return _mediaDecoder.Projection == ProjectionMode.Sphere; }
 			set { if (value) SetProjection(ProjectionMode.Sphere); }
 		}
 		public bool ProjectionIsCubeFacebook
 		{
-			get { return HACK_Projection.HasValue && HACK_Projection == ProjectionMode.CubeFacebook; }
+			get { return _mediaDecoder.Projection == ProjectionMode.CubeFacebook; }
 			set { if (value) SetProjection(ProjectionMode.CubeFacebook); }
 		}
 		public bool ProjectionIsDome
 		{
-			get { return HACK_Projection.HasValue && HACK_Projection == ProjectionMode.Dome; }
+			get { return _mediaDecoder.Projection == ProjectionMode.Dome; }
 			set { if (value) SetProjection(ProjectionMode.Dome); }
 		}
 #endregion
@@ -1337,7 +1335,7 @@ namespace Bivrost.Bivrost360Player
 					case ".jpg":
 					case ".jpeg":
 					case ".png":
-						return recent.title + " (img)";
+						return recent.title + " 📷"; //  (🖼)
 					default:
 						return recent.title;
 				}

@@ -15,11 +15,6 @@
 	using System.Drawing;
 	using System.Drawing.Imaging;
 
-	public interface IUpdatableSceneSettings
-	{
-		void UpdateSceneSettings(ProjectionMode projectionMode, VideoMode stereoscopy);
-	}
-
 
 	public interface IContentUpdatableFromMediaEngine
 	{
@@ -46,11 +41,17 @@
 		/// </summary>
 		void ClearContent();
 
-		// TODO: stereoscopy?
+
+		/// <summary>
+		/// Sets the projection of the content provided.
+		/// Should not affect anything when the content is cleared.
+		/// </summary>
+		/// <param name="projection">The projection to be set. Autodetect value should not reach here.</param>
+		void SetProjection(ProjectionMode projection);
 	}
 
 
-	public class Scene : IScene, IUpdatableSceneSettings, IContentUpdatableFromMediaEngine
+	public class Scene : IScene, IContentUpdatableFromMediaEngine
 	{
 		Logger log = new Logger("scene");
 
@@ -63,6 +64,7 @@
 		SharpDX.Toolkit.Graphics.Effect customEffect;
 
 		SharpDX.Toolkit.Graphics.GeometricPrimitive primitive;
+		ProjectionMode projectionMode;
 
 		private float yaw = 0;
 		private float pitch = 0;
@@ -83,7 +85,6 @@
 		private const float DEFAULT_LITTLE_FOV = 120f;
 		private const float MAX_FOV = 150f;
 
-		private ProjectionMode projectionMode;
 		private Action<IContentUpdatableFromMediaEngine> requestContentCallback;
 		private bool requestContent = true;
 
@@ -124,9 +125,8 @@
 		#endregion
 
 
-		public Scene(ProjectionMode projection, Action<IContentUpdatableFromMediaEngine> requestContentCallback)
+		public Scene(Action<IContentUpdatableFromMediaEngine> requestContentCallback)
 		{
-			projectionMode = projection;
 			this.requestContentCallback = requestContentCallback;
 		}
 
@@ -156,7 +156,7 @@
 			projectionMatrix = Matrix.PerspectiveFovRH((float)(72f * Math.PI / 180f), (float)16f / 9f, 0.0001f, 50.0f);
 			worldMatrix = Matrix.Identity;
 			
-			primitive = GraphicTools.CreateGeometry(projectionMode, graphicsDevice);
+			//primitive = GraphicTools.CreateGeometry(projectionMode, graphicsDevice);
 
 			_device.ImmediateContext.Flush();
 			ResetRotation();
@@ -381,8 +381,6 @@
 
 		void IScene.Render()
 		{
-			actionQueue.RunAllActions();
-
 			Device device = this.Host.Device;
 			if (device == null)
 				return;
@@ -415,6 +413,7 @@
 
 			lock (localCritical)
 			{
+				// requiestContentCallback should ensure that primitive is set at this point
 				primitive.Draw(customEffect);
 			}
 		}
@@ -427,23 +426,6 @@
 		{
 			return value1 + (value2 - value1) * amount;
 		}
-
-
-		#region scene settings updater
-
-		ActionQueue actionQueue = new ActionQueue();
-
-		public void UpdateSceneSettings(ProjectionMode projectionMode, VideoMode stereoscopy)
-		{
-			actionQueue.Enqueue(() =>
-			{
-				primitive?.Dispose();
-				primitive = GraphicTools.CreateGeometry(projectionMode, graphicsDevice);
-				this.projectionMode = projectionMode;
-				// TODO: stereoscopy
-			});
-		}
-		#endregion
 
 
 		#region IContentUpdatableFromMediaEngine
@@ -526,11 +508,21 @@
 
 		void IContentUpdatableFromMediaEngine.ClearContent()
 		{
-			lock (localCritical)
+			 lock (localCritical)
 			{
 				localVideoTexture?.Dispose();
 				//customEffect.Parameters["UserTex"].SetResource(null);
 			}
+		}
+
+		void IContentUpdatableFromMediaEngine.SetProjection(ProjectionMode projection)
+		{
+			lock(localCritical)
+			{
+				primitive?.Dispose();
+				primitive = GraphicTools.CreateGeometry(projection, graphicsDevice);
+				projectionMode = projection;
+			};
 		}
 
 		#endregion

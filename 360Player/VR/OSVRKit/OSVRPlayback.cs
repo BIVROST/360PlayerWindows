@@ -310,7 +310,7 @@ namespace Bivrost.Bivrost360Player.OSVRKit
 			using (Texture2D backBuffer = Texture2D.FromSwapChain<Texture2D>(swapChain, 0))
 			using (RenderTargetView renderView = new RenderTargetView(_device, backBuffer))
 			{
-				primitive = GraphicTools.CreateGeometry(Projection, _gd);
+				//primitive = GraphicTools.CreateGeometry(Projection, _gd);
 
 				DateTime startTime = DateTime.Now;
 				Vector3 position = new Vector3(0, 0, -1);
@@ -341,7 +341,6 @@ namespace Bivrost.Bivrost360Player.OSVRKit
 						first = false;
 					}
 
-					updateSettingsActionQueue.RunAllActions();
 					UpdateContentIfRequested();
 
 					context.update();

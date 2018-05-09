@@ -179,10 +179,18 @@ namespace Bivrost.Bivrost360Player.Tools
 		{
 			switch (projection)
 			{
-				case ProjectionMode.Sphere: return GeometricPrimitive.Sphere.New(graphicsDevice, 6, 64, toLeftHanded);
-				case ProjectionMode.CubeFacebook: return GenerateFacebookCube(graphicsDevice, toLeftHanded);
-				case ProjectionMode.Dome: return GenerateDome(graphicsDevice, toLeftHanded);
-				default: throw new ArgumentException("Unknown projection: " + projection);
+				case ProjectionMode.Autodetect:
+				case ProjectionMode.Sphere:
+					return GeometricPrimitive.Sphere.New(graphicsDevice, 6, 64, toLeftHanded);
+
+				case ProjectionMode.CubeFacebook:
+					return GenerateFacebookCube(graphicsDevice, toLeftHanded);
+
+				case ProjectionMode.Dome:
+					return GenerateDome(graphicsDevice, toLeftHanded);
+
+				default:
+					throw new ArgumentException("Unknown projection: " + projection);
 			}
 		}
 

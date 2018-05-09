@@ -19,7 +19,7 @@ namespace Bivrost.Bivrost360Player
 	}
 
 
-	public abstract class Headset : ILookProvider, IUpdatableSceneSettings, IContentUpdatableFromMediaEngine
+	public abstract class Headset : ILookProvider, IContentUpdatableFromMediaEngine
 	{
 
 		private static ServiceResult nothingIsPlaying = new ServiceResult(null, "(none)", "nothing")
@@ -40,11 +40,11 @@ namespace Bivrost.Bivrost360Player
 				pause = false;
 				_media = value;
 				vrui?.EnqueueUIRedraw();
-				UpdateSceneSettings(Media.projection, Media.stereoscopy);
+				
+				//UpdateSceneSettings(Media.projection, Media.stereoscopy);
 			}
 		}
 		//public bool _stereoVideo => Array.IndexOf(new[] { VideoMode.Mono, VideoMode.Autodetect }, Media.stereoscopy) < 0;
-		public ProjectionMode Projection => Media.projection;
 		protected float Duration => (float)MediaDecoder.Instance.Duration;
 
 
@@ -237,12 +237,12 @@ namespace Bivrost.Bivrost360Player
 				customEffectR.Parameters["gammaFactor"].SetValue(Gamma);
 				customEffectR.CurrentTechnique = customEffectR.Techniques["ColorTechnique"];
 				customEffectR.CurrentTechnique.Passes[0].Apply();
+
+				primitive?.Dispose();
+				primitive = GraphicTools.CreateGeometry(ProjectionMode.Sphere, _gd, false);
 			}
 
 			vrui?.EnqueueUIRedraw();
-
-			// also enqueued
-			UpdateSceneSettings(ProjectionMode.Sphere, VideoMode.Mono);
 		}
 
 
@@ -265,16 +265,7 @@ namespace Bivrost.Bivrost360Player
 		abstract public bool IsPresent();
 
 
-		protected Bivrost.ActionQueue updateSettingsActionQueue = new Bivrost.ActionQueue();
 		protected SharpDX.Toolkit.Graphics.GeometricPrimitive primitive;
-		public void UpdateSceneSettings(ProjectionMode projectionMode, VideoMode stereoscopy)
-		{
-			updateSettingsActionQueue.Enqueue(() =>
-			{
-				primitive?.Dispose();
-				primitive = GraphicTools.CreateGeometry(projectionMode, _gd, false);
-			});
-		}
 
 		void IContentUpdatableFromMediaEngine.ReceiveTextures(Texture2D textureL, Texture2D textureR)
 		{
@@ -389,5 +380,13 @@ namespace Bivrost.Bivrost360Player
 			SetDefaultScene();
 		}
 
+		void IContentUpdatableFromMediaEngine.SetProjection(ProjectionMode projection)
+		{
+			lock (localCritical)
+			{
+				primitive?.Dispose();
+				primitive = GraphicTools.CreateGeometry(projection, _gd, false);
+			}
+		}
 	}
 }
