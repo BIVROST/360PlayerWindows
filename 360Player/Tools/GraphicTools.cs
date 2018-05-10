@@ -219,18 +219,14 @@ namespace Bivrost.Bivrost360Player.Tools
 
 			double yaw = 0, pitch = 0;
 
-			ShellViewModel.Instance.AppendDebugText($"X: {q.X} \t Y: {q.Y} \t Z: {q.Z} \t W: {q.W}");
-
 			if (pole > 0.49999f)
 			{
 				yaw = 2f * (float)Math.Atan2(q.Y, q.X) + Math.PI * 0.5f;
-				ShellViewModel.Instance.AppendDebugText("\t" + MathUtil.RadiansToDegrees((float)yaw));
 				pitch = -Math.PI * 0.5f;
 			}
 			else if (pole < -0.49999f)
 			{
 				yaw = 2f * (float)Math.Atan2(q.Y, q.Z) - Math.PI * 0.5f;
-				ShellViewModel.Instance.AppendDebugText("\t" + MathUtil.RadiansToDegrees((float)yaw));
 				pitch = Math.PI * 0.5f;
 			}
 			else
