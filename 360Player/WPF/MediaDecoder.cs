@@ -327,7 +327,10 @@ namespace Bivrost.Bivrost360Player
 							Ready = true;
 							Duration = _mediaEngineEx.Duration;
 							OnReady(Duration);
-							NewFileIsPlaying(CurrentServiceResult, CurrentServiceResult.BestSupportedStream, Duration);
+							if (CurrentServiceResult == null)
+								log.Error("Media playback aborted just after play?");
+							else
+								NewFileIsPlaying(CurrentServiceResult, CurrentServiceResult.BestSupportedStream, Duration);
 							break;
 
 						case MediaEngineEvent.TimeUpdate:
