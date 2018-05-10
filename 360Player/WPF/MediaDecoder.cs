@@ -66,28 +66,15 @@ namespace Bivrost.Bivrost360Player
 
 		private Texture2D _textureL;
 		private Texture2D _textureR;
-		public Texture2D TextureL
+		protected Texture2D TextureL
 		{
 			get { return _textureL; }
 			private set { _textureL = value; }
 		}
-		public Texture2D TextureR
+		protected Texture2D TextureR
 		{
 			get { return _textureR; }
 			private set { _textureR = value; }
-		}
-
-		//private bool _stereoVideo = false;
-		//public bool IsStereo { get { return isPlaying ? _stereoVideo : false; } }
-		public bool IsStereoRendered { get
-			{
-				switch (CurrentMode)
-				{
-					case VideoMode.Mono: return false;
-					case VideoMode.Autodetect: throw new Exception();
-					default: return true;
-				}
-			}
 		}
 
 		public bool IsPlaying => isPlaying || IsDisplayingStaticContent;
@@ -100,6 +87,11 @@ namespace Bivrost.Bivrost360Player
 				return (_initialized ? (bool)_mediaEngineEx.IsPaused : false);
 				//}
 			} }
+
+
+		/// <summary>
+		/// True if a panorama is displayed, false if a video or nothing at all is being played.
+		/// </summary>
 		public bool IsDisplayingStaticContent => bitmap != null;
 
 
@@ -174,6 +166,14 @@ namespace Bivrost.Bivrost360Player
 			}
 		}
 
+
+		public ServiceResult CurrentServiceResult
+		{
+			get;
+			protected set;
+		}
+
+
 		private bool _initialized = false;
 		private bool _rendering = false;
 		private ManualResetEvent waitForRenderingEnd = new ManualResetEvent(false);
@@ -198,9 +198,42 @@ namespace Bivrost.Bivrost360Player
 		public event Action OnBufferingEnded = delegate { };
 		public event Action<double> OnProgress = delegate { };
 
-		//public event Action OnReleaseTexture = delegate { };
 		[Obsolete]
 		public event Action<Texture2D, Texture2D> OnFormatChanged = delegate { };
+
+
+		#region new file being played reporting
+
+		/// <summary>
+		/// Delegate for the OnNewFileIsPlaying event
+		/// </summary>
+		/// <param name="service">ServiceResult is of the media file playe.d</param>
+		/// <param name="concreteFile">The file name (or URI) directly used - the service result might contain many alternatives.</param>
+		/// <param name="duration">The media length. Unreliable for some streams, -1 for images</param>
+		public delegate void NewFileIsPlayingDelegate(ServiceResult service, string concreteFile, double duration);
+
+		/// <summary>
+		/// Event played once after a video or image has been loaded and will be immediately displayed.
+		/// The opposite of this is the OnStop event.
+		/// </summary>
+		public event NewFileIsPlayingDelegate OnNewFileIsPlaying;
+
+
+		/// <summary>
+		/// Flag used to mark that this streamingResult was already reported
+		/// </summary>
+		private bool _newFileIsPlayingReported = false; 
+
+
+		protected void NewFileIsPlaying(ServiceResult sr, string concreteFile, double duration)
+		{
+			if (_newFileIsPlayingReported) return;
+			_newFileIsPlayingReported = true;
+			OnNewFileIsPlaying?.Invoke(sr, concreteFile, duration);
+		}
+		#endregion
+
+
 		private bool textureReleased = true;
 		public bool TextureReleased { get { return textureReleased; } }
 
@@ -293,7 +326,8 @@ namespace Bivrost.Bivrost360Player
 							Console.WriteLine(string.Format("CAN PLAY {0}, {1}", param1, param2));
 							Ready = true;
 							Duration = _mediaEngineEx.Duration;
-							OnReady(_mediaEngineEx.Duration);
+							OnReady(Duration);
+							NewFileIsPlaying(CurrentServiceResult, CurrentServiceResult.BestSupportedStream, Duration);
 							break;
 
 						case MediaEngineEvent.TimeUpdate:
@@ -570,7 +604,7 @@ namespace Bivrost.Bivrost360Player
 								}
 								catch (Exception exc)
 								{
-									Console.WriteLine("Playback exception " + exc.Message);
+									log.Error(exc, "Playback exception");
 								}
 							}
 						} else Thread.Sleep(1);
@@ -789,6 +823,11 @@ namespace Bivrost.Bivrost360Player
 				TextureL = null;
 				TextureR = null;
 
+				CurrentServiceResult = null;
+				Projection = ProjectionMode.Autodetect;
+				LoadedStereoMode = VideoMode.Autodetect;
+				_newFileIsPlayingReported = false;
+
 				ContentChanged(r => r.ClearContent());
 
 				_initialized = false;	
@@ -797,20 +836,19 @@ namespace Bivrost.Bivrost360Player
             OnStop?.Invoke();
         }
 
-		private string _fileName;
-        public string FileName { get { return _fileName; } }
+		//private string _fileName;
+  //      public string FileName { get { return _fileName; } }
 
 		public void LoadMedia(ServiceResult serviceResult)
 		{
+			CurrentServiceResult = serviceResult;
 			Projection = serviceResult.projection;
 			LoadedStereoMode = serviceResult.stereoscopy;
-
 
 			string fileName = serviceResult.BestSupportedStream;
 
 			Console.WriteLine("Load media: " + fileName);
 
-			_fileName = "";
 			textureReleased = true;
 			waitForFormatChange = true;
 			Stop();
@@ -821,33 +859,21 @@ namespace Bivrost.Bivrost360Player
 				Thread.Sleep(5);
 			}
 
-			_fileName = fileName;
-
 			bitmap?.Dispose();
 			bitmap = null;
+
+			// reset the event
+			_newFileIsPlayingReported = false;
 
 			switch (serviceResult.contentType)
 			{
 				case ServiceResult.ContentType.video:
 					Init();
-
-
-					//Collection collection;
-					//MediaFactory.CreateCollection(out collection);
-
-					//SourceResolver sourceResolver = new SourceResolver();
-					//var mediaSource1 = sourceResolver.CreateObjectFromURL(@"D:\TestVideos\maroon.m4a", SourceResolverFlags.MediaSource | SourceResolverFlags.ContentDoesNotHaveToMatchExtensionOrMimeType).QueryInterface<MediaSource>();
-					//var mediaSource2 = sourceResolver.CreateObjectFromURL(@"D:\TestVideos\maroon-video.mp4", SourceResolverFlags.MediaSource | SourceResolverFlags.ContentDoesNotHaveToMatchExtensionOrMimeType).QueryInterface<MediaSource>();
-					//collection.AddElement(mediaSource1);
-					//collection.AddElement(mediaSource2);
-					//MediaSource aggregateSource;
-					//MediaFactory.CreateAggregateSource(collection, out aggregateSource);
-
-					//MediaEngineSrcElementsEx
+					
 					formatCounter = 0;
 					textureReleased = true;
 					waitForFormatChange = true;
-					_mediaEngineEx.Source = _fileName;
+					_mediaEngineEx.Source = fileName;
 					_mediaEngineEx.Preload = MediaEnginePreload.Automatic;
 					_mediaEngineEx.Load();
 					break;
@@ -857,13 +883,13 @@ namespace Bivrost.Bivrost360Player
 					{
 						byte[] contentSource;
 
-						if (_fileName.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) || _fileName.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
+						if (fileName.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) || fileName.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
 						{
-							RestClient client = new RestClient(_fileName);
+							RestClient client = new RestClient(fileName);
 							IRestRequest request = new RestRequest(Method.GET);
 							IRestResponse response = client.Execute(request);
 
-							log.Info("Loading remote image file via HTTP: " + _fileName);
+							log.Info("Loading remote image file via HTTP: " + fileName);
 
 							if ((int)response.StatusCode < 200 || (int)response.StatusCode >= 400) {
 								log.Error($"Bad HTTP status: {response.StatusCode} ({(int)response.StatusCode})");
@@ -882,10 +908,10 @@ namespace Bivrost.Bivrost360Player
 						}
 						else
 						{
-							log.Info("Loading local image file: " + _fileName);
+							log.Info("Loading local image file: " + fileName);
 							try
 							{
-								contentSource = File.ReadAllBytes(_fileName);
+								contentSource = File.ReadAllBytes(fileName);
 							}
 							catch(Exception e)
 							{
@@ -924,7 +950,7 @@ namespace Bivrost.Bivrost360Player
 
 							var w = bitmap.Width;
 							var h = bitmap.Height;
-							log.Info($"Loaded image of size {w}x{h} from {_fileName}");
+							log.Info($"Loaded image of size {w}x{h} from {fileName}");
 							CurrentMode = ParseStereoMode(LoadedStereoMode, w, h);
 
 							ClipCoords texL, texR;
@@ -934,6 +960,8 @@ namespace Bivrost.Bivrost360Player
 						});
 
 						OnReady?.Invoke(-1);
+
+						NewFileIsPlaying(serviceResult, fileName, -1);
 					});
 
 
@@ -942,7 +970,7 @@ namespace Bivrost.Bivrost360Player
 		}
 
 
-		public MediaEngine Engine { get { return this._mediaEngine; } }
+		//public MediaEngine Engine { get { return this._mediaEngine; } }
 
 
 		public void Shutdown()

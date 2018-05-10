@@ -54,12 +54,23 @@ namespace Bivrost.AnalyticsForVR
 
         public int SampleRate { get { return precision; } }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="precision">How many times per second should orientation be sampled</param>
-        /// <param name="mediaLength">How long is this medium</param>
-        public LookHistory(int precision, double mediaLength)
+		public bool Empty
+		{
+			get
+			{
+				foreach (var point in data)
+					if (point != null)
+						return false;
+				return true;
+			}
+		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="precision">How many times per second should orientation be sampled</param>
+		/// <param name="mediaLength">How long is this medium</param>
+		public LookHistory(int precision, double mediaLength)
 		{
             this.precision = precision;
             int count = (int)Math.Ceiling(mediaLength * precision);
