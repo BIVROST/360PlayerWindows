@@ -38,7 +38,7 @@ namespace Bivrost.Bivrost360Player.Streaming
                     new VideoStream()
                     {
                         url = uri,
-                        hasAudio = true, // TODO
+                        hasAudio = true, // TODO, currently guessed
                         container = container
                     }
                 },

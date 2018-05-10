@@ -114,8 +114,6 @@ namespace Bivrost.Bivrost360Player
 				recentFiles.RemoveAt(0);
 
 			string title = result.title;
-			if (string.IsNullOrWhiteSpace(title))
-				title = Path.GetFileName(result.videoStreams[0].url);
 			recentFiles.Insert(0, new RecentsFormat2.RecentElement() { title = title, uri = result.originalURL });
 			Save();
 		}

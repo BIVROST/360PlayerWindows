@@ -330,7 +330,6 @@ namespace Bivrost.Bivrost360Player
 
 			shellView.BufferingStatus.Visibility = Visibility.Collapsed;
 			
-			UpdateFileRecentsMenuState();
 			ShowStartupUI();
 
 			if (!string.IsNullOrWhiteSpace(FileFromArgs))
@@ -420,7 +419,7 @@ namespace Bivrost.Bivrost360Player
 			IsFileSelected = true;
 
 			Recents.AddRecent(result);
-			UpdateFileRecentsMenuState();
+			NotifyOfPropertyChange(nameof(Items));
 
 			_ready = false;
 			if (!IsFileSelected) return;
@@ -808,26 +807,8 @@ namespace Bivrost.Bivrost360Player
 
 #region recents
 
-		/// <summary>
-		/// Updates the File->(recent files) menu, binding the action to it and
-		/// pruning to at most 10 entries
-		/// </summary>
-		public void UpdateFileRecentsMenuState()
-		{
-			//Recents.UpdateMenu(shellView.FileMenuItem, OpenURI);
-		}
-
-
-		
-
-		
-
-
 		public List<RecentsItem> Items { get { return Recents.RecentFiles.ConvertAll(r => new RecentsItem(r)); } }
 		
-
-
-
 #endregion
 
 
@@ -1332,10 +1313,10 @@ namespace Bivrost.Bivrost360Player
 			get {
 				switch(Path.GetExtension(recent.uri).ToLowerInvariant())
 				{
-					case ".jpg":
-					case ".jpeg":
-					case ".png":
-						return recent.title + " 📷"; //  (🖼)
+					//case ".jpg":
+					//case ".jpeg":
+					//case ".png":
+					//	return recent.title + " 📷"; //  (🖼)
 					default:
 						return recent.title;
 				}
