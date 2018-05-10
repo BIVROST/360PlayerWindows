@@ -60,7 +60,7 @@ namespace Bivrost.Bivrost360Player.Streaming
                         container = container
                     }
 				},
-				title = Path.GetFileNameWithoutExtension(uri),
+				title = Path.GetFileName(uri),
 				contentType = GuessContentTypeFromContainer(container)
 			};
 		}

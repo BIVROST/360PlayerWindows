@@ -157,7 +157,6 @@ namespace Bivrost.Bivrost360Player
 
 		public void Stop()
 		{
-			SetDefaultScene();
 			Media = null;
 			pause = true;
 			vrui?.EnqueueUIRedraw();

@@ -39,7 +39,7 @@ namespace Bivrost.Bivrost360Player.WPF
 		{
 			switch (errorType)
 			{
-				case SharpDX.MediaFoundation.MediaEngineErr.SourceNotSupported: return "http://bivrost360.com/desktop/help/formats";
+				case SharpDX.MediaFoundation.MediaEngineErr.SourceNotSupported: return "https://download.bivrost360.com/player-desktop/#supported-files-and-internet-services";
 				
 				default: return "";
 			}

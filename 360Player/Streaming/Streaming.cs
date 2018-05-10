@@ -124,7 +124,18 @@ namespace Bivrost.Bivrost360Player.Streaming
 		/// <summary>
 		/// The title of this movie, if available. Can be null.
 		/// </summary>
-		public string title = null;
+		public string title
+		{
+			get
+			{
+				return _title ?? ((videoStreams.Count > 0) ? Path.GetFileName(videoStreams[0].url) : null);
+			}
+			set
+			{
+				_title = value;
+			}
+		}
+		private string _title = null;
 
 		/// <summary>
 		/// The description of this movie, if available. Can be null.
@@ -198,8 +209,8 @@ namespace Bivrost.Bivrost360Player.Streaming
 		}
 
 		public string BestSupportedStream => BestQualityVideoStream(
-					Container.mp4 | Container.hls | Container.avi | Container.wmv | Container.png | Container.jpeg
-			).url;
+				Container.mp4 | Container.hls | Container.avi | Container.wmv | Container.png | Container.jpeg
+		).url;
 
 		public override string ToString()
 		{

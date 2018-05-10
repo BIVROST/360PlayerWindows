@@ -11,7 +11,7 @@ namespace Bivrost.AnalyticsForVR
 	{
 		private const string BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
 
-		class HeadPosition
+		struct HeadPosition
 		{
 
             public static byte Angle01to063(double angle01)
@@ -24,47 +24,66 @@ namespace Bivrost.AnalyticsForVR
                 return (byte)v;
             }
 
-            public HeadPosition(double yaw01, double pitch01, float t = 0, byte fov = 0)
-            {
-                yaw = Angle01to063(yaw01);
-                pitch = Angle01to063(pitch01);
-                this.t = t;
-                this.fov = fov;
-            }
+			internal HeadPosition(double yaw01, double pitch01, byte fov = 0)
+			{
+				yaw = Angle01to063(yaw01);
+				pitch = Angle01to063(pitch01);
+				this.fov = fov;
+			}
 
-            public HeadPosition(char yawBase64, char pitchBase64, float t = 0, byte fov = 0)
-            {
-                yaw = (byte)BASE64.IndexOf(yawBase64);
-                pitch = (byte)BASE64.IndexOf(pitchBase64);
-                this.t = t;
-                this.fov = fov;
-            }
+			//public HeadPosition(char yawBase64, char pitchBase64, byte fov = 0)
+			//{
+			//    yaw = (byte)BASE64.IndexOf(yawBase64);
+			//    pitch = (byte)BASE64.IndexOf(pitchBase64);
+			//    this.fov = fov;
+			//}
 
-            public readonly float t;
-			internal readonly byte yaw;
-            internal readonly byte pitch;
-            public readonly byte fov;
+			public bool IsEmpty => yaw == 255 && pitch == 255 && fov == 0;
 
-            public double Yaw { get { return (yaw * 2F * Math.PI) - Math.PI; } }
-            public double Pitch { get { return pitch * Math.PI - 0.5f * Math.PI; } }
-        }
+			public readonly static HeadPosition Empty = new HeadPosition { yaw = 255, pitch = 255, fov = 0 };
+
+			internal byte yaw;
+			internal byte pitch;
+            internal byte fov;
+
+            public double Yaw => (yaw * 2F * Math.PI) - Math.PI;
+            public double Pitch => pitch * Math.PI - 0.5f * Math.PI;
+
+			internal void Set(double yaw01, double pitch01, byte fov)
+			{
+				yaw = Angle01to063(yaw01);
+				pitch = Angle01to063(pitch01);
+				this.fov = fov;
+			}
+		}
 
         private List<HeadPosition> data;
         private int precision;
 
         public int SampleRate { get { return precision; } }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="precision">How many times per second should orientation be sampled</param>
-        /// <param name="mediaLength">How long is this medium</param>
-        public LookHistory(int precision, double mediaLength)
+		public bool Empty
+		{
+			get
+			{
+				foreach (var point in data)
+					if (!point.IsEmpty)
+						return false;
+				return true;
+			}
+		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="precision">How many times per second should orientation be sampled</param>
+		/// <param name="mediaLength">How long is this medium</param>
+		public LookHistory(int precision, double mediaLength)
 		{
             this.precision = precision;
             int count = (int)Math.Ceiling(mediaLength * precision);
             data = new List<HeadPosition>(count);
-            data.AddRange(Enumerable.Repeat<HeadPosition>(null, count));
+            data.AddRange(Enumerable.Repeat<HeadPosition>(HeadPosition.Empty, count));
         }
 
         public void TrackData(float t, SharpDX.Quaternion quaternion, byte fov)
@@ -77,6 +96,9 @@ namespace Bivrost.AnalyticsForVR
             double yaw01 = yaw / (2 * Math.PI) + 0.5;
             double pitch01 = pitch / Math.PI + 0.5;
             TrackData(t, yaw01, pitch01, fov);
+
+			return;
+
 			Bivrost.Log.LoggerManager.Publish("history.yaw", yaw * 180f / Math.PI);
 			Bivrost.Log.LoggerManager.Publish("history.pitch", pitch * 180f / Math.PI);
 			Bivrost.Log.LoggerManager.Publish("history.yaw01", yaw01);
@@ -86,13 +108,12 @@ namespace Bivrost.AnalyticsForVR
         void TrackData(float t, double yaw01, double pitch01, byte fov)
 		{
             int idx = (int)Math.Floor(t * precision);
-            HeadPosition headPosition = new HeadPosition(yaw01, pitch01, t, fov);
             lock (data)
             {
                 // add new element at end (and return)
                 if (data.Count == idx)
                 {
-                    data.Add(headPosition);
+                    data.Add(new HeadPosition(yaw01, pitch01, fov));
                     return;
                 }
                 
@@ -101,15 +122,15 @@ namespace Bivrost.AnalyticsForVR
                 { 
                     if (idx > data.Capacity)
                         data.Capacity = idx + 1;
-                    data.AddRange(Enumerable.Repeat<HeadPosition>(null, data.Capacity - data.Count));
+                    data.AddRange(Enumerable.Repeat<HeadPosition>(HeadPosition.Empty, data.Capacity - data.Count));
                 }
 
                 // finally add the element
-                if (data[idx] == null)
-                {
-                    // TODO: integrate
-                }
-                data[idx] = (headPosition);
+                //if (data[idx] == null)
+                //{
+                //    // TODO: integrate
+                //}
+                data[idx].Set(yaw01, pitch01, fov);
             }
         }
 
@@ -119,7 +140,7 @@ namespace Bivrost.AnalyticsForVR
             StringBuilder sb = new StringBuilder();
             lock (data) data.ForEach(pair =>
             {
-                if (pair == null)
+                if (pair.IsEmpty)
                     sb.Append("--");
                 else
                 {

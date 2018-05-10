@@ -62,7 +62,7 @@ namespace Bivrost.AnalyticsForVR
             log.Info("Media decoder instantiated");
             MediaDecoder.OnInstantiated -= MediaDecoder_OnInstantiated;
             instance.OnTimeUpdate += HandleTimeUpdate;
-            instance.OnPlay += HandlePlay;
+            instance.OnNewFileIsPlaying += HandleNewFileIsPlaying;
             instance.OnStop += HandleStop;
 
         }
@@ -70,23 +70,40 @@ namespace Bivrost.AnalyticsForVR
         private void HandleStop()
         {
             // session end
-            log.Info("Ended history session " + filename);
             if (history == null)
                 return;
+
+			if (history.Empty)
+			{
+				log.Info("Nothing got recorded (no headset)? Discarding session.");
+				return;
+			}
+
 			Session session = new Session(filename, startTime, DateTime.Now, history, lookProvider, serviceResult);
+			int timesUsedBySinks = 0;
 			foreach (var sink in sessionSinks)
 				if (sink.Enabled)
+				{
 					sink.UseSession(session);
+					timesUsedBySinks++;
+				}
             history = null;
+
+            log.Info($"Ended history session {filename}, sent to {timesUsedBySinks} session sinks.");
         }
 
 
-        private void HandlePlay()
+        private void HandleNewFileIsPlaying(ServiceResult result, string concreteFile, double duration)
         {
-            history = new LookHistory(10, MediaDecoder.Instance.Duration);
-            log.Info("New session: " + MediaDecoder.Instance.FileName);
-            filename = MediaDecoder.Instance.FileName;
-            serviceResult = ShellViewModel.Instance.SelectedServiceResult;
+			if(result.contentType != ServiceResult.ContentType.video)
+			{
+				log.Info("Only video files are supported in AnalyticsForVR");
+				return;
+			}
+            history = new LookHistory(10, duration);
+            log.Info("New history session: " + concreteFile);
+            filename = concreteFile;
+            serviceResult = result;
             startTime = DateTime.Now;
         }
 
@@ -116,7 +133,7 @@ namespace Bivrost.AnalyticsForVR
             if (MediaDecoder.Instance != null)
             {
                 MediaDecoder.Instance.OnTimeUpdate -= HandleTimeUpdate;
-                MediaDecoder.Instance.OnPlay -= HandlePlay;
+                MediaDecoder.Instance.OnNewFileIsPlaying -= HandleNewFileIsPlaying;
                 MediaDecoder.Instance.OnStop -= HandleStop;
             }
             ShellViewModel.OnInstantiated -= ShellViewModel_OnInstantiated;

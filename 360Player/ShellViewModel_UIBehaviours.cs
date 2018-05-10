@@ -347,6 +347,8 @@ namespace Bivrost.Bivrost360Player
 			});
 		}
 
+
+		#region debug text
 		public string DebugText { get; set; } = "";
 
 		public void AppendDebugText(string line)
@@ -363,6 +365,8 @@ namespace Bivrost.Bivrost360Player
 		{
 			Execute.OnUIThreadAsync(() => NotifyOfPropertyChange(() => DebugText));
 		}
+		#endregion
+
 
 		public void NormalProjection()
 		{

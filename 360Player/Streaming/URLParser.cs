@@ -38,12 +38,12 @@ namespace Bivrost.Bivrost360Player.Streaming
                     new VideoStream()
                     {
                         url = uri,
-                        hasAudio = true, // TODO
+                        hasAudio = true, // TODO, currently guessed
                         container = container
                     }
                 },
-				contentType = GuessContentTypeFromContainer(container)
-
+				contentType = GuessContentTypeFromContainer(container),
+				title = Uri.UnescapeDataString(Path.GetFileName(uri))
 			};
         }
     }
