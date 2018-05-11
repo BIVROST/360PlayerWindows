@@ -68,7 +68,7 @@ namespace Bivrost.Bivrost360Player
 				}
 				catch (Exception exc)
 				{
-					log.Error(exc.Message);
+					log.Error(exc);
 					Logic.Notify("An error was encountered in VR playback. See log for details.");
 				}
 				finally
