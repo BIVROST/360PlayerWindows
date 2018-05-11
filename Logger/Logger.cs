@@ -56,20 +56,28 @@ namespace Bivrost.Log
 		/// Use for registering non fatal errors in form of exceptions.
 		/// Not displayed on screen.
 		/// </summary>
-		/// <param name="e">The exception that signalled the error</param>
+		/// <param name="ex">The exception that signalled the error</param>
 		/// <param name="additionalMsg">an optional message</param>
 		/// <param name="memberName">(automatically added) source code trace information</param>
 		/// <param name="sourceFilePath">(automatically added) source code trace information</param>
 		/// <param name="sourceLineNumber">(automatically added) source code trace information</param>
 		public void Error(
-			Exception e,
+			Exception ex,
 			string additionalMsg = "Exception",
 			[CallerMemberName] string memberName = "",
 			[CallerFilePath] string sourceFilePath = "",
 			[CallerLineNumber] int sourceLineNumber = 0
 		)
 		{
-			Error(additionalMsg + "\n" + e, memberName, sourceFilePath, sourceLineNumber);
+			var stack = new System.Diagnostics.StackTrace(ex, true);
+			if (stack.FrameCount > 0)
+			{
+				var frame = stack.GetFrame(0);
+				memberName = frame.GetMethod()?.Name ?? "(unknown)";
+				sourceFilePath = frame.GetFileName() ?? "(unknown)";
+				sourceLineNumber = frame.GetFileLineNumber();
+			}
+			Error(additionalMsg + "\n" + ex.Message, memberName, sourceFilePath, sourceLineNumber);
 		}
 
 

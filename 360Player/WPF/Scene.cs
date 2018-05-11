@@ -354,7 +354,8 @@
 					if (vYaw < -1) vYaw = -1;
 					if (vYaw > 1) vYaw = 1;
 					float vPitch = navigatorInput.vPitch;
-					MoveDelta(velocity * vYaw * deltaTime, velocity * vPitch * deltaTime, 1, 4);
+					if(vYaw != 0 || vPitch != 0)
+						MoveDelta(velocity * vYaw * deltaTime, velocity * vPitch * deltaTime, 1, 4);
 
 
 					if (Logic.Instance.settings.SpaceNavigatorKeysAndZoomActive)
@@ -366,7 +367,8 @@
 							ShellViewModel.Instance.Rewind();
 
 						float zoom = navigatorInput.vPush;
-						ChangeFov(fovVelocity * zoom * deltaTime);
+						if(zoom != 0)
+							ChangeFov(fovVelocity * zoom * deltaTime);
 					}
 				}
 			}

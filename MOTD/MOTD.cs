@@ -216,7 +216,7 @@ namespace Bivrost.MOTD
 		{
 			string currentVersion = app.Version;
 
-			logger.Info($"Requesting update notice for {app.Product} version={prevVersion ?? "(development)"} -> {currentVersion ?? "(development)"} id={app.InstallId}");
+			logger.Info($"Requesting update notice for {app.Product} version={prevVersion ?? "(none/unknown)"} -> {currentVersion ?? "(development)"} id={app.InstallId}");
 
 			var client = new RestClient(serverUri + "upgrade");
 			var request = new RestRequest(Method.POST);

@@ -35,7 +35,10 @@ namespace Bivrost.Log
 
 		public void Write(LoggerManager.LogElement entry)
 		{
-			byte[] buf = encoding.GetBytes($"[{entry.Type} {entry.Tag}] {entry.Time} at {entry.Path}\r\n\r\n{entry.Message.Trim().Replace("\r\n", "\r\n\t")}\r\n");
+			byte[] buf = encoding.GetBytes(
+				$"[{entry.Type} {entry.Tag}] {entry.Time.ToString("yyyy-MM-dd HH:mm:ss")} at {entry.Path}\r\n" +
+				$"\t{entry.Message.Trim().Replace("\n", "\n\t")}\r\n\r\n"
+			);
 			lock (LogFile)
 			{
 				fp.Write(buf, 0, buf.Length);

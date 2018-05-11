@@ -128,8 +128,12 @@ namespace Bivrost.Bivrost360Player
 
 				if(args != null && args.Length > 0)
 				{
-					if(!args[args.Length - 1].EndsWith(".exe") && !args[args.Length - 1].EndsWith(".application"))
-						ShellViewModel.FileFromArgs = args[args.Length - 1];
+					var lastArgument = args[args.Length - 1];
+					if (!lastArgument.ToLowerInvariant().EndsWith(".exe") && !lastArgument.ToLowerInvariant().EndsWith(".application"))
+					{
+						logger.Info("Forwarding argument from command line:");
+						ShellViewModel.FileFromArgs = lastArgument;
+					}
 				}
 				
 				DisplayRootViewFor<ShellViewModel>();
