@@ -826,9 +826,9 @@ namespace Bivrost.Bivrost360Player
 				TextureL = null;
 				TextureR = null;
 
-				CurrentServiceResult = null;
-				Projection = ProjectionMode.Autodetect;
-				LoadedStereoMode = VideoMode.Autodetect;
+				//CurrentServiceResult = null;
+				//Projection = ProjectionMode.Autodetect;
+				//LoadedStereoMode = VideoMode.Autodetect;
 				_newFileIsPlayingReported = false;
 
 				ContentChanged(r => r.ClearContent());
