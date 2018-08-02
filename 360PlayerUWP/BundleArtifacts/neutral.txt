@@ -1,0 +1,5 @@
+MainPackage=D:\Projekty\BivrostPlayerCodeSign\360PlayerWindows\360PlayerUWP\bin\AnyCPU\Release\360PlayerUWP_1.0.202.0_AnyCPU.appx
+ResourcePack=D:\Projekty\BivrostPlayerCodeSign\360PlayerWindows\360PlayerUWP\bin\AnyCPU\Release\360PlayerUWP_1.0.202.0_scale-100.appx
+ResourcePack=D:\Projekty\BivrostPlayerCodeSign\360PlayerWindows\360PlayerUWP\bin\AnyCPU\Release\360PlayerUWP_1.0.202.0_scale-125.appx
+ResourcePack=D:\Projekty\BivrostPlayerCodeSign\360PlayerWindows\360PlayerUWP\bin\AnyCPU\Release\360PlayerUWP_1.0.202.0_scale-150.appx
+ResourcePack=D:\Projekty\BivrostPlayerCodeSign\360PlayerWindows\360PlayerUWP\bin\AnyCPU\Release\360PlayerUWP_1.0.202.0_scale-400.appx

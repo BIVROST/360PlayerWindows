@@ -7,12 +7,12 @@ using System.Windows;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("BIVROST 360Player")]
-[assembly: AssemblyDescription("BIVROST 360Player - Virtual Reality Movie Player")]
+[assembly: AssemblyTitle("BIVROST® 360Player")]
+[assembly: AssemblyDescription("BIVROST® 360Player - Virtual Reality Movie Player")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("BIVROST Sp z o.o.")]
-[assembly: AssemblyProduct("BIVROST 360Player")]
-[assembly: AssemblyCopyright("Copyright ©  2017")]
+[assembly: AssemblyCompany("BIVROST® Sp z o.o.")]
+[assembly: AssemblyProduct("BIVROST® 360Player")]
+[assembly: AssemblyCopyright("Copyright ©  2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -51,8 +51,8 @@ using System.Windows;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyVersion("1.0.0.202")]
+[assembly: AssemblyFileVersion("1.0.0.202")]
 [assembly: Guid("150A3700-F729-4FE2-B61B-C3C716530C58")]
 [assembly: NeutralResourcesLanguage("en")]
 

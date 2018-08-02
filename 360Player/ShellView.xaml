@@ -213,7 +213,7 @@
                     <MenuItem Header="License activation" cal:Message.Attach="[Event Click] = [Action OpenLicenseManagement]"/>
                     <MenuItem Header="Log Viewer" cal:Message.Attach="[Event Click] = [Action OpenLogViewer]"/>
                     <Separator />
-                    <MenuItem Header="About BIVROST 360Player" cal:Message.Attach="[Event Click] = [Action OpenAbout]"/>
+					<MenuItem Header="About BIVROST® 360Player" cal:Message.Attach="[Event Click] = [Action OpenAbout]"/>
                 </MenuItem>
             </Menu>
 
@@ -249,8 +249,8 @@
                     <ScaleTransform x:Name="PauseScale" ScaleX="1" ScaleY="1" CenterX="64" CenterY="64"></ScaleTransform>
                 </Canvas.RenderTransform>
                 <Ellipse Width="136" Height="136" Fill="#90000000" Canvas.Top="-4" Canvas.Left="-4"/>
-                <svgc:SvgViewbox Source="Graphics/pause.svg" Width="128" Height="128"/>
-            </Canvas>
+				<svgc:SvgViewbox Source="Graphics/pause.svg" Width="128" Height="128"/>
+			</Canvas>
 
             <Canvas Width="128" Height="128" IsHitTestVisible="False" x:Name="PlayIndicator" Opacity="0">
                 <Canvas.RenderTransform>
@@ -270,7 +270,7 @@
         </Grid>
 
         <Grid Grid.Row="1" Width="400" Height="400" x:Name="StartupPanel" >
-            <svgc:SvgViewbox Source="Graphics/BIVROST-tm-white.svg" HorizontalAlignment="Center" VerticalAlignment="Center" Width="400" Margin="20,0,-20,0"/>
+            <svgc:SvgViewbox Source="Graphics/BIVROST-R-white.svg" HorizontalAlignment="Center" VerticalAlignment="Center" Width="400" Margin="20,0,-20,0"/>
 
             <Button x:Name="_OpenFile"  Width="64" Height="64" Margin="100,0,0,50" HorizontalAlignment="Left" VerticalAlignment="Bottom" cal:Message.Attach="OpenFile">
                 <Button.Template>

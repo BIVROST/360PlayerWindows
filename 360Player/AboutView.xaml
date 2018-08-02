@@ -28,7 +28,7 @@
 			</RichTextBox.Resources>
 			<local:EnabledFlowDocument FontFamily="Segoe" FontSize="12">
 				<Paragraph>
-					<Bold>BIVROST 360Player Beta</Bold>
+					<Bold>BIVROST® 360Player Beta</Bold>
 					<LineBreak />
 					v
 					<TextBlock Text="{Binding Version}"/>
@@ -46,7 +46,7 @@
 				</Paragraph>
 
 				<Paragraph>
-					This software is free and can be used only for noncommercial purposes. To purchase the commercial licence please contact us: 
+					This software is free and can be used only for noncommercial purposes. To purchase the commercial license please contact us: 
 					<Button Style="{StaticResource HyperlinkButton}" Focusable="False" Cursor="Hand" cal:Message.Attach="[Event Click] = [Action ContactCommercial]">
 						<TextBlock Margin="0,0,0,-3">
 								<Hyperlink Focusable="True">contact@bivrost360.com</Hyperlink>
@@ -57,7 +57,7 @@
 				<Paragraph>
 					<Button Style="{StaticResource HyperlinkButton}" Focusable="False" Cursor="Hand" cal:Message.Attach="[Event Click] = [Action ShowLibs]">
 						<TextBlock Margin="0,0,0,-3">
-								BIVROST 360Player is using 3rd party libraries and components.
+								BIVROST® 360Player is using 3rd party libraries and components.
 						</TextBlock>
 					</Button>
 				</Paragraph>

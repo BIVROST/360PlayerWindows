@@ -115,7 +115,7 @@ namespace Bivrost.Bivrost360Player
 		public string PlayerTitle {
 			get
 			{
-				string title = "BIVROST 360Player ™ " + (Features.IsCanary ? "CANARY" : "BETA");
+				string title = "BIVROST® 360Player ™ " + (Features.IsCanary ? "CANARY" : "BETA");
 				if (IsPlaying)
 					title += $" - now playing {SelectedFileNameLabel}";
 				if (!Features.Commercial)
@@ -260,7 +260,7 @@ namespace Bivrost.Bivrost360Player
 			{
 				NotificationCenter.PushNotification(
 					new NotificationViewModel(
-						"A new version of Bivrost 360Player is available.",
+						"A new version of Bivrost® 360Player is available.",
 						() =>
 						{
 							Updater.OnUpdateFail +=

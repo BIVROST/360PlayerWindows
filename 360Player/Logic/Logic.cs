@@ -43,13 +43,13 @@ namespace Bivrost.Bivrost360Player
 
 
 		// Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\BivrostPlayer";
-		public static string LocalDataDirectory = "";
+		public static string LocalDataDirectory { get; private set; } = "";
 
 		public static Logic Instance { get; protected set; }
-		public static void Prepare() {
+		public static void Prepare(string localDataDirectory) {
 			if (Instance != null)
 				throw new Exception("cannot prepare Logic more than once");
-			Instance = new Logic();
+			Instance = new Logic(localDataDirectory);
 		}
 
 		public Settings settings;
@@ -57,8 +57,24 @@ namespace Bivrost.Bivrost360Player
 
 		public event Action OnUpdateAvailable = delegate { };
 
-		protected Logic()
+		protected Logic(string localDataDirectory)
 		{
+			//File.WriteAllText("D:\\abcd.txt", "qweqwe123");
+			//File.WriteAllText(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\" + "aaaaa.wtf", "asbvlajhbvaldbaldsbalsd");
+			Logic.LocalDataDirectory = localDataDirectory + "BIVROST\\360Player\\";
+			if(!Directory.Exists(Logic.LocalDataDirectory))
+			{
+				try
+				{
+					Directory.CreateDirectory(Logic.LocalDataDirectory);
+				} catch(Exception exc)
+				{
+					MessageBox.Show("exc: " + exc.Message + "\npath: " + Logic.LocalDataDirectory);
+				}
+			}
+			
+
+
 			Instance = this;
 
 			// bind buttons in settings window

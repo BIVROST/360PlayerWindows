@@ -47,7 +47,7 @@ namespace Bivrost.Bivrost360Player
 			byte[] token = System.Reflection.Assembly.GetExecutingAssembly().GetName().GetPublicKeyToken();
 			byte[] key = System.Reflection.Assembly.GetExecutingAssembly().GetName().GetPublicKey();
             token = (new SHA1CryptoServiceProvider()).ComputeHash(new byte[0]).Take(8).ToArray();
-            File.WriteAllText("publictoken", ByteArrayToString(token));
+            File.WriteAllText(Logic.LocalDataDirectory + Path.DirectorySeparatorChar + "publictoken", ByteArrayToString(token));
 		}
 
 		public static string ByteArrayToString(byte[] ba)
