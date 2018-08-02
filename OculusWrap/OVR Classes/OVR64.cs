@@ -23,7 +23,7 @@ namespace OculusWrap
 		/// <summary>
 		/// Filename of the DllOVR wrapper file, which wraps the LibOvr.lib in a dll.
 		/// </summary>
-		public const string DllOvrDll = "C:\\Program Files\\Oculus\\Support\\oculus-runtime\\LibOVRRT64_1.dll";
+		public const string DllOvrDll = "LibOVRRT64_1.dll";
 
 		#region Oculus runtime initialization methods
 		/// <summary>
@@ -32,19 +32,38 @@ namespace OculusWrap
 		/// <returns>Pointer to the loaded Oculus runtime module.</returns>
 		protected override void LoadLibrary()
 		{
-			if(OculusRuntimeDll != null)
+			if(OculusRuntimeDll != IntPtr.Zero)
 				return;
 
-			// Check that the DllOvrDll file exists.
-			bool exists = File.Exists(DllOvrDll);
-			if(!exists)
-				throw new DllNotFoundException("Unable to load the file \""+DllOvrDll+"\", the file wasn't found.");
+			string pathDllOvrDll = DllOvrDll;
 
-			OculusRuntimeDll = LoadLibrary(DllOvrDll);
+			// Check that the DllOvrDll file exists.
+
+
+			//pathDllOvrDll = @"C:\Program Files\Oculus\Support\oculus-runtime\LibOVRRT64_1.dll";
+
+
+			if(!File.Exists(pathDllOvrDll))
+			{
+				foreach(string p in Environment.GetEnvironmentVariable("Path").Split(Path.PathSeparator))
+				{
+					var dll = p + Path.DirectorySeparatorChar + DllOvrDll;
+					if (File.Exists(dll))
+					{
+						pathDllOvrDll = dll;
+						break;
+					}
+				}
+			}
+
+			if(!File.Exists(pathDllOvrDll))
+				throw new DllNotFoundException("Unable to load the file \""+pathDllOvrDll+"\", the file wasn't found.");
+
+			OculusRuntimeDll = LoadLibrary(pathDllOvrDll);
 			if(OculusRuntimeDll == IntPtr.Zero)
 			{
 				int win32Error = Marshal.GetLastWin32Error();
-				throw new Win32Exception(win32Error, "Unable to load the file \""+DllOvrDll+"\", LoadLibrary reported error code: "+win32Error+".");
+				throw new Win32Exception(win32Error, "Unable to load the file \""+pathDllOvrDll+"\", LoadLibrary reported error code: "+win32Error+".");
 			}
 		}
 
@@ -125,6 +144,7 @@ namespace OculusWrap
 		/// </remarks>
 		public override Result Initialize(InitParams parameters=null)
 		{
+			LoadLibrary();
 			return ovr_Initialize(parameters);
 		}
 

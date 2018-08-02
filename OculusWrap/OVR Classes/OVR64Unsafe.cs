@@ -26,7 +26,7 @@ namespace OculusWrap
 		/// <summary>
 		/// Filename of the DllOVR wrapper file, which wraps the LibOvr.lib in a dll.
 		/// </summary>
-		public const string DllOvrDll = "C:\\Program Files\\Oculus\\Support\\oculus-runtime\\LibOVRRT64_1.dll";
+		public const string DllOvrDll = "LibOVRRT64_1.dll";
 
 		#region Oculus runtime initialization methods
 		/// <summary>

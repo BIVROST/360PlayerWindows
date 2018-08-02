@@ -645,6 +645,12 @@ namespace Bivrost.Bivrost360Player
 		{
 			lock (criticalSection)
 			{
+				if(contentChangeDelegate == null)
+				{
+					log.Error("ContentRequested without a delegate?");
+					return;
+				}
+
 				contentChangeDelegate(obj);
 				var proj = Projection;
 				if (proj == ProjectionMode.Autodetect)
