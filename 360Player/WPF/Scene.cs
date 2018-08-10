@@ -85,7 +85,7 @@
 		private const float DEFAULT_LITTLE_FOV = 120f;
 		private const float MAX_FOV = 150f;
 
-		private Action<IContentUpdatableFromMediaEngine> requestContentCallback;
+		private Func<IContentUpdatableFromMediaEngine, bool> requestContentCallback;
 		private bool requestContent = true;
 
 		#region ILookProvider integration
@@ -125,7 +125,7 @@
 		#endregion
 
 
-		public Scene(Action<IContentUpdatableFromMediaEngine> requestContentCallback)
+		public Scene(Func<IContentUpdatableFromMediaEngine, bool> requestContentCallback)
 		{
 			this.requestContentCallback = requestContentCallback;
 		}
@@ -408,8 +408,8 @@
 
 			if (requestContent)
 			{
-				requestContent = false;
-				requestContentCallback(this);
+				if(requestContentCallback(this))
+					requestContent = false;
 			}
 
 

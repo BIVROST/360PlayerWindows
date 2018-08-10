@@ -314,10 +314,18 @@ namespace Bivrost.Bivrost360Player.Oculus
 
 							lock (localCritical)
 							{
-								if (eyeIndex == 0)
-									primitive?.Draw(customEffectL);
-								if (eyeIndex == 1)
-									primitive?.Draw(customEffectR);
+								try
+								{
+									
+									if (eyeIndex == 0)
+										primitive?.Draw(customEffectL);
+									if (eyeIndex == 1)
+										primitive?.Draw(customEffectR);
+								}
+								catch (NullReferenceException)
+								{
+									;
+								}
 							}
 
 							if (ProvideLook != null && eyeIndex == 0)
@@ -364,7 +372,7 @@ namespace Bivrost.Bivrost360Player.Oculus
 					waitForRendererStop.Set();
 
 					// Release all resources
-					primitive.Dispose();
+					primitive?.Dispose();
 					eyeTextures[0].Dispose();
 					eyeTextures[1].Dispose();
 					immediateContext.ClearState();

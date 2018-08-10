@@ -641,14 +641,15 @@ namespace Bivrost.Bivrost360Player
 		/// to have their content updated
 		/// </summary>
 		/// <param name="obj"></param>
-		public void ContentRequested(IContentUpdatableFromMediaEngine obj)
+		/// <returns>true if content request was successful, false if media pipeline was not yet initialized.</returns>
+		public bool ContentRequested(IContentUpdatableFromMediaEngine obj)
 		{
 			lock (criticalSection)
 			{
 				if(contentChangeDelegate == null)
 				{
-					log.Error("ContentRequested without a delegate?");
-					return;
+					//log.Error("ContentRequested without a delegate?");
+					return false;
 				}
 
 				contentChangeDelegate(obj);
@@ -657,6 +658,8 @@ namespace Bivrost.Bivrost360Player
 					proj = ProjectionMode.Sphere;
 				obj.SetProjection(proj);
 			}
+
+			return true;
 		}
 
 		/// <summary>

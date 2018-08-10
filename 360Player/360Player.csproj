@@ -453,7 +453,6 @@
     <Compile Include="WPF\IScene.cs" />
     <Compile Include="WPF\MediaDecoder.cs" />
     <Compile Include="WPF\MediaDecoderHelper.cs" />
-    <Compile Include="WPF\MediaDecoderLegacy.cs" />
     <Compile Include="WPF\Scene.cs" />
     <Compile Include="WPF\ShortcutParser.cs" />
     <Compile Include="OpenUrlView.xaml.cs">
