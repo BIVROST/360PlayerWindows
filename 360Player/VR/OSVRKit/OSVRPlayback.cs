@@ -316,7 +316,10 @@ namespace Bivrost.Bivrost360Player.OSVRKit
 
 					if (first)
 					{
-						OnGotFocus();
+                        // Start with default background
+                        SetDefaultScene();
+
+                        OnGotFocus();
 						first = false;
 					}
 

@@ -196,7 +196,11 @@ namespace Bivrost.Bivrost360Player.OpenVR
 
 				try
 				{
-					while (!abort)
+                    // Start with default background
+                    SetDefaultScene();
+
+
+                    while (!abort)
 					{
 						UpdateContentIfRequested();
 

@@ -63,9 +63,6 @@ namespace Bivrost.Bivrost360Player
 			{
 				try
 				{
-                    // Start with default background
-                    SetDefaultScene();
-
                     MediaDecoder.Instance.OnContentChanged += ContentChanged;
                     ContentChanged();
 

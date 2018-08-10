@@ -244,8 +244,10 @@ namespace Bivrost.Bivrost360Player.Oculus
 					DateTime lastTime = DateTime.Now;
 					float deltaTime = 0;
 
+                    // Start with default background
+                    SetDefaultScene();
 
-					while (!abort)
+                    while (!abort)
 					{
 						UpdateContentIfRequested();
 
