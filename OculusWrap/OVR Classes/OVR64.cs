@@ -36,13 +36,7 @@ namespace OculusWrap
 				return;
 
 			string pathDllOvrDll = DllOvrDll;
-
-			// Check that the DllOvrDll file exists.
-
-
-			//pathDllOvrDll = @"C:\Program Files\Oculus\Support\oculus-runtime\LibOVRRT64_1.dll";
-
-
+            
 			if(!File.Exists(pathDllOvrDll))
 			{
 				foreach(string p in Environment.GetEnvironmentVariable("Path").Split(Path.PathSeparator))
