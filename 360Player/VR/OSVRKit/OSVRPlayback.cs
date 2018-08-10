@@ -210,7 +210,7 @@ namespace Bivrost.Bivrost360Player.OSVRKit
 
 				if (Features.IsDebug)
 				{
-					log.Info("OSVR: available screens: " + string.Join("\n", dxgiDevice.Adapter.Outputs.ToList().ConvertAll(o => o.Description.DeviceName)));
+					log.Info("OSVR: available screens: " + string.Join("\n", dxgiDevice.Adapter.Outputs.ToList().ConvertAll(o => o.Description.DeviceName + " (" + o.Description.DesktopBounds + ")")));
 				}
 
 				if (Logic.Instance.settings.OSVRScreen == ScreenSelection.Autodetect)

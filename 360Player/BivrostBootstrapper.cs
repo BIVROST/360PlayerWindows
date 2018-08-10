@@ -83,15 +83,22 @@ namespace Bivrost.Bivrost360Player
 			{
 				//logger.Info("Not copying appref and associating icons and file extensions - but making a stub, because this app is not network deployed");
 				{
-					//string path = (new System.Uri(Assembly.GetExecutingAssembly().CodeBase, true)).AbsolutePath;
-					//string path = Assembly.GetExecutingAssembly().CodeBase;
-					//Logic.LocalDataDirectory = Path.GetDirectoryName(path) + Path.DirectorySeparatorChar;
 
-					//TODO: cleanup UWP packaging hack
-					Logic.Prepare(Windows.Storage.ApplicationData.Current.LocalFolder.Path + Path.DirectorySeparatorChar);
 
-					//MessageBox.Show(Windows.Storage.ApplicationData.Current.LocalFolder.Path);
-					string runArgument = "360player.exe |%1";
+                    // UWP packaging hack
+                    string path;
+                    try
+                    {
+                        path = Windows.Storage.ApplicationData.Current.LocalFolder.Path + Path.DirectorySeparatorChar;
+                    }
+                    catch(InvalidOperationException)
+                    {
+                        path = (Path.GetDirectoryName(Assembly.GetExecutingAssembly().CodeBase) + Path.DirectorySeparatorChar).Remove(0, "file:\\".Length);
+                    }
+                    Logic.Prepare(path);
+
+                    //MessageBox.Show(Windows.Storage.ApplicationData.Current.LocalFolder.Path);
+                    string runArgument = "360player.exe |%1";
 					foreach (var ext in MediaDecoder.SupportedFileExtensions)
 						AssociateExtension($".{ext}", runArgument);
 				}

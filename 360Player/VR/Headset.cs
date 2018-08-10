@@ -63,8 +63,13 @@ namespace Bivrost.Bivrost360Player
 			{
 				try
 				{
-					MediaDecoder.Instance.OnContentChanged += ContentChanged;
-					Render();
+                    // Start with default background
+                    SetDefaultScene();
+
+                    MediaDecoder.Instance.OnContentChanged += ContentChanged;
+                    ContentChanged();
+
+                    Render();
 				}
 				catch (Exception exc)
 				{
@@ -226,6 +231,8 @@ namespace Bivrost.Bivrost360Player
 
 		public void SetDefaultScene()
 		{
+            log.Info("Showing default scene");
+
 			lock (localCritical)
 			{
 				TextureCleanup();
@@ -255,8 +262,11 @@ namespace Bivrost.Bivrost360Player
 			{
 				lock (localCritical)
 				{
-					if(MediaDecoder.Instance.ContentRequested(this))
-						contentUpdateRequested = false;
+                    if (MediaDecoder.Instance.ContentRequested(this))
+                    {
+                        log.Info("Content updated");
+                        contentUpdateRequested = false;
+                    }
 				}
 			}
 		}
