@@ -93,9 +93,6 @@ namespace Bivrost.Bivrost360Player.OSVRKit
 		{
 			Lock = true;
 
-			//Wrap oculus = new Wrap();
-			//Hmd hmd;
-
 			int mainRetry = 5;
 			ClientContext context;
 			do
@@ -117,15 +114,6 @@ namespace Bivrost.Bivrost360Player.OSVRKit
 				}
 
 				displayConfig = context.GetDisplayConfig();
-
-				//if (displayConfig == null)
-				//	displayConfig = context.GetDisplayConfig();
-				//if (displayConfig == null)
-				//{
-				//	context.Dispose();
-				//	_playbackLock = false;
-				//	return;
-				//}
 
 				if (displayConfig != null)
 				{
@@ -285,15 +273,6 @@ namespace Bivrost.Bivrost360Player.OSVRKit
 				OptionFlags = ResourceOptionFlags.None
 			};
 
-		
-
-			//// Define how the depth buffer will be used to filter out objects, based on their distance from the viewer.
-			//DepthStencilStateDescription depthStencilStateDescription = new DepthStencilStateDescription()
-			//{
-			//	IsDepthEnabled = true,
-			//	DepthComparison = Comparison.Less,
-			//	DepthWriteMask = DepthWriteMask.Zero
-			//};
 
 
 			// Retrieve the DXGI device, in order to set the maximum frame latency.
