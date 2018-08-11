@@ -579,7 +579,9 @@
     <Resource Include="logo.png" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Graphics\BIVROST-R-white.svg" />
+    <Content Include="Graphics\BIVROST-R-white.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Graphics\BIVROST-tm-white.svg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <SubType>Designer</SubType>

@@ -239,7 +239,7 @@
         <Grid Grid.Row="1" Grid.RowSpan="2">
             <Grid Background="#99000000" Height="32" VerticalAlignment="Top" x:Name="TopBar">
                 <!--<Border BorderThickness="0,0,0,2" BorderBrush="#ffffff">-->
-                <Label x:Name="SelectedFileNameLabel" Content="Wybrana nazwa pliku video.mp4" FontSize="18" FontFamily="Segoe UI Light"
+                <Label x:Name="SelectedFileNameLabel" Content="Selected file" FontSize="18" FontFamily="Segoe UI Light"
 					   HorizontalAlignment="Center" VerticalAlignment="Bottom" Foreground="White" Height="34"/>
                 <!--</Border>-->
             </Grid>
