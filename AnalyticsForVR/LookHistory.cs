@@ -97,10 +97,9 @@ namespace Bivrost.AnalyticsForVR
             double pitch01 = pitch / Math.PI + 0.5;
             TrackData(t, yaw01, pitch01, fov);
 
-			return;
-
-			Bivrost.Log.LoggerManager.Publish("history.yaw", yaw * 180f / Math.PI);
-			Bivrost.Log.LoggerManager.Publish("history.pitch", pitch * 180f / Math.PI);
+            Bivrost.Log.LoggerManager.Publish("history.t", t);
+            Bivrost.Log.LoggerManager.Publish("history.yaw", yaw * 180f / Math.PI);
+            Bivrost.Log.LoggerManager.Publish("history.pitch", pitch * 180f / Math.PI);
 			Bivrost.Log.LoggerManager.Publish("history.yaw01", yaw01);
 			Bivrost.Log.LoggerManager.Publish("history.pitch01", pitch01);
 		}

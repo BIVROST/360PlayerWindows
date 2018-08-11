@@ -16,6 +16,11 @@ namespace Bivrost.AnalyticsForVR
         double MediaTime {
             get
             {
+                // Prevent smoothing the media time changing into still playing while in pause mode
+                // Without this, session time will look like the media is still playing, even in pause mode
+                if (MediaDecoder.Instance != null && MediaDecoder.Instance.IsPaused)
+                    return _lastMediaTime;
+
                 return _lastMediaTime + _mediaTimeDelta.Elapsed.TotalSeconds;
             }
             set

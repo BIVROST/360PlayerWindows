@@ -84,7 +84,7 @@ namespace Bivrost.Bivrost360Player
 				//{
 				if (IsDisplayingStaticContent) return true;
 
-				return (_initialized ? (bool)_mediaEngineEx.IsPaused : false);
+				return ((_initialized && _mediaEngineEx != null )? (bool)_mediaEngineEx.IsPaused : false);
 				//}
 			} }
 
