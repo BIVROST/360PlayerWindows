@@ -79,14 +79,25 @@ namespace Bivrost.Bivrost360Player
 
 		public bool IsPlaying => isPlaying || IsDisplayingStaticContent;
 		private bool isPlaying;
-		public bool IsPaused { get {
-				/////lock(criticalSection)
-				//{
+		public bool IsPaused {
+            get
+            {
 				if (IsDisplayingStaticContent) return true;
 
-				return ((_initialized && _mediaEngineEx != null )? (bool)_mediaEngineEx.IsPaused : false);
-				//}
-			} }
+                if (!_initialized) return false;
+
+                if (_mediaEngineEx == null) return false;
+
+                try
+                {
+                    return _mediaEngineEx.IsPaused;
+                }
+                catch(NullReferenceException)
+                {
+                    return false;
+                }
+            }
+        }
 
 
 		/// <summary>
