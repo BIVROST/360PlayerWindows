@@ -7,7 +7,7 @@
 		xmlns:svgc="http://sharpvectors.codeplex.com/svgc/"
 		xmlns:sys="clr-namespace:System;assembly=mscorlib"		
         Title="{Binding PlayerTitle}" Height="600" Width="1066" MinWidth="820"  MinHeight="530" WindowStartupLocation="CenterScreen" Icon="Graphics\sygnet.ico"
-		cal:Message.Attach="[Shortcut Control+U] = [Action OpenUrl]; [Event Deactivated] = [Action OnLostFocus]; [Event Activated] = [Action OnGotFocus]; [Shortcut F1] = [Action OpenSupportPage];
+		cal:Message.Attach="[Shortcut Control+U] = [Action OpenUrl]; [Event Deactivated] = [Action OnLostFocus]; [Event Activated] = [Action OnGotFocus]; [Shortcut F1] = [Action OpenHomePage];
 		[Shortcut Tab] = [Action DisableTabPress($source, $eventArgs)];" Background="Black">
 
     <Window.Resources>
@@ -201,16 +201,16 @@
                     <MenuItem Header="Recenter Headset" cal:Message.Attach="[Event Click] = [Action RecenterHeadset]" InputGestureText="R"/>
                     -->
                     <Separator />
-                    <MenuItem IsCheckable="True" IsChecked="{Binding HeadsetIsOculus}" Header="Oculus Rift (DK2/CV1)" />
-                    <MenuItem IsCheckable="True" IsChecked="{Binding HeadsetIsOpenVR}" Header="OpenVR (SteamVR, HTC Vive)" />
-                    <MenuItem IsCheckable="True" IsChecked="{Binding HeadsetIsOSVR}" Header="OSVR" />
-                    <MenuItem IsCheckable="True" IsChecked="{Binding HeadsetIsDisable}"  Header="Disable VR" />
+                    <MenuItem x:Name="headsetCheckOculus" IsCheckable="True" IsChecked="{Binding HeadsetIsOculus}" Header="Oculus Rift (DK2/CV1)" />
+					<MenuItem x:Name="headsetCheckOpenVR" IsCheckable="True" IsChecked="{Binding HeadsetIsOpenVR}" Header="OpenVR (SteamVR, HTC Vive)" />
+					<MenuItem x:Name="headsetCheckOSVR" IsCheckable="True" IsChecked="{Binding HeadsetIsOSVR}" Header="OSVR" />
+					<MenuItem x:Name="headsetCheckDisable" IsCheckable="True" IsChecked="{Binding HeadsetIsDisable}"  Header="Disable VR" />
                 </MenuItem>
                 <MenuItem Header="Help">
-                    <MenuItem Header="Help / Support" cal:Message.Attach="[Event Click] = [Action OpenSupportPage]" InputGestureText="F1"/>
-                    <MenuItem Header="Home Page" cal:Message.Attach="[Event Click] = [Action OpenHomePage]"/>
-                    <MenuItem Header="Buy" cal:Message.Attach="[Event Click] = [Action OpenBuyPage]"/>
-                    <MenuItem Header="License activation" cal:Message.Attach="[Event Click] = [Action OpenLicenseManagement]"/>
+					<MenuItem Header="Help / support" cal:Message.Attach="[Event Click] = [Action OpenHomePage]" InputGestureText="F1"/>
+					<MenuItem Header="Report issue" cal:Message.Attach="[Event Click] = [Action OpenSupportPage]" />                    
+                    <!--<MenuItem Header="Buy" cal:Message.Attach="[Event Click] = [Action OpenBuyPage]"/>-->
+                    <!--<MenuItem Header="License activation" cal:Message.Attach="[Event Click] = [Action OpenLicenseManagement]"/>-->
                     <MenuItem Header="Log Viewer" cal:Message.Attach="[Event Click] = [Action OpenLogViewer]"/>
                     <Separator />
 					<MenuItem Header="About BIVROST® 360Player" cal:Message.Attach="[Event Click] = [Action OpenAbout]"/>

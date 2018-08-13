@@ -115,7 +115,7 @@ namespace Bivrost.Bivrost360Player
 		public string PlayerTitle {
 			get
 			{
-				string title = "BIVROST® 360Player ™ " + (Features.IsCanary ? "CANARY" : "BETA");
+				string title = "BIVROST® 360Player ™ ";
 				if (IsPlaying)
 					title += $" - now playing {SelectedFileNameLabel}";
 				if (!Features.Commercial)
