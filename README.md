@@ -125,7 +125,9 @@ Enabled only when advanced control is enabled in settings:
 Support & contact information
 =============================
 
-Contact support at: support@bivrost360.com.
+To contact support or fill a bug report, please use [the support form][github-support]. 
+
+[github-support]: https://github.com/BIVROST/360PlayerWindows/issues/new?labels=support
 
 This software is free and can be used only for noncommercial purposes. To purchase the commercial license contact us: contact@bivrost360.com.
 
