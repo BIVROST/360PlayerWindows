@@ -193,7 +193,7 @@ namespace Bivrost.Bivrost360Player
 
 
 		#region menu opions: headset
-		public void SetHeadset(HeadsetMode headset)
+		public async void SetHeadset(HeadsetMode headset)
 		{
 			if (Logic.Instance.settings.HeadsetUsage == headset)
 				return;
@@ -201,6 +201,11 @@ namespace Bivrost.Bivrost360Player
 			LoggerManager.Info($"Set headset: {headset} (menu option)");
 			Logic.Instance.settings.HeadsetUsage = headset;
 			Logic.Instance.settings.Save();
+
+			shellView.headsetCheckDisable.IsEnabled = false;
+			shellView.headsetCheckOculus.IsEnabled = false;
+			shellView.headsetCheckOpenVR.IsEnabled = false;
+			shellView.headsetCheckOSVR.IsEnabled = false;
 
 			//switch (headset)
 			//{
@@ -215,7 +220,16 @@ namespace Bivrost.Bivrost360Player
 			NotifyOfPropertyChange(() => HeadsetIsOSVR);
 			NotifyOfPropertyChange(() => HeadsetIsDisable);
 
-			ResetVR();
+
+			await Task.Factory.StartNew(() =>
+			{
+				ResetVR();
+			});
+
+			shellView.headsetCheckDisable.IsEnabled = true;
+			shellView.headsetCheckOculus.IsEnabled = true;
+			shellView.headsetCheckOpenVR.IsEnabled = true;
+			shellView.headsetCheckOSVR.IsEnabled = true;
 		}
 
 
