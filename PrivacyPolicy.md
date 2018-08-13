@@ -1,1 +1,1 @@
-#BIVROST 360Player privacy policy
+# BIVROST 360Player privacy policy
