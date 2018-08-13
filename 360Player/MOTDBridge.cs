@@ -1,5 +1,11 @@
 ﻿using Bivrost.Bivrost360Player.Tools;
 using Bivrost.MOTD;
+using System.Deployment;
+using System.Windows;
+using System.Deployment.Application;
+using Windows.ApplicationModel;
+using System;
+using System.Reflection;
 
 namespace Bivrost.Bivrost360Player
 {
@@ -9,7 +15,28 @@ namespace Bivrost.Bivrost360Player
 		{
 			public string InstallId => Logic.Instance.settings.InstallId.ToString();
 
-			public string Version => PublishInfo.ApplicationIdentity?.Version.ToString();
+			public string Version
+			{
+				get
+				{
+					try
+					{
+						if (ApplicationDeployment.IsNetworkDeployed)
+							return PublishInfo.ApplicationIdentity?.Version.ToString();
+					}
+					catch (Exception exc) { }
+
+					try
+					{
+						var version = Package.Current.Id.Version;
+						return string.Format("{0}.{1}.{2}.{3}", version.Major, version.Minor, 0, version.Build);
+					} catch(Exception exc) { }
+
+					var assembly = typeof(App).GetTypeInfo().Assembly;
+					var assemblyVersion = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>().Version;
+					return assemblyVersion;
+				}
+			}
 
 			public string Product => Logic.productCode;
 
