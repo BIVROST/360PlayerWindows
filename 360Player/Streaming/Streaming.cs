@@ -238,7 +238,7 @@ namespace Bivrost.Bivrost360Player.Streaming
 			new BivrostProtocolParser(),
 			new PornhubParser(),
 			new LittlstarParser(),
-            new YoutubeParser(),
+            //new YoutubeParser(),
             new URLParser(),
 			new LocalFileParser()	// TODO: FacebookParser
 		};
