@@ -1,3 +1,12 @@
+[1.0.0.203] - 2018-08-17
+------------------------
+
+Windows Store (UWP) build
+
+- Removed Youtube streaming
+- Fixes for faster headset initialization
+
+
 [1.0.0.202] - 2018-05-09
 ------------------------
 Panorama support
