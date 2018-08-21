@@ -7,7 +7,7 @@
 **Tell us about your environment:**
 
 * 360Player for Windows version:
-   <!-- ex. 1.0.0.202 - check it in *help* -> *About BIVROST 360Player* -->
+   <!-- ex. 1.0.0.202 - check it in menu Help -> About BIVROST 360Player -->
 * Where did you install 360Player from: 
     Windows Store / BIVROST website / other 
     <!-- please remove those that do not apply -->
@@ -23,3 +23,8 @@
 1.
 2.
 3.
+
+<!-- PLEASE ATTACH LOG FILE - YOU CAN FIND IT IN THE MENU:
+     Help -> Log Viewer, press "Open File" and attach
+     the file or copy-paste it's contents -->
+     
