@@ -134,7 +134,7 @@ namespace Bivrost.Bivrost360Player
 		internal static void SetBasicFeatures()
 		{
 			GhostVR = false;
-			LocallyStoredSessions = false;
+			LocallyStoredSessions = true;
 			RemoteEnabled = false;
 			Commercial = false;
 		}

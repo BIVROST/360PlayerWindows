@@ -133,7 +133,7 @@ namespace Bivrost.Bivrost360Player
 		[JsonIgnore]
 		bool _locallyStoredSessions = false;
 
-		[SettingsAdvancedProperty("Local video analytics sessions directory", ConfigItemType.String, requiredFeatures = FeaturesEnum.locallyStoredSessions)]
+		[SettingsAdvancedProperty("Local video analytics sessions directory", ConfigItemType.Path, requiredFeatures = FeaturesEnum.locallyStoredSessions)]
 		public string LocallyStoredSessionsDirectory { get; set; } = null;
 
 

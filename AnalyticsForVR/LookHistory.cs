@@ -11,7 +11,7 @@ namespace Bivrost.AnalyticsForVR
 	{
 		private const string BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
 
-		struct HeadPosition
+		class HeadPosition
 		{
 
             public static byte Angle01to063(double angle01)
@@ -31,6 +31,13 @@ namespace Bivrost.AnalyticsForVR
 				this.fov = fov;
 			}
 
+			internal HeadPosition()
+			{
+				yaw = 255;
+				pitch = 255;
+				fov = 0;
+			}
+
 			//public HeadPosition(char yawBase64, char pitchBase64, byte fov = 0)
 			//{
 			//    yaw = (byte)BASE64.IndexOf(yawBase64);
@@ -38,9 +45,9 @@ namespace Bivrost.AnalyticsForVR
 			//    this.fov = fov;
 			//}
 
-			public bool IsEmpty => yaw == 255 && pitch == 255 && fov == 0;
+			//public bool IsEmpty => yaw == 255 && pitch == 255 && fov == 0;
 
-			public readonly static HeadPosition Empty = new HeadPosition { yaw = 255, pitch = 255, fov = 0 };
+			//public static HeadPosition Empty => new HeadPosition();
 
 			internal byte yaw;
 			internal byte pitch;
@@ -67,7 +74,7 @@ namespace Bivrost.AnalyticsForVR
 			get
 			{
 				foreach (var point in data)
-					if (!point.IsEmpty)
+					if (point != null)
 						return false;
 				return true;
 			}
@@ -83,7 +90,7 @@ namespace Bivrost.AnalyticsForVR
             this.precision = precision;
             int count = (int)Math.Ceiling(mediaLength * precision);
             data = new List<HeadPosition>(count);
-            data.AddRange(Enumerable.Repeat<HeadPosition>(HeadPosition.Empty, count));
+            //data.AddRange(Enumerable.Repeat<HeadPosition>(HeadPosition.Empty, count));
         }
 
         public void TrackData(float t, SharpDX.Quaternion quaternion, byte fov)
@@ -118,18 +125,21 @@ namespace Bivrost.AnalyticsForVR
                 
                 // no space for element - need to resize
                 else if (idx >= data.Count)
-                { 
-                    if (idx > data.Capacity)
-                        data.Capacity = idx + 1;
-                    data.AddRange(Enumerable.Repeat<HeadPosition>(HeadPosition.Empty, data.Capacity - data.Count));
+                {
+					if (idx > data.Capacity)
+						data.Capacity = idx + 1;
+					data.AddRange(Enumerable.Repeat<HeadPosition>(null, data.Capacity - data.Count));
                 }
 
-                // finally add the element
-                //if (data[idx] == null)
-                //{
-                //    // TODO: integrate
-                //}
-                data[idx].Set(yaw01, pitch01, fov);
+				// finally add the element
+				//if (data[idx] == null)
+				//{
+				//    // TODO: integrate
+				//}
+				if (data[idx] == null)
+					data[idx] = new HeadPosition(yaw01, pitch01, fov);
+				else
+					data[idx].Set(yaw01, pitch01, fov);
             }
         }
 
@@ -139,7 +149,7 @@ namespace Bivrost.AnalyticsForVR
             StringBuilder sb = new StringBuilder();
             lock (data) data.ForEach(pair =>
             {
-                if (pair.IsEmpty)
+                if (pair == null)
                     sb.Append("--");
                 else
                 {
