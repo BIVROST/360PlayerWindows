@@ -1,7 +1,3 @@
-BIVROST 360Player for Windows Changelog
-=======================================
-
-[1.0.0.202]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.202
 [1.0.0.202] - 2018-05-09
 ------------------------
 Panorama support
@@ -10,8 +6,9 @@ Panorama support
 - Fixed: headset look direction again forwarded to main window.
 - Refactored internals of media and projection switching.
 
+[1.0.0.202]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.202
 
-[1.0.0.201]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.201
+
 [1.0.0.201] - 2018-04-12
 ------------------------
 Headsets now persist.
@@ -19,8 +16,9 @@ Headsets now persist.
 - Headset integration stays opened while switching movies
 - A background image is displayed when nothing is playing
 
+[1.0.0.201]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.201
 
-[1.0.0.200]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.200
+
 [1.0.0.200] - 2018-04-12
 ------------------------
 Minor bugfix issue.
@@ -29,16 +27,18 @@ Minor bugfix issue.
 - Better looking MOTD popup
 - Less intrusive update popup
 
+[1.0.0.200]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.200
 
-[1.0.0.199]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.199
+
 [1.0.0.199] - 2018-04-12
 ------------------------
 End-of-life release for the Canary deployment channel.
 
 - From now on, only the stable channel remains.
 
+[1.0.0.199]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.199
 
-[1.0.0.198]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.198
+
 [1.0.0.198] - 2018-03-26
 ------------------------
 Fixed Oculus not properly turning off, fixed HLS not working, documentation update, some minor bugfixes and removal of not used features.  
@@ -77,8 +77,9 @@ Fixed Oculus not properly turning off, fixed HLS not working, documentation upda
 - Option to change the headset while running
 - Added an after-upgrade notice
 
+[1.0.0.198]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.198
 
-[1.0.0.197]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.197
+
 [1.0.0.197] - 2018-03-15
 ------------------------
 Combined fix of a year of bug reports, source code cleanup  
@@ -98,9 +99,10 @@ Combined fix of a year of bug reports, source code cleanup
 - Browser plugins: moved functionality behind conditional compile directive `FEATURE_BROWSER_PLUGINS` (fix #642)
 - Updated documentation
 
+[1.0.0.197]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.197
 
-[d43215a]: https://github.com/BIVROST/360PlayerWindows/commit/d43215a
-[(unreleased as separate version)][d43215a] - 2017-05-26
+
+[(unreleased as separate version)][bf500e1] - 2017-05-26
 --------------------------------------------------------
 Logger update and minor fixes  
 
@@ -108,9 +110,10 @@ Logger update and minor fixes
 - Logger re-implementation: added tags to Logger
 - Proper closing of child windows when main window is closed
 
+[bf500e1]: https://github.com/BIVROST/360PlayerWindows/commit/bf500e1
 
-[b460801]: https://github.com/BIVROST/360PlayerWindows/commit/b460801
-[(unreleased as separate version)][b460801] - 2017-05-12
+
+[(unreleased as separate version)][d5b7fe4] - 2017-05-12
 --------------------------------------------------------
 Cleanup of legacy projects and code  
 
@@ -123,17 +126,19 @@ Cleanup of legacy projects and code
 - Removed project ModelRendering.DrawingSurface (part of BivrostWP)
 - Removed EventMode (non functional)
 
+[d5b7fe4]: https://github.com/BIVROST/360PlayerWindows/commit/d5b7fe4
 
-[0292630]: https://github.com/BIVROST/360PlayerWindows/commit/0292630
-[(unreleased as separate version)][0292630] - 2017-05-11
+
+[(unreleased as separate version)][fc82a7f] - 2017-05-11
 --------------------------------------------------------
 GhostVR integration  
 
 - API connector support
 - Displaying web forms after analytics have been sent
 
+[fc82a7f]: https://github.com/BIVROST/360PlayerWindows/commit/fc82a7f
 
-[1.0.0.196]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.196
+
 [1.0.0.196] - 2017-03-24
 ------------------------
 New input system  
@@ -141,8 +146,9 @@ New input system
 - Gamepad, Keyboard and 3dConnexion Navigator support
 - Little planet fix
 
+[1.0.0.196]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.196
 
-[1.0.0.193]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.193
+
 [1.0.0.193] - 2016-12-16
 ------------------------
 Headset tracking and analytics fixes  
@@ -152,8 +158,9 @@ Headset tracking and analytics fixes
 - Information whether the build is a canary build
 - License ninja doesn't fail when https certificate is invalid
 
+[1.0.0.193]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.193
 
-[1.0.0.189]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.189
+
 [1.0.0.189] - 2016-12-15
 ------------------------
 Licensing fixes and other minor updates  
@@ -163,8 +170,9 @@ Licensing fixes and other minor updates
 - Added shortcut to stop
 - OSVR update
 
+[1.0.0.189]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.189
 
-[1.0.0.188]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.188
+
 [1.0.0.188] - 2016-11-24
 ------------------------
 Codesigning and projection options  
@@ -180,22 +188,25 @@ Codesigning and projection options
 - Tabbed interface in log window
 - OpenVR and VRUI fixes
 
+[1.0.0.188]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.188
 
-[1.0.0.186]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.186
+
 [1.0.0.186] - 2016-09-07
 ------------------------
 Performance fixes. Fixed occasional blinking.  
 
 - Streaming services cleanup and fixes.
 
+[1.0.0.186]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.186
 
-[1.0.0.183]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.183
+
 [1.0.0.183] - 2016-08-22
 ------------------------
 Log window and fix of Youtube integration.
 
+[1.0.0.183]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.183
 
-[1.0.0.182]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.182
+
 [1.0.0.182] - 2016-08-07
 ------------------------
 OpenVR support, published build of previous unreleased features.   
@@ -213,8 +224,9 @@ OpenVR support, published build of previous unreleased features.
 - Now working with Oculus CV1.
 - Merged some OSVR and Oculus integration
 
+[1.0.0.182]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.182
 
-[1.0.0.181]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.181
+
 [1.0.0.181] - 2016-05-05
 ------------------------
 Remote control update.  
@@ -222,8 +234,9 @@ Remote control update.
 - Remote control API example in a separate project
 - Forwarding player events to remote control
 
+[1.0.0.181]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.181
 
-[1.0.0.179]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.179
+
 [1.0.0.179] - 2016-05-02
 ------------------------
 Pornhub streaming support. Added licensing. 
@@ -233,22 +246,25 @@ Pornhub streaming support. Added licensing.
 - Rebranding of UI
 - Licensing support, commercial version.
 
+[1.0.0.179]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.179
 
-[1.0.0.178]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.178
+
 [1.0.0.178] - 2016-03-11
 ------------------------
 Updates to Oculus SDK and OSVR integration.
 
+[1.0.0.178]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.178
 
-[1.0.0.175]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.175
+
 [1.0.0.175] - 2016-02-05
 ------------------------
 Remote Control for player (enabled in Debug), new "About" window.
 
+[1.0.0.175]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.175
 
-[1.0.0.170]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.170
-[1.0.0.170] - 2016-01-15
-------------------------
+
+[(unreleased as separate version)][71fcebe2] - 2016-01-15
+---------------------------------------------------------
 New video streaming services integration. Bug fixes.  
 
 - New video streaming services parser
@@ -261,8 +277,9 @@ New video streaming services integration. Bug fixes.
     - new: clipboard replaced by wm_copydata for instance to instance communication
 - Updated ClickOnce settings
 
+[71fcebe2]: https://github.com/BIVROST/360PlayerWindows/commit/71fcebe2
 
-[1.0.0.138]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.138
+
 [1.0.0.138] - 2016-01-04
 ------------------------
 CES 2016 edition.  
@@ -273,8 +290,9 @@ CES 2016 edition.
 - Fixed OSVR service connectivity issues
 - Fixed bad spherical projection with uncommon video aspect ratio
 
+[1.0.0.138]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.138
 
-[1.0.0.128]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.128
+
 [1.0.0.128] - 2015-12-04
 ------------------------
 OSVR headset support. Prerelease version.  
@@ -287,8 +305,9 @@ Version released to Razer.
 - Updated vrideo integration
 - Updated protocol integration
 
+[1.0.0.128]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.128
 
-[1.0.0.62]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.62
+
 [1.0.0.62] - 2015-10-01
 -----------------------
 Statistical tools for video analysis. Bivrost protocol handling for web integration.  
@@ -298,8 +317,9 @@ Statistical tools for video analysis. Bivrost protocol handling for web integrat
 - Added protocol bivrost: handling with websocket integration
 - UI update
 
+[1.0.0.62]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.62
 
-[1.0.0.56]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.56
+
 [1.0.0.56] - 2015-09-25
 -----------------------
 Streaming services support.  
@@ -314,8 +334,9 @@ Streaming services support.
 - Added several video playback modes
 - Minor stability fixes
 
+[1.0.0.56]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.56
 
-[1.0.0.52]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.52
+
 [1.0.0.52] - 2015-09-08
 -----------------------
 New features, auto updater UI.  
@@ -328,8 +349,9 @@ New features, auto updater UI.
 - Fixed "a task was canceled" exception during shutdown
 - Added repeat video playback button
 
+[1.0.0.52]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.52
 
-[1.0.0.43]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.43
+
 [1.0.0.43] - 2015-08-31
 -----------------------
 UI improvements and fixes, stability fixes.  
@@ -339,5 +361,7 @@ UI improvements and fixes, stability fixes.
 - Stability fixes: fixed a crash while opening a file after `srcnotsupported` error
 - Added license windows
 - Removed DX11 feature level requirement for testing
+
+[1.0.0.43]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.43
 
 
