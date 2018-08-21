@@ -6,6 +6,7 @@ Windows Store (UWP) build
 - Removed Youtube streaming
 - Fixes for faster headset initialization
 
+[1.0.0.203]: https://github.com/BIVROST/360PlayerWindows/tree/v1.0.0.203
 
 [1.0.0.202] - 2018-05-09
 ------------------------
