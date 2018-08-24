@@ -11,7 +11,7 @@ namespace Bivrost.AnalyticsForVR
 	{
 		private const string BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
 
-		class HeadPosition
+		struct HeadPosition
 		{
 
             public static byte Angle01to063(double angle01)
@@ -31,13 +31,6 @@ namespace Bivrost.AnalyticsForVR
 				this.fov = fov;
 			}
 
-			internal HeadPosition()
-			{
-				yaw = 255;
-				pitch = 255;
-				fov = 0;
-			}
-
 			//public HeadPosition(char yawBase64, char pitchBase64, byte fov = 0)
 			//{
 			//    yaw = (byte)BASE64.IndexOf(yawBase64);
@@ -45,23 +38,15 @@ namespace Bivrost.AnalyticsForVR
 			//    this.fov = fov;
 			//}
 
-			//public bool IsEmpty => yaw == 255 && pitch == 255 && fov == 0;
+			public bool IsEmpty => yaw == 0 && pitch == 0 && fov == 0;
 
-			//public static HeadPosition Empty => new HeadPosition();
-
-			internal byte yaw;
-			internal byte pitch;
-            internal byte fov;
+			readonly internal byte yaw;
+			readonly internal byte pitch;
+			readonly internal byte fov;
 
             public double Yaw => (yaw * 2F * Math.PI) - Math.PI;
             public double Pitch => pitch * Math.PI - 0.5f * Math.PI;
 
-			internal void Set(double yaw01, double pitch01, byte fov)
-			{
-				yaw = Angle01to063(yaw01);
-				pitch = Angle01to063(pitch01);
-				this.fov = fov;
-			}
 		}
 
         private List<HeadPosition> data;
@@ -74,7 +59,7 @@ namespace Bivrost.AnalyticsForVR
 			get
 			{
 				foreach (var point in data)
-					if (point != null)
+					if (!point.IsEmpty)
 						return false;
 				return true;
 			}
@@ -128,18 +113,15 @@ namespace Bivrost.AnalyticsForVR
                 {
 					if (idx > data.Capacity)
 						data.Capacity = idx + 1;
-					data.AddRange(Enumerable.Repeat<HeadPosition>(null, data.Capacity - data.Count));
+					data.AddRange(Enumerable.Repeat<HeadPosition>(new HeadPosition(), data.Capacity - data.Count));
                 }
 
 				// finally add the element
-				//if (data[idx] == null)
+				//if (data[idx] != null)
 				//{
-				//    // TODO: integrate
+				//    // TODO: integrate?
 				//}
-				if (data[idx] == null)
-					data[idx] = new HeadPosition(yaw01, pitch01, fov);
-				else
-					data[idx].Set(yaw01, pitch01, fov);
+				data[idx] = new HeadPosition(yaw01, pitch01, fov);
             }
         }
 
@@ -149,7 +131,7 @@ namespace Bivrost.AnalyticsForVR
             StringBuilder sb = new StringBuilder();
             lock (data) data.ForEach(pair =>
             {
-                if (pair == null)
+                if (pair.IsEmpty)
                     sb.Append("--");
                 else
                 {
