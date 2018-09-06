@@ -38,23 +38,15 @@ namespace Bivrost.AnalyticsForVR
 			//    this.fov = fov;
 			//}
 
-			public bool IsEmpty => yaw == 255 && pitch == 255 && fov == 0;
+			public bool IsEmpty => yaw == 0 && pitch == 0 && fov == 0;
 
-			public readonly static HeadPosition Empty = new HeadPosition { yaw = 255, pitch = 255, fov = 0 };
-
-			internal byte yaw;
-			internal byte pitch;
-            internal byte fov;
+			readonly internal byte yaw;
+			readonly internal byte pitch;
+			readonly internal byte fov;
 
             public double Yaw => (yaw * 2F * Math.PI) - Math.PI;
             public double Pitch => pitch * Math.PI - 0.5f * Math.PI;
 
-			internal void Set(double yaw01, double pitch01, byte fov)
-			{
-				yaw = Angle01to063(yaw01);
-				pitch = Angle01to063(pitch01);
-				this.fov = fov;
-			}
 		}
 
         private List<HeadPosition> data;
@@ -83,7 +75,7 @@ namespace Bivrost.AnalyticsForVR
             this.precision = precision;
             int count = (int)Math.Ceiling(mediaLength * precision);
             data = new List<HeadPosition>(count);
-            data.AddRange(Enumerable.Repeat<HeadPosition>(HeadPosition.Empty, count));
+            //data.AddRange(Enumerable.Repeat<HeadPosition>(HeadPosition.Empty, count));
         }
 
         public void TrackData(float t, SharpDX.Quaternion quaternion, byte fov)
@@ -97,10 +89,9 @@ namespace Bivrost.AnalyticsForVR
             double pitch01 = pitch / Math.PI + 0.5;
             TrackData(t, yaw01, pitch01, fov);
 
-			return;
-
-			Bivrost.Log.LoggerManager.Publish("history.yaw", yaw * 180f / Math.PI);
-			Bivrost.Log.LoggerManager.Publish("history.pitch", pitch * 180f / Math.PI);
+            Bivrost.Log.LoggerManager.Publish("history.t", t);
+            Bivrost.Log.LoggerManager.Publish("history.yaw", yaw * 180f / Math.PI);
+            Bivrost.Log.LoggerManager.Publish("history.pitch", pitch * 180f / Math.PI);
 			Bivrost.Log.LoggerManager.Publish("history.yaw01", yaw01);
 			Bivrost.Log.LoggerManager.Publish("history.pitch01", pitch01);
 		}
@@ -119,18 +110,18 @@ namespace Bivrost.AnalyticsForVR
                 
                 // no space for element - need to resize
                 else if (idx >= data.Count)
-                { 
-                    if (idx > data.Capacity)
-                        data.Capacity = idx + 1;
-                    data.AddRange(Enumerable.Repeat<HeadPosition>(HeadPosition.Empty, data.Capacity - data.Count));
+                {
+					if (idx > data.Capacity)
+						data.Capacity = idx + 1;
+					data.AddRange(Enumerable.Repeat<HeadPosition>(new HeadPosition(), data.Capacity - data.Count));
                 }
 
-                // finally add the element
-                //if (data[idx] == null)
-                //{
-                //    // TODO: integrate
-                //}
-                data[idx].Set(yaw01, pitch01, fov);
+				// finally add the element
+				//if (data[idx] != null)
+				//{
+				//    // TODO: integrate?
+				//}
+				data[idx] = new HeadPosition(yaw01, pitch01, fov);
             }
         }
 

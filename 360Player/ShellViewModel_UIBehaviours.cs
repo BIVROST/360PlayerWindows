@@ -227,21 +227,13 @@ namespace Bivrost.Bivrost360Player
 		public void OpenHomePage()
 		{
 			if (Fullscreen) ToggleFullscreen(true);
-#if DEBUG
-            System.Diagnostics.Process.Start("http://download.bivrost360.com/player-desktop/canary");
-#else
-            System.Diagnostics.Process.Start("http://download.bivrost360.com/player-desktop");
-#endif
+			System.Diagnostics.Process.Start("https://tools.bivrost360.com/landing-pages/360PlayerWindows");
         }
 
         public void OpenSupportPage()
 		{
 			if (Fullscreen) ToggleFullscreen(true);
-#if DEBUG
-            System.Diagnostics.Process.Start("http://download.bivrost360.com/player-desktop/canary");
-#else
-            System.Diagnostics.Process.Start("http://download.bivrost360.com/player-desktop");
-#endif
+            System.Diagnostics.Process.Start("https://tools.bivrost360.com/landing-pages/360PlayerWindows/support");
         }
 
         public void OpenBuyPage()
@@ -348,7 +340,7 @@ namespace Bivrost.Bivrost360Player
 		}
 
 
-		#region debug text
+#region debug text
 		public string DebugText { get; set; } = "";
 
 		public void AppendDebugText(string line)
@@ -365,7 +357,7 @@ namespace Bivrost.Bivrost360Player
 		{
 			Execute.OnUIThreadAsync(() => NotifyOfPropertyChange(() => DebugText));
 		}
-		#endregion
+#endregion
 
 
 		public void NormalProjection()

@@ -41,7 +41,7 @@ namespace Bivrost.Bivrost360Player
 		{
 			if (IsWindowsTooOld())
 			{
-				MessageBox.Show($"Windows Version '{Environment.OSVersion.VersionString}' in not supported by BIVROST 360Player. Please upgrade.", "Out of date Windows warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+				MessageBox.Show($"Windows Version '{Environment.OSVersion.VersionString}' in not supported by BIVROST® 360Player. Please upgrade.", "Out of date Windows warning", MessageBoxButton.OK, MessageBoxImage.Warning);
 			}
 			Initialize();
 		}
@@ -59,36 +59,53 @@ namespace Bivrost.Bivrost360Player
 			Application.Current.DispatcherUnhandledException += (_s, _e) => logger.Fatal(_e.Exception, "unhandled application exception");
 			AppDomain.CurrentDomain.UnhandledException += (_s, _e) => logger.Fatal(_e.ExceptionObject as Exception, "unhandled application domain exception");
 
-			Logic.Prepare();
 
-			LoggerManager.RegisterListener(new TextFileLogListener(Logic.LocalDataDirectory));
 			LoggerManager.RegisterListener(new TraceLogListener(false));
+
 			//LoggerManager.RegisterListener(new WindowsEventLogListener());
-			logger.Info("Registered all listeners");
+			
 
 			System.Windows.Forms.Application.EnableVisualStyles();
 
 			if (!System.Diagnostics.Debugger.IsAttached && ApplicationDeployment.IsNetworkDeployed)
 			{
 				//logger.Info("Copying appref and associating icons and file extensions");
-				Logic.LocalDataDirectory = ApplicationDeployment.CurrentDeployment.DataDirectory + "\\";
+				Logic.Prepare(ApplicationDeployment.CurrentDeployment.DataDirectory + Path.DirectorySeparatorChar);
 
 				Task.Factory.StartNew(() =>
 				{
 					CopyApplicationReference();
 					SetAddRemoveProgramsIcon();
-					AssociateFileExtensions();
+					AssociateFileExtensions("rundll32.exe dfshim.dll,ShOpenVerbShortcut " + Logic.LocalDataDirectory + "Bivrost360Player.appref-ms" + "|%1");
 				});
 			}
 			else
 			{
 				//logger.Info("Not copying appref and associating icons and file extensions - but making a stub, because this app is not network deployed");
 				{
-					string path = (new System.Uri(Assembly.GetExecutingAssembly().CodeBase, true)).AbsolutePath;
-                    //string path = Assembly.GetExecutingAssembly().CodeBase;
-                    Logic.LocalDataDirectory = Path.GetDirectoryName(path) + Path.DirectorySeparatorChar;
+                    // Check for application identity (UWP)
+                    string path;
+                    try
+                    {
+                        path = Windows.Storage.ApplicationData.Current.LocalFolder.Path + Path.DirectorySeparatorChar;
+                    }
+                    catch(InvalidOperationException)
+                    {
+                        // If no application identity, use application path (desktop/clickonce app)
+                        path = (Path.GetDirectoryName(Assembly.GetExecutingAssembly().CodeBase) + Path.DirectorySeparatorChar).Remove(0, "file:\\".Length);
+                    }
+                    Logic.Prepare(path);
+
+                    //MessageBox.Show(Windows.Storage.ApplicationData.Current.LocalFolder.Path);
+                    string runArgument = "360player.exe |%1";
+					foreach (var ext in MediaDecoder.SupportedFileExtensions)
+						AssociateExtension($".{ext}", runArgument);
 				}
 			}
+
+			LoggerManager.RegisterListener(new TextFileLogListener(Logic.LocalDataDirectory));
+			logger.Info("Registered all listeners");
+			
 
 
 			string[] args = Environment.GetCommandLineArgs();
@@ -147,33 +164,36 @@ namespace Bivrost.Bivrost360Player
 					if (!string.IsNullOrWhiteSpace(args[args.Length - 1]))
 					{
 						string str = args[args.Length - 1];
-						var cds = new NativeMethods.COPYDATASTRUCT
+
+						if (!str.ToLowerInvariant().EndsWith(".exe") && !str.ToLowerInvariant().EndsWith(".application"))
 						{
-							dwData = new IntPtr(3),
-							cbData = str.Length + 1,
-							lpData = str
-						};
+							var cds = new NativeMethods.COPYDATASTRUCT
+							{
+								dwData = new IntPtr(3),
+								cbData = str.Length + 1,
+								lpData = str
+							};
 
-						//MessageBox.Show("Sending: " + cds.lpData);
+							//MessageBox.Show("Sending: " + cds.lpData);
 
-						IntPtr bwin = GetPlayerWindow();
-						logger.Info("Sending to player window: " + bwin.ToString());
-						NativeMethods.SendMessage(bwin, NativeMethods.WM_COPYDATA, IntPtr.Zero, ref cds);
+							IntPtr bwin = GetPlayerWindow();
+							logger.Info("Sending to player window: " + bwin.ToString());
+							NativeMethods.SendMessage(bwin, NativeMethods.WM_COPYDATA, IntPtr.Zero, ref cds);
 
 
-						//Clipboard.SetText(args[1]);
-						//NativeMethods.PostMessage((IntPtr)NativeMethods.HWND_BROADCAST, NativeMethods.WM_SHOWBIVROSTPLAYER, IntPtr.Zero, IntPtr.Zero);
+							//Clipboard.SetText(args[1]);
+							//NativeMethods.PostMessage((IntPtr)NativeMethods.HWND_BROADCAST, NativeMethods.WM_SHOWBIVROSTPLAYER, IntPtr.Zero, IntPtr.Zero);
 
-						//string str = args[0];
-						//var cds = new NativeMethods.COPYDATASTRUCT
-						//{
-						//	dwData = new IntPtr(3),
-						//	cbData = str.Length + 1,
-						//	lpData = str
-						//};
-						//IntPtr bwin = NativeMethods.FindWindow(null, "Bivrost 360Player");
-						//NativeMethods.SendMessage(bwin, NativeMethods.WM_COPYDATA, IntPtr.Zero, ref cds);
-
+							//string str = args[0];
+							//var cds = new NativeMethods.COPYDATASTRUCT
+							//{
+							//	dwData = new IntPtr(3),
+							//	cbData = str.Length + 1,
+							//	lpData = str
+							//};
+							//IntPtr bwin = NativeMethods.FindWindow(null, "Bivrost 360Player");
+							//NativeMethods.SendMessage(bwin, NativeMethods.WM_COPYDATA, IntPtr.Zero, ref cds);
+						}
 					}
 				} 
 
@@ -280,7 +300,7 @@ namespace Bivrost.Bivrost360Player
 			}
 		}
 
-		public static void AssociateFileExtensions()
+		public static void AssociateFileExtensions(string runArgument)
 		{
 
 			//PROTOCOL REGISTRATION
@@ -297,7 +317,8 @@ namespace Bivrost.Bivrost360Player
 				bivrostProtocolKey.SetValue("URL Protocol","");
 				RegistryKey commandKey = bivrostProtocolKey.OpenSubKey(@"shell\open\command", true);
 				//commandKey.SetValue("","\"" + System.Reflection.Assembly.GetExecutingAssembly().CodeBase.Substring(8).Replace('/',Path.DirectorySeparatorChar) + "\" --bivrost-protocol \"%1\"");
-				commandKey.SetValue("", "rundll32.exe dfshim.dll,ShOpenVerbShortcut " + Logic.LocalDataDirectory + "Bivrost360Player.appref-ms" +"|%1");
+				//DEFAULT RUN ARGUMENT 
+				commandKey.SetValue("", runArgument);
 			} catch(Exception exc) {
 				logger.Error(exc, "Exception while associating protocol");
 			}
@@ -330,10 +351,10 @@ namespace Bivrost.Bivrost360Player
 
 
 			foreach(var ext in MediaDecoder.SupportedFileExtensions)
-				AssociateExtension($".{ext}");
+				AssociateExtension($".{ext}", runArgument);
 		}
 
-		private static void AssociateExtension(string extension)
+		private static void AssociateExtension(string extension, string runArgument)
 		{
 			if (!extension.StartsWith(".")) extension = "." + extension;
 
@@ -346,9 +367,10 @@ namespace Bivrost.Bivrost360Player
 
 				RegistryKey bivrostMenuKey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Classes\SystemFileAssociations\" + extension + @"\Shell\Open in 360Player", true);
 				string iconSourcePath = Path.Combine(System.Windows.Forms.Application.StartupPath, "Graphics\\fileassoc.ico");
+				
 				bivrostMenuKey.SetValue("Icon", iconSourcePath);
 
-				bivrostMenuCommandKey.SetValue("", "rundll32.exe dfshim.dll,ShOpenVerbShortcut " + Logic.LocalDataDirectory + "Bivrost360Player.appref-ms" + "|%1");
+				bivrostMenuCommandKey.SetValue("", runArgument);
 
 				bivrostMenuCommandKey.Close();
 				bivrostMenuKey.Close();
@@ -398,7 +420,7 @@ namespace Bivrost.Bivrost360Player
 				StringBuilder sb = new StringBuilder(256);
 				NativeMethods.GetWindowText(in1, sb, 256);
 				string text = sb.ToString();
-				if (text.StartsWith("BIVROST 360Player"))
+				if (text.StartsWith("BIVROST® 360Player"))
 				{
 					StringBuilder sbname = new StringBuilder(256);
 					NativeMethods.GetClassName(in1, sbname, 256);

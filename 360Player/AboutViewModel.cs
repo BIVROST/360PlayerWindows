@@ -13,7 +13,7 @@ namespace Bivrost.Bivrost360Player
 	{
 		public AboutViewModel()
 		{
-			DisplayName = "About BIVROST 360Player";
+			DisplayName = "About BIVROST® 360Player";
 			try
 			{
 				if(Tools.PublishInfo.ApplicationIdentity != null)

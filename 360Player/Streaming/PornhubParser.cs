@@ -51,16 +51,13 @@ namespace Bivrost.Bivrost360Player.Streaming
 			var result = new ServiceResult(uri, ServiceName, URIToMediaId(uri));
 			string html = HTTPGetString(uri);
 
-			//var match = Regex.Match(html, @"vrProps\s*=\s*({[^;]+})\s*;");
-			//var match = Regex.Match(html, "({[^{}]*\"stereoSrc\"[^{}]*})");
-
 			var match = Regex.Match(html, @"^\s*vrProps\s*=\s*(.+),\s*$", RegexOptions.Multiline);
 
 
 
 			if (match.Captures.Count == 0)
 				throw new StreamNotSupported("This movie is not VR enabled: " + uri);
-			//throw new StreamParsingFailed("vrProps info not found");
+
 			string vrPropsString=match.Groups[1].Captures[0].Value;
 			JObject vrProps = JObject.Parse(vrPropsString);
 
@@ -72,30 +69,10 @@ namespace Bivrost.Bivrost360Player.Streaming
 
 			result.title = Regex.Match(html, @"<title>(.+)<[/]title>").Groups[1].Captures[0].Value;
 
-			//foreach (var p in new Tuple<string, int, int, int>[] {
-			//	Tuple.Create("720p", 1, 1280, 720),
-			//	Tuple.Create("1080p", 2, 1920, 1080),
-			//	Tuple.Create("2k", 3, 2048, 1024),
-			//	Tuple.Create("4k", 4, 3840, 2160)
-			//}) { 
-			//	var matches=Regex.Match(html, "var\\s+player_quality_" + p.Item1 + "\\s*=\\s*'([^;]+)'\\s*;");
-			//	if (matches.Captures.Count > 0)
-			//		result.videoStreams.Add(new VideoStream()
-			//		{
-			//			container = VideoContainer.mp4,
-			//			quality = p.Item2,
-			//			width = p.Item3,
-			//			height = p.Item4,
-			//			url = matches.Groups[1].Captures[0].Value,
-			//			hasAudio = true
-			//		});
-			//}
-
 			var flashvars = Regex.Match(html, @"^\s*var\s+flashvars_\d+\s*=\s*(.+);\s*$", RegexOptions.Multiline);
 			if (flashvars.Captures.Count > 0)
 			{
 				var json = flashvars.Groups[1].Captures[0].Value;
-				//var o = Newtonsoft.Json.JsonConvert.DeserializeObject(json);
 
 				var converter = new ExpandoObjectConverter();
 				dynamic message = JsonConvert.DeserializeObject<ExpandoObject>(json, converter);

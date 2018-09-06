@@ -79,7 +79,7 @@ namespace Bivrost.Bivrost360Player.InputDevices
         {
             try
             {
-                connex = new _3DconnexionDevice("BIVROST 360Player");
+                connex = new _3DconnexionDevice("BIVROST® 360Player");
                 connex.InitDevice(windowHandle);
                 connex.UiMode = false;
                 connex.ResetAllButtonBindings();

@@ -63,8 +63,10 @@ namespace Bivrost.Bivrost360Player
 			{
 				try
 				{
-					MediaDecoder.Instance.OnContentChanged += ContentChanged;
-					Render();
+                    MediaDecoder.Instance.OnContentChanged += ContentChanged;
+                    ContentChanged();
+
+                    Render();
 				}
 				catch (Exception exc)
 				{
@@ -77,6 +79,9 @@ namespace Bivrost.Bivrost360Player
 					Lock = false;
 					_defaultBackgroundTexture?.Dispose();
 					_defaultBackgroundTexture = null;
+
+					abort = false;
+					pause = false;
 				}
 			})
 			{
@@ -223,6 +228,8 @@ namespace Bivrost.Bivrost360Player
 
 		public void SetDefaultScene()
 		{
+            log.Info("Showing default scene");
+
 			lock (localCritical)
 			{
 				TextureCleanup();
@@ -250,9 +257,14 @@ namespace Bivrost.Bivrost360Player
 		{
 			if (contentUpdateRequested)
 			{
-				contentUpdateRequested = false;
 				lock (localCritical)
-					MediaDecoder.Instance.ContentRequested(this);
+				{
+                    if (MediaDecoder.Instance.ContentRequested(this))
+                    {
+                        log.Info("Content updated");
+                        contentUpdateRequested = false;
+                    }
+				}
 			}
 		}
 		private void ContentChanged()
@@ -384,7 +396,12 @@ namespace Bivrost.Bivrost360Player
 			lock (localCritical)
 			{
 				primitive?.Dispose();
+				if (primitive != null)
+					System.Diagnostics.Debug.WriteLine(primitive.GetHashCode().ToString());
 				primitive = GraphicTools.CreateGeometry(projection, _gd, false);
+				if (primitive != null)
+					System.Diagnostics.Debug.WriteLine(primitive.GetHashCode().ToString());
+				;
 			}
 		}
 	}

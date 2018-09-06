@@ -84,7 +84,7 @@ namespace OculusWrap
 			// Deallocate unmanaged memory again.
 			FreeHGlobal(ref m_eyePosesPtr);
 
-			OVR.Dispose();
+			OVR?.Dispose();
 			OVR = null;
 
 			Disposed = true;

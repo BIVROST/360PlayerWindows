@@ -79,14 +79,25 @@ namespace Bivrost.Bivrost360Player
 
 		public bool IsPlaying => isPlaying || IsDisplayingStaticContent;
 		private bool isPlaying;
-		public bool IsPaused { get {
-				/////lock(criticalSection)
-				//{
+		public bool IsPaused {
+            get
+            {
 				if (IsDisplayingStaticContent) return true;
 
-				return (_initialized ? (bool)_mediaEngineEx.IsPaused : false);
-				//}
-			} }
+                if (!_initialized) return false;
+
+                if (_mediaEngineEx == null) return false;
+
+                try
+                {
+                    return _mediaEngineEx.IsPaused;
+                }
+                catch(NullReferenceException)
+                {
+                    return false;
+                }
+            }
+        }
 
 
 		/// <summary>
@@ -641,16 +652,25 @@ namespace Bivrost.Bivrost360Player
 		/// to have their content updated
 		/// </summary>
 		/// <param name="obj"></param>
-		public void ContentRequested(IContentUpdatableFromMediaEngine obj)
+		/// <returns>true if content request was successful, false if media pipeline was not yet initialized.</returns>
+		public bool ContentRequested(IContentUpdatableFromMediaEngine obj)
 		{
 			lock (criticalSection)
 			{
+				if(contentChangeDelegate == null)
+				{
+					//log.Error("ContentRequested without a delegate?");
+					return false;
+				}
+
 				contentChangeDelegate(obj);
 				var proj = Projection;
 				if (proj == ProjectionMode.Autodetect)
 					proj = ProjectionMode.Sphere;
 				obj.SetProjection(proj);
 			}
+
+			return true;
 		}
 
 		/// <summary>

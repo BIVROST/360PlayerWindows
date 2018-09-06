@@ -17,28 +17,6 @@ namespace Bivrost.Bivrost360Player
 		{
 			Task.Factory.StartNew(() => {
 				CreateClickOnceShortcut();
-				//string Timestamp = DateTime.Now.ToString("dd-MM-yyyy");
-
-				//string key = @"HKEY_CURRENT_USER\Software\Classes\bivrost";
-    //            string valueName = "Trial Period";
-
-				//RegistryKey subkey = Registry.CurrentUser.OpenSubKey($"Software\\Classes\\{PROTOCOL_PREFIX}\\shell\\open\\command", true);
-				//if(subkey == null)
-				//{
-				//	subkey = Registry.CurrentUser.CreateSubKey($"Software\\Classes\\{PROTOCOL_PREFIX}\\shell\\open\\command");
-				//	//subkey.SetValue("", )
-
-				//} else
-				//{
-				//	var value = subkey.GetValue("");
-				//}
-				
-				
-
-				//HKEY_CURRENT_USER\Software\Classes
-				//Microsoft.Win32.Registry.SetValue(key, valueName, Timestamp, Microsoft.Win32.RegistryValueKind.String);
-
-
 			});
 		}
 
@@ -47,7 +25,7 @@ namespace Bivrost.Bivrost360Player
 			byte[] token = System.Reflection.Assembly.GetExecutingAssembly().GetName().GetPublicKeyToken();
 			byte[] key = System.Reflection.Assembly.GetExecutingAssembly().GetName().GetPublicKey();
             token = (new SHA1CryptoServiceProvider()).ComputeHash(new byte[0]).Take(8).ToArray();
-            File.WriteAllText("publictoken", ByteArrayToString(token));
+            File.WriteAllText(Logic.LocalDataDirectory + Path.DirectorySeparatorChar + "publictoken", ByteArrayToString(token));
 		}
 
 		public static string ByteArrayToString(byte[] ba)
