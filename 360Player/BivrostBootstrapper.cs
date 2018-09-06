@@ -83,9 +83,7 @@ namespace Bivrost.Bivrost360Player
 			{
 				//logger.Info("Not copying appref and associating icons and file extensions - but making a stub, because this app is not network deployed");
 				{
-
-
-                    // UWP packaging hack
+                    // Check for application identity (UWP)
                     string path;
                     try
                     {
@@ -93,6 +91,7 @@ namespace Bivrost.Bivrost360Player
                     }
                     catch(InvalidOperationException)
                     {
+                        // If no application identity, use application path (desktop/clickonce app)
                         path = (Path.GetDirectoryName(Assembly.GetExecutingAssembly().CodeBase) + Path.DirectorySeparatorChar).Remove(0, "file:\\".Length);
                     }
                     Logic.Prepare(path);
