@@ -280,8 +280,8 @@ namespace Bivrost.Bivrost360Player.OSVRKit
                 dxgiDevice.MaximumFrameLatency = 1;
 
 			using (_gd = SharpDX.Toolkit.Graphics.GraphicsDevice.New(_device))
-			using (customEffectL = GetCustomEffect(_gd))
-			using (customEffectR = GetCustomEffect(_gd))
+			using (customEffectL = Effects.GetEffect(_gd, Effects.GammaShader))
+			using (customEffectR = Effects.GetEffect(_gd, Effects.GammaShader))
 			//using (var primitive = GraphicTools.CreateGeometry(_projection, _gd))
 			using (vrui = new VRUI(_device, _gd))
 			using (Texture2D depthBuffer = new Texture2D(_device, depthBufferDescription))

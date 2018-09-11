@@ -63,10 +63,14 @@
 		SharpDX.Toolkit.Graphics.GraphicsDevice graphicsDevice;
 		SharpDX.Toolkit.Graphics.Effect customEffect;
 
-		SharpDX.Toolkit.Graphics.GeometricPrimitive primitive;
-		ProjectionMode projectionMode;
+        SharpDX.Toolkit.Graphics.GeometricPrimitive primitive;
+        ProjectionMode projectionMode;
 
-		private float yaw = 0;
+        SharpDX.Toolkit.Graphics.GeometricPrimitive bgPrimitive;
+        SharpDX.Toolkit.Graphics.Effect bgCustomEffect;
+
+
+        private float yaw = 0;
 		private float pitch = 0;
 
 		private float deltaTime = 0;
@@ -149,9 +153,12 @@
 				throw new Exception("Scene host device is null");
 
 			graphicsDevice = SharpDX.Toolkit.Graphics.GraphicsDevice.New(_device);
-			customEffect = Headset.GetCustomEffect(graphicsDevice);
+            customEffect = Effects.GetEffect(graphicsDevice, Effects.GammaShader);
 
-			MediaDecoder.Instance.OnContentChanged += ContentChanged;
+            bgCustomEffect = Effects.GetEffect(graphicsDevice, Effects.ImageBasedLightEquirectangular);
+            bgPrimitive = SharpDX.Toolkit.Graphics.GeometricPrimitive.Teapot.New(graphicsDevice, 1, 8);
+
+            MediaDecoder.Instance.OnContentChanged += ContentChanged;
 
 			projectionMatrix = Matrix.PerspectiveFovRH((float)(72f * Math.PI / 180f), (float)16f / 9f, 0.0001f, 50.0f);
 			worldMatrix = Matrix.Identity;
@@ -412,11 +419,17 @@
 					requestContent = false;
 			}
 
+            var rot = Quaternion.Identity;
+            var pos = Vector3.ForwardLH * 1.5f + Vector3.Down * 0.5f;
+            var bgWorldMatrix = Matrix.Scaling(Vector3.One) * Matrix.RotationQuaternion(rot) * Matrix.Translation(pos);
+            bgCustomEffect.Parameters["WorldViewProj"].SetValue(bgWorldMatrix * viewMatrix * projectionMatrix);
 
-			lock (localCritical)
+
+            lock (localCritical)
 			{
 				// requiestContentCallback should ensure that primitive is set at this point
 				primitive?.Draw(customEffect);
+                bgPrimitive?.Draw(bgCustomEffect);
 			}
 		}
 

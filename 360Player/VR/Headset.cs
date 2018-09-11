@@ -112,35 +112,6 @@ namespace Bivrost.Bivrost360Player
 		protected SharpDX.Toolkit.Graphics.Effect customEffectR;
 
 
-		private static SharpDX.Toolkit.Graphics.EffectCompilerResult gammaShader = null;
-		private static SharpDX.Toolkit.Graphics.EffectCompilerResult GammaShader
-		{
-			get
-			{
-				if (gammaShader == null)
-				{
-					string shaderSource = Properties.Resources.GammaShader;
-					SharpDX.Toolkit.Graphics.EffectCompiler compiler = new SharpDX.Toolkit.Graphics.EffectCompiler();
-					var shaderCode = compiler.Compile(shaderSource, "gamma shader", SharpDX.Toolkit.Graphics.EffectCompilerFlags.Debug | SharpDX.Toolkit.Graphics.EffectCompilerFlags.EnableBackwardsCompatibility | SharpDX.Toolkit.Graphics.EffectCompilerFlags.SkipOptimization);
-
-					if (shaderCode.HasErrors)
-						throw new HeadsetError("Shader compile error:\n" + string.Join("\n", shaderCode.Logger.Messages));
-					gammaShader = shaderCode;
-				}
-				return gammaShader;
-			}
-		}
-
-
-		public static SharpDX.Toolkit.Graphics.Effect GetCustomEffect(SharpDX.Toolkit.Graphics.GraphicsDevice gd)
-		{
-			var ce = new SharpDX.Toolkit.Graphics.Effect(gd, GammaShader.EffectData);
-			ce.CurrentTechnique = ce.Techniques["ColorTechnique"];
-			ce.CurrentTechnique.Passes[0].Apply();
-			return ce;
-		}
-
-
 		protected VRUI vrui;
 		protected bool ShouldShowVRUI
 		{

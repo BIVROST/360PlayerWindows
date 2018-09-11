@@ -396,6 +396,7 @@
     <Compile Include="NotificationViewModel.cs" />
     <Compile Include="RemoteControl\Settings_RemoteControl.cs" />
     <Compile Include="ShellViewModel_Headsets.cs" />
+    <Compile Include="Tools\Effects.cs" />
     <Compile Include="Tools\OneWayTypedConverter.cs" />
     <Compile Include="VR\Oculus\EyeTexture.cs" />
     <Compile Include="ServiceResultResolver.xaml.cs">
@@ -608,6 +609,7 @@
     <Resource Include="Resources\icon-ghostvr.ico" />
     <EmbeddedResource Include="Resources\default-background-equirectangular.png" />
     <Resource Include="Graphics\viking_logo.png" />
+    <None Include="Shaders\ImageBasedLightEquirectangular.hlsl" />
     <Content Include="x64\openvr_api.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

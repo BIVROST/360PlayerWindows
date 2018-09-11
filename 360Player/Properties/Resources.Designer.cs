@@ -68,7 +68,7 @@ namespace Bivrost.Bivrost360Player.Properties {
         ///Section 1
         ///For the purposes of this licence, the following terms are defined as follows:
         ///1) Bivrost Desktop – computer software created by the Bivrost Developer, used for displaying panoramic videos; Bivrost Desktop offers features and specifications listed in its Documentation; to be operational, Bivrost Desktop requires third-party software listed in the Documentation, specifically: an operating system, drivers and libraries;
-        ///2 [rest of string was truncated]&quot;;.
+        ///2) Docum [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string EULA {
             get {
@@ -87,7 +87,7 @@ namespace Bivrost.Bivrost360Player.Properties {
         ///SharpVectors 1.0 is under the New BSD License (BSD).
         ///OculusWrap 1.6.0.2 is under the Microsoft Public License (Ms-PL).
         ///Nancy 1.2 and Nancy.Hosting.Self 1.2 are under the MIT license.
-        ///Fleck 0.13.0.57 is under the MI [rest of string was truncated]&quot;;.
+        ///Fleck 0.13.0.57 is under the MIT license. [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string EulaLibs {
             get {
@@ -121,7 +121,8 @@ namespace Bivrost.Bivrost360Player.Properties {
         ///
         ///struct PixelInputType
         ///{
-        ///    float4 [rest of string was truncated]&quot;;.
+        ///    float4 position : SV_POSITION;
+        /// [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string GammaShader {
             get {
@@ -136,6 +137,41 @@ namespace Bivrost.Bivrost360Player.Properties {
             get {
                 object obj = ResourceManager.GetObject("icon_ghostvr", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to //reuse//code//ApplyAnEffectFxFile//
+        ///uniform extern float4x4 WorldViewProj : WORLDVIEWPROJECTION;
+        ///extern float gammaFactor;
+        ///
+        ////////////////
+        ///// GLOBALS //
+        ////////////////
+        /////matrix worldMatrix;
+        /////matrix viewMatrix;
+        /////matrix projectionMatrix;
+        ///
+        /////float4 AmbientColor = float4(1, 1, 1, 1);
+        ///
+        /////////////////
+        ///// TYPEDEFS //
+        /////////////////
+        ///struct VertexInputType
+        ///{
+        ///    float4 Position : SV_Position;
+        ///    float3 Normal : NORMAL;
+        ///    float2 TexCoord : TEXCOORD0;
+        ///};
+        ///
+        ///struct PixelInputType
+        ///{
+        ///    float4 position : SV_POSITION;
+        /// [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string ImageBasedLightEquirectangular {
+            get {
+                return ResourceManager.GetString("ImageBasedLightEquirectangular", resourceCulture);
             }
         }
     }

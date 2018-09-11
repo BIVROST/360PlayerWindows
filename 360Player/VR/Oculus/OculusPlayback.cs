@@ -129,8 +129,8 @@ namespace Bivrost.Bivrost360Player.Oculus
 				using (Layers layers = new Layers())
 				using (_gd = SharpDX.Toolkit.Graphics.GraphicsDevice.New(_device))
 				using (vrui = new VRUI(_device, _gd))
-				using (customEffectL = GetCustomEffect(_gd))
-				using (customEffectR = GetCustomEffect(_gd))
+				using (customEffectL = Effects.GetEffect(_gd, Effects.GammaShader))
+				using (customEffectR = Effects.GetEffect(_gd, Effects.GammaShader))
 				//using (SharpDX.Toolkit.Graphics.GeometricPrimitive primitive = GraphicTools.CreateGeometry(_projection, _gd, false))
 				{
 					if (hmd == null)
