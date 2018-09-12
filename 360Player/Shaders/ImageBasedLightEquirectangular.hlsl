@@ -59,21 +59,23 @@ PixelInputType ColorVertexShader(VertexInputType input)
 
     return output;
 }
+//
+//// http://gamedev.stackexchange.com/a/32688/44395
+//float2 rand_2_10(in float2 uv)
+//{
+//    float noiseX = (frac(sin(dot(uv, float2(12.9898, 78.233) * 2.0)) * 43758.5453));
+//    float noiseY = sqrt(1 - noiseX * noiseX);
+//    return float2(noiseX, noiseY);
+//}
+//float rand_1_05(in float2 uv)
+//{
+//    float2 noise = (frac(sin(dot(uv, float2(12.9898, 78.233) * 2.0)) * 43758.5453));
+//    return abs(noise.x + noise.y) * 0.5;
 
-// http://gamedev.stackexchange.com/a/32688/44395
-float2 rand_2_10(in float2 uv)
-{
-    float noiseX = (frac(sin(dot(uv, float2(12.9898, 78.233) * 2.0)) * 43758.5453));
-    float noiseY = sqrt(1 - noiseX * noiseX);
-    return float2(noiseX, noiseY);
-}
-float rand_1_05(in float2 uv)
-{
-    float2 noise = (frac(sin(dot(uv, float2(12.9898, 78.233) * 2.0)) * 43758.5453));
-    return abs(noise.x + noise.y) * 0.5;
-}
+//}
 
 
+///aaaa
 
 float Pixels[13] =
 {
@@ -115,9 +117,11 @@ float BlurWeights[13] =
 float4 ColorPixelShader(PixelInputType input) : SV_Target
 {
 
-	return float4(input.Normal, 1);
+	//return float4(2,1,1,1) - float4(input.Normal, 1);
 
-    //return pow(UserTex.Sample(UserTexSampler, input.TexCoord), gammaFactor);
+	float2 TexCoord = input.Normal.xy;
+
+    return pow(UserTex.Sample(UserTexSampler, TexCoord), gammaFactor) ;
 }
 
 
