@@ -419,7 +419,7 @@
 					requestContent = false;
 			}
 
-            bgCustomRotation = Quaternion.Lerp(bgCustomRotation, Quaternion.RotationYawPitchRoll(180-yaw, 0, 0), deltaTime);
+            bgCustomRotation = Quaternion.Lerp(bgCustomRotation, Quaternion.RotationYawPitchRoll((float)Math.PI-yaw, 0, 0), deltaTime);
 
             //*Matrix.RotationQuaternion(Quaternion.Invert(bgCustomRotation)) *
             var pos = Vector3.ForwardLH * 1.5f + Vector3.Down * 0.5f;
@@ -452,8 +452,11 @@
 		}
 
 
-		#region IContentUpdatableFromMediaEngine
-		void IContentUpdatableFromMediaEngine.ReceiveTextures(Texture2D textureL, Texture2D textureR)
+        #region IContentUpdatableFromMediaEngine
+
+
+        SharpDX.Toolkit.Graphics.Texture2D mainTexture;
+        void IContentUpdatableFromMediaEngine.ReceiveTextures(Texture2D textureL, Texture2D textureR)
 		{
 			if (MediaDecoder.Instance.TextureReleased) return;
 
@@ -462,15 +465,19 @@
                 localVideoTexture?.Dispose();
                 localVideoTexture = null;
 
+                mainTexture?.Dispose();
+                mainTexture = null;
+
                 using (var resource = textureL.QueryInterface<SharpDX.DXGI.Resource>())
                 using (var sharedTex = _device.OpenSharedResource<Texture2D>(resource.SharedHandle))
                 {
-                    var tex = SharpDX.Toolkit.Graphics.Texture2D.New(graphicsDevice, sharedTex);
-                    customEffect.Parameters["UserTex"].SetResource(tex);
-                    customEffect.Parameters["gammaFactor"].SetValue(1f);
-                    customEffect.CurrentTechnique = customEffect.Techniques["ColorTechnique"];
-                    customEffect.CurrentTechnique.Passes[0].Apply();
+                    mainTexture = SharpDX.Toolkit.Graphics.Texture2D.New(graphicsDevice, sharedTex);
                 };
+
+                customEffect.Parameters["UserTex"].SetResource(mainTexture);
+                customEffect.Parameters["gammaFactor"].SetValue(1f);
+                customEffect.CurrentTechnique = customEffect.Techniques["ColorTechnique"];
+                customEffect.CurrentTechnique.Passes[0].Apply();
             }
 
 
@@ -478,17 +485,16 @@
             {
                 lock (localCritical)
                 {
-                    if (localVideoTexture == null) return;
-
-                    using (var resource = textureL.QueryInterface<SharpDX.DXGI.Resource>())
-                    using (var sharedTex = _device.OpenSharedResource<Texture2D>(resource.SharedHandle))
+                    if (mainTexture == null)
                     {
-                        var tex = SharpDX.Toolkit.Graphics.Texture2D.New(gd, sharedTex);
-                        e.Parameters["UserTex"].SetResource(tex);
-                        e.Parameters["gammaFactor"].SetValue(1f);
-                        e.CurrentTechnique = e.Techniques["ColorTechnique"];
-                        e.CurrentTechnique.Passes[0].Apply();
-                    };
+                        log.Error("Custom effect source did not receive main texture");
+                        return;
+                    }
+
+                    e.Parameters["UserTex"].SetResource(mainTexture);
+                    e.Parameters["gammaFactor"].SetValue(1f);
+                    e.CurrentTechnique = e.Techniques["ColorTechnique"];
+                    e.CurrentTechnique.Passes[0].Apply();
                 }
             };
 

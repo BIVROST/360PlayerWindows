@@ -111,6 +111,8 @@ float BlurWeights[13] =
    0.002216,
 };
 
+#define M1_2PI 0.15915494309
+#define MPI 3.14
 ////////////////////////////////////////////////////////////////////////////////
 // Pixel Shader
 ////////////////////////////////////////////////////////////////////////////////
@@ -119,7 +121,21 @@ float4 ColorPixelShader(PixelInputType input) : SV_Target
 
 	//return float4(2,1,1,1) - float4(input.Normal, 1);
 
-	float2 TexCoord = input.Normal.xy;
+	float3 normal = input.Normal;
+	//return float4(normal.y, normal.y, normal.y, 1);
+
+	float pitch = (normal.y-1)/2;
+	float yaw = (atan2(normal.x, -normal.z) + MPI) * M1_2PI;
+
+	float imageBasedLight = saturate(normal.y);
+	//if (imageBasedLight > .8) imageBasedLight = 1;
+	//else imageBasedLight = 0;
+
+	float2 TexCoord; // = input.Normal.xy;
+	TexCoord.y = -pitch;
+	TexCoord.x = yaw;
+
+	//return float4(imageBasedLight, imageBasedLight, imageBasedLight, 1);
 
     return pow(UserTex.Sample(UserTexSampler, TexCoord), gammaFactor) ;
 }
