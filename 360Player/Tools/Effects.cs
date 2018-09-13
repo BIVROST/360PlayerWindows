@@ -23,7 +23,6 @@ namespace Bivrost.Bivrost360Player.Tools
 
         static private Logger log = new Logger("Effects");
 
-
         public static EffectData Compile(string shaderCode, string shaderName)
         {
             int key = shaderCode.GetHashCode();
@@ -50,14 +49,13 @@ namespace Bivrost.Bivrost360Player.Tools
 
 
 
-        public static Effect GetEffect(GraphicsDevice gd, EffectData effectData)
+        public static Effect GetEffect(GraphicsDevice gd, EffectData effectData, string technique = "ColorTechnique")
         {
             var effect = new Effect(gd, effectData);
-            effect.CurrentTechnique = effect.Techniques["ColorTechnique"];
+            effect.CurrentTechnique = effect.Techniques[technique];
             effect.CurrentTechnique.Passes[0].Apply();
             return effect;
         }
-
 
 
         public static EffectData GammaShader => Compile(Properties.Resources.GammaShader, "GammaShader");
@@ -81,6 +79,24 @@ namespace Bivrost.Bivrost360Player.Tools
                     dirty = true;
                 }
             }
+
+
+            private string _technique = "ColorTechnique";
+            public string Technique
+            {
+                set
+                {
+                    if (_technique == value) return;
+                    _technique = value;
+                    dirty = true;
+                }
+                get
+                {
+                    return _technique;
+                }
+            }
+
+
 
             public AutoRefreshEffect(string filePath)
             {
@@ -123,7 +139,7 @@ namespace Bivrost.Bivrost360Player.Tools
                 {
                     var hlslSource = File.ReadAllText(filePath);
                     var effectData = Compile(hlslSource, filePath);
-                    effect = GetEffect(gd, effectData);
+                    effect = GetEffect(gd, effectData, Technique);
                     _initAction(effect, gd);
                     dirty = false;
                 }
@@ -135,7 +151,7 @@ namespace Bivrost.Bivrost360Player.Tools
                     {
                         var hlslSource = File.ReadAllText(filePath);
                         var effectData = Compile(hlslSource, filePath);
-                        var nextEffect = GetEffect(gd, effectData);
+                        var nextEffect = GetEffect(gd, effectData, Technique);
                         effect?.Dispose();
                         effect = nextEffect;
                         _initAction(effect, gd);

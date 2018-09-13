@@ -156,8 +156,8 @@
             customEffect = Effects.GetEffect(graphicsDevice, Effects.GammaShader);
 
             bgCustomEffectSource = new Effects.AutoRefreshEffect(@"D:\Projekty\360PlayerWindows\360Player\Shaders\ImageBasedLightEquirectangular.hlsl");
-            bgPrimitive = SharpDX.Toolkit.Graphics.GeometricPrimitive.Teapot.New(graphicsDevice, 1, 8);
-
+            //bgPrimitive = SharpDX.Toolkit.Graphics.GeometricPrimitive.Teapot.New(graphicsDevice, 1, 8);
+            bgPrimitive = SharpDX.Toolkit.Graphics.GeometricPrimitive.Sphere.New(graphicsDevice, 1, 32);
             MediaDecoder.Instance.OnContentChanged += ContentChanged;
 
 			projectionMatrix = Matrix.PerspectiveFovRH((float)(72f * Math.PI / 180f), (float)16f / 9f, 0.0001f, 50.0f);
@@ -327,11 +327,47 @@
 
 					if (keyboardInput.KeyDown(Key.OemPlus) || keyboardInput.KeyDown(Key.Add))
 						ChangeFov(-fovVelocity * deltaTime);
-				}
+
+#if DEBUG
+                    if (keyboardInput.KeyPressed(Key.F2))
+                    {
+                        bgPrimitive?.Dispose();
+                        bgPrimitive = SharpDX.Toolkit.Graphics.GeometricPrimitive.Sphere.New(graphicsDevice, 1);
+                    }
+                    if (keyboardInput.KeyPressed(Key.F3))
+                    {
+                        bgPrimitive?.Dispose();
+                        bgPrimitive = SharpDX.Toolkit.Graphics.GeometricPrimitive.GeoSphere.New(graphicsDevice, 1);
+                    }
+                    if (keyboardInput.KeyPressed(Key.F4))
+                    {
+                        bgPrimitive?.Dispose();
+                        bgPrimitive = SharpDX.Toolkit.Graphics.GeometricPrimitive.Cube.New(graphicsDevice, 1);
+                    }
+                    if (keyboardInput.KeyPressed(Key.F5))
+                    {
+                        bgPrimitive?.Dispose();
+                        bgPrimitive = SharpDX.Toolkit.Graphics.GeometricPrimitive.Torus.New(graphicsDevice);
+                    }
+                    if (keyboardInput.KeyPressed(Key.F6))
+                    {
+                        bgPrimitive?.Dispose();
+                        bgPrimitive = SharpDX.Toolkit.Graphics.GeometricPrimitive.Teapot.New(graphicsDevice, 1, 14);
+                    }
+                    if (keyboardInput.KeyPressed(Key.F7))
+                    {
+                        bgCustomEffectSource.Technique = "ColorTechnique";
+                    }
+                    if (keyboardInput.KeyPressed(Key.F8))
+                    {
+                        bgCustomEffectSource.Technique = "ColorTechniqueReflection";
+                    }
+#endif
+                }
 
 
 
-				if (gamepadInput.Active)
+                if (gamepadInput.Active)
 				{
 					MoveDelta(velocity * gamepadInput.vYaw * deltaTime, velocity * gamepadInput.vPitch * deltaTime, 1, 4);
 
@@ -419,16 +455,20 @@
 					requestContent = false;
 			}
 
-            bgCustomRotation = Quaternion.Lerp(bgCustomRotation, Quaternion.RotationYawPitchRoll((float)Math.PI-yaw, 0, 0), deltaTime);
+            //bgCustomRotation = Quaternion.Lerp(bgCustomRotation, Quaternion.RotationYawPitchRoll((float)Math.PI-yaw, 0, 0), deltaTime);
+            var pos = Vector3.ForwardLH * 1.5f + Vector3.Down * 0.5f;
+
+            bgCustomRotation = Quaternion.RotationYawPitchRoll((float)Math.PI - yaw, pitch, 0);
+            pos = Vector3.ForwardLH; 
 
             //*Matrix.RotationQuaternion(Quaternion.Invert(bgCustomRotation)) *
-            var pos = Vector3.ForwardLH * 1.5f + Vector3.Down * 0.5f;
             var bgWorldMatrix = Matrix.Scaling(Vector3.One) 
                 * Matrix.RotationQuaternion(Quaternion.Invert(bgCustomRotation)) 
                 * Matrix.Translation(pos) 
                 * Matrix.RotationQuaternion(bgCustomRotation);
             SharpDX.Toolkit.Graphics.Effect bgCustomEffect = bgCustomEffectSource.Get(graphicsDevice);
             bgCustomEffect.Parameters["WorldViewProj"].SetValue(bgWorldMatrix * viewMatrix * projectionMatrix);
+            bgCustomEffect.Parameters["World"].SetValue(bgWorldMatrix);
 
 
             lock (localCritical)
@@ -476,7 +516,7 @@
 
                 customEffect.Parameters["UserTex"].SetResource(mainTexture);
                 customEffect.Parameters["gammaFactor"].SetValue(1f);
-                customEffect.CurrentTechnique = customEffect.Techniques["ColorTechnique"];
+                //customEffect.CurrentTechnique = customEffect.Techniques["ColorTechnique"];
                 customEffect.CurrentTechnique.Passes[0].Apply();
             }
 
@@ -493,7 +533,7 @@
 
                     e.Parameters["UserTex"].SetResource(mainTexture);
                     e.Parameters["gammaFactor"].SetValue(1f);
-                    e.CurrentTechnique = e.Techniques["ColorTechnique"];
+                    //e.CurrentTechnique = e.Techniques["ColorTechnique"];
                     e.CurrentTechnique.Passes[0].Apply();
                 }
             };
@@ -546,7 +586,7 @@
                 {
                     customEffect.Parameters["UserTex"].SetResource(SharpDX.Toolkit.Graphics.Texture2D.New(graphicsDevice, sharedTex));
                     customEffect.Parameters["gammaFactor"].SetValue(1f);
-                    customEffect.CurrentTechnique = customEffect.Techniques["ColorTechnique"];
+                    //customEffect.CurrentTechnique = customEffect.Techniques["ColorTechnique"];
                     customEffect.CurrentTechnique.Passes[0].Apply();
                 }
             }
@@ -563,7 +603,7 @@
                     {
                         e.Parameters["UserTex"].SetResource(SharpDX.Toolkit.Graphics.Texture2D.New(gd, sharedTex));
                         e.Parameters["gammaFactor"].SetValue(1f);
-                        e.CurrentTechnique = e.Techniques["ColorTechnique"];
+                        //e.CurrentTechnique = e.Techniques["ColorTechnique"];
                         e.CurrentTechnique.Passes[0].Apply();
                     }
                 }
