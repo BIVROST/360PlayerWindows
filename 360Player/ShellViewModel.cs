@@ -628,14 +628,15 @@ namespace Bivrost.Bivrost360Player
 					this.DXCanvas.Visibility = Visibility.Visible;
 				});
 
-				var scene = new Scene(_mediaDecoder.ContentRequested);
+				//var scene = new Scene(_mediaDecoder.ContentRequested);
+                IScene scene = new SceneSharpDX4();
 				this.DXCanvas.Scene = scene;
                 this.DXCanvas.StartRendering();
 
-				HeadsetEnable += scene.HeadsetEnabled;
-				HeadsetDisable += scene.HeadsetDisabled;
-				if (CurrentHeadset != null)
-					scene.HeadsetEnabled(CurrentHeadset);
+				//HeadsetEnable += scene.HeadsetEnabled;
+				//HeadsetDisable += scene.HeadsetDisabled;
+				//if (CurrentHeadset != null)
+				//	scene.HeadsetEnabled(CurrentHeadset);
 
 
 
@@ -1007,7 +1008,7 @@ namespace Bivrost.Bivrost360Player
 			_dragLastPosition = current;
 			if (this.DXCanvas.Scene != null)
 			{
-				((Scene)this.DXCanvas.Scene).MoveDelta((float)delta.X, (float)delta.Y, (float)(72f / this.DXCanvas.ActualWidth) * 1.5f, 20f);
+				//((Scene)this.DXCanvas.Scene).MoveDelta((float)delta.X, (float)delta.Y, (float)(72f / this.DXCanvas.ActualWidth) * 1.5f, 20f);
 			}
 		}
 
@@ -1120,8 +1121,8 @@ namespace Bivrost.Bivrost360Player
 		{
 			if (IsPlaying)
 			{
-				if (this.DXCanvas.Scene != null)
-					((Scene)this.DXCanvas.Scene).HasFocus = false;
+				//if (this.DXCanvas.Scene != null)
+				//	((Scene)this.DXCanvas.Scene).HasFocus = false;
 			}
 		}
 
@@ -1131,7 +1132,7 @@ namespace Bivrost.Bivrost360Player
 			{
                 if (this.DXCanvas.Scene != null)
                 {
-                    ((Scene)this.DXCanvas.Scene).HasFocus = true;
+                    //((Scene)this.DXCanvas.Scene).HasFocus = true;
                     this.shellView.PlayPause.Focus();
                 }
 			}

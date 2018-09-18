@@ -282,8 +282,8 @@ namespace Bivrost.Bivrost360Player
 			{
 				if (this.DXCanvas.Scene != null)
 				{
-					Scene scene = ((Scene)this.DXCanvas.Scene);
-					scene.ChangeFov(deg);
+					//Scene scene = ((Scene)this.DXCanvas.Scene);
+					//scene.ChangeFov(deg);
 				}
 			}
 		}
@@ -299,8 +299,8 @@ namespace Bivrost.Bivrost360Player
 			{
 				if (this.DXCanvas.Scene != null)
 				{
-					Scene scene = ((Scene)this.DXCanvas.Scene);
-					scene.ResetFov();
+					//Scene scene = ((Scene)this.DXCanvas.Scene);
+					//scene.ResetFov();
 				}
 			}
 		}
@@ -364,7 +364,7 @@ namespace Bivrost.Bivrost360Player
 		{
 			if (this.DXCanvas.Scene != null)
 			{
-				((Scene)this.DXCanvas.Scene).RectlinearProjection();
+				//((Scene)this.DXCanvas.Scene).RectlinearProjection();
 			}
 		}
 
@@ -372,7 +372,7 @@ namespace Bivrost.Bivrost360Player
 		{
 			if(this.DXCanvas.Scene != null)
 			{
-				((Scene)this.DXCanvas.Scene).StereographicProjection();
+				//((Scene)this.DXCanvas.Scene).StereographicProjection();
 			}
         }
 

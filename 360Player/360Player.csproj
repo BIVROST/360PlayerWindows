@@ -395,6 +395,7 @@
     </Compile>
     <Compile Include="NotificationViewModel.cs" />
     <Compile Include="RemoteControl\Settings_RemoteControl.cs" />
+    <Compile Include="SceneSharpDX4.cs" />
     <Compile Include="ShellViewModel_Headsets.cs" />
     <Compile Include="Tools\Effects.cs" />
     <Compile Include="Tools\OneWayTypedConverter.cs" />
@@ -449,7 +450,6 @@
     <Compile Include="WPF\DX11ImageSource.cs" />
     <Compile Include="WPF\EnabledFlowDocument.cs" />
     <Compile Include="WPF\GridLengthAnimation.cs" />
-    <Compile Include="WPF\IConfigurableScene.cs" />
     <Compile Include="WPF\InputBindingTrigger.cs" />
     <Compile Include="WPF\IScene.cs" />
     <Compile Include="WPF\MediaDecoder.cs" />
@@ -610,6 +610,9 @@
     <EmbeddedResource Include="Resources\default-background-equirectangular.png" />
     <Resource Include="Graphics\viking_logo.png" />
     <None Include="Shaders\ImageBasedLightEquirectangular.hlsl" />
+    <Content Include="MiniTri.fx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="x64\openvr_api.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
