@@ -302,7 +302,9 @@
 
         void Render(TimeSpan sceneTime)
         {
-			try {
+#if !DEBUG
+            try {
+#endif
 				SharpDX.Direct3D11.Device device = this.Device;
 				if (device == null)
 					return;
@@ -341,12 +343,14 @@
 				}
 
 				device.ImmediateContext.Flush();
-			} catch(Exception exc)
+#if !DEBUG
+        } catch(Exception exc)
 			{
 				Console.WriteLine("[EXC] " + exc.Message);
 				Console.WriteLine("[EXC] " + exc.StackTrace);
 				;
 			}
+#endif
         }
 
         private void OnIsFrontBufferAvailableChanged(object sender, DependencyPropertyChangedEventArgs e)

@@ -23,10 +23,15 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 * THE SOFTWARE.
 */
+
+uniform extern float4x4 WorldViewProj : WORLDVIEWPROJECTION;
+
 struct VS_IN
 {
 	float4 pos : POSITION;
 	float4 col : COLOR;
+	float3 normal : NORMAL;
+	float2 uv : TEXCOORD0;
 };
 
 struct PS_IN
@@ -38,7 +43,11 @@ struct PS_IN
 PS_IN VS( VS_IN input )
 {
 	PS_IN output = (PS_IN)0;
-	
+
+	//input.pos.w = 1;
+	//output.pos = mul(input.pos, WorldViewProj);
+
+
 	output.pos = input.pos;
 	output.col = input.col;
 	
