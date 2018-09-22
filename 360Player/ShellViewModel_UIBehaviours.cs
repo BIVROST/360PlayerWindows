@@ -280,10 +280,7 @@ namespace Bivrost.Bivrost360Player
 		{
 			if (IsPlaying)
 			{
-				if (ControllableScene != null)
-				{
-                    ControllableScene.ChangeFov(deg);
-				}
+                ControllableScene?.ChangeFov(deg);
 			}
 		}
 
@@ -296,10 +293,7 @@ namespace Bivrost.Bivrost360Player
 		{
 			if (IsPlaying)
 			{
-				if (ControllableScene != null)
-                {
-                    ControllableScene.ResetFov();
-				}
+                ControllableScene?.ResetFov();
 			}
 		}
 

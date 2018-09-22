@@ -6,6 +6,7 @@ using SharpDX.D3DCompiler;
 using SharpDX.Direct3D;
 using d3d11 = SharpDX.Direct3D11;
 using dxgi = SharpDX.DXGI;
+using assFlags = Assimp.PostProcessSteps;
 
 namespace Bivrost.Bivrost360Player
 {
@@ -31,7 +32,7 @@ namespace Bivrost.Bivrost360Player
             Assimp.Scene scene;
             using (var ctx = new Assimp.AssimpContext())
             {
-                scene = ctx.ImportFile(objFile, Assimp.PostProcessSteps.MakeLeftHanded);
+                scene = ctx.ImportFile(objFile, assFlags.MakeLeftHanded | assFlags.GenerateUVCoords | assFlags.GenerateNormals);
                 Assimp.Mesh mesh = scene.Meshes[0];
 
                 float[] indicesList = new float[mesh.FaceCount * 3];
@@ -247,8 +248,8 @@ namespace Bivrost.Bivrost360Player
         Model3d chairModel;
         Object3d chair1;
         Object3d chair2;
-        Model3d teapotModel;
-        Object3d teapot;
+        Model3d sphereModel;
+        Object3d sphere;
         private Matrix viewProj;
 
         public SceneSharpDX4(Func<IContentUpdatableFromMediaEngine, bool> contentRequested)
@@ -266,15 +267,14 @@ namespace Bivrost.Bivrost360Player
             this.host = host;
             MediaDecoder.Instance.OnContentChanged += Instance_OnContentChanged;
 
-
             mat = new Material(device, "Renderers/MiniTri.fx");
 
             chairModel = new Model3d(device, "Renderers/office_chair.obj");
-            teapotModel = new Model3d(device, "Renderers/teapot.obj");
+            sphereModel = new Model3d(device, "Renderers/sphere.obj");
 
             chair1 = new Object3d(device, chairModel, mat);
             chair2 = new Object3d(device, chairModel, mat);
-            teapot = new Object3d(device, teapotModel, mat);
+            sphere = new Object3d(device, sphereModel, mat);
         }
 
      
@@ -285,8 +285,8 @@ namespace Bivrost.Bivrost360Player
             chairModel.Dispose();
             chair1.Dispose();
             chair2.Dispose();
-            teapotModel.Dispose();
-            teapot.Dispose();
+            sphereModel.Dispose();
+            sphere.Dispose();
             mat.Dispose();
         }
 
@@ -298,20 +298,24 @@ namespace Bivrost.Bivrost360Player
                     requestContent = false;
             }
 
+            context.PixelShader.SetShaderResource(0, textureView);
+            context.PixelShader.SetSampler(0, sampler);
+
             chair1.Render(viewProj, context);
             chair2.Render(viewProj, context);
-            teapot.Render(viewProj, context);
+            sphere.Render(viewProj, context);
         }
+
         void IScene.Update(TimeSpan timeSpan)
         {
             float time = (float)timeSpan.TotalSeconds;
 
             var view = Matrix.LookAtRH(Vector3.Zero, Vector3.ForwardRH, Vector3.UnitY);
-            var proj = Matrix.PerspectiveFovRH(72f * (float)Math.PI / 180f, 16f / 9f, 0.0001f, 50.0f);
+            var proj = Matrix.PerspectiveFovRH(72f * (float)Math.PI / 180f, 16f / 9f, 0.01f, 100.0f);
             viewProj = Matrix.Multiply(view, proj);
             chair1.World = Matrix.RotationZ(time * 2) * Matrix.RotationX(time) * Matrix.Translation(Vector3.ForwardRH * 5) * Matrix.Translation(Vector3.Left * 2);
             chair2.World = Matrix.RotationZ(time * 2) * Matrix.RotationX(time) * Matrix.Translation(Vector3.ForwardRH * 5) * Matrix.Translation(Vector3.Right * 2);
-            teapot.World = Matrix.RotationZ(time * 2) * Matrix.RotationX(time) * Matrix.Translation(Vector3.ForwardRH * 5) * Matrix.Translation(Vector3.Up);
+            sphere.World = Matrix.RotationZ(time / 5) * Matrix.RotationX(time / 3) * Matrix.Scaling(50);
         }
 
         #region content updates
@@ -319,6 +323,8 @@ namespace Bivrost.Bivrost360Player
         bool requestContent = true;
 
         protected Func<IContentUpdatableFromMediaEngine, bool> requestContentCallback;
+        private d3d11.SamplerState sampler;
+        private d3d11.ShaderResourceView textureView;
 
         protected void Instance_OnContentChanged()
         {
@@ -335,9 +341,32 @@ namespace Bivrost.Bivrost360Player
             throw new NotImplementedException();
         }
 
+        d3d11.Texture2D mainTexture;
         void IContentUpdatableFromMediaEngine.ReceiveTextures(d3d11.Texture2D textureL, d3d11.Texture2D textureR)
         {
-            ;
+            mainTexture?.Dispose();
+            using (var resource = textureL.QueryInterface<SharpDX.DXGI.Resource>())
+            {
+                mainTexture = device.OpenSharedResource<d3d11.Texture2D>(resource.SharedHandle);
+            };
+
+            textureView?.Dispose();
+            textureView = new d3d11.ShaderResourceView(device, mainTexture);
+
+            sampler?.Dispose();
+            sampler = new d3d11.SamplerState(device, new d3d11.SamplerStateDescription()
+            {
+                Filter = d3d11.Filter.MinMagMipLinear,
+                AddressU = d3d11.TextureAddressMode.Clamp,
+                AddressV = d3d11.TextureAddressMode.Clamp,
+                AddressW = d3d11.TextureAddressMode.Clamp,
+                BorderColor = SharpDX.Color.Black,
+                ComparisonFunction = d3d11.Comparison.Never,
+                MaximumAnisotropy = 16,
+                MipLodBias = 0,
+                MinimumLod = -float.MaxValue,
+                MaximumLod = float.MaxValue
+            });
         }
 
         void IContentUpdatableFromMediaEngine.SetProjection(ProjectionMode projection)

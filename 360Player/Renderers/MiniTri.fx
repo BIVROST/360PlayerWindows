@@ -26,6 +26,9 @@
 
 uniform extern float4x4 WorldViewProj : WORLDVIEWPROJECTION;
 
+Texture2D<float4> UserTex : register(t0);
+SamplerState UserTexSampler : register(s0);
+
 struct VS_IN
 {
 	float4 pos : POSITION;
@@ -38,6 +41,7 @@ struct PS_IN
 {
 	float4 pos : SV_POSITION;
 	float4 col : COLOR;
+	float2 uv : TEXCOORD0;
 };
 
 PS_IN VS( VS_IN input )
@@ -50,13 +54,14 @@ PS_IN VS( VS_IN input )
 
 	//output.pos = input.pos;
 	output.col = float4(input.normal, 1);
-	
+	output.uv = input.uv;
 	return output;
 }
 
 float4 PS( PS_IN input ) : SV_Target
 {
-	return input.col;
+	return UserTex.Sample(UserTexSampler, input.uv);
+	//return input.col;
 }
 
 technique10 Render

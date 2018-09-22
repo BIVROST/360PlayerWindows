@@ -1008,10 +1008,7 @@ namespace Bivrost.Bivrost360Player
 			var current = e.GetPosition(null);
 			var delta = current - _dragLastPosition;
 			_dragLastPosition = current;
-			if (this.DXCanvas.Scene != null)
-			{
-				ControllableScene.MoveDelta((float)delta.X, (float)delta.Y, (float)(72f / this.DXCanvas.ActualWidth) * 1.5f, 20f);
-			}
+			ControllableScene?.MoveDelta((float)delta.X, (float)delta.Y, (float)(72f / this.DXCanvas.ActualWidth) * 1.5f, 20f);
 		}
 
 		public void MouseDown(object sender, MouseButtonEventArgs e)
@@ -1123,7 +1120,7 @@ namespace Bivrost.Bivrost360Player
 		{
 			if (IsPlaying)
 			{
-				if (this.DXCanvas.Scene != null && ControllableScene != null)
+				if (ControllableScene != null)
 					ControllableScene.HasFocus = false;
 			}
 		}

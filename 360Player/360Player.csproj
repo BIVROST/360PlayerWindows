@@ -580,6 +580,9 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <AppDesigner Include="Properties\" />
+    <None Include="Renderers\sphere.obj">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Renderers\teapot.obj">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
