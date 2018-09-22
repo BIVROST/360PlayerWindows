@@ -142,10 +142,12 @@ namespace Bivrost.Bivrost360Player.Tools
 			string identities;
 			string[] identity;
 
+            if (AppDomain.CurrentDomain.ApplicationIdentity == null) return;
+
 			try
 			{
 				// Get the full name of the identity
-				identities = System.AppDomain.CurrentDomain.ApplicationIdentity.FullName;
+				identities = AppDomain.CurrentDomain.ApplicationIdentity.FullName;
 
 				// Parse uri
 				PublishInfo.Uri = new System.Uri(identities.Substring(0, identities.IndexOf('#')));
