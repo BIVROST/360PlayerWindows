@@ -49,7 +49,7 @@ PS_IN VS( VS_IN input )
 
 
 	//output.pos = input.pos;
-	output.col = input.col;
+	output.col = float4(input.normal, 1);
 	
 	return output;
 }

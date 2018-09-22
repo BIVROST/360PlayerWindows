@@ -138,16 +138,18 @@ namespace Bivrost.Bivrost360Player
 
 
 
-    internal class Renderer:IDisposable
+    internal class Object3d:IDisposable
     {
-        private Model3d model;
+        protected Material material;
+        protected Model3d model;
         protected d3d11.Buffer constantBuffer;
 
         public Matrix World { set; get; }
 
 
-        public Renderer(d3d11.Device device, Model3d model)
+        public Object3d(d3d11.Device device, Model3d model, Material mat)
         {
+            this.material = mat;
             this.model = model;
             constantBuffer = new d3d11.Buffer(
                 device,
@@ -175,35 +177,73 @@ namespace Bivrost.Bivrost360Player
             context.UpdateSubresource(ref worldViewProj, constantBuffer);
             context.VertexShader.SetConstantBuffer(0, constantBuffer);
 
+            material.Apply(context);
             model.Render(context);
         }
     }
 
 
 
-    //internal class Material
-    //{
-    //    public Material()
-    //    {
+    internal class Material : IDisposable
+    {
+        private d3d11.VertexShader vertexShader;
+        private d3d11.PixelShader pixelShader;
+        private d3d11.InputLayout layout;
 
-    //    }
-    //}
+        public Material(d3d11.Device device, string shaderFile)  // TODO: additional shader flags?
+        {
+            // Compile Vertex and Pixel shaders
+            using (var vertexShaderByteCode = ShaderBytecode.CompileFromFile(shaderFile, "VS", "vs_4_0", ShaderFlags.None, EffectFlags.None))
+            using (var pixelShaderByteCode = ShaderBytecode.CompileFromFile(shaderFile, "PS", "ps_4_0", ShaderFlags.None, EffectFlags.None))
+            using (var signature = ShaderSignature.GetInputSignature(vertexShaderByteCode))
+            {
+                vertexShader = new d3d11.VertexShader(device, vertexShaderByteCode);
+                pixelShader = new d3d11.PixelShader(device, pixelShaderByteCode);
+
+                //var vsRefl = new ShaderReflection(vertexShaderByteCode);
+                //vsRefl.Description.
+
+                layout = new d3d11.InputLayout(
+                    device,
+                    signature,
+                    new[]
+                    {
+                        new d3d11.InputElement("POSITION", 0, dxgi.Format.R32G32B32A32_Float,  d3d11.InputElement.AppendAligned, 0),
+                        new d3d11.InputElement("COLOR",    0, dxgi.Format.R32G32B32A32_Float,  d3d11.InputElement.AppendAligned, 0),
+                        new d3d11.InputElement("NORMAL",   0, dxgi.Format.R32G32B32_Float,     d3d11.InputElement.AppendAligned, 0),
+                        new d3d11.InputElement("TEXCOORD", 0, dxgi.Format.R32G32_Float,        d3d11.InputElement.AppendAligned, 0)
+                    }
+                );
+            }
+        }
+
+
+        public void Apply(d3d11.DeviceContext context)
+        {
+            context.InputAssembler.InputLayout = layout;
+            context.VertexShader.Set(vertexShader);
+            context.PixelShader.Set(pixelShader);
+        }
+
+
+        public void Dispose()
+        {
+            vertexShader.Dispose();
+            pixelShader.Dispose();
+            layout.Dispose();
+        }
+    }
 
 
     internal class SceneSharpDX4 : IScene
     {
         private ISceneHost host;
-        private CompilationResult vertexShaderByteCode;
-        private d3d11.VertexShader vertexShader;
-        private CompilationResult pixelShaderByteCode;
-        private d3d11.PixelShader pixelShader;
-        private d3d11.InputLayout layout;
-
+        private Material mat;
         Model3d chairModel;
-        Renderer chair1;
-        Renderer chair2;
+        Object3d chair1;
+        Object3d chair2;
         Model3d teapotModel;
-        Renderer teapot;
+        Object3d teapot;
         private Matrix viewProj;
 
         private d3d11.Device device => host.Device;
@@ -215,57 +255,24 @@ namespace Bivrost.Bivrost360Player
         {
             this.host = host;
 
-
-            // Compile Vertex and Pixel shaders
-            vertexShaderByteCode = ShaderBytecode.CompileFromFile("MiniTri.fx", "VS", "vs_4_0", ShaderFlags.None, EffectFlags.None);
-            vertexShader = new d3d11.VertexShader(device, vertexShaderByteCode);
-
-            pixelShaderByteCode = ShaderBytecode.CompileFromFile("MiniTri.fx", "PS", "ps_4_0", ShaderFlags.None, EffectFlags.None);
-            pixelShader = new d3d11.PixelShader(device, pixelShaderByteCode);
-
-            //var vsRefl = new ShaderReflection(vertexShaderByteCode);
-            //vsRefl.Description.
-
-            using (var signature = ShaderSignature.GetInputSignature(vertexShaderByteCode))
-            {
-                layout = new d3d11.InputLayout(
-                    device,
-                    signature,
-                    new[]
-                    {
-                    new d3d11.InputElement("POSITION", 0, dxgi.Format.R32G32B32A32_Float,  d3d11.InputElement.AppendAligned, 0),
-                    new d3d11.InputElement("COLOR",    0, dxgi.Format.R32G32B32A32_Float,  d3d11.InputElement.AppendAligned, 0),
-                    new d3d11.InputElement("NORMAL",   0, dxgi.Format.R32G32B32_Float,     d3d11.InputElement.AppendAligned, 0),
-                    new d3d11.InputElement("TEXCOORD", 0, dxgi.Format.R32G32_Float,        d3d11.InputElement.AppendAligned, 0)
-                    }
-                );
-            }
-
+            mat = new Material(device, "MiniTri.fx");
 
             chairModel = new Model3d(device, "office_chair.obj");
-            chair1 = new Renderer(device, chairModel);
-            chair2 = new Renderer(device, chairModel);
             teapotModel = new Model3d(device, "teapot.obj");
-            teapot = new Renderer(device, teapotModel);
 
-            context.InputAssembler.InputLayout = layout;
-            context.VertexShader.Set(vertexShader);
-            context.PixelShader.Set(pixelShader);
+            chair1 = new Object3d(device, chairModel, mat);
+            chair2 = new Object3d(device, chairModel, mat);
+            teapot = new Object3d(device, teapotModel, mat);
         }
 
         void IScene.Detach()
         {
-            vertexShaderByteCode.Dispose();
-            vertexShader.Dispose();
-            pixelShaderByteCode.Dispose();
-            pixelShader.Dispose();
-            layout.Dispose();
-
             chairModel.Dispose();
             chair1.Dispose();
             chair2.Dispose();
             teapotModel.Dispose();
             teapot.Dispose();
+            mat.Dispose();
         }
 
         void IScene.Render()
