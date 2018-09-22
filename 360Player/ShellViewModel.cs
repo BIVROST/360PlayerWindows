@@ -29,7 +29,7 @@ using Bivrost.Bivrost360Player.Streaming;
 
 namespace Bivrost.Bivrost360Player
 {
-	public partial class ShellViewModel : Screen
+    public partial class ShellViewModel : Screen
 	{
 		public static ShellViewModel Instance;
 
@@ -100,6 +100,7 @@ namespace Bivrost.Bivrost360Player
 
 		public DPFCanvas DXCanvas;
 		public ShellView shellView;
+        public IControllableScene ControllableScene => DXCanvas?.Scene as IControllableScene;
 
 		private bool ended = false;
 		private bool lockSlider = false;
@@ -628,15 +629,14 @@ namespace Bivrost.Bivrost360Player
 					this.DXCanvas.Visibility = Visibility.Visible;
 				});
 
-				//var scene = new Scene(_mediaDecoder.ContentRequested);
-                IScene scene = new SceneSharpDX4();
+				var scene = new Scene(_mediaDecoder.ContentRequested);
 				this.DXCanvas.Scene = scene;
                 this.DXCanvas.StartRendering();
 
-				//HeadsetEnable += scene.HeadsetEnabled;
-				//HeadsetDisable += scene.HeadsetDisabled;
-				//if (CurrentHeadset != null)
-				//	scene.HeadsetEnabled(CurrentHeadset);
+				HeadsetEnable += scene.HeadsetEnabled;
+				HeadsetDisable += scene.HeadsetDisabled;
+				if (CurrentHeadset != null)
+					scene.HeadsetEnabled(CurrentHeadset);
 
 
 
@@ -1000,6 +1000,7 @@ namespace Bivrost.Bivrost360Player
 		private bool _waitingForDoubleClickTimeout = false;
 		private Point _waitingPoint;
 
+
 		public void MouseMove(object sender, MouseEventArgs e)
 		{
 			if (_doubleClickDetected) return;
@@ -1008,7 +1009,7 @@ namespace Bivrost.Bivrost360Player
 			_dragLastPosition = current;
 			if (this.DXCanvas.Scene != null)
 			{
-				//((Scene)this.DXCanvas.Scene).MoveDelta((float)delta.X, (float)delta.Y, (float)(72f / this.DXCanvas.ActualWidth) * 1.5f, 20f);
+				ControllableScene.MoveDelta((float)delta.X, (float)delta.Y, (float)(72f / this.DXCanvas.ActualWidth) * 1.5f, 20f);
 			}
 		}
 
@@ -1121,8 +1122,8 @@ namespace Bivrost.Bivrost360Player
 		{
 			if (IsPlaying)
 			{
-				//if (this.DXCanvas.Scene != null)
-				//	((Scene)this.DXCanvas.Scene).HasFocus = false;
+				if (this.DXCanvas.Scene != null && ControllableScene != null)
+					ControllableScene.HasFocus = false;
 			}
 		}
 
@@ -1132,7 +1133,8 @@ namespace Bivrost.Bivrost360Player
 			{
                 if (this.DXCanvas.Scene != null)
                 {
-                    //((Scene)this.DXCanvas.Scene).HasFocus = true;
+                    if(ControllableScene != null)
+                        ControllableScene.HasFocus = true;
                     this.shellView.PlayPause.Focus();
                 }
 			}
@@ -1198,24 +1200,6 @@ namespace Bivrost.Bivrost360Player
 		protected void SetProjection(ProjectionMode projection)
 		{
 			_mediaDecoder.Projection = projection;
-
-			//if (DXCanvas.Scene != null)
-			//{
-			//	Scene scene = (Scene)DXCanvas.Scene;
-			//	scene.UpdateSceneSettings(projection, VideoMode.Autodetect);
-			//}
-
-			//UpdateVRSceneSettings(
-			//	projection.GetValueOrDefault(ProjectionMode.Sphere), 
-			//	VideoMode.Autodetect
-			//);
-
-
-
-			//void UpdateVRSceneSettings(ProjectionMode projectionMode, VideoMode videoMode)
-			//{
-			//	CurrentHeadset?.UpdateSceneSettings(projectionMode, videoMode);
-			//}
 
 			NotifyOfPropertyChange(() => ProjectionIsAuto);
 			NotifyOfPropertyChange(() => ProjectionIsEquirectangular);

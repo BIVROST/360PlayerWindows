@@ -280,10 +280,9 @@ namespace Bivrost.Bivrost360Player
 		{
 			if (IsPlaying)
 			{
-				if (this.DXCanvas.Scene != null)
+				if (ControllableScene != null)
 				{
-					//Scene scene = ((Scene)this.DXCanvas.Scene);
-					//scene.ChangeFov(deg);
+                    ControllableScene.ChangeFov(deg);
 				}
 			}
 		}
@@ -297,10 +296,9 @@ namespace Bivrost.Bivrost360Player
 		{
 			if (IsPlaying)
 			{
-				if (this.DXCanvas.Scene != null)
-				{
-					//Scene scene = ((Scene)this.DXCanvas.Scene);
-					//scene.ResetFov();
+				if (ControllableScene != null)
+                {
+                    ControllableScene.ResetFov();
 				}
 			}
 		}
@@ -362,18 +360,12 @@ namespace Bivrost.Bivrost360Player
 
 		public void NormalProjection()
 		{
-			if (this.DXCanvas.Scene != null)
-			{
-				//((Scene)this.DXCanvas.Scene).RectlinearProjection();
-			}
+			ControllableScene?.RectlinearProjection();
 		}
 
 		public void LittlePlanetProjection()
 		{
-			if(this.DXCanvas.Scene != null)
-			{
-				//((Scene)this.DXCanvas.Scene).StereographicProjection();
-			}
+            ControllableScene?.StereographicProjection();
         }
 
         public void SeekRelative(int v)

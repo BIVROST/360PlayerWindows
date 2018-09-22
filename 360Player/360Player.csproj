@@ -330,6 +330,8 @@
       <DependentUpon>AboutView.xaml</DependentUpon>
     </Compile>
     <Compile Include="AboutViewModel.cs" />
+    <Compile Include="Renderers\IContentUpdatableFromMediaEngine.cs" />
+    <Compile Include="Renderers\IControllableScene.cs" />
     <Compile Include="Logic\LicensingContext.cs" />
     <Compile Include="MOTDBridge.cs" />
     <Compile Include="RemoteControl\ApiServer.cs" />
@@ -457,7 +459,7 @@
     <Compile Include="WPF\IScene.cs" />
     <Compile Include="WPF\MediaDecoder.cs" />
     <Compile Include="WPF\MediaDecoderHelper.cs" />
-    <Compile Include="WPF\Scene.cs" />
+    <Compile Include="Renderers\Scene.cs" />
     <Compile Include="WPF\ShortcutParser.cs" />
     <Compile Include="OpenUrlView.xaml.cs">
       <DependentUpon>OpenUrlView.xaml</DependentUpon>
