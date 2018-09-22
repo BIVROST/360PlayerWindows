@@ -18,6 +18,7 @@ namespace Bivrost.Bivrost360Player
         private d3d11.InputLayout layout;
         private int verticesCount;
         private d3d11.Buffer vertices;
+        private d3d11.Buffer indices;
         private d3d11.Buffer constantBuffer;
 
         private d3d11.Device device => host.Device;
@@ -37,7 +38,7 @@ namespace Bivrost.Bivrost360Player
             pixelShaderByteCode = ShaderBytecode.CompileFromFile("MiniTri.fx", "PS", "ps_4_0", ShaderFlags.None, EffectFlags.None);
             pixelShader = new d3d11.PixelShader(device, pixelShaderByteCode);
 
-            var vsRefl = new ShaderReflection(vertexShaderByteCode);
+            //var vsRefl = new ShaderReflection(vertexShaderByteCode);
             //vsRefl.Description.
 
             using (var signature = ShaderSignature.GetInputSignature(vertexShaderByteCode))
@@ -57,61 +58,60 @@ namespace Bivrost.Bivrost360Player
             }
 
             List<float> verticesList = new List<float>();
+            List<int> indicesList = new List<int>();
+
+
+            Assimp.Scene scene;
+            using (var ctx = new Assimp.AssimpContext())
             {
-                const float s = 0.2f;
-                const int c = 1;
-                for (int x = -c; x < c; x++)
-                    for ( int y = -c; y < c; y++)
-                        for ( int z = -c; z < c; z++)
-                        {                                     // position                               color                       normal       uv
-                                                              //verticesList.AddRange(new float[] {x + 0.0f, y + 0.5f, z + 0.5f, 1.0f,      1.0f, 1.0f, 1.0f, 1.0f,     1,0,0,       0,0 });
-                                                              //verticesList.AddRange(new float[] {x + 0.5f, y - 0.5f, z + 0.0f, 1.0f,      0.0f, 1.0f, 0.0f, 1.0f,     1,0,0,       0,0 });
-                                                              //verticesList.AddRange(new float[] {x - 0.5f, y - 0.5f, z - 0.5f, 1.0f,      0.0f, 0.0f, 1.0f, 1.0f,     1,0,0,       0,0 });
+                scene = ctx.ImportFile("office_chair.obj", Assimp.PostProcessSteps.MakeLeftHanded);
 
+                indicesList.Clear();
+                verticesList.Clear();
+                var mesh = scene.Meshes[0];
+                foreach (var face in mesh.Faces)
+                {
+                    indicesList.AddRange(face.Indices);
+                }
+                for(int i =0; i < mesh.VertexCount; i++)
+                {
+                    var vert = mesh.Vertices[i];
+                    float x = vert.X;
+                    float y = vert.Y;
+                    float z = vert.Z;
+                    float w = 1.0f;
 
-                            /**    E---F
-                             *    /G  /H
-                             *   A---B |
-                             *   |   |/
-                             *   C---D
-                             * 
-                             */
+                    float u = 0;
+                    float v = 0;
+                    if (mesh.HasTextureCoords(0))
+                    {
+                        u = mesh.TextureCoordinateChannels[0][i].X;
+                        v = mesh.TextureCoordinateChannels[0][i].Y;
+                    }
 
+                    float r = 0.5f;
+                    float g = 0.8f;
+                    float b = 0.3f;
+                    float a = 0.5f;
+                    if(mesh.VertexColorChannelCount > 0)
+                    {
+                        var col = mesh.VertexColorChannels[0][i];
+                        r = col.R;
+                        g = col.G;
+                        b = col.B;
+                        a = col.A;
+                    }
 
-                            //                    position                   color                   normal     uv
-                            var A = new float[] { x - s, y - s, z - s, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1, 0, 0, 0, 0 };
-                            var B = new float[] { x + s, y - s, z - s, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1, 0, 0, 0, 0 };
-                            var C = new float[] { x - s, y + s, z - s, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1, 0, 0, 0, 0 };
-                            var D = new float[] { x + s, y + s, z - s, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1, 0, 0, 0, 0 };
-                            var E = new float[] { x - s, y - s, z + s, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 1, 0, 0, 0, 0 };
-                            var F = new float[] { x + s, y - s, z + s, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1, 0, 0, 0, 0 };
-                            var G = new float[] { x - s, y + s, z + s, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1, 0, 0, 0, 0 };
-                            var H = new float[] { x + s, y + s, z + s, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1, 0, 0, 0, 0 };
-
-                            Action<float[], float[], float[], float[]> face = (f1,f2,f3,f4) => {
-                                verticesList.AddRange(f1);
-                                verticesList.AddRange(f2);
-                                verticesList.AddRange(f3);
-
-                                verticesList.AddRange(f2);
-                                verticesList.AddRange(f4);
-                                verticesList.AddRange(f3);
-                            };
-
-                            face(A, B, C, D);
-                            face(B, F, D, H);
-                            face(F, E, H, G);
-                            face(E, A, G, C);
-                            face(E, F, A, B);
-                            face(C, D, G, H);
-                        }
+                    verticesList.AddRange(new float[] {  x,y,z,w,      r, g, b, a,    1, 0, 0,    u, v });
+                }
             }
-            verticesCount = verticesList.Count;
 
 
             // Instantiate Vertex buffer from vertex data
             vertices = d3d11.Buffer.Create(device, d3d11.BindFlags.VertexBuffer, verticesList.ToArray());
-                
+            verticesCount = verticesList.Count;
+            indices = d3d11.Buffer.Create(device, d3d11.BindFlags.IndexBuffer, indicesList.ToArray());
+               
 
             constantBuffer = new d3d11.Buffer(
                 device, 
@@ -127,6 +127,8 @@ namespace Bivrost.Bivrost360Player
             // Prepare All the stages
             context.InputAssembler.InputLayout = layout;
             context.InputAssembler.SetVertexBuffers(0, new d3d11.VertexBufferBinding(vertices, 13 * sizeof(float), 0));
+            context.InputAssembler.SetIndexBuffer(indices, dxgi.Format.R32_UInt, 0);
+
             context.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
             context.VertexShader.Set(vertexShader);
             context.VertexShader.SetConstantBuffer(0, constantBuffer);
@@ -166,7 +168,7 @@ namespace Bivrost.Bivrost360Player
             var viewProj = Matrix.Multiply(view, proj);
 
             //var worldViewProj = Matrix.RotationX(time) * Matrix.RotationY(time * 2) * Matrix.RotationZ(time * .7f) * viewProj;
-            var worldViewProj = Matrix.RotationZ(time / 5) * Matrix.RotationX(time / 10) * Matrix.Translation(Vector3.BackwardRH * 5)  * viewProj;
+            var worldViewProj = Matrix.RotationZ(time * 2) * Matrix.RotationX(time) * Matrix.Translation(Vector3.BackwardRH * 5)  * viewProj;
             worldViewProj.Transpose();
             context.UpdateSubresource(ref worldViewProj, constantBuffer);
         }
