@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using SharpDX;
 using SharpDX.D3DCompiler;
 using SharpDX.Direct3D;
@@ -239,7 +240,7 @@ namespace Bivrost.Bivrost360Player
     }
 
 
-    internal class SceneSharpDX4 : IScene
+    internal class SceneSharpDX4 : IScene, IContentUpdatableFromMediaEngine
     {
         private ISceneHost host;
         private Material mat;
@@ -250,6 +251,11 @@ namespace Bivrost.Bivrost360Player
         Object3d teapot;
         private Matrix viewProj;
 
+        public SceneSharpDX4(Func<IContentUpdatableFromMediaEngine, bool> contentRequested)
+        {
+            requestContentCallback = contentRequested;
+        }
+
         private d3d11.Device device => host.Device;
 
         private d3d11.DeviceContext context => device.ImmediateContext;
@@ -258,6 +264,8 @@ namespace Bivrost.Bivrost360Player
         void IScene.Attach(ISceneHost host)
         {
             this.host = host;
+            MediaDecoder.Instance.OnContentChanged += Instance_OnContentChanged;
+
 
             mat = new Material(device, "Renderers/MiniTri.fx");
 
@@ -269,8 +277,11 @@ namespace Bivrost.Bivrost360Player
             teapot = new Object3d(device, teapotModel, mat);
         }
 
+     
         void IScene.Detach()
         {
+            MediaDecoder.Instance.OnContentChanged -= Instance_OnContentChanged;
+
             chairModel.Dispose();
             chair1.Dispose();
             chair2.Dispose();
@@ -281,21 +292,58 @@ namespace Bivrost.Bivrost360Player
 
         void IScene.Render()
         {
+            if (requestContent)
+            {
+                if (requestContentCallback(this))
+                    requestContent = false;
+            }
+
             chair1.Render(viewProj, context);
             chair2.Render(viewProj, context);
             teapot.Render(viewProj, context);
         }
-
         void IScene.Update(TimeSpan timeSpan)
         {
             float time = (float)timeSpan.TotalSeconds;
 
-            var view = Matrix.LookAtRH(Vector3.Zero, -Vector3.ForwardRH, Vector3.UnitY);
+            var view = Matrix.LookAtRH(Vector3.Zero, Vector3.ForwardRH, Vector3.UnitY);
             var proj = Matrix.PerspectiveFovRH(72f * (float)Math.PI / 180f, 16f / 9f, 0.0001f, 50.0f);
             viewProj = Matrix.Multiply(view, proj);
-            chair1.World = Matrix.RotationZ(time * 2) * Matrix.RotationX(time) * Matrix.Translation(Vector3.BackwardRH * 5) * Matrix.Translation(Vector3.Left);
-            chair2.World = Matrix.RotationZ(time * 2) * Matrix.RotationX(time) * Matrix.Translation(Vector3.BackwardRH * 5) * Matrix.Translation(Vector3.Right);
-            teapot.World = Matrix.RotationZ(time * 2) * Matrix.RotationX(time) * Matrix.Translation(Vector3.BackwardRH * 5) * Matrix.Translation(Vector3.Up);
+            chair1.World = Matrix.RotationZ(time * 2) * Matrix.RotationX(time) * Matrix.Translation(Vector3.ForwardRH * 5) * Matrix.Translation(Vector3.Left * 2);
+            chair2.World = Matrix.RotationZ(time * 2) * Matrix.RotationX(time) * Matrix.Translation(Vector3.ForwardRH * 5) * Matrix.Translation(Vector3.Right * 2);
+            teapot.World = Matrix.RotationZ(time * 2) * Matrix.RotationX(time) * Matrix.Translation(Vector3.ForwardRH * 5) * Matrix.Translation(Vector3.Up);
         }
+
+        #region content updates
+
+        bool requestContent = true;
+
+        protected Func<IContentUpdatableFromMediaEngine, bool> requestContentCallback;
+
+        protected void Instance_OnContentChanged()
+        {
+            requestContent = true;
+        }
+
+        void IContentUpdatableFromMediaEngine.ClearContent()
+        {
+            throw new NotImplementedException();
+        }
+
+        void IContentUpdatableFromMediaEngine.ReceiveBitmap(Bitmap bitmap, MediaDecoder.ClipCoords coordsL, MediaDecoder.ClipCoords coordsR)
+        {
+            throw new NotImplementedException();
+        }
+
+        void IContentUpdatableFromMediaEngine.ReceiveTextures(d3d11.Texture2D textureL, d3d11.Texture2D textureR)
+        {
+            ;
+        }
+
+        void IContentUpdatableFromMediaEngine.SetProjection(ProjectionMode projection)
+        {
+            ;
+        }
+        #endregion
     }
 }

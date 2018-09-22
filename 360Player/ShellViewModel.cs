@@ -629,14 +629,15 @@ namespace Bivrost.Bivrost360Player
 					this.DXCanvas.Visibility = Visibility.Visible;
 				});
 
-				var scene = new Scene(_mediaDecoder.ContentRequested);
+				var scene = new SceneSharpDX4(_mediaDecoder.ContentRequested);
 				this.DXCanvas.Scene = scene;
                 this.DXCanvas.StartRendering();
 
-				HeadsetEnable += scene.HeadsetEnabled;
-				HeadsetDisable += scene.HeadsetDisabled;
-				if (CurrentHeadset != null)
-					scene.HeadsetEnabled(CurrentHeadset);
+                // FIXME!!
+				//HeadsetEnable += scene.HeadsetEnabled;
+				//HeadsetDisable += scene.HeadsetDisabled;
+				//if (CurrentHeadset != null)
+				//	scene.HeadsetEnabled(CurrentHeadset);
 
 
 
