@@ -398,7 +398,7 @@
     </Compile>
     <Compile Include="NotificationViewModel.cs" />
     <Compile Include="RemoteControl\Settings_RemoteControl.cs" />
-    <Compile Include="SceneSharpDX4.cs" />
+    <Compile Include="Renderers\SceneSharpDX4.cs" />
     <Compile Include="ShellViewModel_Headsets.cs" />
     <Compile Include="Tools\Effects.cs" />
     <Compile Include="Tools\OneWayTypedConverter.cs" />
@@ -566,10 +566,10 @@
     <None Include="app.manifest">
       <SubType>Designer</SubType>
     </None>
-    <None Include="office_chair.mtl">
+    <None Include="Renderers\office_chair.mtl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="office_chair.obj">
+    <None Include="Renderers\office_chair.obj">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
@@ -578,7 +578,7 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <AppDesigner Include="Properties\" />
-    <None Include="teapot.obj">
+    <None Include="Renderers\teapot.obj">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
@@ -622,7 +622,7 @@
     <EmbeddedResource Include="Resources\default-background-equirectangular.png" />
     <Resource Include="Graphics\viking_logo.png" />
     <None Include="Shaders\ImageBasedLightEquirectangular.hlsl" />
-    <Content Include="MiniTri.fx">
+    <Content Include="Renderers\MiniTri.fx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="x64\openvr_api.dll">

@@ -190,11 +190,15 @@ namespace Bivrost.Bivrost360Player
         private d3d11.PixelShader pixelShader;
         private d3d11.InputLayout layout;
 
-        public Material(d3d11.Device device, string shaderFile)  // TODO: additional shader flags?
+        public Material(d3d11.Device device, string shaderFile):this(device, System.IO.File.ReadAllBytes(shaderFile), shaderFile)
+        { }
+
+
+        public Material(d3d11.Device device, byte[] shaderBytes, string shaderName = "unknown")  // TODO: additional shader flags?
         {
             // Compile Vertex and Pixel shaders
-            using (var vertexShaderByteCode = ShaderBytecode.CompileFromFile(shaderFile, "VS", "vs_4_0", ShaderFlags.None, EffectFlags.None))
-            using (var pixelShaderByteCode = ShaderBytecode.CompileFromFile(shaderFile, "PS", "ps_4_0", ShaderFlags.None, EffectFlags.None))
+            using (var vertexShaderByteCode = ShaderBytecode.Compile(shaderBytes, "VS", "vs_4_0", ShaderFlags.None, EffectFlags.None, shaderName))
+            using (var pixelShaderByteCode = ShaderBytecode.Compile(shaderBytes, "PS", "ps_4_0", ShaderFlags.None, EffectFlags.None, shaderName))
             using (var signature = ShaderSignature.GetInputSignature(vertexShaderByteCode))
             {
                 vertexShader = new d3d11.VertexShader(device, vertexShaderByteCode);
@@ -255,10 +259,10 @@ namespace Bivrost.Bivrost360Player
         {
             this.host = host;
 
-            mat = new Material(device, "MiniTri.fx");
+            mat = new Material(device, "Renderers/MiniTri.fx");
 
-            chairModel = new Model3d(device, "office_chair.obj");
-            teapotModel = new Model3d(device, "teapot.obj");
+            chairModel = new Model3d(device, "Renderers/office_chair.obj");
+            teapotModel = new Model3d(device, "Renderers/teapot.obj");
 
             chair1 = new Object3d(device, chairModel, mat);
             chair2 = new Object3d(device, chairModel, mat);
