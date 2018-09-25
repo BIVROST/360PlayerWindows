@@ -26,8 +26,9 @@
 
 uniform extern float4x4 WorldViewProj : WORLDVIEWPROJECTION;
 
-Texture2D<float4> UserTex : register(t0);
-SamplerState UserTexSampler : register(s0);
+SamplerState Sampler : register(s0);
+Texture2D<float4> Diffuse : register(t0);
+Texture2D<float4> Normal : register(t0);
 
 struct VS_IN
 {
@@ -60,7 +61,7 @@ PS_IN VS( VS_IN input )
 
 float4 PS( PS_IN input ) : SV_Target
 {
-	return UserTex.Sample(UserTexSampler, input.uv);
+	return Diffuse.Sample(Sampler, input.uv);
 	//return input.col;
 }
 
