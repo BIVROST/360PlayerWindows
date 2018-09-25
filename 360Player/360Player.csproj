@@ -401,6 +401,7 @@
     <Compile Include="NotificationViewModel.cs" />
     <Compile Include="RemoteControl\Settings_RemoteControl.cs" />
     <Compile Include="Renderers\SceneSharpDX4.cs" />
+    <Compile Include="Renderers\TextureAsset.cs" />
     <Compile Include="ShellViewModel_Headsets.cs" />
     <Compile Include="Tools\Effects.cs" />
     <Compile Include="Tools\OneWayTypedConverter.cs" />
@@ -630,6 +631,12 @@
     <Content Include="Renderers\MiniTri.fx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Renderers\office_chair_d.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Renderers\office_chair_n.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <Content Include="x64\openvr_api.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
