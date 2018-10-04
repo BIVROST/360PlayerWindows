@@ -330,6 +330,7 @@
       <DependentUpon>AboutView.xaml</DependentUpon>
     </Compile>
     <Compile Include="AboutViewModel.cs" />
+    <Compile Include="Renderers\Asset.cs" />
     <Compile Include="Renderers\IContentUpdatableFromMediaEngine.cs" />
     <Compile Include="Renderers\IControllableScene.cs" />
     <Compile Include="Logic\LicensingContext.cs" />
@@ -631,14 +632,17 @@
     <EmbeddedResource Include="Resources\default-background-equirectangular.png" />
     <Resource Include="Graphics\viking_logo.png" />
     <None Include="Shaders\ImageBasedLightEquirectangular.hlsl" />
-    <Content Include="Renderers\MiniTri.fx">
+    <None Include="Renderers\Sphere.fx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    </None>
     <None Include="Renderers\office_chair_d.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="Renderers\office_chair_n.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Renderers\Chair.fx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Content Include="x64\openvr_api.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

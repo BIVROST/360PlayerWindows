@@ -6,8 +6,9 @@ using assFlags = Assimp.PostProcessSteps;
 
 namespace Bivrost.Bivrost360Player
 {
-    internal class ModelAsset : IDisposable
+    internal class ModelAsset : Asset
     {
+        public override string AssetType => "Model";
 
         protected d3d11.Buffer vertices;
         protected d3d11.Buffer indices;
@@ -17,7 +18,7 @@ namespace Bivrost.Bivrost360Player
         const int shaderChannelLength = 13; // TODO: from InputLayout
 
 
-        public ModelAsset(d3d11.Device device, string objFile)
+        public ModelAsset(d3d11.Device device, string objFile):base(objFile)
         {
             Load(device, objFile);
         }
@@ -130,7 +131,7 @@ namespace Bivrost.Bivrost360Player
             //context.Draw(verticesCount, 0);
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             Unload();
         }

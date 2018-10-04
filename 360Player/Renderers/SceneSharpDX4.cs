@@ -12,8 +12,9 @@ namespace Bivrost.Bivrost360Player
     {
         // TODO: Asset Manager holding all assets and cleaning up after them
 
-        private ISceneHost host;
-        private MaterialAsset mat;
+        ISceneHost host;
+        MaterialAsset matSphere;
+        MaterialAsset matChair;
         ModelAsset chairModel;
         Object3d chair1;
         Object3d chair2;
@@ -21,7 +22,7 @@ namespace Bivrost.Bivrost360Player
         Object3d sphere;
         TextureAsset chairTextureDiffuse;
         TextureAsset chairTextureNormal;
-        private Matrix viewProj;
+        Matrix viewProj;
 
         public SceneSharpDX4(Func<IContentUpdatableFromMediaEngine, bool> contentRequested)
         {
@@ -38,14 +39,15 @@ namespace Bivrost.Bivrost360Player
             this.host = host;
             MediaDecoder.Instance.OnContentChanged += Instance_OnContentChanged;
 
-            mat = new MaterialAsset(device, "Renderers/MiniTri.fx");
+            matSphere = new MaterialAsset(device, "Renderers/Sphere.fx");
+            matChair = new MaterialAsset(device, "Renderers/Chair.fx");
 
             chairModel = new ModelAsset(device, "Renderers/office_chair.obj");
             sphereModel = new ModelAsset(device, "Renderers/sphere.obj");
 
-            chair1 = new Object3d(device, chairModel, mat);
-            chair2 = new Object3d(device, chairModel, mat);
-            sphere = new Object3d(device, sphereModel, mat);
+            chair1 = new Object3d(device, sphereModel, matChair);
+            chair2 = new Object3d(device, chairModel, matChair);
+            sphere = new Object3d(device, sphereModel, matSphere);
 
             chairTextureDiffuse = new TextureAsset(device, "Renderers/office_chair_d.png");
             chairTextureNormal = new TextureAsset(device, "Renderers/office_chair_n.png");
@@ -60,7 +62,8 @@ namespace Bivrost.Bivrost360Player
             chair2.Dispose();
             sphereModel.Dispose();
             sphere.Dispose();
-            mat.Dispose();
+            matSphere.Dispose();
+            matChair.Dispose();
         }
 
         void IScene.Render()
@@ -73,27 +76,26 @@ namespace Bivrost.Bivrost360Player
 
             context.PixelShader.SetShaderResource(0, textureView);
             context.PixelShader.SetSampler(0, sampler);
-            sphere.Render(viewProj, context);
+            sphere.Render(viewProj, context, totalSeconds);
 
             context.PixelShader.SetShaderResource(0, chairTextureDiffuse.TextureView);
             context.PixelShader.SetShaderResource(1, chairTextureNormal.TextureView);
             context.PixelShader.SetSampler(0, sampler);
             context.PixelShader.SetSampler(1, sampler);
-            chair1.Render(viewProj, context);
-            chair2.Render(viewProj, context);
-
+            chair1.Render(viewProj, context, totalSeconds);
+            chair2.Render(viewProj, context, totalSeconds);
         }
 
         void IScene.Update(TimeSpan timeSpan)
         {
-            float time = (float)timeSpan.TotalSeconds;
+            totalSeconds = (float)timeSpan.TotalSeconds;
 
             var view = Matrix.LookAtRH(Vector3.Zero, Vector3.ForwardRH, Vector3.UnitY);
             var proj = Matrix.PerspectiveFovRH(72f * (float)Math.PI / 180f, 16f / 9f, 0.01f, 100.0f);
             viewProj = Matrix.Multiply(view, proj);
-            chair1.World = Matrix.RotationZ(time * 2) * Matrix.RotationX(time) * Matrix.Translation(Vector3.ForwardRH * 5) * Matrix.Translation(Vector3.Left * 2);
-            chair2.World = Matrix.RotationY(time /2 ) * Matrix.Translation(Vector3.ForwardRH * 5) * Matrix.Translation(Vector3.Right * 2);
-            sphere.World = Matrix.RotationY(time / 5) /** Matrix.RotationX(time / 3) */ * Matrix.Scaling(50);
+            chair1.World = Matrix.RotationZ(totalSeconds * 2) * Matrix.RotationX(totalSeconds) * Matrix.Translation(Vector3.ForwardRH * 5) * Matrix.Translation(Vector3.Left * 2);
+            chair2.World = Matrix.RotationY(totalSeconds / 2) * Matrix.Translation(Vector3.ForwardRH * 5) * Matrix.Translation(Vector3.Right * 2);
+            sphere.World = Matrix.RotationY(totalSeconds / 5) /** Matrix.RotationX(time / 3) */ * Matrix.Scaling(50);
         }
 
         #region content updates
@@ -120,6 +122,8 @@ namespace Bivrost.Bivrost360Player
         }
 
         d3d11.Texture2D mainTexture;
+        float totalSeconds;
+
         void IContentUpdatableFromMediaEngine.ReceiveTextures(d3d11.Texture2D textureL, d3d11.Texture2D textureR)
         {
             mainTexture?.Dispose();

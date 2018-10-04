@@ -10,12 +10,15 @@ namespace Bivrost.Bivrost360Player
 
     internal partial class SceneSharpDX4
     {
-        internal class TextureAsset:IDisposable
+        internal class TextureAsset:Asset
         {
+
+            public override string AssetType => "Texture";
             public d3d11.Texture2D Texture { get; protected set; }
             public d3d11.ShaderResourceView TextureView { get; protected set; }
 
-            public TextureAsset(d3d11.Device device, string path)
+
+            public TextureAsset(d3d11.Device device, string path):base(path)
             {
                 using (var image = Image.FromFile(path))
                 using (var bitmap = new Bitmap(image))
@@ -55,12 +58,13 @@ namespace Bivrost.Bivrost360Player
                 TextureView = new d3d11.ShaderResourceView(device, Texture);
             }
 
-            public void Dispose()
+
+            public override void Dispose()
             {
                 Texture.Dispose();
                 TextureView.Dispose();
             }
-            
+
         }
     }
 }
