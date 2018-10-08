@@ -1,3 +1,5 @@
+// based mostly on https://digitalerr0r.wordpress.com/2012/03/03/xna-4-0-shader-programming-4normal-mapping/
+
 extern float4x4 worldViewProj : WORLDVIEWPROJECTION;
 extern float4x4 world : WORLD;
 extern float time;
@@ -5,6 +7,7 @@ extern float time;
 SamplerState Sampler : register(s0);
 Texture2D<float4> diffuseTex : register(t0);
 Texture2D<float4> normalTex : register(t1);
+Texture2D<float4> eqrTex : register(t2);
 
 struct VS_IN
 {
@@ -12,15 +15,17 @@ struct VS_IN
 	float4 color : COLOR;
 	float3 normal : NORMAL;
 	float2 uv : TEXCOORD0;
+	float3 tangent : TANGENT0;
+	float3 binormal : BINORMAL0;
 };
 
 struct PS_IN
 {
 	float4 pos : SV_POSITION;
 	float4 color : COLOR;
-	float3 normal : NORMAL;
 	float2 uv : TEXCOORD0;
-	float3 worldPos : TEXCOORD1;
+	float4 view : TEXCOORD1;
+	float3x3 WorldToTangentSpace : TEXCOORD2;
 };
 
 PS_IN VS(VS_IN input)
@@ -30,74 +35,79 @@ PS_IN VS(VS_IN input)
 	input.pos.w = 1;
 	output.pos = mul(input.pos, worldViewProj);
 	output.color = input.color;
-	output.normal = input.normal;
 	output.uv = input.uv;
-	output.worldPos = mul(input.pos, world).xyz;
-
+	output.WorldToTangentSpace[0] = mul(normalize(input.tangent), world);
+	output.WorldToTangentSpace[1] = mul(normalize(input.binormal), world);
+	output.WorldToTangentSpace[2] = mul(normalize(input.normal), world);
+	output.view = normalize(-mul(input.pos, world));	// assumes camera at 0,0,0
 
 	return output;
 }
 
+
+
+
+
+#define MPI_2 1.57079632679
+#define MPI 3.14159265359
+#define M1_2PI 0.15915494309
+#define M1_PI 0.31830988618
+
+float2 UnitVectorToEquirectangularTexCoord(float3 normal)
+{
+	//float pitch = -(normal.y-1)/2;	// approximate
+	float pitch = 1 - (asin(normal.y) + MPI_2) * M1_PI;	// precise
+
+	float yaw = (atan2(normal.x, -normal.z) + MPI) * M1_2PI;
+
+	return float2(yaw, pitch);
+}
+
+
+//struct PointLight
+//{
+//	float3 position;
+//	float3 diffuseColor;
+//	float  diffusePower;
+//	float3 specularColor;
+//	float  specularPower;
+//};
+
 float4 PS(PS_IN input) : SV_Target
 {
-	//return float4(normalize(mul(input.normal, world)).xyz, 1);
+	float4 diffuseMap = diffuseTex.Sample(Sampler, input.uv);
+	float3 normalMap = normalTex.Sample(Sampler, input.uv) * 2.0 - 1.0;
+
+	float3 light = normalize(float3(1, -1, -1));	// left down forward
+	light = mul(light, world);
+	light = mul(light, world);
+
+	// Light related
+	float4 AmbientColor = float4(1, 1, 1, 1);
+	float AmbientIntensity = 0.1;
+	float4 DiffuseColor = float4(1,1,1,1);
+	float DiffuseIntensity = 1;
+	float4 SpecularColor = float4(1,1,1,1);
+	float SpecularIntensity = 8;
+
+	normalMap = normalize(mul(normalMap, input.WorldToTangentSpace));
+	float4 normal = float4(normalMap, 1.0);
+
+	float4 diffuse = saturate(dot(-light, normal));
+	float4 reflect = normalize(2 * diffuse*normal - float4(light, 1.0));
+	float4 specular = pow(saturate(dot(reflect, input.view)), SpecularIntensity);
+	
+//return normal;
+
+	//float2 uv2 = UnitVectorToEquirectangularTexCoord(normal);
+	//return eqrTex.Sample(Sampler, uv2);
 
 
-
-	float4 diffuse = diffuseTex.Sample(Sampler, input.uv);
-	float4 normalMap = normalTex.Sample(Sampler, input.uv) * 2 - float4(1,1,1,1);
-	normalMap=normalize(normalMap); 
-
-	//float3 DirToLight = normalize(float3(0, 1, 0));
-	//float3 DirLightColor = float3(1, 1, 1);
-
-	//float NDotL = dot(DirToLight, normal);
-
-	//float3 EyePosition = float3(0, 0, 0);
-
-	//float specExp = 0.5f;
-
-	//float3 finalColor = DirLightColor.rgb * saturate(NDotL);
-	//// calculate specular light and add to diffuse
-	//float3 toEye = EyePosition.xyz - input.pos;
-	//toEye = normalize(toEye);
-	//float3 halfway = normalize(toEye + DirToLight);
-	//float NDotH = saturate(dot(halfway, normal));
-	//finalColor += DirLightColor.rgb * pow(NDotH, specExp);
-	//// scale light color by material color
-	//return float4(finalColor * diffuse.rgb, 1);
-
-	//return float4(input.normal, 1);
-
-
-
-
-
-	//return float4(input.normal, 1);
-
-	float3 normal = normalMap.xyz + input.normal.xyz; 
-
-	//return float4(normalMap.xyz + input.normal.xyz, 1);
-
-
-	// right, up, 
-	float3 light = normalize(float3(0,0,-1));
-
-	//light = light * sin(time);
-
-	//return float4(light,1);
-
-	light = normalize(mul(light, world) - mul(float4(0, 0, 0, 0), world)) ;
-
-	//light = mul(light, worldViewProj); inverse?
-	//float4 normalL = saturate(mul(normal, world));
-
-	float brightness = dot(light, normal);
-
-	//return normal;
-	//return normal;
-	return float4(brightness, brightness, brightness, 1);
-	//return diffuse; // *brightness * input.color;
+	return float4((
+		diffuseMap * AmbientColor * AmbientIntensity +
+		diffuseMap * DiffuseIntensity * DiffuseColor * diffuse +
+		diffuseMap * SpecularColor*specular
+	).xyz, 1);
 }
 
 technique10 Render

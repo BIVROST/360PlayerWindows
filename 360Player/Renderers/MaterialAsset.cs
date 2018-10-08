@@ -52,7 +52,9 @@ namespace Bivrost.Bivrost360Player
                         new d3d11.InputElement("POSITION", 0, dxgi.Format.R32G32B32A32_Float,  d3d11.InputElement.AppendAligned, 0),
                         new d3d11.InputElement("COLOR",    0, dxgi.Format.R32G32B32A32_Float,  d3d11.InputElement.AppendAligned, 0),
                         new d3d11.InputElement("NORMAL",   0, dxgi.Format.R32G32B32_Float,     d3d11.InputElement.AppendAligned, 0),
-                        new d3d11.InputElement("TEXCOORD", 0, dxgi.Format.R32G32_Float,        d3d11.InputElement.AppendAligned, 0)
+                        new d3d11.InputElement("TEXCOORD", 0, dxgi.Format.R32G32_Float,        d3d11.InputElement.AppendAligned, 0),
+                        new d3d11.InputElement("TANGENT",  0, dxgi.Format.R32G32B32_Float,     d3d11.InputElement.AppendAligned, 0),
+                        new d3d11.InputElement("BINORMAL", 0, dxgi.Format.R32G32B32_Float,     d3d11.InputElement.AppendAligned, 0)
                     }
                 );
 

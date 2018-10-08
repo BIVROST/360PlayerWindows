@@ -82,6 +82,11 @@ namespace Bivrost.Bivrost360Player
             context.PixelShader.SetShaderResource(1, chairTextureNormal.TextureView);
             context.PixelShader.SetSampler(0, sampler);
             context.PixelShader.SetSampler(1, sampler);
+
+            context.PixelShader.SetShaderResource(2, textureView);
+            context.PixelShader.SetSampler(2, sampler);
+
+
             chair1.Render(viewProj, context, totalSeconds);
             chair2.Render(viewProj, context, totalSeconds);
         }
@@ -93,8 +98,8 @@ namespace Bivrost.Bivrost360Player
             var view = Matrix.LookAtRH(Vector3.Zero, Vector3.ForwardRH, Vector3.UnitY);
             var proj = Matrix.PerspectiveFovRH(72f * (float)Math.PI / 180f, 16f / 9f, 0.01f, 100.0f);
             viewProj = Matrix.Multiply(view, proj);
-            chair1.World = Matrix.RotationZ(totalSeconds * 2) * Matrix.RotationX(totalSeconds) * Matrix.Translation(Vector3.ForwardRH * 5) * Matrix.Translation(Vector3.Left * 2);
-            chair2.World = Matrix.RotationY(totalSeconds / 2) * Matrix.Translation(Vector3.ForwardRH * 5) * Matrix.Translation(Vector3.Right * 2);
+            chair1.World = Matrix.RotationZ(totalSeconds * 2) * Matrix.RotationX(totalSeconds) * Matrix.Translation(Vector3.ForwardRH * 5) * Matrix.Translation(Vector3.Left * 4);
+            chair2.World = Matrix.RotationY(totalSeconds / 2) * Matrix.Translation(Vector3.ForwardRH * 3) * Matrix.Translation(Vector3.Right * 0) * Matrix.Translation(Vector3.Down *2f);
             sphere.World = Matrix.RotationY(totalSeconds / 5) /** Matrix.RotationX(time / 3) */ * Matrix.Scaling(50);
         }
 

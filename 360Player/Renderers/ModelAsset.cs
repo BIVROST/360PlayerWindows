@@ -15,7 +15,7 @@ namespace Bivrost.Bivrost360Player
         protected int verticesCount;
         protected int indexCount;
         protected d3d11.VertexBufferBinding vertexBufferBinding;    // TODO: This might be recreated each frame as in samples
-        const int shaderChannelLength = 13; // TODO: from InputLayout
+        const int shaderChannelLength = 19; // TODO: from InputLayout
 
 
         public ModelAsset(d3d11.Device device, string objFile):base(objFile)
@@ -29,7 +29,7 @@ namespace Bivrost.Bivrost360Player
             Assimp.Scene scene;
             using (var ctx = new Assimp.AssimpContext())
             {
-                scene = ctx.ImportFile(objFile, assFlags.MakeLeftHanded);
+                 scene = ctx.ImportFile(objFile, assFlags.MakeLeftHanded | assFlags.CalculateTangentSpace);
                 Assimp.Mesh mesh = scene.Meshes[0];     // TODO: multi-material meshes
 
                 int[] indicesList = new int[mesh.FaceCount * 3];
@@ -85,20 +85,43 @@ namespace Bivrost.Bivrost360Player
                         nz = mesh.Normals[i].Z;
                     }
 
+                    float tgx = 0;
+                    float tgy = 0;
+                    float tgz = 0;
+                    float btgx = 0;
+                    float btgy = 0;
+                    float btgz = 0;
+                    if (mesh.HasTangentBasis)
+                    {
+                        tgx = mesh.Tangents[i].X;
+                        tgy = mesh.Tangents[i].Y;
+                        tgz = mesh.Tangents[i].Z;
+                        btgx = mesh.BiTangents[i].X;
+                        btgy = mesh.BiTangents[i].Y;
+                        btgz = mesh.BiTangents[i].Z;
+                    }
+
                     // TODO: from InputLayout
-                    verticesList[i * shaderChannelLength +  0] = x;
+                    verticesList[i * shaderChannelLength +  0] = x; // position
                     verticesList[i * shaderChannelLength +  1] = y;
                     verticesList[i * shaderChannelLength +  2] = z;
                     verticesList[i * shaderChannelLength +  3] = w;
-                    verticesList[i * shaderChannelLength +  4] = r;
+                    verticesList[i * shaderChannelLength +  4] = r; // vertex color
                     verticesList[i * shaderChannelLength +  5] = g;
                     verticesList[i * shaderChannelLength +  6] = b;
                     verticesList[i * shaderChannelLength +  7] = a;
-                    verticesList[i * shaderChannelLength +  8] = nx;
+                    verticesList[i * shaderChannelLength +  8] = nx; // normals
                     verticesList[i * shaderChannelLength +  9] = ny;
                     verticesList[i * shaderChannelLength + 10] = nz;
-                    verticesList[i * shaderChannelLength + 11] = u;
+                    verticesList[i * shaderChannelLength + 11] = u;  // uv
                     verticesList[i * shaderChannelLength + 12] = 1-v;
+
+                    verticesList[i * shaderChannelLength + 13] = tgx; // tangents
+                    verticesList[i * shaderChannelLength + 14] = tgy;
+                    verticesList[i * shaderChannelLength + 15] = tgz;
+                    verticesList[i * shaderChannelLength + 16] = btgx; // bitangents
+                    verticesList[i * shaderChannelLength + 17] = btgy;
+                    verticesList[i * shaderChannelLength + 18] = btgz;
                 }
 
                 // Instantiate Vertex buffer from vertex data
