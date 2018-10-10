@@ -22,6 +22,8 @@ struct VS_IN
 struct PS_IN
 {
 	float4 pos : SV_POSITION;
+	float4 rawPos : TEXCOORD5;
+	float3 normal : NORMAL;
 	float4 color : COLOR;
 	float2 uv : TEXCOORD0;
 	float4 view : TEXCOORD1;
@@ -34,13 +36,14 @@ PS_IN VS(VS_IN input)
 
 	input.pos.w = 1;
 	output.pos = mul(input.pos, worldViewProj);
+	output.rawPos = mul(input.pos, world);
 	output.color = input.color;
 	output.uv = input.uv;
 	output.WorldToTangentSpace[0] = mul(normalize(input.tangent), world);
 	output.WorldToTangentSpace[1] = mul(normalize(input.binormal), world);
 	output.WorldToTangentSpace[2] = mul(normalize(input.normal), world);
+	output.normal = input.normal;
 	output.view = normalize(-mul(input.pos, world));	// assumes camera at 0,0,0
-
 	return output;
 }
 
@@ -92,6 +95,7 @@ float4 PS(PS_IN input) : SV_Target
 
 	normalMap = normalize(mul(normalMap, input.WorldToTangentSpace));
 	float4 normal = float4(normalMap, 1.0);
+	//float4 normal = float4(normalize(input.normal), 1);
 
 	float4 diffuse = saturate(dot(-light, normal));
 	float4 reflect = normalize(2 * diffuse*normal - float4(light, 1.0));
@@ -99,9 +103,15 @@ float4 PS(PS_IN input) : SV_Target
 	
 //return normal;
 
-	//float2 uv2 = UnitVectorToEquirectangularTexCoord(normal);
-	//return eqrTex.Sample(Sampler, uv2);
 
+	// reflection
+	//float3 v = normalize(input.rawPos.xyz);
+	//float3 reflection = v - 2 * dot(v, normal) * normal;
+	//float2 TexCoord = UnitVectorToEquirectangularTexCoord(reflection);
+	//float4 eqrMap = pow(eqrTex.Sample(Sampler, TexCoord), 2.2);
+	//return eqrMap;
+
+	// end refl
 
 	return float4((
 		diffuseMap * AmbientColor * AmbientIntensity +

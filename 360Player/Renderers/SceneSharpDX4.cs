@@ -23,6 +23,8 @@ namespace Bivrost.Bivrost360Player
         TextureAsset chairTextureDiffuse;
         TextureAsset chairTextureNormal;
         Matrix viewProj;
+        TextureAsset equirectangularTexture;
+        d3d11.SamplerState sampler;
 
         public SceneSharpDX4(Func<IContentUpdatableFromMediaEngine, bool> contentRequested)
         {
@@ -39,6 +41,11 @@ namespace Bivrost.Bivrost360Player
             this.host = host;
             MediaDecoder.Instance.OnContentChanged += Instance_OnContentChanged;
 
+            chairTextureDiffuse = new TextureAsset(device, "Renderers/office_chair_d.png");
+            chairTextureNormal = new TextureAsset(device, "Renderers/office_chair_n.png");
+
+            equirectangularTexture = new TextureAsset(device);
+
             matSphere = new MaterialAsset(device, "Renderers/Sphere.fx");
             matChair = new MaterialAsset(device, "Renderers/Chair.fx");
 
@@ -49,8 +56,20 @@ namespace Bivrost.Bivrost360Player
             chair2 = new Object3d(device, chairModel, matChair);
             sphere = new Object3d(device, sphereModel, matSphere);
 
-            chairTextureDiffuse = new TextureAsset(device, "Renderers/office_chair_d.png");
-            chairTextureNormal = new TextureAsset(device, "Renderers/office_chair_n.png");
+            sampler = new d3d11.SamplerState(device, new d3d11.SamplerStateDescription()
+            {
+                Filter = d3d11.Filter.MinMagMipLinear,
+                AddressU = d3d11.TextureAddressMode.Clamp,
+                AddressV = d3d11.TextureAddressMode.Clamp,
+                AddressW = d3d11.TextureAddressMode.Clamp,
+                BorderColor = SharpDX.Color.Black,
+                ComparisonFunction = d3d11.Comparison.Never,
+                MaximumAnisotropy = 16,
+                MipLodBias = 0,
+                MinimumLod = -float.MaxValue,
+                MaximumLod = float.MaxValue
+            });
+
         }
 
         void IScene.Detach()
@@ -64,6 +83,8 @@ namespace Bivrost.Bivrost360Player
             sphere.Dispose();
             matSphere.Dispose();
             matChair.Dispose();
+
+            sampler.Dispose();
         }
 
         void IScene.Render()
@@ -74,7 +95,7 @@ namespace Bivrost.Bivrost360Player
                     requestContent = false;
             }
 
-            context.PixelShader.SetShaderResource(0, textureView);
+            context.PixelShader.SetShaderResource(0, equirectangularTexture.TextureView);
             context.PixelShader.SetSampler(0, sampler);
             sphere.Render(viewProj, context, totalSeconds);
 
@@ -83,7 +104,7 @@ namespace Bivrost.Bivrost360Player
             context.PixelShader.SetSampler(0, sampler);
             context.PixelShader.SetSampler(1, sampler);
 
-            context.PixelShader.SetShaderResource(2, textureView);
+            context.PixelShader.SetShaderResource(2, equirectangularTexture.TextureView);
             context.PixelShader.SetSampler(2, sampler);
 
 
@@ -108,8 +129,7 @@ namespace Bivrost.Bivrost360Player
         bool requestContent = true;
 
         protected Func<IContentUpdatableFromMediaEngine, bool> requestContentCallback;
-        private d3d11.SamplerState sampler;
-        private d3d11.ShaderResourceView textureView;
+        //private d3d11.ShaderResourceView textureView;
 
         protected void Instance_OnContentChanged()
         {
@@ -126,34 +146,15 @@ namespace Bivrost.Bivrost360Player
             throw new NotImplementedException();
         }
 
-        d3d11.Texture2D mainTexture;
+        //d3d11.Texture2D mainTexture;
         float totalSeconds;
 
         void IContentUpdatableFromMediaEngine.ReceiveTextures(d3d11.Texture2D textureL, d3d11.Texture2D textureR)
         {
-            mainTexture?.Dispose();
             using (var resource = textureL.QueryInterface<SharpDX.DXGI.Resource>())
             {
-                mainTexture = device.OpenSharedResource<d3d11.Texture2D>(resource.SharedHandle);
+                equirectangularTexture.ReplaceTextureOwning(device.OpenSharedResource<d3d11.Texture2D>(resource.SharedHandle));
             };
-
-            textureView?.Dispose();
-            textureView = new d3d11.ShaderResourceView(device, mainTexture);
-
-            sampler?.Dispose();
-            sampler = new d3d11.SamplerState(device, new d3d11.SamplerStateDescription()
-            {
-                Filter = d3d11.Filter.MinMagMipLinear,
-                AddressU = d3d11.TextureAddressMode.Clamp,
-                AddressV = d3d11.TextureAddressMode.Clamp,
-                AddressW = d3d11.TextureAddressMode.Clamp,
-                BorderColor = SharpDX.Color.Black,
-                ComparisonFunction = d3d11.Comparison.Never,
-                MaximumAnisotropy = 16,
-                MipLodBias = 0,
-                MinimumLod = -float.MaxValue,
-                MaximumLod = float.MaxValue
-            });
         }
 
         void IContentUpdatableFromMediaEngine.SetProjection(ProjectionMode projection)
