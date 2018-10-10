@@ -10,23 +10,23 @@ using dxgi = SharpDX.DXGI;
 
 namespace Bivrost.Bivrost360Player
 {
-    internal class MaterialAsset : Asset
+    internal class ShaderAsset : Asset
     {
 
-        public override string AssetType => "Material";
+        public override string AssetType => "Shader";
         private d3d11.VertexShader vertexShader;
         private d3d11.PixelShader pixelShader;
         private d3d11.InputLayout layout;
 
 
-        public MaterialAsset(d3d11.Device device, string shaderFile):base(shaderFile)
+        public ShaderAsset(d3d11.Device device, string shaderFile):base(shaderFile)
         {
             Load(device, System.IO.File.ReadAllBytes(shaderFile), shaderFile);
             EnableLiveReload("../../" + shaderFile);
         }
 
 
-        public MaterialAsset(d3d11.Device device, byte[] shaderBytes, string shaderName):base(shaderName)
+        public ShaderAsset(d3d11.Device device, byte[] shaderBytes, string shaderName):base(shaderName)
         {
             Load(device, shaderBytes, shaderName);
         }

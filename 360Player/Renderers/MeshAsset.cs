@@ -6,7 +6,7 @@ using assFlags = Assimp.PostProcessSteps;
 
 namespace Bivrost.Bivrost360Player
 {
-    internal class ModelAsset : Asset
+    internal class MeshAsset : Asset
     {
         public override string AssetType => "Model";
 
@@ -18,7 +18,7 @@ namespace Bivrost.Bivrost360Player
         const int shaderChannelLength = 19; // TODO: from InputLayout
 
 
-        public ModelAsset(d3d11.Device device, string objFile):base(objFile)
+        public MeshAsset(d3d11.Device device, string objFile):base(objFile)
         {
             Load(device, objFile);
         }

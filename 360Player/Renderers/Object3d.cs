@@ -7,8 +7,8 @@ namespace Bivrost.Bivrost360Player
 {
     internal class Object3d:IDisposable
     {
-        protected MaterialAsset material;
-        protected ModelAsset model;
+        protected Material material;
+        protected MeshAsset mesh;
         protected d3d11.Buffer constantBuffer;
 
 
@@ -32,10 +32,10 @@ namespace Bivrost.Bivrost360Player
         }
 
 
-        public Object3d(d3d11.Device device, ModelAsset model, MaterialAsset mat)
+        public Object3d(d3d11.Device device, MeshAsset mesh, Material mat)
         {
             this.material = mat;
-            this.model = model;
+            this.mesh = mesh;
             if (Marshal.SizeOf(constants) % 16 != 0)
                 throw new ArgumentException("Constant buffer's size must be multiple of 16 bytes, is " + Marshal.SizeOf(constants));
             constantBuffer = new d3d11.Buffer(
@@ -50,12 +50,6 @@ namespace Bivrost.Bivrost360Player
         }
 
 
-        public void Dispose()
-        {
-            constantBuffer.Dispose();
-        }
-
-
         internal void Render(Matrix viewProj, d3d11.DeviceContext context, float time)
         {
             constants.worldViewProj = World * viewProj;
@@ -67,7 +61,35 @@ namespace Bivrost.Bivrost360Player
             context.PixelShader.SetConstantBuffer(0, constantBuffer);
 
             material.Apply(context);
-            model.Render(context);
+            mesh.Render(context);
         }
+
+
+        #region IDisposable Support
+        private bool disposedValue = false;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    constantBuffer.Dispose();
+                }
+
+                material = null;
+                mesh = null;
+
+                disposedValue = true;
+            }
+        }
+
+        ~Object3d() => Dispose(false);
+
+        public void Dispose() {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+        #endregion
     }
 }

@@ -331,6 +331,7 @@
     </Compile>
     <Compile Include="AboutViewModel.cs" />
     <Compile Include="Renderers\Asset.cs" />
+    <Compile Include="Renderers\AssetManager.cs" />
     <Compile Include="Renderers\IContentUpdatableFromMediaEngine.cs" />
     <Compile Include="Renderers\IControllableScene.cs" />
     <Compile Include="Logic\LicensingContext.cs" />
@@ -401,8 +402,9 @@
     </Compile>
     <Compile Include="NotificationViewModel.cs" />
     <Compile Include="RemoteControl\Settings_RemoteControl.cs" />
-    <Compile Include="Renderers\MaterialAsset.cs" />
-    <Compile Include="Renderers\ModelAsset.cs" />
+    <Compile Include="Renderers\Material.cs" />
+    <Compile Include="Renderers\ShaderAsset.cs" />
+    <Compile Include="Renderers\MeshAsset.cs" />
     <Compile Include="Renderers\Object3d.cs" />
     <Compile Include="Renderers\SceneSharpDX4.cs" />
     <Compile Include="Renderers\TextureAsset.cs" />

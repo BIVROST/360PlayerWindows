@@ -7,18 +7,19 @@ using d3d11 = SharpDX.Direct3D11;
 namespace Bivrost.Bivrost360Player
 {
 
-
     internal partial class SceneSharpDX4 : IScene, IContentUpdatableFromMediaEngine
     {
         // TODO: Asset Manager holding all assets and cleaning up after them
 
         ISceneHost host;
-        MaterialAsset matSphere;
-        MaterialAsset matChair;
-        ModelAsset chairModel;
+        ShaderAsset shaderSphere;
+        ShaderAsset shaderChair;
+        Material materialSphere;
+        Material materialChair;
+        MeshAsset chairModel;
         Object3d chair1;
         Object3d chair2;
-        ModelAsset sphereModel;
+        MeshAsset sphereModel;
         Object3d sphere;
         TextureAsset chairTextureDiffuse;
         TextureAsset chairTextureNormal;
@@ -46,16 +47,6 @@ namespace Bivrost.Bivrost360Player
 
             equirectangularTexture = new TextureAsset(device);
 
-            matSphere = new MaterialAsset(device, "Renderers/Sphere.fx");
-            matChair = new MaterialAsset(device, "Renderers/Chair.fx");
-
-            chairModel = new ModelAsset(device, "Renderers/office_chair.obj");
-            sphereModel = new ModelAsset(device, "Renderers/sphere.obj");
-
-            chair1 = new Object3d(device, sphereModel, matChair);
-            chair2 = new Object3d(device, chairModel, matChair);
-            sphere = new Object3d(device, sphereModel, matSphere);
-
             sampler = new d3d11.SamplerState(device, new d3d11.SamplerStateDescription()
             {
                 Filter = d3d11.Filter.MinMagMipLinear,
@@ -70,6 +61,19 @@ namespace Bivrost.Bivrost360Player
                 MaximumLod = float.MaxValue
             });
 
+            shaderSphere = new ShaderAsset(device, "Renderers/Sphere.fx");
+            materialSphere = new Material(shaderSphere,Tuple.Create(equirectangularTexture, sampler));
+
+            shaderChair = new ShaderAsset(device, "Renderers/Chair.fx");
+            materialChair = new Material(shaderChair, Tuple.Create(chairTextureDiffuse, sampler), Tuple.Create(chairTextureNormal, sampler));
+
+
+            chairModel = new MeshAsset(device, "Renderers/office_chair.obj");
+            sphereModel = new MeshAsset(device, "Renderers/sphere.obj");
+
+            chair1 = new Object3d(device, sphereModel, materialChair);
+            chair2 = new Object3d(device, chairModel, materialChair);
+            sphere = new Object3d(device, sphereModel, materialSphere);
         }
 
         void IScene.Detach()
@@ -81,8 +85,10 @@ namespace Bivrost.Bivrost360Player
             chair2.Dispose();
             sphereModel.Dispose();
             sphere.Dispose();
-            matSphere.Dispose();
-            matChair.Dispose();
+            shaderSphere.Dispose();
+            shaderChair.Dispose();
+            //materialSphere.Dispose();
+            //materialChair.Dispose();
 
             sampler.Dispose();
         }
@@ -95,22 +101,11 @@ namespace Bivrost.Bivrost360Player
                     requestContent = false;
             }
 
-            context.PixelShader.SetShaderResource(0, equirectangularTexture.TextureView);
-            context.PixelShader.SetSampler(0, sampler);
             sphere.Render(viewProj, context, totalSeconds);
-
-            context.PixelShader.SetShaderResource(0, chairTextureDiffuse.TextureView);
-            context.PixelShader.SetShaderResource(1, chairTextureNormal.TextureView);
-            context.PixelShader.SetSampler(0, sampler);
-            context.PixelShader.SetSampler(1, sampler);
-
-            context.PixelShader.SetShaderResource(2, equirectangularTexture.TextureView);
-            context.PixelShader.SetSampler(2, sampler);
-
-
             chair1.Render(viewProj, context, totalSeconds);
             chair2.Render(viewProj, context, totalSeconds);
         }
+
 
         void IScene.Update(TimeSpan timeSpan)
         {
