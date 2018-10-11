@@ -8,35 +8,40 @@ namespace Bivrost.Bivrost360Player
 {
     internal class TextureAsset:Asset
     {
-        private string path;
+        readonly private string path;
         private d3d11.Device device;
         private d3d11.Texture2D ownedTexture;
-
-        public override string AssetType => "Texture";
 
 
         public d3d11.ShaderResourceView TextureView { get; protected set; }
 
 
-        public TextureAsset(d3d11.Device device, string path):base(path)
+        public TextureAsset(string path, string name = null):base("Texture", name ?? path)
+        {
+            this.path = path;
+            ownedTexture = null;
+        }
+
+
+        public override void Load(d3d11.Device device)
         {
             this.device = device;
+
+            if (path == null)
+                return;
+
             TextureView = d3d11.ShaderResourceView.FromFile(device, path, d3d11.ImageLoadInformation.Default);
-            ownedTexture = null;
         }
 
-
-        public TextureAsset(d3d11.Device device) : base(null)
+        internal void Apply(d3d11.DeviceContext context, int idx)
         {
-            this.device = device;
-            TextureView = null;
-            ownedTexture = null;
+            if(TextureView != null)
+                context.PixelShader.SetShaderResource(idx, TextureView);
         }
-
 
         public void ReplaceTextureNonOwning(d3d11.Texture2D texture, string newName = null)
         {
-            Dispose();
+            Unload();
             ownedTexture = null;
             TextureView = new d3d11.ShaderResourceView(device, texture);
         }
@@ -44,18 +49,19 @@ namespace Bivrost.Bivrost360Player
 
         public void ReplaceTextureOwning(d3d11.Texture2D texture, string newName = null)
         {
-            Dispose();
+            Unload();
             ownedTexture = texture;
             TextureView = new d3d11.ShaderResourceView(device, texture);
         }
 
 
-        public override void Dispose()
+        protected override void Unload()
         {
             ownedTexture?.Dispose();
             TextureView?.Dispose();
             ownedTexture = null;
         }
+
 
     }
 }

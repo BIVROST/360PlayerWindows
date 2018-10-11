@@ -8,28 +8,27 @@ namespace Bivrost.Bivrost360Player
 {
     internal class MeshAsset : Asset
     {
-        public override string AssetType => "Model";
-
         protected d3d11.Buffer vertices;
         protected d3d11.Buffer indices;
         protected int verticesCount;
         protected int indexCount;
         protected d3d11.VertexBufferBinding vertexBufferBinding;    // TODO: This might be recreated each frame as in samples
+        private string objFile;
         const int shaderChannelLength = 19; // TODO: from InputLayout
 
 
-        public MeshAsset(d3d11.Device device, string objFile):base(objFile)
+        public MeshAsset(string objFile):base("Model", objFile)
         {
-            Load(device, objFile);
+            this.objFile = objFile;
         }
 
 
-        protected void Load(d3d11.Device device, string objFile)
+        public override void Load(d3d11.Device device)
         {
             Assimp.Scene scene;
             using (var ctx = new Assimp.AssimpContext())
             {
-                 scene = ctx.ImportFile(objFile, assFlags.MakeLeftHanded | assFlags.CalculateTangentSpace);
+                scene = ctx.ImportFile(objFile, assFlags.MakeLeftHanded | assFlags.CalculateTangentSpace);
                 Assimp.Mesh mesh = scene.Meshes[0];     // TODO: multi-material meshes
 
                 int[] indicesList = new int[mesh.FaceCount * 3];
@@ -59,7 +58,7 @@ namespace Bivrost.Bivrost360Player
                     if (mesh.HasTextureCoords(0))
                     {
                         u = mesh.TextureCoordinateChannels[0][i].X;
-                        v = mesh.TextureCoordinateChannels[0][i].Y;
+                        v = 1 - mesh.TextureCoordinateChannels[0][i].Y;
                     }
 
                     float r = 0.5f;
@@ -101,7 +100,7 @@ namespace Bivrost.Bivrost360Player
                         btgz = mesh.BiTangents[i].Z;
                     }
 
-                    // TODO: from InputLayout
+                    // TODO: from InputLayout?
                     verticesList[i * shaderChannelLength +  0] = x; // position
                     verticesList[i * shaderChannelLength +  1] = y;
                     verticesList[i * shaderChannelLength +  2] = z;
@@ -114,8 +113,7 @@ namespace Bivrost.Bivrost360Player
                     verticesList[i * shaderChannelLength +  9] = ny;
                     verticesList[i * shaderChannelLength + 10] = nz;
                     verticesList[i * shaderChannelLength + 11] = u;  // uv
-                    verticesList[i * shaderChannelLength + 12] = 1-v;
-
+                    verticesList[i * shaderChannelLength + 12] = v;
                     verticesList[i * shaderChannelLength + 13] = tgx; // tangents
                     verticesList[i * shaderChannelLength + 14] = tgy;
                     verticesList[i * shaderChannelLength + 15] = tgz;
@@ -135,7 +133,7 @@ namespace Bivrost.Bivrost360Player
         }
 
 
-        protected void Unload()
+        protected override void Unload()
         {
             vertices?.Dispose();
             indices?.Dispose();
@@ -151,13 +149,8 @@ namespace Bivrost.Bivrost360Player
 
             context.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
             context.DrawIndexed(indexCount, 0, 0);
-            //context.Draw(verticesCount, 0);
         }
-
-        public override void Dispose()
-        {
-            Unload();
-        }
+        
 
     }
 }

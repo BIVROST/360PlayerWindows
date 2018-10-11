@@ -9,20 +9,11 @@ namespace Bivrost.Bivrost360Player
 
     internal partial class SceneSharpDX4 : IScene, IContentUpdatableFromMediaEngine
     {
-        // TODO: Asset Manager holding all assets and cleaning up after them
-
         ISceneHost host;
-        ShaderAsset shaderSphere;
-        ShaderAsset shaderChair;
-        Material materialSphere;
-        Material materialChair;
-        MeshAsset chairModel;
         Object3d chair1;
         Object3d chair2;
-        MeshAsset sphereModel;
         Object3d sphere;
-        TextureAsset chairTextureDiffuse;
-        TextureAsset chairTextureNormal;
+        AssetManager assetManager;
         Matrix viewProj;
         TextureAsset equirectangularTexture;
         d3d11.SamplerState sampler;
@@ -42,10 +33,9 @@ namespace Bivrost.Bivrost360Player
             this.host = host;
             MediaDecoder.Instance.OnContentChanged += Instance_OnContentChanged;
 
-            chairTextureDiffuse = new TextureAsset(device, "Renderers/office_chair_d.png");
-            chairTextureNormal = new TextureAsset(device, "Renderers/office_chair_n.png");
+            assetManager = new AssetManager(device);
 
-            equirectangularTexture = new TextureAsset(device);
+            equirectangularTexture = assetManager.EmptyTexture("equirectangular media texture");
 
             sampler = new d3d11.SamplerState(device, new d3d11.SamplerStateDescription()
             {
@@ -60,37 +50,47 @@ namespace Bivrost.Bivrost360Player
                 MinimumLod = -float.MaxValue,
                 MaximumLod = float.MaxValue
             });
+            assetManager.RegisterIDisposable(sampler);
 
-            shaderSphere = new ShaderAsset(device, "Renderers/Sphere.fx");
-            materialSphere = new Material(shaderSphere,Tuple.Create(equirectangularTexture, sampler));
+            chair1 = new Object3d(
+                device,
+                assetManager.Mesh("Renderers/sphere.obj"),
+                new Material(
+                    assetManager.Shader("Renderers/chair.fx"),
+                    Tuple.Create(assetManager.Texture("Renderers/office_chair_d.png"), sampler),
+                    Tuple.Create(assetManager.Texture("Renderers/office_chair_n.png"), sampler)
+                )
+            );
 
-            shaderChair = new ShaderAsset(device, "Renderers/Chair.fx");
-            materialChair = new Material(shaderChair, Tuple.Create(chairTextureDiffuse, sampler), Tuple.Create(chairTextureNormal, sampler));
+            chair2 = new Object3d(
+                device,
+                assetManager.Mesh("Renderers/office_chair.obj"),
+                new Material(
+                    assetManager.Shader("Renderers/chair.fx"),
+                    Tuple.Create(assetManager.Texture("Renderers/office_chair_d.png"), sampler),
+                    Tuple.Create(assetManager.Texture("Renderers/office_chair_n.png"), sampler)
+                )
+            );
 
+            sphere = new Object3d(
+                device,
+                assetManager.Mesh("Renderers/sphere.obj"),
+                new Material(
+                    assetManager.Shader("Renderers/sphere.fx"),
+                    Tuple.Create(equirectangularTexture, sampler)
+                )
+            );
 
-            chairModel = new MeshAsset(device, "Renderers/office_chair.obj");
-            sphereModel = new MeshAsset(device, "Renderers/sphere.obj");
-
-            chair1 = new Object3d(device, sphereModel, materialChair);
-            chair2 = new Object3d(device, chairModel, materialChair);
-            sphere = new Object3d(device, sphereModel, materialSphere);
         }
 
         void IScene.Detach()
         {
             MediaDecoder.Instance.OnContentChanged -= Instance_OnContentChanged;
 
-            chairModel.Dispose();
             chair1.Dispose();
             chair2.Dispose();
-            sphereModel.Dispose();
             sphere.Dispose();
-            shaderSphere.Dispose();
-            shaderChair.Dispose();
-            //materialSphere.Dispose();
-            //materialChair.Dispose();
-
-            sampler.Dispose();
+            assetManager.Dispose();
         }
 
         void IScene.Render()

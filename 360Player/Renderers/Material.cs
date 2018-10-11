@@ -22,7 +22,7 @@ namespace Bivrost.Bivrost360Player
             shader.Apply(context);
             for (int idx = 0; idx < texturesWithSamplers.Length; idx++)
             {
-                context.PixelShader.SetShaderResource(idx, texturesWithSamplers[idx].Item1.TextureView);
+                texturesWithSamplers[idx].Item1.Apply(context, idx);
                 context.PixelShader.SetSampler(idx, texturesWithSamplers[idx].Item2);
             }
         }

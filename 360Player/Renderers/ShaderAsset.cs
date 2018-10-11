@@ -13,24 +13,17 @@ namespace Bivrost.Bivrost360Player
     internal class ShaderAsset : Asset
     {
 
-        public override string AssetType => "Shader";
         private d3d11.VertexShader vertexShader;
         private d3d11.PixelShader pixelShader;
         private d3d11.InputLayout layout;
+        private string shaderFile;
 
 
-        public ShaderAsset(d3d11.Device device, string shaderFile):base(shaderFile)
+        public ShaderAsset(string shaderFile):base("Shader", shaderFile)
         {
-            Load(device, System.IO.File.ReadAllBytes(shaderFile), shaderFile);
-            EnableLiveReload("../../" + shaderFile);
+            this.shaderFile = shaderFile;
         }
-
-
-        public ShaderAsset(d3d11.Device device, byte[] shaderBytes, string shaderName):base(shaderName)
-        {
-            Load(device, shaderBytes, shaderName);
-        }
-
+        
 
         public void Load(d3d11.Device device, byte[] shaderBytes, string shaderName)
         {
@@ -66,6 +59,15 @@ namespace Bivrost.Bivrost360Player
                 pixelShader = nextPixelShader;
                 layout = nextLayout;
             }
+        }
+
+
+        public override void Load(d3d11.Device device)
+        {
+            Load(device, File.ReadAllBytes(shaderFile), shaderFile);
+#if LIVE_UPDATE_ENABLED
+            EnableLiveReload("../../" + shaderFile);
+#endif
         }
 
 
@@ -128,13 +130,18 @@ namespace Bivrost.Bivrost360Player
         }
 
 
-        public override void Dispose()
+        protected override void Unload()
         {
-            vertexShader.Dispose();
-            pixelShader.Dispose();
-            layout.Dispose();
+            vertexShader?.Dispose();
+            pixelShader?.Dispose();
+            layout?.Dispose();
+            vertexShader = null;
+            pixelShader = null;
+            layout = null;
+
 #if LIVE_UPDATE_ENABLED
             watcher?.Dispose();
+            watcher = null;
 #endif
         }
 
