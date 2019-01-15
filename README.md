@@ -7,7 +7,7 @@ The easiest way to watch 360-videos and images using a VR headset!
 
 The 360Player by BIVROST is a video player for immersive spherical videos and images. The desktop application for Windows allows you to play virtual reality media on your PC using a VR headset. It supports all versions of Oculus Rift, HTC Vive, OSVR and Windows Mixed Reality headsets.
 
-Download the player to experience videos in a smooth way and with high performance. Watch images and videos up to 8K and enjoy the finest resolution at 360 degrees.
+[Download the player](https://www.microsoft.com/en-us/p/bivrost-360player/9n2l3zr1xhkp?activetab=pivot:regionofsystemrequirementstab) to experience videos in a smooth way and with high performance. Watch images and videos up to 8K and enjoy the finest resolution at 360 degrees.
 
 
 Key features
