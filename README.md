@@ -129,7 +129,7 @@ To contact support or fill a bug report, please use [the support form][github-su
 
 [github-support]: https://github.com/BIVROST/360PlayerWindows/issues/new?labels=support
 
-This software is free and can be used only for noncommercial purposes. To purchase the commercial license contact us: contact@bivrost360.com.
+This software is free and can be used only for noncommercial purposes. To purchase the commercial license read [the terms](LICENSE.md) and contact us: [contact@bivrost.pro](mailto:contact@bivrost.pro).
 
 ### Why is the player crashing on Nvidia Optimus?
 You need to run the player with Nvidia graphic card. Click here for more instructions. There are some Optimus configurations that may not work properly. Feel free to write to support if you encountered one of them to help us make the player better.
